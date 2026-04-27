@@ -1,4 +1,26 @@
-import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEmail, IsIn, IsObject, IsOptional, IsString, MinLength, ValidateNested } from 'class-validator';
+
+class RegisterProfileDto {
+  @IsString()
+  firstName!: string;
+
+  @IsString()
+  lastName!: string;
+
+  @IsString()
+  country!: string;
+
+  @IsString()
+  city!: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsIn(['individual', 'student', 'startup', 'company'])
+  accountType!: string;
+}
 
 export class RegisterDto {
   @IsEmail()
@@ -14,4 +36,10 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   companyName?: string;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => RegisterProfileDto)
+  profile?: RegisterProfileDto;
 }

@@ -27,7 +27,7 @@ const apiBaseUrl = getApiBaseUrl();
 export default function RegisterPage() {
   const [values, setValues] = useState<RegisterFormState>(initialValues);
   const [errors, setErrors] = useState<RegisterErrors>({});
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'verification_sent'>('idle');
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'account_created'>('idle');
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === values.country),
@@ -69,7 +69,7 @@ export default function RegisterPage() {
         throw new Error('Registration failed.');
       }
 
-      setStatus('verification_sent');
+      setStatus('account_created');
     } catch {
       setErrors({ form: 'We could not create your account right now. Please try again.' });
       setStatus('idle');
@@ -99,24 +99,24 @@ export default function RegisterPage() {
               Start quoting PCBs for delivery across Africa.
             </h1>
             <p className="mt-5 text-lg leading-8 text-slate-200">
-              Register in under a minute. Email verification keeps accounts secure, and payment setup happens only when you place an order.
+              Register in under a minute. Payment setup happens only when you place an order.
             </p>
             <div className="mt-8 grid gap-3 text-sm font-bold text-sky-100 sm:grid-cols-3">
               <div className="glass rounded-2xl p-4">No card required</div>
-              <div className="glass rounded-2xl p-4">Email verification</div>
+              <div className="glass rounded-2xl p-4">Secure account</div>
               <div className="glass rounded-2xl p-4">All African countries</div>
             </div>
           </div>
 
           <div className="glass-light rounded-3xl p-5 text-ink sm:p-7">
-            {status === 'verification_sent' ? (
-              <VerificationState email={values.email} />
+            {status === 'account_created' ? (
+              <AccountCreatedState email={values.email} />
             ) : (
               <form onSubmit={submit} className="space-y-5" noValidate>
                 <div>
                   <h2 className="text-2xl font-black tracking-tight text-ink">Create account</h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Use a professional email when possible. We will send a verification link after signup.
+                    Use a professional email when possible. Your account is created immediately after signup.
                   </p>
                 </div>
 
@@ -273,16 +273,16 @@ function ErrorBox({ message }: { message: string }) {
   return <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{message}</div>;
 }
 
-function VerificationState({ email }: { email: string }) {
+function AccountCreatedState({ email }: { email: string }) {
   return (
     <div className="py-8 text-center">
       <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-emerald-50 text-2xl font-black text-emerald-700">
         ✓
       </div>
-      <h2 className="mt-5 text-2xl font-black tracking-tight text-ink">Check your email</h2>
+      <h2 className="mt-5 text-2xl font-black tracking-tight text-ink">Account created</h2>
       <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">
-        We created your account and sent a verification link to <span className="font-black text-deepblue">{email}</span>.
-        Verify your email before placing paid orders.
+        We created your account for <span className="font-black text-deepblue">{email}</span>.
+        You can now log in and continue your order setup.
       </p>
       <Button href="/login" className="mt-6">
         Continue to login
