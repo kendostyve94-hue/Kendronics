@@ -1,3 +1,5 @@
+import { officialContactEmail } from './official-contact';
+
 export interface LegalSection {
   title: string;
   body: string[];
@@ -107,7 +109,7 @@ export const privacyDocument: LegalDocument = {
       title: '1. Who we are',
       body: [
         'Kendronics is a France-based PCB ordering, payment, logistics, tracking, and support platform for customers ordering through external manufacturing partners.',
-        'Privacy requests may be sent to kendostyve94@gmail.com. Final company registration details and any Data Protection Officer contact should be added before publication.',
+        `Privacy requests may be sent to ${officialContactEmail}. Final company registration details and any Data Protection Officer contact should be added before publication.`,
       ],
     },
     {
@@ -170,7 +172,7 @@ export const privacyDocument: LegalDocument = {
       title: '10. User rights',
       body: [
         'Depending on applicable law, users may have rights to access, correct, delete, restrict, port, or object to processing of personal data, and to withdraw consent where processing is based on consent.',
-        'Users may contact kendostyve94@gmail.com for privacy requests. We may need to verify identity before responding. EU users may also have the right to lodge a complaint with a supervisory authority.',
+        `Users may contact ${officialContactEmail} for privacy requests. We may need to verify identity before responding. EU users may also have the right to lodge a complaint with a supervisory authority.`,
       ],
     },
   ],
@@ -230,7 +232,7 @@ export const refundDocument: LegalDocument = {
     {
       title: '7. How to request a refund review',
       body: [
-        'Open a support ticket or email kendostyve94@gmail.com with the order ID, payment reference, issue summary, files where relevant, photos for delivery damage, and any carrier or customs communication.',
+        `Open a support ticket or email ${officialContactEmail} with the order ID, payment reference, issue summary, files where relevant, photos for delivery damage, and any carrier or customs communication.`,
         'Kendronics will review the case and respond with the available options based on order status, partner status, payment records, and logistics evidence.',
       ],
     },

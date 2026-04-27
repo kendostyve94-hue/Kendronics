@@ -1,11 +1,16 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../../prisma/prisma.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
-import { Quote } from './entities/quote.entity';
+import { PricingBreakdown, Quote } from './entities/quote.entity';
 import { PricingRuleRepository } from './repositories/pricing-rule.repository';
 
 @Injectable()
 export class PricingService {
-  constructor(private readonly pricingRules: PricingRuleRepository) {}
+  constructor(
+    private readonly pricingRules: PricingRuleRepository,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async createQuote(userId: string, dto: CreateQuoteDto): Promise<Quote> {
     if (dto.productType === 'pcb_assembly' && (!dto.bomFileId || !dto.cplFileId)) {
@@ -32,24 +37,48 @@ export class PricingService {
     const paymentFee = subtotalBeforePayment * rules.paymentFeeRate + rules.paymentFixedFee;
     const finalTotal = subtotalBeforePayment + paymentFee;
 
-    return {
-      id: crypto.randomUUID(),
-      userId,
-      currency: 'EUR',
-      validUntil: new Date(Date.now() + 2 * 60 * 60 * 1000),
-      breakdown: {
-        partnerManufacturingCost: round(manufacturing),
-        partnerHandlingCost: rules.partnerHandlingFee,
-        ChinaToFranceLogistics: rules.chinaToFranceFee,
-        FranceProcessingFee: rules.franceProcessingFee,
-        FranceToAfricaDelivery: round(logistics),
-        customsRiskBuffer: 0,
-        paymentProcessingFee: round(paymentFee),
-        KendronicsServiceFee: round(serviceFee),
-        totalBeforeTax: round(finalTotal),
-        taxesIfApplicable: 0,
-        finalTotal: round(finalTotal),
+    const breakdown: PricingBreakdown = {
+      partnerManufacturingCost: round(manufacturing),
+      partnerHandlingCost: rules.partnerHandlingFee,
+      ChinaToFranceLogistics: rules.chinaToFranceFee,
+      FranceProcessingFee: rules.franceProcessingFee,
+      FranceToAfricaDelivery: round(logistics),
+      customsRiskBuffer: 0,
+      paymentProcessingFee: round(paymentFee),
+      KendronicsServiceFee: round(serviceFee),
+      totalBeforeTax: round(finalTotal),
+      taxesIfApplicable: 0,
+      finalTotal: round(finalTotal),
+    };
+    const validUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
+
+    const quote = await this.prisma.quote.create({
+      data: {
+        userId,
+        productType: dto.productType,
+        gerberFileId: dto.gerberFileId,
+        bomFileId: dto.bomFileId,
+        cplFileId: dto.cplFileId,
+        layers: dto.layers,
+        lengthMm: dto.lengthMm,
+        widthMm: dto.widthMm,
+        quantity: dto.quantity,
+        destinationCountryIso2: dto.destinationCountryIso2,
+        shippingMode: dto.shippingMode,
+        currency: 'EUR',
+        finalTotal: breakdown.finalTotal,
+        validUntil,
+        breakdown: breakdown as unknown as Prisma.InputJsonObject,
       },
+    });
+
+    return {
+      ...quote,
+      lengthMm: Number(quote.lengthMm),
+      widthMm: Number(quote.widthMm),
+      finalTotal: Number(quote.finalTotal),
+      currency: 'EUR',
+      breakdown: quote.breakdown as unknown as PricingBreakdown,
     };
   }
 }

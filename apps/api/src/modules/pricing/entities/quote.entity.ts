@@ -15,7 +15,19 @@ export interface PricingBreakdown {
 export interface Quote {
   id: string;
   userId: string;
+  productType: string;
+  gerberFileId: string;
+  bomFileId?: string | null;
+  cplFileId?: string | null;
+  layers: number;
+  lengthMm: number;
+  widthMm: number;
+  quantity: number;
+  destinationCountryIso2: string;
+  shippingMode: string;
   currency: 'EUR';
+  finalTotal: number;
   validUntil: Date;
+  createdAt?: Date;
   breakdown: PricingBreakdown;
 }

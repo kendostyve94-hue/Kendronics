@@ -18,8 +18,34 @@ model User {
   createdAt       DateTime  @default(now())
 
   sessions Session[]
+  quotes   Quote[]
   orders   Order[]
   payments Payment[]
+}
+
+model Quote {
+  id                     String   @id @default(uuid())
+  userId                 String
+  productType            String
+  gerberFileId           String
+  bomFileId              String?
+  cplFileId              String?
+  layers                 Int
+  lengthMm               Decimal  @db.Decimal(10, 2)
+  widthMm                Decimal  @db.Decimal(10, 2)
+  quantity               Int
+  destinationCountryIso2 String
+  shippingMode           String
+  currency               String   @default("EUR")
+  finalTotal             Decimal  @db.Decimal(12, 2)
+  breakdown              Json
+  validUntil             DateTime
+  createdAt              DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([validUntil])
 }
 
 model Session {

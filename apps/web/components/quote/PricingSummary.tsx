@@ -28,6 +28,7 @@ export function PricingSummary({
   pricing,
   errors,
   onSave,
+  saveState = 'idle',
   productionSpeed,
   onProductionSpeedChange,
   countries,
@@ -41,6 +42,7 @@ export function PricingSummary({
   pricing: PricingBreakdown;
   errors: string[];
   onSave: () => void;
+  saveState?: 'idle' | 'saving' | 'saved' | 'error';
   productionSpeed: 'standard' | 'express_24h' | 'pcba_24h';
   onProductionSpeedChange: (value: 'standard' | 'express_24h' | 'pcba_24h') => void;
   countries: AfricanCountry[];
@@ -57,7 +59,7 @@ export function PricingSummary({
   const [rates, setRates] = useState<ShippingRate[]>([]);
   const [ratesState, setRatesState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const countryMenuRef = useRef<HTMLDivElement>(null);
-  const canSave = errors.length === 0;
+  const canSave = errors.length === 0 && saveState !== 'saving';
 
   const selectedCountry = countries.find((country) => country.iso2 === destinationCountry) ?? countries[0];
   const filteredCountries = useMemo(() => {
@@ -165,7 +167,7 @@ export function PricingSummary({
               : 'cursor-not-allowed bg-slate-300 opacity-70'
           }`}
         >
-          Sauvegarder dans le panier
+          {saveState === 'saving' ? 'Sauvegarde...' : saveState === 'saved' ? 'Devis sauvegarde' : 'Sauvegarder dans le panier'}
         </button>
       </div>
 

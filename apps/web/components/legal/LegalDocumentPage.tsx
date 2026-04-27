@@ -3,6 +3,7 @@ import { Navbar } from '../layout/Navbar';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import type { LegalDocument } from '../../lib/legal-content';
+import { officialContactEmail } from '../../lib/official-contact';
 
 const heroImage =
   'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2400&q=85';
@@ -72,7 +73,7 @@ export function LegalDocumentPage({ document }: { document: LegalDocument }) {
               <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Need help?</p>
               <h2 className="mt-3 text-3xl font-black tracking-tight">Contact Kendronics support.</h2>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-sky-100">
-                Use support tickets for order issues and kendostyve94@gmail.com for privacy requests.
+                Use support tickets for order issues and {officialContactEmail} for privacy requests.
               </p>
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0">

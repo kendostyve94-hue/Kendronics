@@ -114,6 +114,14 @@ type ShippingRateSelection = {
 
 type UploadState = {
   status: 'idle' | 'uploading' | 'uploaded' | 'error';
+  uploadId?: string;
+  message?: string;
+};
+
+type QuoteSaveState = {
+  status: 'idle' | 'saving' | 'saved' | 'error';
+  quoteId?: string;
+  orderId?: string;
   message?: string;
 };
 
@@ -123,6 +131,7 @@ export default function QuotePage() {
   const [config, setConfig] = useState<QuoteConfig>(initialConfig);
   const [saved, setSaved] = useState(false);
   const [gerberUpload, setGerberUpload] = useState<UploadState>({ status: 'idle' });
+  const [quoteSave, setQuoteSave] = useState<QuoteSaveState>({ status: 'idle' });
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === config.destinationCountry) ?? africanCountries[0],
@@ -133,6 +142,7 @@ export default function QuotePage() {
 
   function update<K extends keyof QuoteConfig>(key: K, value: QuoteConfig[K]) {
     setSaved(false);
+    setQuoteSave({ status: 'idle' });
     setConfig((current) => ({ ...current, [key]: value }));
   }
 
@@ -179,6 +189,7 @@ export default function QuotePage() {
 
   async function uploadGerber(file: File) {
     setSaved(false);
+    setQuoteSave({ status: 'idle' });
     setGerberUpload({ status: 'uploading', message: 'Upload Gerber ZIP en cours...' });
 
     try {
@@ -205,7 +216,7 @@ export default function QuotePage() {
         throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Upload impossible pour le moment.');
       }
 
-      const presignedUpload = (await presignResponse.json()) as { uploadUrl: string };
+      const presignedUpload = (await presignResponse.json()) as { uploadId: string; uploadUrl: string };
       const uploadResponse = await fetch(presignedUpload.uploadUrl, {
         method: 'PUT',
         headers: { 'Content-Type': file.type || 'application/zip' },
@@ -217,11 +228,82 @@ export default function QuotePage() {
       }
 
       update('gerberFileName', file.name);
-      setGerberUpload({ status: 'uploaded', message: 'Gerber ZIP televerse en stockage prive.' });
+      setGerberUpload({ status: 'uploaded', uploadId: presignedUpload.uploadId, message: 'Gerber ZIP televerse en stockage prive.' });
     } catch (error) {
       setGerberUpload({
         status: 'error',
         message: error instanceof Error ? error.message : 'Upload impossible pour le moment.',
+      });
+    }
+  }
+
+  async function saveQuote() {
+    setSaved(false);
+    setQuoteSave({ status: 'saving', message: 'Sauvegarde du devis...' });
+
+    try {
+      const session = readAuthSession();
+      if (!session) {
+        throw new Error('Connectez-vous avant de sauvegarder un devis.');
+      }
+
+      if (!gerberUpload.uploadId) {
+        throw new Error('Televersez un fichier Gerber ZIP avant de sauvegarder le devis.');
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/pricing/quote`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productType: config.productType,
+          gerberFileId: gerberUpload.uploadId,
+          layers: config.layers,
+          lengthMm: toMillimeters(config.length, config.unit),
+          widthMm: toMillimeters(config.width, config.unit),
+          quantity: config.quantity,
+          destinationCountryIso2: config.destinationCountry,
+          shippingMode: config.shippingMode,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Impossible de sauvegarder le devis.');
+      }
+
+      const quote = (await response.json()) as { id: string };
+      const orderResponse = await fetch(`${apiBaseUrl}/api/orders`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          quoteId: quote.id,
+          destinationCountryIso2: config.destinationCountry,
+        }),
+      });
+
+      if (!orderResponse.ok) {
+        const error = await orderResponse.json().catch(() => null);
+        throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? "Le devis est cree, mais la commande n'a pas pu etre ouverte.");
+      }
+
+      const order = (await orderResponse.json()) as { id: string; orderNumber: string };
+      setSaved(true);
+      setQuoteSave({
+        status: 'saved',
+        quoteId: quote.id,
+        orderId: order.id,
+        message: `Commande ouverte: ${order.orderNumber}`,
+      });
+    } catch (error) {
+      setQuoteSave({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Impossible de sauvegarder le devis.',
       });
     }
   }
@@ -450,7 +532,22 @@ export default function QuotePage() {
 
           {saved ? (
             <div className="rounded-sm border border-[#b9ebda] bg-[#eefbf6] p-4 text-sm font-bold text-[#116b52]">
-              Quote saved locally. Supplier validation remains required before final checkout.
+              Devis sauvegarde cote serveur. Validation fournisseur requise avant paiement final.
+            </div>
+          ) : null}
+          {quoteSave.status === 'error' ? (
+            <div className="rounded-sm border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
+              {quoteSave.message}
+            </div>
+          ) : null}
+          {quoteSave.status === 'saved' && quoteSave.message ? (
+            <div className="rounded-sm border border-slate-200 bg-white p-4 text-sm font-bold text-slate-700">
+              <p>{quoteSave.message}</p>
+              {quoteSave.orderId ? (
+                <a className="mt-3 inline-flex text-[#0877ff] hover:text-[#0068e8]" href={`/orders/${quoteSave.orderId}`}>
+                  Voir la commande
+                </a>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -459,7 +556,8 @@ export default function QuotePage() {
           <PricingSummary
             pricing={pricing}
             errors={errors}
-            onSave={() => setSaved(true)}
+            onSave={saveQuote}
+            saveState={quoteSave.status}
             productionSpeed={config.productionSpeed}
             onProductionSpeedChange={(value) => update('productionSpeed', value)}
             countries={africanCountries}
@@ -477,6 +575,10 @@ export default function QuotePage() {
       <Footer />
     </main>
   );
+}
+
+function toMillimeters(value: number, unit: QuoteConfig['unit']): number {
+  return unit === 'inch' ? Math.round(value * 25.4 * 100) / 100 : value;
 }
 
 function Panel({

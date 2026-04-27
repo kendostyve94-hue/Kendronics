@@ -13,7 +13,9 @@ Le site `apps/web` est une application Next.js. Vercel est donc l'option la plus
    - Build Command: `npm run web:build`
    - Output Directory: `apps/web/.next`
 6. Pour le site web seul, tu peux deployer sans variable d'environnement.
-7. Si l'API est deployee plus tard, ajoute cette variable dans Vercel:
+7. Pour modifier l'adresse de contact affichee sur le site, ajoute:
+   - `NEXT_PUBLIC_OFFICIAL_CONTACT_EMAIL=contact@ton-domaine.com`
+8. Si l'API est deployee plus tard, ajoute cette variable dans Vercel:
    - `NEXT_PUBLIC_API_BASE_URL=https://url-de-ton-api`
 
 ## API
@@ -55,12 +57,14 @@ Commandes utiles:
 5. L'URL de sante de l'API sera `/api/health`.
 6. Quand l'API est publique, ajoute dans Vercel:
    - `NEXT_PUBLIC_API_BASE_URL=https://url-publique-de-ton-api`
+   - `NEXT_PUBLIC_OFFICIAL_CONTACT_EMAIL=contact@ton-domaine.com`
 7. Redeploie le site web Vercel.
 
 ### Checklist production avant ouverture grand public
 
 - L'API Render repond sur `/api/health`.
 - `NEXT_PUBLIC_API_BASE_URL` dans Vercel pointe vers l'URL publique Render.
+- `NEXT_PUBLIC_OFFICIAL_CONTACT_EMAIL` dans Vercel correspond a l'adresse publique Kendronics.
 - `FRONTEND_ORIGIN` dans Render vaut `https://kendronics.vercel.app`.
 - `JWT_SECRET` est une valeur longue et unique, pas la valeur exemple.
 - `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` sont en mode live quand tu acceptes de vrais paiements.
