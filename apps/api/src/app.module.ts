@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HealthController } from './health.controller';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CountriesModule } from './modules/countries/countries.module';
@@ -11,9 +12,11 @@ import { SupportModule } from './modules/support/support.module';
 import { TrackingModule } from './modules/tracking/tracking.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { UsersModule } from './modules/users/users.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
+    PrismaModule,
     AuthModule,
     UsersModule,
     OrdersModule,
@@ -27,5 +30,6 @@ import { UsersModule } from './modules/users/users.module';
     SupportModule,
     NotificationsModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}

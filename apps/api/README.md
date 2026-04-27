@@ -51,8 +51,8 @@ Success response:
 
 ```json
 {
-  "accessToken": "access.user-id",
-  "refreshToken": "refresh.user-id.timestamp",
+  "accessToken": "jwt-signed-access-token",
+  "refreshToken": "refresh.random-token",
   "tokenType": "Bearer",
   "expiresIn": 900
 }

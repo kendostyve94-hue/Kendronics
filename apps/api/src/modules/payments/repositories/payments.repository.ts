@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { Payment, PaymentEvent, PaymentProvider, PaymentStatus } from '../entities/payment.entity';
 
 @Injectable()
 export class PaymentsRepository {
-  private readonly payments = new Map<string, Payment>();
-  private readonly events = new Map<string, PaymentEvent>();
+  constructor(private readonly prisma: PrismaService) {}
 
   async createPayment(input: {
     userId: string;
@@ -13,50 +14,46 @@ export class PaymentsRepository {
     amount: number;
     currency: 'EUR';
   }): Promise<Payment> {
-    const payment: Payment = {
-      id: crypto.randomUUID(),
-      userId: input.userId,
-      orderId: input.orderId,
-      provider: input.provider,
-      amount: input.amount,
-      currency: input.currency,
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    const payment = await this.prisma.payment.create({
+      data: {
+        userId: input.userId,
+        orderId: input.orderId,
+        provider: input.provider,
+        amount: input.amount,
+        currency: input.currency,
+        status: 'pending',
+      },
+    });
 
-    this.payments.set(payment.id, payment);
-    return payment;
+    return this.toPayment(payment);
   }
 
   async attachProviderReference(paymentId: string, providerPaymentId: string): Promise<Payment> {
-    const payment = this.mustFindPayment(paymentId);
-    payment.providerPaymentId = providerPaymentId;
-    payment.updatedAt = new Date();
-    return payment;
+    const payment = await this.prisma.payment.update({
+      where: { id: paymentId },
+      data: { providerPaymentId },
+    });
+    return this.toPayment(payment);
   }
 
   async findByProviderReference(provider: PaymentProvider, providerPaymentId: string): Promise<Payment | null> {
-    return (
-      [...this.payments.values()].find(
-        (payment) => payment.provider === provider && payment.providerPaymentId === providerPaymentId,
-      ) ?? null
-    );
+    const payment = await this.prisma.payment.findFirst({
+      where: { provider, providerPaymentId },
+    });
+    return payment ? this.toPayment(payment) : null;
   }
 
   async updateStatus(paymentId: string, status: PaymentStatus): Promise<Payment> {
-    const payment = this.mustFindPayment(paymentId);
-    payment.status = status;
-    payment.updatedAt = new Date();
+    const payment = await this.prisma.payment.update({
+      where: { id: paymentId },
+      data: {
+        status,
+        succeededAt: status === 'succeeded' ? new Date() : undefined,
+        failedAt: status === 'failed' ? new Date() : undefined,
+      },
+    });
 
-    if (status === 'succeeded') {
-      payment.succeededAt = new Date();
-    }
-    if (status === 'failed') {
-      payment.failedAt = new Date();
-    }
-
-    return payment;
+    return this.toPayment(payment);
   }
 
   async recordWebhookEvent(input: {
@@ -66,41 +63,93 @@ export class PaymentsRepository {
     payload: unknown;
     paymentId?: string;
   }): Promise<{ event: PaymentEvent; duplicate: boolean }> {
-    const key = `${input.provider}:${input.providerEventId}`;
-    const existing = this.events.get(key);
+    const existing = await this.prisma.paymentEvent.findUnique({
+      where: {
+        provider_providerEventId: {
+          provider: input.provider,
+          providerEventId: input.providerEventId,
+        },
+      },
+    });
+
     if (existing) {
-      return { event: existing, duplicate: true };
+      return { event: this.toPaymentEvent(existing), duplicate: true };
     }
 
-    const event: PaymentEvent = {
-      id: crypto.randomUUID(),
-      paymentId: input.paymentId,
-      provider: input.provider,
-      providerEventId: input.providerEventId,
-      eventType: input.eventType,
-      payload: input.payload,
-      createdAt: new Date(),
-    };
-    this.events.set(key, event);
-    return { event, duplicate: false };
+    const event = await this.prisma.paymentEvent.create({
+      data: {
+        paymentId: input.paymentId,
+        provider: input.provider,
+        providerEventId: input.providerEventId,
+        eventType: input.eventType,
+        payload: input.payload as Prisma.InputJsonValue,
+      },
+    });
+
+    return { event: this.toPaymentEvent(event), duplicate: false };
   }
 
   async markEventProcessed(provider: PaymentProvider, providerEventId: string, error?: string): Promise<void> {
-    const event = this.events.get(`${provider}:${providerEventId}`);
-    if (!event) {
-      return;
-    }
-
-    event.processedAt = new Date();
-    event.processingError = error;
+    await this.prisma.paymentEvent.updateMany({
+      where: { provider, providerEventId },
+      data: {
+        processedAt: new Date(),
+        processingError: error,
+      },
+    });
   }
 
-  private mustFindPayment(paymentId: string): Payment {
-    const payment = this.payments.get(paymentId);
-    if (!payment) {
-      throw new Error('Payment not found.');
-    }
+  private toPayment(payment: {
+    id: string;
+    orderId: string;
+    userId: string;
+    provider: string;
+    providerPaymentId: string | null;
+    status: string;
+    amount: Prisma.Decimal;
+    currency: string;
+    createdAt: Date;
+    updatedAt: Date;
+    succeededAt: Date | null;
+    failedAt: Date | null;
+  }): Payment {
+    return {
+      id: payment.id,
+      orderId: payment.orderId,
+      userId: payment.userId,
+      provider: payment.provider as PaymentProvider,
+      providerPaymentId: payment.providerPaymentId ?? undefined,
+      status: payment.status as PaymentStatus,
+      amount: payment.amount.toNumber(),
+      currency: payment.currency as 'EUR',
+      createdAt: payment.createdAt,
+      updatedAt: payment.updatedAt,
+      succeededAt: payment.succeededAt ?? undefined,
+      failedAt: payment.failedAt ?? undefined,
+    };
+  }
 
-    return payment;
+  private toPaymentEvent(event: {
+    id: string;
+    paymentId: string | null;
+    provider: string;
+    providerEventId: string;
+    eventType: string;
+    payload: Prisma.JsonValue;
+    processedAt: Date | null;
+    processingError: string | null;
+    createdAt: Date;
+  }): PaymentEvent {
+    return {
+      id: event.id,
+      paymentId: event.paymentId ?? undefined,
+      provider: event.provider as PaymentProvider,
+      providerEventId: event.providerEventId,
+      eventType: event.eventType,
+      payload: event.payload,
+      processedAt: event.processedAt ?? undefined,
+      processingError: event.processingError ?? undefined,
+      createdAt: event.createdAt,
+    };
   }
 }

@@ -1,8 +1,12 @@
+import './config/load-env';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { validateProductionConfig } from './config/production-config';
 
 async function bootstrap() {
+  validateProductionConfig();
+
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.setGlobalPrefix('api');

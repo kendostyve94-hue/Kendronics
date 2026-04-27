@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import { Navbar } from '../../../components/layout/Navbar';
 import { Card } from '../../../components/ui/Card';
+import { getApiBaseUrl } from '../../../lib/api-base-url';
 import { readAuthSession } from '../../../lib/auth-session';
 import {
   customerTrackingStatuses,
@@ -21,6 +22,7 @@ import type {
 } from '../../../lib/order-detail-contract';
 
 type PageStatus = 'loading' | 'ready' | 'demo' | 'error';
+const apiBaseUrl = getApiBaseUrl();
 
 const countryNames: Record<string, string> = {
   SN: 'Senegal',
@@ -51,8 +53,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
           : {};
 
         const [orderResponse, trackingResponse] = await Promise.all([
-          fetch(orderDetailApiContract.order.path.replace(':orderId', orderId), { headers }),
-          fetch(orderDetailApiContract.tracking.path.replace(':orderId', orderId), { headers }),
+          fetch(`${apiBaseUrl}${orderDetailApiContract.order.path.replace(':orderId', orderId)}`, { headers }),
+          fetch(`${apiBaseUrl}${orderDetailApiContract.tracking.path.replace(':orderId', orderId)}`, { headers }),
         ]);
 
         if (!orderResponse.ok || !trackingResponse.ok) {

@@ -6,12 +6,14 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthTokens } from './entities/auth-tokens.entity';
 import { SessionRepository } from './repositories/session.repository';
+import { AuthTokenService } from './auth-token.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly sessionRepository: SessionRepository,
+    private readonly authTokenService: AuthTokenService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthTokens> {
@@ -46,8 +48,17 @@ export class AuthService {
   }
 
   private async issueTokens(userId: string, email: string): Promise<AuthTokens> {
-    const accessToken = `access.${userId}`;
-    const refreshToken = `refresh.${userId}.${Date.now()}`;
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+
+    const accessToken = this.authTokenService.createAccessToken({
+      id: user.id,
+      email: user.email,
+      roles: user.roles,
+    });
+    const refreshToken = this.authTokenService.createRefreshToken();
     await this.sessionRepository.create({ userId, email, refreshToken });
 
     return {

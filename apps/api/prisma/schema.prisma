@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  passwordHash    String
+  fullName        String
+  companyName     String?
+  roles           String[]  @default(["user"])
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+
+  sessions Session[]
+  orders   Order[]
+  payments Payment[]
+}
+
+model Session {
+  id               String    @id @default(uuid())
+  userId           String
+  email            String
+  refreshTokenHash String
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([refreshTokenHash])
+  @@index([userId])
+}
+
+model Order {
+  id                           String    @id @default(uuid())
+  orderNumber                  String    @unique
+  userId                       String
+  quoteId                      String
+  destinationCountryIso2       String
+  status                       String    @default("awaiting_payment")
+  externalManufacturingPartner String?
+  externalSupplierOrderId      String?
+  carrierName                  String?
+  trackingNumber               String?
+  estimatedDeliveryAt          DateTime?
+  paidAt                       DateTime?
+  deliveredAt                  DateTime?
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Payment {
+  id                String    @id @default(uuid())
+  orderId           String
+  userId            String
+  provider          String
+  providerPaymentId String?
+  status            String    @default("pending")
+  amount            Decimal   @db.Decimal(12, 2)
+  currency          String    @default("EUR")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  succeededAt       DateTime?
+  failedAt          DateTime?
+
+  order  Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events PaymentEvent[]
+
+  @@index([orderId])
+  @@index([userId])
+  @@unique([provider, providerPaymentId])
+}
+
+model PaymentEvent {
+  id              String    @id @default(uuid())
+  paymentId       String?
+  provider        String
+  providerEventId String
+  eventType       String
+  payload         Json
+  processedAt     DateTime?
+  processingError String?
+  createdAt       DateTime  @default(now())
+
+  payment Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, providerEventId])
+  @@index([paymentId])
+}

@@ -5,12 +5,20 @@
     "web:dev": "node --max-old-space-size=4096 node_modules/next/dist/bin/next dev apps/web",
     "web:build": "node --max-old-space-size=4096 node_modules/next/dist/bin/next build apps/web",
     "api:dev": "nest start --watch --config apps/api/nest-cli.json",
-    "api:build": "nest build --config apps/api/nest-cli.json"
+    "api:build": "node --max-old-space-size=4096 node_modules/@nestjs/cli/bin/nest.js build --config apps/api/nest-cli.json",
+    "api:prod:build": "npm run db:generate && npm run api:build",
+    "api:start:prod": "node dist/apps/api/main.js",
+    "api:deploy:start": "npm run db:deploy && npm run api:start:prod",
+    "db:generate": "node scripts/prisma-api.mjs generate",
+    "db:migrate": "node scripts/prisma-api.mjs migrate",
+    "db:deploy": "node scripts/prisma-api.mjs deploy",
+    "db:validate": "node scripts/prisma-api.mjs validate"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@prisma/client": "^6.6.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "next": "^15.0.0",
@@ -28,6 +36,7 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "prisma": "^6.6.0",
     "typescript": "^5.4.0"
   }
 }

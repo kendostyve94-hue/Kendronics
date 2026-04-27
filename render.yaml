@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: kendronics-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npm run api:prod:build
+    preDeployCommand: npm run db:deploy
+    startCommand: npm run api:start:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_TOKEN_TTL_SECONDS
+        value: 900
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: FRONTEND_ORIGIN
+        value: https://kendronics.vercel.app
+      - key: OFFICIAL_CONTACT_EMAIL
+        value: kendostyve94@gmail.com
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: SMTP_HELO_DOMAIN
+        value: kendronics.com
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false

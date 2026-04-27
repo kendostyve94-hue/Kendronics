@@ -1,4 +1,4 @@
-import { Body, Controller, Headers, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Headers, NotFoundException, Post, Req, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
@@ -25,6 +25,10 @@ export class PaymentsController {
 
   @Post('mobile-money/simulated-callback')
   mobileMoneySimulatedCallback(@Body() dto: MobileMoneyCallbackDto) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new NotFoundException();
+    }
+
     return this.paymentsService.handleMobileMoneyCallback(dto);
   }
 

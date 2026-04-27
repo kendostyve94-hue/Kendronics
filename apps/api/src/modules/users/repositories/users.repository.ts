@@ -1,36 +1,55 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { UserRole } from '../../../common/types/user-role.enum';
-import { demoTrackingUser } from '../../tracking/demo-tracking-data';
 import { User } from '../entities/user.entity';
 
 @Injectable()
 export class UsersRepository {
-  private readonly users = new Map<string, User>();
+  constructor(private readonly prisma: PrismaService) {}
 
-  constructor() {
-    this.users.set(demoTrackingUser.id, demoTrackingUser);
-  }
-
-  async create(input: Omit<User, 'id' | 'roles' | 'createdAt'>): Promise<User> {
-    const user: User = {
-      ...input,
-      id: crypto.randomUUID(),
-      roles: [UserRole.User],
-      createdAt: new Date(),
-    };
-    this.users.set(user.id, user);
-    return user;
+  async create(input: Omit<User, 'id' | 'roles' | 'createdAt'> & { roles?: UserRole[] }): Promise<User> {
+    const user = await this.prisma.user.create({
+      data: {
+        email: input.email,
+        passwordHash: input.passwordHash,
+        fullName: input.fullName,
+        companyName: input.companyName,
+        roles: input.roles ?? [UserRole.User],
+        emailVerifiedAt: input.emailVerifiedAt,
+      },
+    });
+    return this.toUser(user);
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.users.get(id) ?? null;
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    return user ? this.toUser(user) : null;
   }
 
-  async findByEmailAndPassword(email: string, password: string): Promise<User | null> {
-    return (
-      [...this.users.values()].find(
-        (user) => user.email === email && user.passwordHash === `hash:${password}`,
-      ) ?? null
-    );
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    return user ? this.toUser(user) : null;
+  }
+
+  private toUser(user: {
+    id: string;
+    email: string;
+    passwordHash: string;
+    fullName: string;
+    companyName: string | null;
+    roles: string[];
+    emailVerifiedAt: Date | null;
+    createdAt: Date;
+  }): User {
+    return {
+      id: user.id,
+      email: user.email,
+      passwordHash: user.passwordHash,
+      fullName: user.fullName,
+      companyName: user.companyName ?? undefined,
+      roles: user.roles as UserRole[],
+      emailVerifiedAt: user.emailVerifiedAt ?? undefined,
+      createdAt: user.createdAt,
+    };
   }
 }

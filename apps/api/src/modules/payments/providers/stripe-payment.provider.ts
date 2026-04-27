@@ -19,6 +19,10 @@ export class StripePaymentProvider {
 
   async createCheckoutSession(input: CreateProviderCheckoutInput): Promise<CheckoutSession> {
     if (!this.stripe) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new ServiceUnavailableException('Stripe is not configured for production payments.');
+      }
+
       return {
         paymentId: input.paymentId,
         provider: 'stripe',
@@ -71,6 +75,10 @@ export class StripePaymentProvider {
     parsedBody: unknown,
   ): VerifiedStripePaymentEvent {
     if (!this.stripe || !this.webhookSecret) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new ServiceUnavailableException('Stripe webhooks are not configured for production payments.');
+      }
+
       return this.verifySimulatedWebhook(parsedBody);
     }
 

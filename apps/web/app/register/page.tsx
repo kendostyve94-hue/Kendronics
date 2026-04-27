@@ -5,6 +5,7 @@ import type { FormEvent } from 'react';
 import { Navbar } from '../../components/layout/Navbar';
 import { Button } from '../../components/ui/Button';
 import { africanCountries } from '../../lib/african-countries';
+import { getApiBaseUrl } from '../../lib/api-base-url';
 import { validateRegisterForm } from '../../lib/register-validation';
 import type { AccountType, RegisterErrors, RegisterFormState } from '../../lib/register-validation';
 
@@ -21,6 +22,7 @@ const initialValues: RegisterFormState = {
   accountType: 'individual',
   acceptedTerms: false,
 };
+const apiBaseUrl = getApiBaseUrl();
 
 export default function RegisterPage() {
   const [values, setValues] = useState<RegisterFormState>(initialValues);
@@ -44,7 +46,7 @@ export default function RegisterPage() {
     setStatus('submitting');
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

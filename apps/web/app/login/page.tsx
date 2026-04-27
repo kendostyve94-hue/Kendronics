@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Navbar } from '../../components/layout/Navbar';
+import { getApiBaseUrl } from '../../lib/api-base-url';
 import { authApiContract } from '../../lib/auth-contract';
 import type { ForgotPasswordResponse, LoginResponse } from '../../lib/auth-contract';
 import { persistAuthSession } from '../../lib/auth-session';
@@ -24,6 +25,7 @@ const initialLoginValues: LoginFormState = {
 
 const neutralForgotPasswordMessage =
   'If an account can receive password reset email, we will send instructions shortly.';
+const apiBaseUrl = getApiBaseUrl();
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'forgot_password'>('login');
@@ -45,7 +47,7 @@ export default function LoginPage() {
     setStatus('submitting');
 
     try {
-      const response = await fetch(authApiContract.login.path, {
+      const response = await fetch(`${apiBaseUrl}${authApiContract.login.path}`, {
         method: authApiContract.login.method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -79,7 +81,7 @@ export default function LoginPage() {
     setStatus('submitting');
 
     try {
-      const response = await fetch(authApiContract.forgotPassword.path, {
+      const response = await fetch(`${apiBaseUrl}${authApiContract.forgotPassword.path}`, {
         method: authApiContract.forgotPassword.method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: forgotValues.email.trim().toLowerCase() }),

@@ -22,6 +22,10 @@ Le site peut etre heberge gratuitement sur Vercel, mais l'API NestJS dans `apps/
 
 Variables utiles pour l'API:
 
+- `DATABASE_URL=postgresql://...`
+- `JWT_SECRET` valeur longue et aleatoire
+- `JWT_ACCESS_TOKEN_TTL_SECONDS=900`
+- `ADMIN_EMAILS=admin@ton-domaine.com`
 - `FRONTEND_ORIGIN=https://url-de-ton-site-vercel`
 - `PORT` fourni par l'hebergeur
 - `OFFICIAL_CONTACT_EMAIL`
@@ -30,3 +34,47 @@ Variables utiles pour l'API:
 - `SMTP_USER`
 - `SMTP_PASS`
 - `SMTP_FROM`
+- `S3_BUCKET`
+- `S3_REGION`
+- `S3_ACCESS_KEY_ID`
+- `S3_SECRET_ACCESS_KEY`
+- `S3_ENDPOINT` optionnel pour Cloudflare R2 ou autre stockage compatible S3
+
+Commandes utiles:
+
+- `npm run db:generate` genere le client Prisma.
+- `npm run db:migrate` applique les migrations en developpement avec `apps/api/.env`.
+- `npm run db:deploy` applique les migrations en staging/production.
+
+### Deploiement API recommande
+
+1. Cree une base PostgreSQL cloud, par exemple Neon ou Supabase.
+2. Copie son URL de connexion dans `DATABASE_URL`.
+3. Cree un service web Node.js pour l'API, par exemple avec Render.
+4. Utilise `render.yaml` si tu choisis Render.
+5. L'URL de sante de l'API sera `/api/health`.
+6. Quand l'API est publique, ajoute dans Vercel:
+   - `NEXT_PUBLIC_API_BASE_URL=https://url-publique-de-ton-api`
+7. Redeploie le site web Vercel.
+
+### Checklist production avant ouverture grand public
+
+- L'API Render repond sur `/api/health`.
+- `NEXT_PUBLIC_API_BASE_URL` dans Vercel pointe vers l'URL publique Render.
+- `FRONTEND_ORIGIN` dans Render vaut `https://kendronics.vercel.app`.
+- `JWT_SECRET` est une valeur longue et unique, pas la valeur exemple.
+- `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` sont en mode live quand tu acceptes de vrais paiements.
+- Le webhook Stripe pointe vers `https://url-publique-de-ton-api/api/payments/webhooks/stripe`.
+- SMTP est configure avec un mot de passe d'application ou un fournisseur email transactionnel.
+- Le bucket prive S3/R2 est cree et les variables `S3_*` sont renseignees.
+- Le parcours complet est teste: inscription, connexion, upload Gerber, devis, commande, paiement, suivi, ticket support.
+
+## Developpement local avec PostgreSQL
+
+1. Installe Docker Desktop ou PostgreSQL localement.
+2. Copie `apps/api/.env.example` vers `apps/api/.env`.
+3. Si Docker est installe, lance `docker compose up -d postgres`.
+4. Lance `npm run db:migrate`.
+5. Lance `npm run api:dev`.
+
+Si Docker n'est pas installe, installe PostgreSQL localement ou cree une base cloud PostgreSQL, puis remplace `DATABASE_URL` dans `apps/api/.env`.
