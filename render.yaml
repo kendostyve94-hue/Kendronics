@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: npm ci && npm run api:prod:build
+    buildCommand: npm ci --include=dev && npm run api:prod:build
     startCommand: npm run api:deploy:start
     healthCheckPath: /api/health
     envVars:
