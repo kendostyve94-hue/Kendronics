@@ -12,7 +12,8 @@ export class UploadRepository {
   ): Promise<PresignedUpload> {
     const uploadId = randomUUID();
     const storageKey = `uploads/${userId}/${uploadId}/${sanitizedFilename}`;
-    const uploadUrl = this.createPresignedPutUrl(storageKey, dto.mimeType);
+    const uploadUrl = this.createPresignedPutUrl(storageKey);
+    void dto;
 
     return {
       uploadId,
@@ -23,11 +24,11 @@ export class UploadRepository {
     };
   }
 
-  private createPresignedPutUrl(storageKey: string, mimeType: string): string {
-    const bucket = process.env.S3_BUCKET;
-    const region = process.env.S3_REGION;
-    const accessKeyId = process.env.S3_ACCESS_KEY_ID;
-    const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
+  private createPresignedPutUrl(storageKey: string): string {
+    const bucket = this.configValue('S3_BUCKET');
+    const region = this.configValue('S3_REGION');
+    const accessKeyId = this.configValue('S3_ACCESS_KEY_ID');
+    const secretAccessKey = this.configValue('S3_SECRET_ACCESS_KEY');
 
     if (!bucket || !region || !accessKeyId || !secretAccessKey) {
       if (process.env.NODE_ENV === 'production') {
@@ -43,7 +44,7 @@ export class UploadRepository {
     const service = 's3';
     const expiresSeconds = '600';
     const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
-    const endpoint = process.env.S3_ENDPOINT?.replace(/\/+$/, '');
+    const endpoint = this.configValue('S3_ENDPOINT')?.replace(/\/+$/, '');
     const baseUrl = endpoint
       ? `${endpoint}/${bucket}/${this.uriEncodePath(storageKey)}`
       : `https://${bucket}.s3.${region}.amazonaws.com/${this.uriEncodePath(storageKey)}`;
@@ -54,7 +55,6 @@ export class UploadRepository {
     url.searchParams.set('X-Amz-Date', amzDate);
     url.searchParams.set('X-Amz-Expires', expiresSeconds);
     url.searchParams.set('X-Amz-SignedHeaders', 'host');
-    url.searchParams.set('response-content-type', mimeType);
 
     const canonicalQueryString = [...url.searchParams.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
@@ -91,5 +91,10 @@ export class UploadRepository {
     const regionKey = createHmac('sha256', dateKey).update(region).digest();
     const serviceKey = createHmac('sha256', regionKey).update(service).digest();
     return createHmac('sha256', serviceKey).update('aws4_request').digest();
+  }
+
+  private configValue(key: string): string | undefined {
+    const value = process.env[key]?.trim();
+    return value && value !== 'not-configured' ? value : undefined;
   }
 }

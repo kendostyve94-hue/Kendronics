@@ -5,6 +5,8 @@ import { Navbar } from '../../components/layout/Navbar';
 import { Footer } from '../../components/layout/Footer';
 import { PricingSummary } from '../../components/quote/PricingSummary';
 import { africanCountries } from '../../lib/african-countries';
+import { getApiBaseUrl } from '../../lib/api-base-url';
+import { readAuthSession } from '../../lib/auth-session';
 import { calculatePCBQuote } from '../../lib/pricing';
 import { validateQuoteConfig } from '../../lib/quote-pricing';
 import type { QuoteConfig } from '../../lib/quote-types';
@@ -110,9 +112,17 @@ type ShippingRateSelection = {
   transitTime?: string;
 };
 
+type UploadState = {
+  status: 'idle' | 'uploading' | 'uploaded' | 'error';
+  message?: string;
+};
+
+const apiBaseUrl = getApiBaseUrl();
+
 export default function QuotePage() {
   const [config, setConfig] = useState<QuoteConfig>(initialConfig);
   const [saved, setSaved] = useState(false);
+  const [gerberUpload, setGerberUpload] = useState<UploadState>({ status: 'idle' });
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === config.destinationCountry) ?? africanCountries[0],
@@ -167,6 +177,55 @@ export default function QuotePage() {
     }));
   }
 
+  async function uploadGerber(file: File) {
+    setSaved(false);
+    setGerberUpload({ status: 'uploading', message: 'Upload Gerber ZIP en cours...' });
+
+    try {
+      const session = readAuthSession();
+      if (!session) {
+        throw new Error('Connectez-vous avant de televerser un fichier Gerber.');
+      }
+
+      const presignResponse = await fetch(`${apiBaseUrl}/api/uploads/presign`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filename: file.name,
+          mimeType: file.type || 'application/zip',
+          fileSizeBytes: file.size,
+        }),
+      });
+
+      if (!presignResponse.ok) {
+        const error = await presignResponse.json().catch(() => null);
+        throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Upload impossible pour le moment.');
+      }
+
+      const presignedUpload = (await presignResponse.json()) as { uploadUrl: string };
+      const uploadResponse = await fetch(presignedUpload.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/zip' },
+        body: file,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Le stockage prive a refuse le fichier.');
+      }
+
+      update('gerberFileName', file.name);
+      setGerberUpload({ status: 'uploaded', message: 'Gerber ZIP televerse en stockage prive.' });
+    } catch (error) {
+      setGerberUpload({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Upload impossible pour le moment.',
+      });
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f3f5f7] text-[#1f2933]">
       <Navbar />
@@ -217,7 +276,8 @@ export default function QuotePage() {
               gerberFileName={config.gerberFileName}
               bomFileName={config.bomFileName}
               cplFileName={config.cplFileName}
-              onGerber={(name) => update('gerberFileName', name)}
+              gerberUpload={gerberUpload}
+              onGerber={uploadGerber}
               onBom={(name) => update('bomFileName', name)}
               onCpl={(name) => update('cplFileName', name)}
             />
@@ -460,6 +520,7 @@ function UnifiedUpload({
   gerberFileName,
   bomFileName,
   cplFileName,
+  gerberUpload,
   onGerber,
   onBom,
   onCpl,
@@ -467,7 +528,8 @@ function UnifiedUpload({
   gerberFileName?: string;
   bomFileName?: string;
   cplFileName?: string;
-  onGerber: (name: string) => void;
+  gerberUpload: UploadState;
+  onGerber: (file: File) => void;
   onBom: (name: string) => void;
   onCpl: (name: string) => void;
 }) {
@@ -476,18 +538,22 @@ function UnifiedUpload({
       <label className="inline-flex cursor-pointer items-center justify-center gap-3 rounded-full bg-[#0877ff] px-12 py-4 text-base font-black text-white shadow-sm transition hover:bg-[#0068e8]">
         <input
           type="file"
-          accept=".zip,.rar"
+          accept=".zip,application/zip,application/x-zip-compressed"
           required
+          disabled={gerberUpload.status === 'uploading'}
           className="sr-only"
           onChange={(event) => {
             const file = event.target.files?.[0];
-            if (file) onGerber(file.name);
+            if (file) onGerber(file);
           }}
         />
         <span className="text-xl">⇧</span>
-        <span>{gerberFileName ?? 'Ajouter Gerber'}</span>
+        <span>{gerberUpload.status === 'uploading' ? 'Upload en cours...' : gerberFileName ?? 'Ajouter Gerber'}</span>
       </label>
-      <p className="mt-5 text-sm text-slate-500">Accepte uniquement les fichiers zip ou rar, Max 100 Mo, Voir exemple &gt;.</p>
+      {gerberUpload.message ? (
+        <p className={`mt-5 text-sm font-bold ${gerberUpload.status === 'error' ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{gerberUpload.message}</p>
+      ) : null}
+      <p className="mt-5 text-sm text-slate-500">Accepte uniquement les fichiers ZIP, Max 50 Mo, Voir exemple &gt;.</p>
       <p className="mt-3 text-sm text-slate-500">Tous les televersements sont effectues en toute securite et dans le respect de la confidentialite</p>
       <div className="mx-auto mt-5 grid max-w-2xl gap-3 sm:grid-cols-2">
         <CompactFile label="BOM" fileName={bomFileName} accept=".csv,.xlsx,.xls" onFile={onBom} />
