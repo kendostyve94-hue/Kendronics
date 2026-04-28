@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button } from '../ui/Button';
-
 const ORDER_STORAGE_KEY = 'kendronics.customer.orders';
 
 const productItems = [
@@ -24,6 +22,14 @@ const aboutItems = [
   { label: 'Remboursement', href: '/refund-policy' },
   { label: 'Termes et conditions', href: '/terms' },
   { label: 'Cookies', href: '/cookie-policy' },
+];
+
+const mobileActionItems = [
+  { label: 'Suivi', href: '/tracking' },
+  { label: 'Commande', href: '/quote' },
+  { label: 'Connexion', href: '/login' },
+  { label: 'Creer mon compte', href: '/register' },
+  { label: "Centre d'aide", href: '/centre-aide' },
 ];
 
 export function Navbar() {
@@ -91,10 +97,10 @@ export function Navbar() {
 
   return (
     <header className={`fixed left-0 right-0 top-0 z-50 text-white transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="border-b border-white/15 bg-[#07324a]/90 px-4 py-1.5 text-[11px] font-medium backdrop-blur-sm sm:px-6 lg:px-8">
+      <div className="border-b border-white/15 bg-[#07324a]/90 px-3 py-1 text-[11px] font-medium backdrop-blur-sm sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4">
-          <p className="font-semibold tracking-wide text-white">Accelere ta creativite</p>
-          <div className="flex items-center gap-3 text-white">
+          <p className="min-w-0 truncate font-semibold tracking-wide text-white">Accelere ta creativite</p>
+          <div className="flex shrink-0 items-center gap-2 text-white sm:gap-3">
             <AccountLink />
             <LanguageButton language={language} onClick={switchLanguage} />
             <a href="/centre-aide" className="hidden text-xs font-semibold transition hover:text-[#ffd22e] sm:inline">
@@ -104,13 +110,13 @@ export function Navbar() {
         </div>
       </div>
 
-      <div className="border-b border-white/10 bg-[#07324a]/80 px-4 py-2.5 backdrop-blur-md sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4">
-          <a href="/" className="inline-flex items-center gap-3 text-xl font-black tracking-tight" aria-label="Accueil Kendronics">
-            <span className="grid h-9 w-9 place-items-center border-2 border-[#ffd22e] text-[9px] font-black leading-none text-[#ffd22e]">
+      <div className="border-b border-white/10 bg-[#07324a]/80 px-3 py-2 backdrop-blur-md sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-3">
+          <a href="/" className="inline-flex min-w-0 items-center gap-2 text-lg font-black tracking-tight sm:gap-3 sm:text-xl" aria-label="Accueil Kendronics">
+            <span className="grid h-8 w-8 shrink-0 place-items-center border-2 border-[#ffd22e] text-[8px] font-black leading-none text-[#ffd22e] sm:h-9 sm:w-9 sm:text-[9px]">
               PCB
             </span>
-            <span>
+            <span className="truncate">
               <span className="text-[#ffd22e]">K</span>endronics
             </span>
           </a>
@@ -129,14 +135,11 @@ export function Navbar() {
             <LoginMenu />
           </nav>
 
-          <div className="flex items-center gap-3 lg:hidden">
+          <div className="flex shrink-0 items-center gap-2 lg:hidden">
             <CartLink href={cartHref} count={orders.length} />
-            <Button href="/quote" className="hidden h-10 px-5 text-xs sm:inline-flex">
-              Commande
-            </Button>
             <button
               type="button"
-              className="inline-flex h-11 w-11 items-center justify-center border border-white/25 bg-white/10 text-white backdrop-blur transition hover:border-[#ffd22e]"
+              className="inline-flex h-9 w-9 items-center justify-center border border-white/25 bg-white/10 text-white backdrop-blur transition hover:border-[#ffd22e]"
               aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation"
@@ -152,21 +155,64 @@ export function Navbar() {
         </div>
 
         {isMenuOpen ? (
-          <nav id="mobile-navigation" className="mx-auto mt-5 grid max-w-[1180px] gap-2 border-t border-white/15 pt-4 lg:hidden">
-            {[...productItems, ...supportItems, ...aboutItems, { label: 'Suivi', href: '/tracking' }, { label: 'Commande', href: '/quote' }, { label: 'Connexion', href: '/login' }, { label: 'Creer mon compte', href: '/register' }, { label: "Centre d'aide", href: '/centre-aide' }].map((item) => (
-              <a
-                key={`${item.label}-${item.href}`}
-                href={item.href}
-                className="flex min-h-11 items-center border border-white/15 bg-white/10 px-4 text-sm font-medium text-white transition hover:border-[#ffd22e] hover:text-[#ffd22e]"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
+          <nav id="mobile-navigation" className="mx-auto mt-3 max-h-[calc(100vh-6.5rem)] max-w-[1180px] overflow-y-auto border-t border-white/15 pt-3 lg:hidden">
+            <div className="grid gap-2">
+              <MobileSection title="Produit" items={productItems} onNavigate={() => setIsMenuOpen(false)} defaultOpen />
+              <MobileSection title="Support" items={supportItems} onNavigate={() => setIsMenuOpen(false)} />
+              <MobileSection title="A propos" items={aboutItems} onNavigate={() => setIsMenuOpen(false)} />
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/15 pt-3">
+              {mobileActionItems.map((item) => (
+                <a
+                  key={`${item.label}-${item.href}`}
+                  href={item.href}
+                  className={`flex min-h-10 items-center justify-center border px-3 text-center text-xs font-medium text-white transition hover:border-[#ffd22e] hover:text-[#ffd22e] ${
+                    item.label === 'Commande' ? 'rounded-full border-[#0f8f6b]' : item.label === 'Connexion' ? 'rounded-full border-[#0f8f6b] bg-[#0f8f6b]' : 'border-white/15 bg-white/10'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
           </nav>
         ) : null}
       </div>
     </header>
+  );
+}
+
+function MobileSection({
+  title,
+  items,
+  onNavigate,
+  defaultOpen = false,
+}: {
+  title: string;
+  items: Array<{ label: string; href: string }>;
+  onNavigate: () => void;
+  defaultOpen?: boolean;
+}) {
+  return (
+    <details className="group border border-white/15 bg-white/10" open={defaultOpen}>
+      <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between px-3 text-sm font-semibold text-white">
+        <span>{title}</span>
+        <span className="text-[10px] transition group-open:rotate-180">v</span>
+      </summary>
+      <div className="grid border-t border-white/10 bg-[#07324a]/70 p-1.5">
+        {items.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className="flex min-h-9 items-center px-3 text-sm font-medium text-white/90 transition hover:bg-white/10 hover:text-[#ffd22e]"
+            onClick={onNavigate}
+          >
+            {item.label}
+          </a>
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -212,7 +258,7 @@ function LoginMenu() {
 
 function CartLink({ href, count }: { href: string; count: number }) {
   return (
-    <a href={href} className="relative inline-flex h-10 w-10 items-center justify-center text-white transition hover:text-[#ffd22e]" aria-label="Panier">
+    <a href={href} className="relative inline-flex h-9 w-9 items-center justify-center text-white transition hover:text-[#ffd22e] sm:h-10 sm:w-10" aria-label="Panier">
       <CartIcon />
       <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-pink-500 px-1 text-[11px] font-semibold leading-none text-white">
         {count}
