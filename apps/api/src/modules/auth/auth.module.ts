@@ -1,15 +1,17 @@
 import { Global, Module } from '@nestjs/common';
+import { SupportModule } from '../support/support.module';
 import { UsersModule } from '../users/users.module';
 import { AuthTokenService } from './auth-token.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { ProfileVerificationService } from './profile-verification.service';
 import { SessionRepository } from './repositories/session.repository';
 
 @Global()
 @Module({
-  imports: [UsersModule],
+  imports: [UsersModule, SupportModule],
   controllers: [AuthController],
-  providers: [AuthService, AuthTokenService, SessionRepository],
-  exports: [AuthService, AuthTokenService],
+  providers: [AuthService, AuthTokenService, SessionRepository, ProfileVerificationService],
+  exports: [AuthService, AuthTokenService, ProfileVerificationService],
 })
 export class AuthModule {}

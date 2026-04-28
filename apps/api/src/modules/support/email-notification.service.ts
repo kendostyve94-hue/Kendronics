@@ -39,6 +39,33 @@ export class EmailNotificationService {
       text: body,
     });
   }
+
+  async sendProfileVerificationCode(input: { to: string; code: string; action: string }): Promise<void> {
+    const config = getSmtpConfig();
+    const subject = '[Kendronics] Code de verification du compte';
+    const body = [
+      'Code de verification Kendronics',
+      '',
+      `Action: ${labelForAction(input.action)}`,
+      `Code: ${input.code}`,
+      '',
+      'Ce code expire dans 10 minutes.',
+      "Si vous n'avez pas demande cette action, ignorez cet e-mail.",
+    ].join('\n');
+
+    await sendSmtpMail(config, {
+      to: input.to,
+      subject,
+      text: body,
+    });
+  }
+}
+
+function labelForAction(action: string) {
+  if (action === 'account') return 'Modification du compte';
+  if (action === 'contacts') return 'Changement des contacts';
+  if (action === 'delete') return 'Suppression du compte';
+  return 'Verification du compte';
 }
 
 function getSmtpConfig(): SmtpConfig {

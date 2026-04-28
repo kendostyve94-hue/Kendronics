@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { Navbar } from '../../components/layout/Navbar';
 import { Card } from '../../components/ui/Card';
-import { readAuthSession } from '../../lib/auth-session';
+import { getApiBaseUrl } from '../../lib/api-base-url';
+import { readAuthSession, readFreshAuthSession } from '../../lib/auth-session';
 
 const profileStorageKey = 'kendronics.customer.profile';
 
@@ -20,7 +21,6 @@ type ConfirmationAction = 'account' | 'contacts' | 'delete';
 
 type ConfirmationState = {
   action: ConfirmationAction;
-  code: string;
   email: string;
 };
 
@@ -31,6 +31,7 @@ const emptyProfile: ProfileForm = {
   company: '',
   country: '',
 };
+const apiBaseUrl = getApiBaseUrl();
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileForm>(emptyProfile);
@@ -47,6 +48,8 @@ export default function ProfilePage() {
   const [confirmation, setConfirmation] = useState<ConfirmationState | null>(null);
   const [confirmationInput, setConfirmationInput] = useState('');
   const [openSection, setOpenSection] = useState<'account' | 'contacts' | 'delete' | null>(null);
+  const [verificationError, setVerificationError] = useState('');
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'sending' | 'verifying'>('idle');
 
   useEffect(() => {
     const storedProfile = readStoredProfile();
@@ -77,42 +80,97 @@ export default function ProfilePage() {
     setSaved(true);
   }
 
-  function requestConfirmation(action: ConfirmationAction) {
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    setConfirmation({
-      action,
-      code,
-      email: profile.email,
-    });
-    setConfirmationInput('');
+  async function requestConfirmation(action: ConfirmationAction) {
+    setVerificationError('');
+    setVerificationStatus('sending');
+
+    try {
+      const session = await readFreshAuthSession();
+      if (!session?.accessToken) {
+        throw new Error('Connectez-vous avant de demander un code.');
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/auth/profile-verification/request`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Impossible d'envoyer le code de confirmation.");
+      }
+
+      setConfirmation({
+        action,
+        email: profile.email,
+      });
+      setConfirmationInput('');
+    } catch (error) {
+      setVerificationError(error instanceof Error ? error.message : "Impossible d'envoyer le code de confirmation.");
+    } finally {
+      setVerificationStatus('idle');
+    }
   }
 
-  function validateConfirmation() {
-    if (!confirmation || confirmationInput.trim() !== confirmation.code) return;
+  async function validateConfirmation() {
+    if (!confirmation || !confirmationInput.trim()) return;
 
-    if (confirmation.action === 'account') {
-      saveProfile({ ...profile, ...accountDraft });
-    }
+    setVerificationError('');
+    setVerificationStatus('verifying');
 
-    if (confirmation.action === 'contacts') {
-      saveProfile({
-        ...profile,
-        email: contactDraft.nextEmail.trim() || profile.email,
-        phone: contactDraft.nextPhone.trim() || profile.phone,
+    try {
+      const session = await readFreshAuthSession();
+      if (!session?.accessToken) {
+        throw new Error('Connectez-vous avant de valider le code.');
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/auth/profile-verification/verify`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: confirmation.action,
+          code: confirmationInput.trim(),
+        }),
       });
-      setContactDraft({ currentEmail: '', nextEmail: '', nextPhone: '' });
-    }
 
-    if (confirmation.action === 'delete') {
-      window.localStorage.removeItem(profileStorageKey);
-      window.localStorage.removeItem('kendronics.auth.session');
-      setProfile(emptyProfile);
-      setAccountDraft({ name: '', phone: '', company: '', country: '' });
-      setDeleteEmail('');
-    }
+      if (!response.ok) {
+        throw new Error('Code de confirmation invalide ou expire.');
+      }
 
-    setConfirmation(null);
-    setConfirmationInput('');
+      if (confirmation.action === 'account') {
+        saveProfile({ ...profile, ...accountDraft });
+      }
+
+      if (confirmation.action === 'contacts') {
+        saveProfile({
+          ...profile,
+          email: contactDraft.nextEmail.trim() || profile.email,
+          phone: contactDraft.nextPhone.trim() || profile.phone,
+        });
+        setContactDraft({ currentEmail: '', nextEmail: '', nextPhone: '' });
+      }
+
+      if (confirmation.action === 'delete') {
+        window.localStorage.removeItem(profileStorageKey);
+        window.localStorage.removeItem('kendronics.auth.session');
+        setProfile(emptyProfile);
+        setAccountDraft({ name: '', phone: '', company: '', country: '' });
+        setDeleteEmail('');
+      }
+
+      setConfirmation(null);
+      setConfirmationInput('');
+    } catch (error) {
+      setVerificationError(error instanceof Error ? error.message : 'Code de confirmation invalide ou expire.');
+    } finally {
+      setVerificationStatus('idle');
+    }
   }
 
   function toggleSection(section: 'account' | 'contacts' | 'delete') {
@@ -177,7 +235,7 @@ export default function ProfilePage() {
               <div className="flex items-end">
                 <button
                   type="button"
-                  onClick={() => requestConfirmation('account')}
+                  onClick={() => void requestConfirmation('account')}
                   disabled={!canSaveAccount}
                   className={`h-11 w-full rounded-sm px-5 text-sm font-black text-white transition sm:w-auto ${
                     canSaveAccount ? 'bg-deepblue hover:bg-signal' : 'cursor-not-allowed bg-slate-300'
@@ -203,7 +261,7 @@ export default function ProfilePage() {
               <div className="flex items-end sm:col-span-3">
                 <button
                   type="button"
-                  onClick={() => requestConfirmation('contacts')}
+                  onClick={() => void requestConfirmation('contacts')}
                   disabled={!canSaveContacts || !profile.email}
                   className={`h-11 w-full rounded-sm px-5 text-sm font-black text-white transition sm:w-auto ${
                     canSaveContacts && profile.email ? 'bg-deepblue hover:bg-signal' : 'cursor-not-allowed bg-slate-300'
@@ -233,7 +291,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   disabled={!canConfirmDelete}
-                  onClick={() => requestConfirmation('delete')}
+                  onClick={() => void requestConfirmation('delete')}
                   className="h-11 rounded-sm bg-red-600 px-5 text-sm font-black text-white transition disabled:cursor-not-allowed disabled:bg-slate-300"
                 >
                   Confirmer
@@ -258,9 +316,8 @@ export default function ProfilePage() {
           <div className="w-full max-w-[19rem] rounded-sm bg-white p-4 shadow-premium">
             <h2 className="text-base font-black text-ink">Code de confirmation</h2>
             <p className="mt-2 text-xs leading-5 text-slate-600">
-              Un code de confirmation a ete prepare pour {confirmation.email}. Entrez ce code pour valider l'action.
+              Un code de confirmation vient d'etre envoye a {confirmation.email}. Entrez ce code pour valider l'action.
             </p>
-            <p className="mt-2 text-xs font-bold text-slate-500">Code temporaire: {confirmation.code}</p>
             <input
               value={confirmationInput}
               onChange={(event) => setConfirmationInput(event.target.value)}
@@ -274,15 +331,21 @@ export default function ProfilePage() {
               </button>
               <button
                 type="button"
-                disabled={!confirmationInput.trim()}
-                onClick={validateConfirmation}
+                disabled={!confirmationInput.trim() || verificationStatus === 'verifying'}
+                onClick={() => void validateConfirmation()}
                 className="h-10 rounded-sm bg-deepblue text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                Valider
+                {verificationStatus === 'verifying' ? 'Verification...' : 'Valider'}
               </button>
             </div>
+            {verificationError ? <p className="mt-3 text-xs font-bold text-red-600">{verificationError}</p> : null}
           </div>
         </div>
+      ) : null}
+      {!confirmation && verificationError ? (
+        <p className="fixed bottom-24 left-4 right-4 z-[70] mx-auto max-w-sm rounded-sm bg-red-50 px-4 py-3 text-sm font-bold text-red-700 shadow-sm">
+          {verificationError}
+        </p>
       ) : null}
     </main>
   );
