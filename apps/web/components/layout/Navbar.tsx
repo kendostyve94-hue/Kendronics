@@ -29,7 +29,6 @@ const mobileActionItems = [
   { label: 'Commande', href: '/quote' },
   { label: 'Connexion', href: '/login' },
   { label: 'Creer mon compte', href: '/register' },
-  { label: "Centre d'aide", href: '/centre-aide' },
 ];
 
 export function Navbar() {
@@ -167,8 +166,12 @@ export function Navbar() {
                 <a
                   key={`${item.label}-${item.href}`}
                   href={item.href}
-                  className={`flex min-h-10 items-center justify-center border px-3 text-center text-xs font-medium text-white transition hover:border-[#ffd22e] hover:text-[#ffd22e] ${
-                    item.label === 'Commande' ? 'rounded-full border-[#0f8f6b]' : item.label === 'Connexion' ? 'rounded-full border-[#0f8f6b] bg-[#0f8f6b]' : 'border-white/15 bg-white/10'
+                  className={`flex min-h-10 items-center justify-center border px-3 text-center text-xs font-semibold text-white transition hover:border-[#ffd22e] hover:text-[#ffd22e] ${
+                    item.label === 'Commande' || item.label === 'Suivi'
+                      ? 'rounded-full border-[#0f8f6b] bg-[#07324a]/40'
+                      : item.label === 'Connexion' || item.label === 'Creer mon compte'
+                        ? 'rounded-full border-[#0f8f6b] bg-[#0f8f6b]'
+                        : 'border-white/15 bg-white/10'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -195,17 +198,17 @@ function MobileSection({
   defaultOpen?: boolean;
 }) {
   return (
-    <details className="group border border-white/15 bg-white/10" open={defaultOpen}>
-      <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between px-3 text-sm font-semibold text-white">
+    <details className="group border border-[#0f8f6b]/70 bg-[#0f8f6b]/18 shadow-[inset_3px_0_#0f8f6b]" open={defaultOpen}>
+      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-4 text-base font-semibold text-white">
         <span>{title}</span>
-        <span className="text-[10px] transition group-open:rotate-180">v</span>
+        <span className="text-xs text-[#ffd22e] transition group-open:rotate-180">v</span>
       </summary>
-      <div className="grid border-t border-white/10 bg-[#07324a]/70 p-1.5">
+      <div className="grid border-t border-[#0f8f6b]/40 bg-[#07324a]/75 p-1.5">
         {items.map((item) => (
           <a
             key={item.href}
             href={item.href}
-            className="flex min-h-9 items-center px-3 text-sm font-medium text-white/90 transition hover:bg-white/10 hover:text-[#ffd22e]"
+            className="flex min-h-10 items-center px-3 text-sm font-medium text-white transition hover:bg-white/10 hover:text-[#ffd22e]"
             onClick={onNavigate}
           >
             {item.label}

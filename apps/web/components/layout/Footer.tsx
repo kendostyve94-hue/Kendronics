@@ -16,7 +16,7 @@ const groups = [
   {
     title: 'Support',
     links: [
-      ["Centre d'aide", '/faq'],
+      ["Centre d'aide", '/centre-aide'],
       ['Confidentialite', '/privacy'],
       ['Conditions', '/terms'],
     ],
@@ -83,15 +83,15 @@ export function Footer() {
 
   return (
     <footer id="support" className="border-t border-[#243447] bg-[#132234]">
-      <div className="mx-auto grid max-w-[1200px] gap-7 px-4 py-9 sm:px-6 lg:grid-cols-[1.15fr_1.7fr_1.1fr] lg:px-8">
+      <div className="mx-auto grid max-w-[1040px] gap-5 px-4 py-7 sm:px-5 lg:grid-cols-[1.05fr_1.35fr_1fr] lg:px-6">
         <div>
           <h2 className="text-lg font-black text-white">Kendronics</h2>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-slate-300">
+          <p className="mt-3 max-w-xs text-sm leading-6 text-slate-300">
             Solution d'approvisionnement et de fabrication electronique pour les ingenieurs exigeants.
           </p>
-          <div className="mt-4 flex gap-3 text-sm font-black text-slate-300">
-            <a href="/tracking" className="rounded-sm border border-[#33465b] px-3 py-2 transition hover:border-signal/60 hover:text-white" aria-label="Suivi">
-              Suivi
+          <div className="mt-4 flex flex-wrap gap-2 text-sm font-black text-slate-300">
+            <a href="/centre-aide" className="rounded-sm border border-[#33465b] px-3 py-2 transition hover:border-signal/60 hover:text-white" aria-label="Centre d'aide">
+              Centre d'aide
             </a>
             <a href="/contact" className="rounded-sm border border-[#33465b] px-3 py-2 transition hover:border-signal/60 hover:text-white" aria-label="Contact">
               Contact
@@ -99,11 +99,11 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="grid gap-7 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           {groups.map((group) => (
             <div key={group.title}>
               <h3 className="text-sm font-black text-white">{group.title}</h3>
-              <ul className="mt-3 space-y-2 text-sm text-slate-300">
+              <ul className="mt-3 space-y-1.5 text-sm text-slate-300">
                 {group.links.map(([label, href]) => (
                   <li key={label}>
                     <a href={href} className="transition hover:text-white">
@@ -121,7 +121,7 @@ export function Footer() {
           <p className="mt-3 text-sm leading-6 text-slate-300">
             Partagez votre experience et aidez d'autres ingenieurs a choisir une solution fiable.
           </p>
-          <form onSubmit={submitComment} className="mt-4 space-y-3">
+          <form onSubmit={submitComment} className="mt-4 space-y-2.5">
             <div className="flex gap-1" aria-label="Note du commentaire">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -160,8 +160,8 @@ export function Footer() {
           </form>
         </div>
       </div>
-      <div className="border-t border-[#243447] px-4 py-4 text-xs text-slate-400 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-[1200px]">&copy; 2024 Kendronics Industrial. Tous droits reserves.</div>
+      <div className="border-t border-[#243447] px-4 py-3 text-xs text-slate-400 sm:px-5 lg:px-6">
+        <div className="mx-auto max-w-[1040px]">&copy; 2024 Kendronics Industrial. Tous droits reserves.</div>
       </div>
     </footer>
   );
