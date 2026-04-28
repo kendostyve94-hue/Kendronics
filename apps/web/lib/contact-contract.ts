@@ -37,7 +37,7 @@ export interface SupportTicketResponse {
 }
 
 export const contactCategoryLabels: Record<ContactCategory, string> = {
-  quote_issue: 'Quote issue',
+  quote_issue: 'Probleme de devis',
   upload_issue: 'Upload issue',
   payment_issue: 'Payment issue',
   delivery_issue: 'Delivery issue',
@@ -77,7 +77,7 @@ export function validateContactForm(values: ContactFormState): ContactFormErrors
   }
 
   if (values.orderId.trim() && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(values.orderId.trim())) {
-    errors.orderId = 'Order ID must be a valid UUID.';
+    errors.orderId = 'L ID commande doit etre un UUID valide.';
   }
 
   if (values.message.trim().length < 10) {

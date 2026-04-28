@@ -233,10 +233,10 @@ export default function HowItWorksPage() {
           </div>
           <div className="relative mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col">
             <Button href="/quote" variant="light">
-              Get Quote
+              Demander un devis
             </Button>
             <Button href="/services" variant="secondary">
-              View Services
+              Voir les services
             </Button>
           </div>
         </div>
@@ -264,7 +264,7 @@ function HowItWorksHero() {
             Kendronics is an intermediary and logistics platform. Customers upload production files, receive a quote, pay securely, and track orders that are manufactured by external PCB partners.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Button href="/quote">Start Quote</Button>
+            <Button href="/quote">Commencer le devis</Button>
             <Button href="#journey" variant="secondary">
               See Timeline
             </Button>

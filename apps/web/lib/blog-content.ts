@@ -82,7 +82,7 @@ export const blogArticles: BlogArticle[] = [
       'A transparent look at manufacturing cost, logistics, payment processing, service fees, destination routing, and customs risk buffers.',
     category: 'pcb_ordering_tips',
     readTime: '7 min read',
-    publishLabel: 'Ordering tip',
+    publishLabel: 'Conseil de commande',
     image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=85',
   },
   {
@@ -92,7 +92,7 @@ export const blogArticles: BlogArticle[] = [
       'How to think about revisions, small batches, delivery timing, support tickets, and order tracking while preparing a hardware pilot.',
     category: 'hardware_startup_africa',
     readTime: '10 min read',
-    publishLabel: 'Startup guide',
+    publishLabel: 'Guide startup',
     image: 'https://images.pexels.com/photos/7285976/pexels-photo-7285976.jpeg?auto=compress&cs=tinysrgb&w=1200',
   },
   {

@@ -71,7 +71,7 @@ export default function RegisterPage() {
 
       setStatus('account_created');
     } catch {
-      setErrors({ form: 'We could not create your account right now. Please try again.' });
+      setErrors({ form: 'Impossible de creer votre compte pour le moment. Reessayez.' });
       setStatus('idle');
     }
   }
@@ -94,9 +94,9 @@ export default function RegisterPage() {
 
         <div className="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="max-w-xl">
-            <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-100">Create your Kendronics account</p>
+            <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-100">Creez votre compte Kendronics</p>
             <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
-              Start quoting PCBs for delivery across Africa.
+              Commencez a demander des devis PCB pour une livraison en Afrique.
             </h1>
             <p className="mt-5 text-lg leading-8 text-slate-200">
               Register in under a minute. Payment setup happens only when you place an order.
@@ -114,7 +114,7 @@ export default function RegisterPage() {
             ) : (
               <form onSubmit={submit} className="space-y-5" noValidate>
                 <div>
-                  <h2 className="text-2xl font-black tracking-tight text-ink">Create account</h2>
+                  <h2 className="text-2xl font-black tracking-tight text-ink">Creer un compte</h2>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     Use a professional email when possible. Your account is created immediately after signup.
                   </p>
@@ -185,7 +185,7 @@ export default function RegisterPage() {
                   disabled={status === 'submitting'}
                   className="h-12 w-full rounded-xl bg-deepblue text-sm font-black text-white shadow-lg shadow-sky-950/20 transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {status === 'submitting' ? 'Creating account...' : 'Create account'}
+                  {status === 'submitting' ? 'Creation du compte...' : 'Creer un compte'}
                 </button>
 
                 <p className="text-center text-sm text-slate-600">

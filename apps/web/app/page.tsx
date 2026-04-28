@@ -94,7 +94,7 @@ function Hero() {
           </p>
           <div className="mt-8">
             <Button href="/quote" className="h-12 min-w-36 px-8">
-              Get Quote
+              Demander un devis
             </Button>
           </div>
         </div>

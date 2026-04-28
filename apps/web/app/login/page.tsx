@@ -95,7 +95,7 @@ export default function LoginPage() {
       setForgotErrors({ form: result.message || neutralForgotPasswordMessage });
       setStatus('reset_sent');
     } catch {
-      setForgotErrors({ form: 'We could not process the request right now. Please try again.' });
+      setForgotErrors({ form: 'Impossible de traiter la demande pour le moment. Reessayez.' });
       setStatus('idle');
     }
   }
@@ -139,7 +139,7 @@ export default function LoginPage() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-100">Kendronics workspace</p>
           <h1 className="mt-4 max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-            Sign in to manage quotes, orders, and shipments.
+            Connectez-vous pour gerer vos devis, commandes et livraisons.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-200">
             Continue from quote to checkout with secure token sessions, shipment updates, and support in one account.
@@ -176,7 +176,7 @@ export default function LoginPage() {
                 Pick up exactly where your PCB workflow left off.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-sky-100">
-                Login unlocks authenticated pricing requests, protected order history, and the refresh-token session used by the Kendronics dashboard surfaces.
+                La connexion debloque les demandes de prix authentifiees, l historique protege et la session utilisee par les espaces Kendronics.
               </p>
             </div>
           </div>
@@ -261,7 +261,7 @@ function LoginForm({
           Forgot password?
         </button>
         <a href="/register" className="font-black text-deepblue transition hover:text-signal-dark">
-          Create account
+          Creer un compte
         </a>
       </div>
 

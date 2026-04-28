@@ -49,7 +49,7 @@ export function BlogIndex({ articles }: { articles: BlogArticle[] }) {
                 </span>
               </div>
               <Button href="/quote" className="mt-7">
-                Quote after reading
+                Demander un devis apres lecture
               </Button>
             </div>
           </div>

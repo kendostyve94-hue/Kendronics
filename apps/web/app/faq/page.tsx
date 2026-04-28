@@ -266,7 +266,7 @@ export default function FaqPage() {
           </div>
           <div className="relative mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col">
             <Button href="/quote" variant="light">
-              Get Quote
+              Demander un devis
             </Button>
             <Button href="/how-it-works" variant="secondary">
               How It Works

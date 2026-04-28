@@ -17,113 +17,113 @@ const serviceImages = [
 const services = [
   {
     id: 'pcb-standard',
-    title: 'PCB prototype ordering',
+    title: 'Commande de PCB prototype',
     category: 'Prototype',
     image: serviceImages[0],
-    what: 'A guided ordering flow for early PCB revisions, first articles, and engineering validation boards.',
-    audience: 'Students, makers, research labs, and founders testing a new circuit before committing to volume.',
-    benefit: 'African users get a predictable way to configure, pay for, and track prototype boards without juggling overseas supplier workflows.',
-    cta: 'Quote a prototype',
+    what: 'Un parcours guide pour les premieres revisions de PCB, les premiers prototypes et les cartes de validation.',
+    audience: 'Etudiants, makers, laboratoires et fondateurs qui testent un nouveau circuit avant de passer au volume.',
+    benefit: 'Les utilisateurs africains peuvent configurer, payer et suivre leurs prototypes sans gerer plusieurs interfaces fournisseurs.',
+    cta: 'Deviser un prototype',
   },
   {
     id: 'pcb-petit-lot',
-    title: 'Small-batch PCB ordering',
+    title: 'Commande PCB petit lot',
     category: 'Production',
     image: serviceImages[1],
-    what: 'Repeatable ordering for low-volume PCB runs when a design is ready for pilots, demos, or limited deployment.',
-    audience: 'Hardware startups, university labs, repair teams, and product teams that need consistent small quantities.',
-    benefit: 'Teams can plan around clear delivery milestones and country-aware logistics instead of rebuilding procurement from scratch.',
-    cta: 'Start a small batch',
+    what: 'Commande reproductible pour les petites series lorsque le design est pret pour pilote, demonstration ou deploiement limite.',
+    audience: 'Startups hardware, laboratoires, equipes de reparation et equipes produit qui ont besoin de petites quantites fiables.',
+    benefit: 'Les equipes planifient avec des jalons clairs et une logistique adaptee au pays de destination.',
+    cta: 'Lancer un petit lot',
   },
   {
     id: 'pcb-avance',
-    title: 'Advanced PCB request',
-    category: 'Custom',
+    title: 'Demande PCB avance',
+    category: 'Sur mesure',
     image: serviceImages[0],
-    what: 'A request path for boards that need extra review, special stackups, tighter constraints, or non-standard specifications.',
-    audience: 'Engineering teams working on controlled impedance, dense layouts, unusual materials, or more complex designs.',
-    benefit: 'African teams can submit advanced requirements through Kendronics for coordination with suitable external manufacturing partners.',
-    cta: 'Request review',
+    what: 'Un parcours pour les cartes qui demandent une revue technique, un empilage special, des contraintes serrees ou des specifications non standards.',
+    audience: 'Equipes travaillant sur impedance controlee, routage dense, materiaux speciaux ou designs complexes.',
+    benefit: 'Les equipes africaines peuvent transmettre leurs exigences avancees pour coordination avec des partenaires adaptes.',
+    cta: 'Demander une revue',
   },
   {
     id: 'pcba',
-    title: 'PCBA request',
-    category: 'Assembly',
+    title: 'Demande PCBA',
+    category: 'Assemblage',
     image: serviceImages[2],
-    what: 'An assembly request workflow for PCB orders that need BOM, CPL, and production-readiness review.',
-    audience: 'Teams moving from bare boards into assembled prototypes, pilot units, or validation hardware.',
-    benefit: 'Users can centralize board and assembly coordination while keeping production details, payment, support, and tracking in one place.',
-    cta: 'Request PCBA',
+    what: 'Un parcours d assemblage pour les commandes qui demandent BOM, CPL et verification avant production.',
+    audience: 'Equipes qui passent de cartes nues vers prototypes assembles, pilotes ou materiel de validation.',
+    benefit: 'Les utilisateurs centralisent PCB, assemblage, paiement, support et suivi au meme endroit.',
+    cta: 'Demander un PCBA',
   },
   {
     id: 'stencil',
-    title: 'SMT stencil ordering',
-    category: 'Assembly',
+    title: 'Commande stencil SMT',
+    category: 'Assemblage',
     image: serviceImages[3],
-    what: 'Stencil ordering support for surface-mount assembly, repeatable solder paste application, and bench production.',
-    audience: 'Labs, workshops, and small manufacturers assembling boards locally or preparing controlled assembly runs.',
-    benefit: 'African users can add stencil planning to the same procurement path as their PCB order instead of sourcing it separately.',
-    cta: 'Quote a stencil',
+    what: 'Support de commande stencil pour l assemblage CMS, la pate a braser et les petites productions.',
+    audience: 'Laboratoires, ateliers et petits fabricants qui assemblent localement ou preparent une serie controlee.',
+    benefit: 'Le stencil peut etre planifie avec la meme commande que le PCB.',
+    cta: 'Deviser un stencil',
   },
   {
     id: 'assistance-technique',
-    title: 'Gerber review assistance',
-    category: 'Files',
+    title: 'Assistance revue Gerber',
+    category: 'Fichiers',
     image: serviceImages[2],
-    what: 'Customer-facing assistance for checking uploaded production files before an order moves deeper into fulfillment.',
-    audience: 'Engineers who want confidence around Gerber exports, board options, or production-readiness before paying.',
-    benefit: 'Reduces avoidable delays caused by unclear fabrication files, especially when international lead times matter.',
-    cta: 'Upload files',
+    what: 'Assistance pour verifier les fichiers de production avant de poursuivre la commande.',
+    audience: 'Ingenieurs qui veulent securiser l export Gerber, les options de carte ou la preparation avant paiement.',
+    benefit: 'Reduit les retards causes par des fichiers incomplets ou ambigus.',
+    cta: 'Televerser les fichiers',
   },
   {
     id: 'paiement',
-    title: 'Payment facilitation',
-    category: 'Payments',
+    title: 'Facilitation du paiement',
+    category: 'Paiement',
     image: serviceImages[1],
-    what: 'Secure payment handling for PCB orders, with card checkout in place and Mobile Money-ready architecture.',
-    audience: 'Customers who need a cleaner payment path for international PCB procurement.',
-    benefit: 'African buyers get a single checkout-oriented experience instead of fragmented supplier payment arrangements.',
-    cta: 'Get pricing',
+    what: 'Gestion securisee du paiement des commandes PCB, avec paiement carte et architecture prete pour Mobile Money.',
+    audience: 'Clients qui veulent un paiement plus simple pour l achat PCB international.',
+    benefit: 'Les acheteurs africains disposent d un parcours de paiement centralise.',
+    cta: 'Voir le prix',
   },
   {
     id: 'logistique',
-    title: 'Africa delivery and logistics coordination',
-    category: 'Logistics',
+    title: 'Livraison Afrique et coordination logistique',
+    category: 'Logistique',
     image: serviceImages[3],
-    what: 'Country-aware delivery coordination across manufacturing partners, the France operations flow, and African destinations.',
-    audience: 'Teams shipping boards to African markets that need visibility into estimated delivery and fulfillment stages.',
-    benefit: 'Users can plan around destination-country context, customs milestones, and practical delivery updates.',
-    cta: 'Plan delivery',
+    what: 'Coordination de livraison selon le pays, entre partenaires de fabrication, flux France et destinations africaines.',
+    audience: 'Equipes qui expedient des cartes vers l Afrique et veulent de la visibilite sur les delais.',
+    benefit: 'Les utilisateurs planifient avec contexte pays, douane et mises a jour pratiques.',
+    cta: 'Planifier la livraison',
   },
   {
     id: 'suivi',
-    title: 'Order tracking',
-    category: 'Visibility',
+    title: 'Suivi de commande',
+    category: 'Visibilite',
     image: serviceImages[0],
-    what: 'A public and customer-safe tracking experience for order status, timeline, carrier details, and delivery estimates.',
-    audience: 'Customers, teams, and stakeholders who need progress visibility without access to admin or supplier data.',
-    benefit: 'African teams can keep projects moving with clear milestone updates from payment through delivery.',
-    cta: 'Track an order',
+    what: 'Une experience de suivi publique et securisee pour statut, timeline, transporteur et estimation de livraison.',
+    audience: 'Clients et equipes qui veulent suivre l avancee sans acceder aux donnees admin ou fournisseur.',
+    benefit: 'Les equipes gardent de la visibilite du paiement jusqu a la livraison.',
+    cta: 'Suivre une commande',
     href: '/tracking',
   },
   {
     id: 'support',
-    title: 'Professional support tickets',
+    title: 'Tickets de support professionnels',
     category: 'Support',
     image: serviceImages[2],
-    what: 'Structured support tickets for order questions, delivery updates, file issues, and operational follow-up.',
-    audience: 'Customers who need reliable support around quotes, payments, production coordination, or shipment status.',
-    benefit: 'Teams get an accountable support channel instead of scattered messages during time-sensitive hardware work.',
-    cta: 'Contact support',
+    what: 'Tickets structures pour les questions de commande, livraison, fichiers et suivi operationnel.',
+    audience: 'Clients qui ont besoin d un support fiable sur devis, paiement, production ou expedition.',
+    benefit: 'Les equipes disposent d un canal clair au lieu de messages disperses.',
+    cta: 'Contacter le support',
     href: '#support-options',
   },
 ];
 
 const workflowSteps = [
-  ['Choose', 'Select prototype, batch, assembly, stencil, or support-led service needs.'],
-  ['Configure', 'Share files, destination country, quantities, and technical requirements.'],
-  ['Coordinate', 'Kendronics routes the request through trusted external manufacturing and logistics partners.'],
-  ['Track', 'Follow customer-safe milestones through payment, fulfillment, delivery, and support.'],
+  ['Choisir', 'Selectionnez prototype, petit lot, assemblage, stencil ou assistance technique.'],
+  ['Configurer', 'Partagez fichiers, pays de destination, quantites et exigences techniques.'],
+  ['Coordonner', 'Kendronics transmet la demande aux partenaires de fabrication et de logistique adaptes.'],
+  ['Suivre', 'Suivez les jalons client du paiement a la livraison.'],
 ];
 
 export default function ServicesPage() {
@@ -134,9 +134,9 @@ export default function ServicesPage() {
 
       <Section
         id="services-grid"
-        eyebrow="Service catalog"
-        title="A premium operating layer for PCB orders, payments, and Africa delivery."
-        description="Kendronics is not a PCB factory. We help customers configure orders, coordinate with trusted external manufacturing partners, facilitate payment, and track delivery to African destinations."
+        eyebrow="Catalogue de services"
+        title="Une couche operationnelle pour commandes PCB, paiements et livraison en Afrique."
+        description="Kendronics n est pas une usine PCB. Nous aidons les clients a configurer leurs commandes, coordonner avec des partenaires externes, faciliter le paiement et suivre la livraison."
       >
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {services.map((service) => (
@@ -146,9 +146,9 @@ export default function ServicesPage() {
       </Section>
 
       <Section
-        eyebrow="How services connect"
-        title="One flow from request to tracked delivery."
-        description="The service catalog is designed so customers can move from a technical request into quoting, payment, fulfillment coordination, and support without losing context."
+        eyebrow="Connexion des services"
+        title="Un seul parcours de la demande a la livraison suivie."
+        description="Le catalogue permet de passer d une demande technique au devis, au paiement, a la coordination et au support sans perdre le contexte."
       >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {workflowSteps.map(([title, body], index) => (
@@ -172,20 +172,20 @@ export default function ServicesPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-deepblue via-deepblue/[0.9] to-ink/[0.7]" />
           <div className="relative">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">CTA strategy</p>
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Parcours client</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-              Start with a quote. Escalate to support when the request needs human review.
+              Commencez par un devis. Passez au support quand une revue humaine est necessaire.
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-sky-100 sm:text-base">
-              Most services route customers to the quote flow first. Advanced PCB, PCBA, Gerber review, logistics, and support use that request context to guide follow-up without exposing supplier or admin details.
+              La plupart des services commencent par la configuration. PCB avance, PCBA, revue Gerber, logistique et support utilisent ensuite ce contexte pour guider le suivi.
             </p>
           </div>
           <div className="relative mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col">
             <Button href="/quote" variant="light">
-              Get Quote
+              Demander un devis
             </Button>
             <Button href="/tracking" variant="secondary">
-              Track Order
+              Suivre une commande
             </Button>
           </div>
         </div>
@@ -204,18 +204,18 @@ function ServicesHero() {
       <div className="relative mx-auto grid min-h-[78vh] max-w-7xl gap-10 px-4 pb-24 pt-36 sm:px-6 lg:grid-cols-[1fr_26rem] lg:items-center lg:px-8">
         <div>
           <p className="inline-flex rounded-xl border border-white/[0.18] bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-sky-100 backdrop-blur-xl">
-            PCB services for Africa
+            Services PCB pour l Afrique
           </p>
           <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-            PCB ordering and logistics coordination, without pretending to be the factory.
+            Commande PCB et coordination logistique, sans pretendre etre l usine.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
-            Kendronics helps African hardware teams request boards, assembly, stencils, reviews, payments, tracking, and support through a clear customer-facing workflow.
+            Kendronics aide les equipes hardware africaines a demander PCB, assemblage, stencils, revues, paiements, suivi et support dans un parcours clair.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Button href="/quote">Get Quote</Button>
+            <Button href="/quote">Demander un devis</Button>
             <Button href="#services-grid" variant="secondary">
-              Explore services
+              Explorer les services
             </Button>
           </div>
         </div>
@@ -229,9 +229,9 @@ function ServicesHero() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ink/[0.72] via-transparent to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/[0.18] bg-white/[0.12] p-4 backdrop-blur-xl">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-100">Service path</p>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-100">Parcours service</p>
               <div className="mt-3 grid grid-cols-3 gap-2 text-center text-sm font-black">
-                {['Quote', 'Coordinate', 'Track'].map((item) => (
+                {['Devis', 'Coordonner', 'Suivre'].map((item) => (
                   <span key={item} className="rounded-xl bg-white/12 px-3 py-3">
                     {item}
                   </span>
@@ -275,9 +275,9 @@ function ServiceCard({
       </div>
       <div className="flex flex-1 flex-col p-6">
         <h2 className="text-xl font-black tracking-tight text-ink">{service.title}</h2>
-        <ServiceDetail label="What it is" value={service.what} />
-        <ServiceDetail label="Who it is for" value={service.audience} />
-        <ServiceDetail label="Benefit for African users" value={service.benefit} />
+        <ServiceDetail label="Ce que c est" value={service.what} />
+        <ServiceDetail label="Pour qui" value={service.audience} />
+        <ServiceDetail label="Benefice pour l Afrique" value={service.benefit} />
         <a
           href={service.href ?? '/quote'}
           className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-deepblue px-4 text-sm font-black text-white transition hover:bg-signal"

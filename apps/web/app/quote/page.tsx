@@ -329,12 +329,12 @@ export default function QuotePage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="text-xs font-bold text-slate-500">
-                Ship to: <span className="text-[#0f8f6b]">{selectedCountry.name}</span> / {selectedCountry.logisticsZone}
+                Livraison vers : <span className="text-[#0f8f6b]">{selectedCountry.name}</span> / {selectedCountry.logisticsZone}
               </div>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950">Online PCB Quote</h1>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950">Devis PCB en ligne</h1>
             </div>
             <a href="/how-it-works" className="text-sm font-bold text-[#0f8f6b] hover:text-[#096b51]">
-              Instructions For Ordering &gt;
+              Instructions de commande &gt;
             </a>
           </div>
 
@@ -390,23 +390,23 @@ export default function QuotePage() {
                 ['PTFE Teflon', 'High-frequency, high-temperature applications.'],
               ]}
             />
-            <QuoteRow label="Layers" help="Odd layer counts are normally adjusted to the next even count by manufacturers.">
+            <QuoteRow label="Couches" help="Les nombres impairs sont souvent ajustes au nombre pair superieur par les fabricants.">
               <Pills value={config.layers} onChange={(value) => update('layers', Number(value))} options={[1, 2, 4, 6, 8, 10, 12, 14, 16]} />
             </QuoteRow>
             <QuoteRow label="Dimensions" help="Dimension of the single PCB or panel you upload.">
               <div className="grid gap-3 sm:grid-cols-[1fr_1fr_110px]">
-                <NumberBox label="Length" value={config.length} onChange={(value) => update('length', value)} />
-                <NumberBox label="Width" value={config.width} onChange={(value) => update('width', value)} />
+                <NumberBox label="Longueur" value={config.length} onChange={(value) => update('length', value)} />
+                <NumberBox label="Largeur" value={config.width} onChange={(value) => update('width', value)} />
                 <SelectBox value={config.unit} onChange={(value) => update('unit', value as QuoteConfig['unit'])} options={['mm', 'inch']} />
               </div>
             </QuoteRow>
-            <QuoteRow label="PCB Qty" help="Choose a common quantity or enter a custom value.">
+            <QuoteRow label="Quantite PCB" help="Choisissez une quantite courante ou entrez une valeur personnalisee.">
               <div className="space-y-3">
                 <Pills value={config.quantity} onChange={(value) => update('quantity', Number(value))} options={quantityOptions} />
-                <NumberBox label="Custom Qty" value={config.quantity} min={1} onChange={(value) => update('quantity', value)} />
+                <NumberBox label="Quantite personnalisee" value={config.quantity} min={1} onChange={(value) => update('quantity', value)} />
               </div>
             </QuoteRow>
-            <QuoteRow label="Product Type" help="Medical and aerospace requirements add higher validation cost.">
+            <QuoteRow label="Type d usage" help="Les exigences medicales et aerospatiales ajoutent des couts de validation.">
               <Pills
                 value={config.usageType}
                 onChange={(value) => update('usageType', value as QuoteConfig['usageType'])}
@@ -420,10 +420,10 @@ export default function QuotePage() {
           </Panel>
 
           <Panel title="Spécifications PCB" description="Epaisseur, couleur, finition, cuivre et recouvrement des vias.">
-            <QuoteRow label="Different Design" help="Number of unique designs separated by v-cuts, mouse bites or milling slots.">
+            <QuoteRow label="Designs differents" help="Nombre de designs uniques separes par V-cut, mouse bites ou fraisage.">
               <Pills value={config.differentDesigns} onChange={(value) => update('differentDesigns', Number(value))} options={[1, 2, 3, 4]} />
             </QuoteRow>
-            <QuoteRow label="Delivery Format" help="Single board, customer panel, or panel created by the supplier.">
+            <QuoteRow label="Format de livraison" help="Carte seule, panneau client ou panneau cree par le fournisseur.">
               <Pills
                 value={config.deliveryFormat}
                 onChange={(value) => update('deliveryFormat', value as QuoteConfig['deliveryFormat'])}
@@ -434,37 +434,37 @@ export default function QuotePage() {
                 ]}
               />
             </QuoteRow>
-            <QuoteRow label="PCB Thickness" help="Finished board thickness. Thin and thick boards can affect price.">
+            <QuoteRow label="Epaisseur PCB" help="Epaisseur finale de la carte. Les cartes fines ou epaisses influencent le prix.">
               <Pills value={config.thickness} onChange={(value) => update('thickness', String(value))} options={['0.8mm', '1.0mm', '1.2mm', '1.6mm', '2.0mm']} />
             </QuoteRow>
-            <QuoteRow label="PCB Color" help="Green is normally the fastest and cheapest solder mask color.">
+            <QuoteRow label="Couleur PCB" help="Le vert est generalement la couleur de masque la plus rapide et economique.">
               <ColorPills value={config.solderMaskColor} onChange={(value) => update('solderMaskColor', value)} />
             </QuoteRow>
-            <QuoteRow label="Silkscreen" help="Printed reference designators and labels.">
+            <QuoteRow label="Serigraphie" help="References et libelles imprimes sur la carte.">
               <Pills value={config.silkscreenColor} onChange={(value) => update('silkscreenColor', String(value))} options={['White', 'Black', 'Yellow']} />
             </QuoteRow>
-            <QuoteRow label="Surface Finish" help="HASL is affordable; ENIG adds flatness, shelf life and tighter tolerances.">
+            <QuoteRow label="Finition de surface" help="HASL est economique; ENIG apporte planeite, duree de stockage et tolerances plus serrees.">
               <Pills value={config.surfaceFinish} onChange={(value) => update('surfaceFinish', String(value))} options={['HASL lead-free', 'ENIG', 'OSP', 'Immersion silver']} />
             </QuoteRow>
             <QuoteRow label="Via Covering" help="Le recouvrement des vias influence la fabrication et le cout.">
               <Pills value={config.viaCovering} onChange={(value) => update('viaCovering', String(value))} options={['Tented', 'Plugged', 'Epoxy filled']} />
             </QuoteRow>
-            <QuoteRow label="Outer Copper Weight" help="Copper weight on outer layers.">
+            <QuoteRow label="Cuivre externe" help="Epaisseur de cuivre sur les couches externes.">
               <Pills value={config.outerCopperWeight} onChange={(value) => update('outerCopperWeight', String(value))} options={['1 oz', '2 oz', '3 oz']} />
             </QuoteRow>
-            <QuoteRow label="Inner Copper Weight" help="Copper thickness on internal layers for multilayer boards.">
+            <QuoteRow label="Cuivre interne" help="Epaisseur de cuivre sur les couches internes des cartes multicouches.">
               <Pills value={config.innerCopperWeight} onChange={(value) => update('innerCopperWeight', String(value))} options={['0.5 oz', '1 oz', '2 oz']} />
             </QuoteRow>
           </Panel>
 
           <Panel title="Options de haute spécification" description="Precision, tests, marquage et processus speciaux.">
-            <QuoteRow label="Min via hole size / diameter" help="Small vias can increase manufacturing precision cost.">
+            <QuoteRow label="Taille trou via / diametre" help="Les petits vias peuvent augmenter le cout de precision.">
               <div className="grid gap-3 sm:grid-cols-2">
                 <SelectBox value={config.minimumViaHole} onChange={(value) => update('minimumViaHole', value)} options={['0.2mm', '0.25mm', '0.3mm', '0.4mm']} />
                 <SelectBox value={config.viaDiameter} onChange={(value) => update('viaDiameter', value)} options={['0.45mm', '0.5mm', '0.6mm', '0.8mm']} />
               </div>
             </QuoteRow>
-            <QuoteRow label="Mark on PCB" help="Choose order mark, barcode, serial number or mark removal.">
+            <QuoteRow label="Marquage PCB" help="Choisissez numero de commande, code-barres, serie ou suppression du marquage.">
               <div className="grid gap-3 md:grid-cols-3">
                 <Switch label="Order Number" checked={config.orderNumberMarking} onChange={(value) => update('orderNumberMarking', value)} />
                 <Switch label="Specify Position" checked={config.markingLocationSpecified} onChange={(value) => update('markingLocationSpecified', value)} />
@@ -473,7 +473,7 @@ export default function QuotePage() {
                 <Switch label="Serial Number" checked={config.serialNumber} onChange={(value) => update('serialNumber', value)} />
               </div>
             </QuoteRow>
-            <QuoteRow label="Electrical Test" help="Testing choices affect quality assurance and lead time.">
+            <QuoteRow label="Test electrique" help="Les choix de test influencent qualite et delai.">
               <div className="grid gap-3 md:grid-cols-3">
                 <Switch label="Flying Probe" checked={config.flyingProbe} onChange={(value) => update('flyingProbe', value)} />
                 <Switch label="Full Test" checked={config.fullElectricalTest} onChange={(value) => update('fullElectricalTest', value)} />
@@ -482,7 +482,7 @@ export default function QuotePage() {
                 <Switch label="AOI" checked={config.aoi} onChange={(value) => update('aoi', value)} />
               </div>
             </QuoteRow>
-            <QuoteRow label="Special Processes" help="Advanced process options are reviewed before production.">
+            <QuoteRow label="Procede speciaux" help="Les options avancees sont revues avant production.">
               <div className="grid gap-3 md:grid-cols-3">
                 <Switch label="Impedance Control" checked={config.impedanceControl} onChange={(value) => update('impedanceControl', value)} />
                 <Switch label="Gold Fingers" checked={config.goldFingers} onChange={(value) => update('goldFingers', value)} />
@@ -509,7 +509,7 @@ export default function QuotePage() {
                 <SelectBox value={config.adhesiveType} onChange={(value) => update('adhesiveType', value)} options={['', 'Acrylic', 'Epoxy']} />
               </div>
             </QuoteRow>
-            <QuoteRow label="Assembly request" help="BOM and CPL files are required before cart validation.">
+            <QuoteRow label="Demande d assemblage" help="Les fichiers BOM et CPL sont requis avant validation panier.">
               <div className="grid gap-3 md:grid-cols-3">
                 <Switch label="Assemble PCB boards" checked={config.assemblyRequired} onChange={(value) => update('assemblyRequired', value)} />
                 <SelectBox value={config.assemblySide} onChange={(value) => update('assemblySide', value)} options={['top', 'bottom', 'both']} />
@@ -517,7 +517,7 @@ export default function QuotePage() {
                 <Switch label="Confirm Parts Placement" checked={config.confirmPartsPlacement} onChange={(value) => update('confirmPartsPlacement', value)} />
               </div>
             </QuoteRow>
-            <QuoteRow label="Stencil options" help="Add stencil type, size, frame and polishing options.">
+            <QuoteRow label="Options stencil" help="Ajoutez type, taille, cadre et options de polissage du stencil.">
               <div className="grid gap-3 md:grid-cols-3">
                 <Switch label="Order together with PCB" checked={config.stencilRequired} onChange={(value) => update('stencilRequired', value)} />
                 <SelectBox value={config.stencilType} onChange={(value) => update('stencilType', value)} options={['', 'prototype', 'production', 'smt']} />
@@ -875,19 +875,19 @@ function Switch({ label, checked, onChange }: { label: string; checked: boolean;
 function SupportCard() {
   return (
     <aside className="rounded-sm border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-lg font-black text-slate-950">Need help?</h2>
+      <h2 className="text-lg font-black text-slate-950">Besoin d aide ?</h2>
       <div className="mt-4 space-y-3 text-sm">
         <a href="/contact" className="block rounded-sm border border-slate-200 p-3 font-bold text-[#0f8f6b] hover:border-[#0f8f6b]">
-          Online Chat &gt;
-          <span className="mt-1 block text-xs font-medium leading-5 text-slate-500">Fast reply for quote questions.</span>
+          Chat en ligne &gt;
+          <span className="mt-1 block text-xs font-medium leading-5 text-slate-500">Reponse rapide pour les questions de devis.</span>
         </a>
         <a href="/contact" className="block rounded-sm border border-slate-200 p-3 font-bold text-[#0f8f6b] hover:border-[#0f8f6b]">
-          Email Us &gt;
-          <span className="mt-1 block text-xs font-medium leading-5 text-slate-500">Contact support for supplier review.</span>
+          Nous ecrire &gt;
+          <span className="mt-1 block text-xs font-medium leading-5 text-slate-500">Contactez le support pour une revue fournisseur.</span>
         </a>
         <a href="/faq" className="block rounded-sm border border-slate-200 p-3 font-bold text-[#0f8f6b] hover:border-[#0f8f6b]">
-          Help Center &gt;
-          <span className="mt-1 block text-xs font-medium leading-5 text-slate-500">Get instant answers.</span>
+          Centre d aide &gt;
+          <span className="mt-1 block text-xs font-medium leading-5 text-slate-500">Trouvez des reponses rapidement.</span>
         </a>
       </div>
     </aside>

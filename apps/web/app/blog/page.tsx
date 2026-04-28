@@ -6,9 +6,9 @@ import { Button } from '../../components/ui/Button';
 import { blogArticles, blogCategoryLabels } from '../../lib/blog-content';
 
 export const metadata: Metadata = {
-  title: 'Kendronics Blog | PCB Guides For African Hardware Builders',
+  title: 'Blog Kendronics | Guides PCB pour les builders africains',
   description:
-    'Educational PCB design, Gerber export, KiCad, EasyEDA, ordering, logistics, and hardware startup guides for African builders using Kendronics.',
+    'Guides PCB, export Gerber, KiCad, EasyEDA, commande, logistique et startup hardware pour les builders africains utilisant Kendronics.',
   keywords: [
     'PCB design Africa',
     'Gerber export tutorial',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     'PCB logistics Africa',
   ],
   openGraph: {
-    title: 'Kendronics Blog | PCB Guides For African Hardware Builders',
+    title: 'Blog Kendronics | Guides PCB pour les builders africains',
     description:
       'Learn PCB design, Gerber export, ordering, logistics, and manufacturing basics for African hardware projects.',
     type: 'website',
@@ -79,7 +79,7 @@ export default function BlogPage() {
               ))}
             </div>
             <Button href="/quote" className="mt-6 w-full">
-              Get Quote
+              Demander un devis
             </Button>
           </div>
         </div>
@@ -107,7 +107,7 @@ function BlogHero() {
             Practical guides for PCB design, Gerber export, KiCad, EasyEDA, ordering, logistics, and electronics manufacturing basics.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Button href="/quote">Get Quote</Button>
+            <Button href="/quote">Demander un devis</Button>
             <Button href="#articles" variant="secondary">
               Browse guides
             </Button>

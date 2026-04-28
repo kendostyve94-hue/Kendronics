@@ -82,10 +82,11 @@ export function Navbar() {
 
   const cartHref = useMemo(() => {
     const lastOrderId = orders[0];
-    return lastOrderId ? `/orders/${lastOrderId}` : '/quote';
+    return lastOrderId ? `/orders/${lastOrderId}` : '/orders/demo';
   }, [orders]);
 
-  function updateLanguage(nextLanguage: 'fr' | 'en') {
+  function switchLanguage() {
+    const nextLanguage = language === 'fr' ? 'en' : 'fr';
     setLanguage(nextLanguage);
     window.localStorage.setItem('kendronics.language', nextLanguage);
     document.documentElement.lang = nextLanguage;
@@ -95,11 +96,11 @@ export function Navbar() {
     <header className={`fixed left-0 right-0 top-0 z-50 text-white transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="border-b border-white/15 bg-[#07324a]/90 px-4 py-2 text-[11px] font-medium backdrop-blur-sm sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4">
-          <p className="font-black tracking-wide text-white">Accelere ta creativite</p>
+          <p className="font-semibold tracking-wide text-white">Accelere ta creativite</p>
           <div className="flex items-center gap-3 text-white">
             <AccountMenu userLabel={userLabel} />
-            <LanguageMenu language={language} onLanguageChange={updateLanguage} />
-            <a href="/centre-aide" className="hidden text-xs font-black transition hover:text-[#ffd22e] sm:inline">
+            <LanguageButton language={language} onClick={switchLanguage} />
+            <a href="/centre-aide" className="hidden text-xs font-semibold transition hover:text-[#ffd22e] sm:inline">
               Centre d'aide
             </a>
           </div>
@@ -117,7 +118,7 @@ export function Navbar() {
             </span>
           </a>
 
-          <nav className="hidden items-center gap-5 text-xs font-bold lg:flex">
+          <nav className="hidden items-center gap-4 text-sm font-medium lg:flex">
             <Dropdown label="Produit" items={productItems} />
             <Dropdown label="Support" items={supportItems} />
             <Dropdown label="A propos" items={aboutItems} />
@@ -125,7 +126,7 @@ export function Navbar() {
               Suivi
             </a>
             <CartLink href={cartHref} count={orders.length} />
-            <a href="/quote" className="text-white transition hover:text-[#ffd22e]">
+            <a href="/quote" className="inline-flex h-10 items-center border border-[#0f8f6b] px-4 font-medium text-white transition hover:border-[#12a87c] hover:text-[#ffd22e]">
               Commande
             </a>
             <LoginMenu />
@@ -159,7 +160,7 @@ export function Navbar() {
               <a
                 key={`${item.label}-${item.href}`}
                 href={item.href}
-                className="flex min-h-11 items-center border border-white/15 bg-white/10 px-4 text-sm font-black text-white transition hover:border-[#ffd22e] hover:text-[#ffd22e]"
+                className="flex min-h-11 items-center border border-white/15 bg-white/10 px-4 text-sm font-medium text-white transition hover:border-[#ffd22e] hover:text-[#ffd22e]"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {item.label}
@@ -179,9 +180,9 @@ function Dropdown({ label, items }: { label: string; items: Array<{ label: strin
         {label}
         <span className="text-[10px]">v</span>
       </button>
-      <div className="invisible absolute right-0 top-full min-w-56 translate-y-2 border border-slate-200 bg-white p-2 text-slate-950 opacity-0 shadow-[0_16px_38px_rgba(15,23,42,0.22)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+      <div className="invisible absolute right-0 top-full min-w-44 translate-y-2 border border-slate-200 bg-white p-1.5 text-slate-950 opacity-0 shadow-[0_16px_38px_rgba(15,23,42,0.22)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
         {items.map((item) => (
-          <a key={item.href} href={item.href} className="block px-3 py-2 text-sm font-black text-slate-800 transition hover:bg-[#eaf2fb] hover:text-[#0877ff]">
+          <a key={item.href} href={item.href} className="block px-3 py-1.5 text-xs font-medium text-slate-800 transition hover:bg-[#eaf2fb] hover:text-[#0877ff]">
             {item.label}
           </a>
         ))}
@@ -193,17 +194,17 @@ function Dropdown({ label, items }: { label: string; items: Array<{ label: strin
 function LoginMenu() {
   return (
     <div className="group relative">
-      <a href="/login" className="inline-flex h-10 items-center rounded-full bg-[#0877ff] px-5 text-white transition hover:bg-[#0068e8]">
+      <a href="/login" className="inline-flex h-10 items-center rounded-full bg-[#0f8f6b] px-5 font-medium text-white transition hover:bg-[#0b7558]">
         Connexion
       </a>
       <div className="invisible absolute right-0 top-full min-w-60 translate-y-2 border border-slate-200 bg-white p-4 text-slate-950 opacity-0 shadow-[0_18px_44px_rgba(15,23,42,0.22)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
         <span className="absolute -top-2 right-8 h-4 w-4 rotate-45 border-l border-t border-slate-200 bg-white" />
-        <a href="/login" className="flex h-10 items-center justify-center rounded-full bg-[#0877ff] text-sm font-black text-white hover:bg-[#0068e8]">
+        <a href="/login" className="flex h-10 items-center justify-center rounded-full bg-[#0f8f6b] text-sm font-semibold text-white hover:bg-[#0b7558]">
           Connexion
         </a>
         <p className="mt-3 text-sm text-slate-600">
           Nouveau client ?{' '}
-          <a href="/register" className="font-black text-[#0877ff] hover:text-[#0068e8]">
+          <a href="/register" className="font-semibold text-[#0f8f6b] hover:text-[#0b7558]">
             Creer mon compte
           </a>
         </p>
@@ -216,7 +217,7 @@ function CartLink({ href, count }: { href: string; count: number }) {
   return (
     <a href={href} className="relative inline-flex h-10 w-10 items-center justify-center text-white transition hover:text-[#ffd22e]" aria-label="Panier">
       <CartIcon />
-      <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-pink-500 px-1 text-[11px] font-black leading-none text-white">
+      <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-pink-500 px-1 text-[11px] font-semibold leading-none text-white">
         {count}
       </span>
     </a>
@@ -229,10 +230,9 @@ function AccountMenu({ userLabel }: { userLabel: string }) {
       <a href="/profile" className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 transition hover:border-[#ffd22e]" aria-label="Repertoire utilisateur">
         <UserIcon />
       </a>
-      <div className="invisible absolute right-0 top-full min-w-56 translate-y-2 border border-slate-200 bg-white p-3 text-slate-950 opacity-0 shadow-[0_16px_38px_rgba(15,23,42,0.22)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
-        <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Repertoire</p>
-        <p className="mt-1 truncate text-sm font-black text-slate-950">{userLabel}</p>
-        <a href="/profile" className="mt-3 block px-2 py-2 text-sm font-bold text-[#0877ff] hover:bg-[#eaf2fb]">
+      <div className="invisible absolute right-full top-0 z-[80] mr-3 flex h-9 min-w-72 items-center gap-3 border border-slate-200 bg-white px-3 text-slate-950 opacity-0 shadow-[0_12px_28px_rgba(15,23,42,0.18)] transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+        <span className="truncate text-xs font-medium text-slate-600">{userLabel}</span>
+        <a href="/profile" className="shrink-0 text-xs font-semibold text-[#0f8f6b] hover:text-[#0b7558]">
           Modifier mes informations
         </a>
       </div>
@@ -240,25 +240,17 @@ function AccountMenu({ userLabel }: { userLabel: string }) {
   );
 }
 
-function LanguageMenu({ language, onLanguageChange }: { language: 'fr' | 'en'; onLanguageChange: (language: 'fr' | 'en') => void }) {
+function LanguageButton({ language, onClick }: { language: 'fr' | 'en'; onClick: () => void }) {
   return (
-    <div className="group relative">
-      <button type="button" className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 transition hover:border-[#ffd22e]" aria-label="Changer de langue">
-        <GlobeIcon />
-      </button>
-      <div className="invisible absolute right-0 top-full min-w-36 translate-y-2 border border-slate-200 bg-white p-2 text-slate-950 opacity-0 shadow-[0_16px_38px_rgba(15,23,42,0.22)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
-        {(['fr', 'en'] as const).map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => onLanguageChange(item)}
-            className={`block w-full px-3 py-2 text-left text-sm font-black transition hover:bg-[#eaf2fb] ${language === item ? 'text-[#0877ff]' : 'text-slate-800'}`}
-          >
-            {item === 'fr' ? 'Francais' : 'Anglais'}
-          </button>
-        ))}
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 transition hover:border-[#ffd22e]"
+      aria-label={`Basculer en ${language === 'fr' ? 'anglais' : 'francais'}`}
+      title={language === 'fr' ? 'Passer en anglais' : 'Passer en francais'}
+    >
+      <GlobeIcon />
+    </button>
   );
 }
 

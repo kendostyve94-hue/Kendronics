@@ -135,7 +135,7 @@ export default function ContactPage() {
                 </select>
                 {errors.category && <p className="mt-2 text-xs font-bold text-red-600">{errors.category}</p>}
               </label>
-              <TextField label="Order ID optional" value={values.orderId} error={errors.orderId} onChange={(value) => update('orderId', value)} />
+              <TextField label="ID commande facultatif" value={values.orderId} error={errors.orderId} onChange={(value) => update('orderId', value)} />
             </div>
 
             <label className="block">
@@ -181,7 +181,7 @@ export default function ContactPage() {
 
         <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
           <InfoPanel title="Support email" body={officialContactEmail} detail="Use email for professional support follow-up. Support tickets remain the best format for order-specific issues." />
-          <InfoPanel title="Response time" body="Business-hours response target" detail="Quote, upload, payment, and delivery issues are triaged by category and order context." />
+          <InfoPanel title="Delai de reponse" body="Objectif de reponse pendant les horaires ouvrables" detail="Les questions de devis, upload, paiement et livraison sont triees par categorie et contexte de commande." />
           <InfoPanel title="Business location" body="France-based platform" detail="Kendronics coordinates PCB ordering, payment, France logistics, Africa delivery, tracking, and support." />
           <Card glass className="p-5">
             <h3 className="text-lg font-black text-ink">FAQ before contacting?</h3>

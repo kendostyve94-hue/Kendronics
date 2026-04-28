@@ -168,10 +168,10 @@ export default function CapabilitiesPage() {
           </div>
           <div className="relative mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col">
             <Button href="/quote" variant="light">
-              Get Quote
+              Demander un devis
             </Button>
             <Button href="/services" variant="secondary">
-              View Services
+              Voir les services
             </Button>
           </div>
         </div>
@@ -199,7 +199,7 @@ function CapabilitiesHero() {
             Explore materials, stackups, finishes, copper weights, via options, PCBA, and stencil availability that Kendronics can help coordinate through external manufacturing partners.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Button href="/quote">Get Quote</Button>
+            <Button href="/quote">Demander un devis</Button>
             <Button href="#technical-capabilities" variant="secondary">
               View Tables
             </Button>

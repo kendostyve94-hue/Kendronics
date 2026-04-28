@@ -96,7 +96,7 @@ export default function TrackingPage() {
           <div className="self-end">
             <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-100">Public tracking</p>
             <h1 className="mt-4 max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-              Track your Kendronics order.
+              Suivez votre commande Kendronics.
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-200">
               Enter the order ID and account email to view customer-safe shipping progress without exposing pricing,
@@ -107,9 +107,9 @@ export default function TrackingPage() {
           <Card glass className="self-end p-5 text-ink sm:p-6">
             <form onSubmit={submitLookup} className="space-y-4">
               <TrackingField
-                label="Order ID"
+                label="ID commande"
                 value={orderId}
-                placeholder="Order UUID"
+                placeholder="UUID de commande"
                 autoComplete="off"
                 onChange={setOrderId}
               />
@@ -126,7 +126,7 @@ export default function TrackingPage() {
                 disabled={state === 'loading' || !orderId.trim() || !email.trim()}
                 className="h-12 w-full rounded-xl bg-signal px-5 text-sm font-black text-white shadow-lg shadow-sky-950/20 transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                {state === 'loading' ? 'Checking tracking...' : 'Track order'}
+                {state === 'loading' ? 'Verification du suivi...' : 'Suivre la commande'}
               </button>
             </form>
           </Card>
@@ -201,7 +201,7 @@ function LookupMessage({ state }: { state: LookupState }) {
   }
 
   if (state === 'not_found') {
-    return <Alert tone="error" title="Order not found" message="No public order was found for that order ID." />;
+    return <Alert tone="error" title="Commande introuvable" message="Aucune commande publique ne correspond a cet ID." />;
   }
 
   if (state === 'invalid_email') {
@@ -209,7 +209,7 @@ function LookupMessage({ state }: { state: LookupState }) {
   }
 
   if (state === 'error') {
-    return <Alert tone="error" title="Tracking unavailable" message="Please try again or contact support if the issue continues." />;
+    return <Alert tone="error" title="Suivi indisponible" message="Reessayez ou contactez le support si le probleme continue." />;
   }
 
   return null;
@@ -234,7 +234,7 @@ function PublicOverview({ timeline, destination }: { timeline: PublicTrackingTim
       <SummaryTile label="Current status" value={publicStatusLabels[timeline.status]} highlight={timeline.status === 'delivered'} />
       <SummaryTile label="Estimated delivery" value={timeline.estimatedDeliveryAt ? formatDate(timeline.estimatedDeliveryAt) : 'Pending confirmation'} />
       <SummaryTile label="Destination" value={destination} />
-      <SummaryTile label="Order number" value={timeline.orderNumber} />
+      <SummaryTile label="Numero de commande" value={timeline.orderNumber} />
     </div>
   );
 }
@@ -256,7 +256,7 @@ function ShipmentCard({ timeline, destination }: { timeline: PublicTrackingTimel
       <div className="mt-5 space-y-4">
         <ShipmentRow label="Destination country" value={destination} />
         <ShipmentRow label="Carrier" value={timeline.carrierName || 'Not assigned yet'} />
-        <ShipmentRow label="Tracking number" value={timeline.trackingNumber || 'Not available yet'} />
+        <ShipmentRow label="Numero de suivi" value={timeline.trackingNumber || 'Pas encore disponible'} />
         <ShipmentRow label="Delivery" value={timeline.status === 'delivered' ? 'Delivered' : timeline.estimatedDeliveryAt ? formatDate(timeline.estimatedDeliveryAt) : 'Pending confirmation'} />
       </div>
     </Card>

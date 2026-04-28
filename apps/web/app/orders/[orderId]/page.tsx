@@ -61,7 +61,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
         ]);
 
         if (!orderResponse.ok || !trackingResponse.ok) {
-          throw new Error('Order detail unavailable.');
+          throw new Error('Details de commande indisponibles.');
         }
 
         const orderPayload = await orderResponse.json();
@@ -138,7 +138,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
         />
         <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.84] to-deepblue/[0.6]" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-100">Order detail</p>
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-100">Details de commande</p>
           <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h1 className="max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
@@ -231,7 +231,7 @@ function PaymentCard({
 function OverviewCards({ order, destination }: { order: CustomerOrderSummary; destination: string }) {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <SummaryTile label="Order ID" value={order.id} />
+      <SummaryTile label="ID commande" value={order.id} />
       <SummaryTile label="Total price" value={formatMoney(order.totalPrice, order.currency)} />
       <SummaryTile label="Payment" value={capitalize(order.paymentStatus)} />
       <SummaryTile label="Destination" value={destination} />
@@ -338,7 +338,7 @@ function TrackingTimeline({
 
   return (
     <Card className="p-6">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Tracking timeline</p>
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Timeline de suivi</p>
       <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">Progress</h2>
       <div className="mt-6 space-y-0">
         {customerTrackingStatuses.map((status, index) => {
@@ -384,7 +384,7 @@ function TrackingTimeline({
 function SupportCard({ supportHref, orderNumber }: { supportHref: string; orderNumber: string }) {
   return (
     <Card className="p-6">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Need help?</p>
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Besoin d aide ?</p>
       <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">Contact support</h2>
       <p className="mt-3 text-sm leading-6 text-slate-600">
         Open a ticket with {orderNumber} attached so the support team can review the customer-safe order timeline.
