@@ -1,4 +1,5 @@
 import { AuthTokens } from './auth-contract';
+import { getApiBaseUrl } from './api-base-url';
 
 const SESSION_STORAGE_KEY = 'kendronics.auth.session';
 
@@ -37,4 +38,35 @@ export function readAuthSession(): StoredAuthSession | null {
 export function clearAuthSession() {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(SESSION_STORAGE_KEY);
+}
+
+export async function readFreshAuthSession(): Promise<StoredAuthSession | null> {
+  const session = readAuthSession();
+  if (!session) return null;
+
+  const expiresAt = new Date(session.accessTokenExpiresAt).getTime();
+  const refreshBeforeMs = 60 * 1000;
+  if (Number.isFinite(expiresAt) && expiresAt - Date.now() > refreshBeforeMs) {
+    return session;
+  }
+
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: session.refreshToken }),
+    });
+
+    if (!response.ok) {
+      clearAuthSession();
+      return null;
+    }
+
+    const tokens = (await response.json()) as AuthTokens;
+    persistAuthSession(tokens);
+    return readAuthSession();
+  } catch {
+    clearAuthSession();
+    return null;
+  }
 }

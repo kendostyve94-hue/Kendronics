@@ -6,7 +6,7 @@ import { Footer } from '../../components/layout/Footer';
 import { PricingSummary } from '../../components/quote/PricingSummary';
 import { africanCountries } from '../../lib/african-countries';
 import { getApiBaseUrl } from '../../lib/api-base-url';
-import { readAuthSession } from '../../lib/auth-session';
+import { readFreshAuthSession } from '../../lib/auth-session';
 import { calculatePCBQuote } from '../../lib/pricing';
 import { validateQuoteConfig } from '../../lib/quote-pricing';
 import type { QuoteConfig } from '../../lib/quote-types';
@@ -193,7 +193,7 @@ export default function QuotePage() {
     setGerberUpload({ status: 'uploading', message: 'Upload Gerber ZIP en cours...' });
 
     try {
-      const session = readAuthSession();
+      const session = await readFreshAuthSession();
       if (!session) {
         throw new Error('Connectez-vous avant de televerser un fichier Gerber.');
       }
@@ -242,7 +242,7 @@ export default function QuotePage() {
     setQuoteSave({ status: 'saving', message: 'Sauvegarde du devis...' });
 
     try {
-      const session = readAuthSession();
+      const session = await readFreshAuthSession();
       if (!session) {
         throw new Error('Connectez-vous avant de sauvegarder un devis.');
       }
