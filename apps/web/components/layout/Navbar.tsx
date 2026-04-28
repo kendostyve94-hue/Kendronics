@@ -115,7 +115,7 @@ export function Navbar() {
             <img
               src="/images/kendronics-logo.png"
               alt="Kendronics"
-              className="h-9 w-auto max-w-[12rem] object-contain sm:h-10 sm:max-w-[13rem]"
+              className="h-12 w-auto max-w-[14.5rem] object-contain sm:h-14 sm:max-w-[16rem]"
             />
           </a>
 
