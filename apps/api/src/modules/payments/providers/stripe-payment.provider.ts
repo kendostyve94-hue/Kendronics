@@ -117,7 +117,21 @@ export class StripePaymentProvider {
       };
     }
 
-    if (event.type === 'checkout.session.expired') {
+    if (event.type === 'checkout.session.async_payment_succeeded') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      return {
+        id: event.id,
+        type: event.type,
+        providerPaymentId: session.id,
+        paymentStatus: 'succeeded',
+        raw: event,
+      };
+    }
+
+    if (
+      event.type === 'checkout.session.expired' ||
+      event.type === 'checkout.session.async_payment_failed'
+    ) {
       const session = event.data.object as Stripe.Checkout.Session;
       return {
         id: event.id,
@@ -132,7 +146,7 @@ export class StripePaymentProvider {
       id: event.id,
       type: event.type,
       providerPaymentId: event.id,
-      paymentStatus: 'pending',
+      paymentStatus: 'ignored',
       raw: event,
     };
   }

@@ -24,7 +24,7 @@ export interface MobileMoneyInitiationResult {
 export interface VerifiedStripePaymentEvent {
   id: string;
   type: string;
-  paymentStatus: 'pending' | 'succeeded' | 'failed';
+  paymentStatus: 'pending' | 'succeeded' | 'failed' | 'ignored';
   providerPaymentId: string;
   raw: unknown;
 }

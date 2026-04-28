@@ -27,6 +27,11 @@ export class PaymentWebhookHandler {
       return { received: true, duplicate: true };
     }
 
+    if (event.paymentStatus === 'ignored') {
+      await this.paymentsRepository.markEventProcessed('stripe', event.id);
+      return { received: true, duplicate: false, ignored: true };
+    }
+
     if (!payment) {
       await this.paymentsRepository.markEventProcessed(
         'stripe',

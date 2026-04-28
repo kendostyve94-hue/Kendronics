@@ -21,6 +21,9 @@ export interface Order {
   quoteId: string;
   destinationCountryIso2: string;
   status: OrderStatus;
+  totalPrice?: number;
+  currency?: 'EUR';
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
   externalManufacturingPartner?: string;
   externalSupplierOrderId?: string;
   carrierName?: string;

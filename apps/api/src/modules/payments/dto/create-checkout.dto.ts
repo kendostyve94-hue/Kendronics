@@ -1,12 +1,11 @@
-import { IsNumber, IsUrl, IsUUID, Min } from 'class-validator';
+import { IsOptional, IsUrl, IsUUID } from 'class-validator';
 
 export class CreateCheckoutDto {
   @IsUUID()
   orderId!: string;
 
-  @IsNumber()
-  @Min(0.5)
-  amount!: number;
+  @IsOptional()
+  amount?: number;
 
   @IsUrl({ require_tld: false })
   successUrl!: string;

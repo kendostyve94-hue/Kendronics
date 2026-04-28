@@ -22,11 +22,15 @@ export class PaymentsService {
 
   async createCheckout(userId: string, dto: CreateCheckoutDto): Promise<CheckoutSession> {
     const order = await this.ordersService.findOwnedOrder(userId, dto.orderId);
+    if (!order.totalPrice || order.totalPrice < 0.5) {
+      throw new BadRequestException('Order quote amount is unavailable for checkout.');
+    }
+
     const payment = await this.paymentsRepository.createPayment({
       userId,
       orderId: order.id,
       provider: 'stripe',
-      amount: dto.amount,
+      amount: order.totalPrice,
       currency: 'EUR',
     });
 

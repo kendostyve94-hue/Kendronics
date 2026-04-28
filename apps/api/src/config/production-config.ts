@@ -2,6 +2,8 @@ const productionOnlyRequiredEnv = [
   'DATABASE_URL',
   'JWT_SECRET',
   'FRONTEND_ORIGIN',
+  'STRIPE_SECRET_KEY',
+  'STRIPE_WEBHOOK_SECRET',
 ];
 
 const unsafeSecretValues = new Set(['replace-with-a-long-random-secret', 'development-only-change-me']);
@@ -18,5 +20,13 @@ export function validateProductionConfig() {
 
   if (unsafeSecretValues.has(process.env.JWT_SECRET ?? '')) {
     throw new Error('JWT_SECRET must be a strong production secret.');
+  }
+
+  if (process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
+    throw new Error('STRIPE_SECRET_KEY must be a Stripe secret key.');
+  }
+
+  if (process.env.STRIPE_WEBHOOK_SECRET && !process.env.STRIPE_WEBHOOK_SECRET.startsWith('whsec_')) {
+    throw new Error('STRIPE_WEBHOOK_SECRET must be a Stripe webhook signing secret.');
   }
 }

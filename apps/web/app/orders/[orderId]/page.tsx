@@ -4,7 +4,7 @@ import { use, useEffect, useState } from 'react';
 import { Navbar } from '../../../components/layout/Navbar';
 import { Card } from '../../../components/ui/Card';
 import { getApiBaseUrl } from '../../../lib/api-base-url';
-import { readAuthSession } from '../../../lib/auth-session';
+import { readAuthSession, readFreshAuthSession } from '../../../lib/auth-session';
 import {
   customerTrackingStatuses,
   isCustomerTrackingStatus,
@@ -22,6 +22,7 @@ import type {
 } from '../../../lib/order-detail-contract';
 
 type PageStatus = 'loading' | 'ready' | 'demo' | 'error';
+type CheckoutStatus = 'idle' | 'loading' | 'error';
 const apiBaseUrl = getApiBaseUrl();
 
 const countryNames: Record<string, string> = {
@@ -39,6 +40,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const { orderId } = use(params);
   const [detail, setDetail] = useState<OrderDetailResponse>(() => buildDemoOrderDetail(orderId));
   const [status, setStatus] = useState<PageStatus>('loading');
+  const [checkoutStatus, setCheckoutStatus] = useState<CheckoutStatus>('idle');
+  const [checkoutError, setCheckoutError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +88,44 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
 
   const destination = countryNames[detail.order.destinationCountryIso2] ?? detail.order.destinationCountryIso2;
   const supportHref = `/support?orderId=${encodeURIComponent(detail.order.id)}`;
+  const canCheckout = status === 'ready' && detail.order.paymentStatus === 'pending';
+
+  async function startStripeCheckout() {
+    setCheckoutStatus('loading');
+    setCheckoutError('');
+
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        throw new Error('Connectez-vous avant de payer cette commande.');
+      }
+
+      const origin = window.location.origin;
+      const response = await fetch(`${apiBaseUrl}/api/payments/checkout`, {
+        method: 'POST',
+        headers: {
+          Authorization: `${session.tokenType} ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: detail.order.id,
+          successUrl: `${origin}/orders/${detail.order.id}?payment=success`,
+          cancelUrl: `${origin}/orders/${detail.order.id}?payment=cancelled`,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Impossible de lancer le paiement Stripe.');
+      }
+
+      const checkout = (await response.json()) as { checkoutUrl: string };
+      window.location.assign(checkout.checkoutUrl);
+    } catch (error) {
+      setCheckoutStatus('error');
+      setCheckoutError(error instanceof Error ? error.message : 'Impossible de lancer le paiement Stripe.');
+    }
+  }
 
   return (
     <main className="min-h-screen bg-cloud">
@@ -132,12 +173,58 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
           </div>
 
           <div className="space-y-6 lg:sticky lg:top-28 lg:self-start">
+            <PaymentCard
+              order={detail.order}
+              canCheckout={canCheckout}
+              checkoutStatus={checkoutStatus}
+              checkoutError={checkoutError}
+              onCheckout={startStripeCheckout}
+            />
             <TrackingTimeline currentStatus={detail.order.status} items={detail.trackingTimeline} />
             <SupportCard supportHref={supportHref} orderNumber={detail.order.orderNumber} />
           </div>
         </div>
       </section>
     </main>
+  );
+}
+
+function PaymentCard({
+  order,
+  canCheckout,
+  checkoutStatus,
+  checkoutError,
+  onCheckout,
+}: {
+  order: CustomerOrderSummary;
+  canCheckout: boolean;
+  checkoutStatus: CheckoutStatus;
+  checkoutError: string;
+  onCheckout: () => void;
+}) {
+  return (
+    <Card className="p-6">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Payment</p>
+      <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">{formatMoney(order.totalPrice, order.currency)}</h2>
+      <p className="mt-3 text-sm leading-6 text-slate-600">
+        {order.paymentStatus === 'paid'
+          ? 'Payment is confirmed for this order.'
+          : 'Pay securely through Stripe Checkout. Kendronics never handles card details directly.'}
+      </p>
+      <button
+        type="button"
+        disabled={!canCheckout || checkoutStatus === 'loading'}
+        onClick={onCheckout}
+        className={`mt-5 inline-flex h-12 w-full items-center justify-center rounded-xl px-5 text-sm font-black text-white transition ${
+          canCheckout && checkoutStatus !== 'loading'
+            ? 'bg-[#635bff] hover:bg-[#4f46e5]'
+            : 'cursor-not-allowed bg-slate-300'
+        }`}
+      >
+        {checkoutStatus === 'loading' ? 'Opening Stripe...' : order.paymentStatus === 'paid' ? 'Paid' : 'Pay with Stripe'}
+      </button>
+      {checkoutStatus === 'error' ? <p className="mt-3 text-sm font-bold text-red-700">{checkoutError}</p> : null}
+    </Card>
   );
 }
 
@@ -440,6 +527,7 @@ function buildDemoOrderDetail(orderId: string): OrderDetailResponse {
 function defaultTimelineDescription(status: CustomerTrackingStatus): string {
   const descriptions: Record<CustomerTrackingStatus, string> = {
     paid: 'Payment is confirmed.',
+    awaiting_payment: 'Payment is pending.',
     supplier_order_pending: 'Kendronics is preparing the external partner order.',
     supplier_ordered: 'The partner production order has been placed.',
     supplier_in_production: 'The boards are being produced by an approved external partner.',

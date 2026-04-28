@@ -1,4 +1,5 @@
 export const customerTrackingStatuses = [
+  'awaiting_payment',
   'paid',
   'supplier_order_pending',
   'supplier_ordered',
@@ -86,6 +87,7 @@ export const orderDetailApiContract = {
 } as const;
 
 export const statusLabels: Record<CustomerTrackingStatus, string> = {
+  awaiting_payment: 'Awaiting payment',
   paid: 'Paid',
   supplier_order_pending: 'Partner order pending',
   supplier_ordered: 'Partner order placed',
