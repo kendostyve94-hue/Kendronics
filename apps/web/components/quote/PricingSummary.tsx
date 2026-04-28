@@ -110,7 +110,7 @@ export function PricingSummary({
   }, [deliveryOpen, destinationCountry, pricing.deliveryWeightKg]);
 
   return (
-    <aside className="sticky top-28 space-y-3">
+    <aside className="space-y-3 lg:sticky lg:top-28">
       <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-black text-slate-950">Details des frais</h2>
@@ -169,6 +169,25 @@ export function PricingSummary({
         >
           {saveState === 'saving' ? 'Sauvegarde...' : saveState === 'saved' ? 'Devis sauvegarde' : 'Sauvegarder dans le panier'}
         </button>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-[4.9rem] z-40 border-t border-slate-200 bg-[#f4f7fa]/96 px-4 py-3 shadow-[0_-10px_28px_rgba(8,20,32,0.14)] backdrop-blur lg:hidden">
+        <div className="mx-auto flex max-w-md items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estime</p>
+            <p className="mt-0.5 text-lg font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={!canSave}
+            className={`h-11 shrink-0 rounded-sm px-5 text-xs font-black uppercase text-white transition ${
+              canSave ? 'bg-[#0f8f6b] hover:bg-[#0b7558]' : 'cursor-not-allowed bg-slate-300 opacity-70'
+            }`}
+          >
+            {saveState === 'saving' ? 'Sauvegarde...' : 'Panier'}
+          </button>
+        </div>
       </div>
 
       <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-5 shadow-sm">

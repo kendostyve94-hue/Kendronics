@@ -95,6 +95,7 @@ export function Navbar() {
   }
 
   return (
+    <>
     <header className={`fixed left-0 right-0 top-0 z-50 text-white transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="border-b border-white/15 bg-[#07324a]/90 px-3 py-1 text-[11px] font-medium backdrop-blur-sm sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4">
@@ -183,6 +184,42 @@ export function Navbar() {
         ) : null}
       </div>
     </header>
+    <MobileDock cartHref={cartHref} orderCount={orders.length} />
+    </>
+  );
+}
+
+function MobileDock({ cartHref, orderCount }: { cartHref: string; orderCount: number }) {
+  const items = [
+    { label: 'Accueil', href: '/', icon: <HomeIcon /> },
+    { label: 'Devis', href: '/quote', icon: <PlusIcon />, featured: true },
+    { label: 'Suivi', href: '/tracking', icon: <RouteIcon /> },
+    { label: 'Compte', href: '/profile', icon: <UserIcon /> },
+  ];
+
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-[#f4f7fa]/96 px-2 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-1.5 shadow-[0_-12px_32px_rgba(8,20,32,0.16)] backdrop-blur lg:hidden"
+      aria-label="Navigation mobile principale"
+    >
+      <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+        {items.map((item) => (
+          <a
+            key={item.href}
+            href={item.href}
+            className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-sm text-[11px] font-black ${
+              item.featured ? 'bg-[#0f8f6b] text-white shadow-sm' : 'text-slate-700 hover:bg-white'
+            }`}
+          >
+            <span className="grid h-5 w-5 place-items-center">{item.icon}</span>
+            <span>{item.label}</span>
+          </a>
+        ))}
+        <a href={cartHref} className="sr-only">
+          Panier {orderCount}
+        </a>
+      </div>
+    </nav>
   );
 }
 
@@ -318,6 +355,35 @@ function GlobeIcon() {
       <path d="M3.5 12h17" />
       <path d="M12 3a15 15 0 0 1 0 18" />
       <path d="M12 3a15 15 0 0 0 0 18" />
+    </svg>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 10.8 12 3l9 7.8" />
+      <path d="M5.5 9.5V21h13V9.5" />
+      <path d="M9.5 21v-6h5v6" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+function RouteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="6" cy="18" r="2" />
+      <circle cx="18" cy="6" r="2" />
+      <path d="M8 18h4a4 4 0 0 0 0-8h-1a4 4 0 0 1 0-8h5" />
     </svg>
   );
 }

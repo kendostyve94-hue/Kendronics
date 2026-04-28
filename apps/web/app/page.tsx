@@ -111,10 +111,10 @@ function Hero() {
       <img src={heroImage} alt="Fabrication electronique et PCB" className="absolute inset-0 h-full w-full object-cover opacity-55" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#06283b]/95 via-[#06283b]/78 to-[#06283b]/30" />
 
-      <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-6 pt-6 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[640px] lg:grid-cols-[1fr_25rem] lg:items-center lg:px-8">
+      <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-6 pt-8 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[640px] lg:grid-cols-[1fr_25rem] lg:items-center lg:px-8">
         <div className="lg:pr-4">
           <p className="label-caps text-[#ffd22e]">PCB, PCBA et logistique Afrique</p>
-          <h1 className="mt-3 max-w-3xl text-3xl font-black leading-tight tracking-tight text-white sm:mt-4 sm:text-5xl lg:text-6xl">
+          <h1 className="mt-3 max-w-3xl text-[2rem] font-black leading-tight tracking-tight text-white sm:mt-4 sm:text-5xl lg:text-6xl">
             Commandez vos PCB plus simplement, du fichier Gerber a la livraison.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/88 sm:mt-5 sm:text-base sm:leading-7">
@@ -142,7 +142,7 @@ function Hero() {
 
 function QuickQuotePanel() {
   return (
-    <aside className="border border-white/25 bg-white/95 p-4 text-ink shadow-premium sm:p-5">
+    <aside className="hidden border border-white/25 bg-white/95 p-4 text-ink shadow-premium sm:p-5 lg:block">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.14em] text-deepblue">Devis rapide</p>
@@ -189,10 +189,14 @@ function MobileQuickAccess() {
   ];
 
   return (
-    <section className="bg-white px-4 py-3 shadow-sm sm:px-6 lg:hidden">
+    <section className="bg-white px-4 py-4 shadow-sm sm:px-6 lg:hidden">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-sm font-black text-ink">Acces rapide</h2>
+        <a href="/quote" className="text-xs font-black text-deepblue">Devis</a>
+      </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {links.map(([title, subtitle, href]) => (
-          <a key={title} href={href} className="min-w-[8.5rem] border border-line bg-slate-50 p-3">
+          <a key={title} href={href} className="min-w-[8.5rem] border border-line bg-slate-50 p-3 shadow-sm">
             <p className="text-sm font-black text-ink">{title}</p>
             <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
           </a>
