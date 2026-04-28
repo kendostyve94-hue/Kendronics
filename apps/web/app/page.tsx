@@ -4,6 +4,24 @@ import { Navbar } from '../components/layout/Navbar';
 import { Button } from '../components/ui/Button';
 
 const heroImage = '/images/home-hero-pcb-assembly.jpeg';
+const heroVideo = '/videos/home-hero-production.mov';
+
+const heroSlides = [
+  {
+    eyebrow: 'PCB, PCBA et logistique Afrique',
+    title: 'Commandez vos PCB plus simplement, du fichier Gerber a la livraison.',
+    body: 'Kendronics coordonne devis, verification fichiers, paiement, production externe et suivi client pour les equipes hardware africaines.',
+    media: heroImage,
+    type: 'image',
+  },
+  {
+    eyebrow: 'Production, controle et coordination',
+    title: 'Passez du prototype au suivi de fabrication avec un parcours clair.',
+    body: 'Ajoutez vos fichiers, comparez les options, validez le paiement et gardez une vue simple sur chaque etape de la commande.',
+    media: heroVideo,
+    type: 'video',
+  },
+];
 
 const productCards = [
   {
@@ -107,24 +125,44 @@ export default function HomePage() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[#07324a] pt-24 text-white sm:pt-28">
-      <img src={heroImage} alt="Fabrication electronique et PCB" className="absolute inset-0 h-full w-full object-cover opacity-55" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#06283b]/95 via-[#06283b]/78 to-[#06283b]/30" />
-
-      <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-6 pt-8 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[640px] lg:grid-cols-[1fr_25rem] lg:items-center lg:px-8">
-        <div className="lg:pr-4">
-          <p className="label-caps text-[#ffd22e]">PCB, PCBA et logistique Afrique</p>
-          <h1 className="mt-3 max-w-3xl text-[2rem] font-black leading-tight tracking-tight text-white sm:mt-4 sm:text-5xl lg:text-6xl">
-            Commandez vos PCB plus simplement, du fichier Gerber a la livraison.
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-white/88 sm:mt-5 sm:text-base sm:leading-7">
-            Kendronics coordonne devis, verification fichiers, paiement, production externe et suivi client pour les equipes hardware africaines.
-          </p>
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:gap-3">
-            <Button href="/quote" className="h-11 whitespace-nowrap px-2 text-xs sm:h-12 sm:px-7 sm:text-sm">Demande un devis</Button>
-            <Button href="/services" variant="secondary" className="h-11 whitespace-nowrap px-2 text-xs sm:h-12 sm:px-7 sm:text-sm">Voir les services</Button>
+    <section className="relative min-h-[30rem] overflow-hidden bg-[#07324a] pt-24 text-white sm:min-h-[40rem] sm:pt-28">
+      <div className="absolute inset-0">
+        {heroSlides.map((slide, index) => (
+          <div key={slide.title} className={`home-hero-slide absolute inset-0 ${index === 1 ? 'home-hero-slide-delayed' : ''}`}>
+            {slide.type === 'video' ? (
+              <video className="h-full w-full object-cover opacity-60" autoPlay muted loop playsInline preload="metadata">
+                <source src={slide.media} type="video/quicktime" />
+              </video>
+            ) : (
+              <img src={slide.media} alt="" className="h-full w-full object-cover opacity-60" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#06283b]/96 via-[#06283b]/78 to-[#06283b]/32" />
           </div>
-          <div className="mt-5 grid max-w-2xl grid-cols-2 gap-2 sm:mt-8 sm:grid-cols-4 sm:gap-3">
+        ))}
+      </div>
+
+      <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-7 pt-7 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[640px] lg:grid-cols-[1fr_25rem] lg:items-center lg:px-8">
+        <div className="relative min-h-[20rem] lg:min-h-0 lg:pr-4">
+          {heroSlides.map((slide, index) => (
+            <div key={slide.title} className={`home-hero-copy absolute inset-0 flex flex-col justify-center ${index === 1 ? 'home-hero-slide-delayed' : ''}`}>
+              <p className="label-caps text-[#ffd22e]">{slide.eyebrow}</p>
+              <h1 className="mt-3 max-w-3xl text-[1.72rem] font-black leading-tight tracking-tight text-white sm:mt-4 sm:text-5xl lg:text-6xl">
+                {slide.title}
+              </h1>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/88 sm:mt-5 sm:text-base sm:leading-7">
+                {slide.body}
+              </p>
+              <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:gap-3">
+                <Button href="/quote" className="h-11 whitespace-nowrap px-2 text-xs sm:h-12 sm:px-7 sm:text-sm">Demande un devis</Button>
+                <Button href="/services" variant="secondary" className="h-11 whitespace-nowrap px-2 text-xs sm:h-12 sm:px-7 sm:text-sm">Voir les services</Button>
+              </div>
+            </div>
+          ))}
+          <div className="absolute bottom-0 left-0 flex gap-2 sm:hidden" aria-hidden="true">
+            <span className="home-hero-dot h-1.5 w-6 bg-white" />
+            <span className="home-hero-dot home-hero-slide-delayed h-1.5 w-6 bg-white" />
+          </div>
+          <div className="mt-[20rem] hidden max-w-2xl grid-cols-2 gap-2 sm:grid sm:grid-cols-4 sm:gap-3 lg:mt-8">
             {proofStats.map(([value, label]) => (
               <div key={label} className="border border-white/20 bg-white/10 p-2.5 sm:p-3">
                 <p className="text-base font-black text-white sm:text-lg">{value}</p>
