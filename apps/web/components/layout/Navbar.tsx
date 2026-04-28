@@ -126,7 +126,7 @@ export function Navbar() {
               Suivi
             </a>
             <CartLink href={cartHref} count={orders.length} />
-            <a href="/quote" className="inline-flex h-10 items-center border border-[#0f8f6b] px-4 font-medium text-white transition hover:border-[#12a87c] hover:text-[#ffd22e]">
+            <a href="/quote" className="inline-flex h-10 items-center rounded-full border border-[#0f8f6b] px-5 font-medium text-white transition hover:border-[#12a87c] hover:text-[#ffd22e]">
               Commande
             </a>
             <LoginMenu />
