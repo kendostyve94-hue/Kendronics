@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
@@ -23,5 +23,11 @@ export class OrdersController {
   @Get(':id')
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.ordersService.findOwnedOrder(user.id, id);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  delete(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.ordersService.deleteOwnedOrder(user.id, id);
   }
 }

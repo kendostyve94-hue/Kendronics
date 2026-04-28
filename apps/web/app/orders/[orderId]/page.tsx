@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/layout/Navbar';
 import { Card } from '../../../components/ui/Card';
 import { getApiBaseUrl } from '../../../lib/api-base-url';
@@ -21,7 +22,9 @@ import type {
 
 type PageStatus = 'loading' | 'ready' | 'demo' | 'error';
 type CheckoutStatus = 'idle' | 'loading' | 'error';
+type DeleteStatus = 'idle' | 'deleting' | 'error';
 const apiBaseUrl = getApiBaseUrl();
+const customerOrdersStorageKey = 'kendronics.customer.orders';
 
 const countryNames: Record<string, string> = {
   SN: 'Senegal',
@@ -36,10 +39,13 @@ const countryNames: Record<string, string> = {
 
 export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = use(params);
+  const router = useRouter();
   const [detail, setDetail] = useState<OrderDetailResponse>(() => buildDemoOrderDetail(orderId));
   const [status, setStatus] = useState<PageStatus>('loading');
   const [checkoutStatus, setCheckoutStatus] = useState<CheckoutStatus>('idle');
   const [checkoutError, setCheckoutError] = useState('');
+  const [deleteStatus, setDeleteStatus] = useState<DeleteStatus>('idle');
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -125,6 +131,38 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     }
   }
 
+  async function deleteOrder() {
+    const confirmed = window.confirm(`Supprimer la commande ${detail.order.orderNumber} ? Cette action retire la commande de votre panier.`);
+    if (!confirmed) return;
+
+    setDeleteStatus('deleting');
+    setDeleteError('');
+
+    try {
+      const session = await readFreshAuthSession();
+
+      if (session && status === 'ready') {
+        const response = await fetch(`${apiBaseUrl}${orderDetailApiContract.deleteOrder.path.replace(':orderId', detail.order.id)}`, {
+          method: orderDetailApiContract.deleteOrder.method,
+          headers: {
+            Authorization: `${session.tokenType} ${session.accessToken}`,
+          },
+        });
+
+        if (!response.ok && response.status !== 404) {
+          const error = await response.json().catch(() => null);
+          throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Impossible de supprimer la commande.');
+        }
+      }
+
+      forgetCustomerOrder(detail.order.id);
+      router.push('/quote');
+    } catch (error) {
+      setDeleteStatus('error');
+      setDeleteError(error instanceof Error ? error.message : 'Impossible de supprimer la commande.');
+    }
+  }
+
   return (
     <main className="min-h-screen bg-cloud">
       <Navbar />
@@ -182,6 +220,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
               gerberFile={detail.gerberFile}
               pricingBreakdown={detail.pricingBreakdown}
               destination={destination}
+              deleteStatus={deleteStatus}
+              deleteError={deleteError}
+              onDelete={deleteOrder}
             />
           </div>
 
@@ -266,12 +307,18 @@ function OrderAccordion({
   gerberFile,
   pricingBreakdown,
   destination,
+  deleteStatus,
+  deleteError,
+  onDelete,
 }: {
   order: CustomerOrderSummary;
   specs: PcbSpecs;
   gerberFile: GerberFileInfo;
   pricingBreakdown: PricingLineItem[];
   destination: string;
+  deleteStatus: DeleteStatus;
+  deleteError: string;
+  onDelete: () => void;
 }) {
   const productionDelay = order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : 'A confirmer';
 
@@ -296,6 +343,23 @@ function OrderAccordion({
         </div>
       </summary>
       <div className="border-t border-line bg-slate-50 p-4">
+        <div className="mb-4 flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Gestion commande</p>
+            <p className="mt-1 text-sm text-slate-600">Vous pouvez retirer cette commande du panier et de votre espace client.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={deleteStatus === 'deleting'}
+            className="inline-flex h-10 items-center justify-center rounded-full border border-red-300 px-4 text-sm font-black text-red-700 transition hover:border-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {deleteStatus === 'deleting' ? 'Suppression...' : 'Supprimer'}
+          </button>
+        </div>
+        {deleteStatus === 'error' ? (
+          <p className="mb-4 rounded-sm border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700">{deleteError}</p>
+        ) : null}
         <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
           <PcbSpecsCard specs={specs} gerberFile={gerberFile} />
           <PricingBreakdownCard order={order} pricingBreakdown={pricingBreakdown} />
@@ -303,6 +367,20 @@ function OrderAccordion({
       </div>
     </details>
   );
+}
+
+function forgetCustomerOrder(orderId: string) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const current = JSON.parse(window.localStorage.getItem(customerOrdersStorageKey) ?? '[]') as string[];
+    const next = Array.isArray(current) ? current.filter((id) => id !== orderId) : [];
+    window.localStorage.setItem(customerOrdersStorageKey, JSON.stringify(next));
+    window.dispatchEvent(new Event('kendronics:orders-updated'));
+  } catch {
+    window.localStorage.setItem(customerOrdersStorageKey, JSON.stringify([]));
+    window.dispatchEvent(new Event('kendronics:orders-updated'));
+  }
 }
 
 function PcbSpecsCard({ specs, gerberFile }: { specs: PcbSpecs; gerberFile: GerberFileInfo }) {

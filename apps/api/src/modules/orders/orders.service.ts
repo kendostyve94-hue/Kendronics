@@ -32,6 +32,11 @@ export class OrdersService {
     return order;
   }
 
+  async deleteOwnedOrder(userId: string, orderId: string): Promise<void> {
+    await this.findOwnedOrder(userId, orderId);
+    await this.ordersRepository.delete(orderId);
+  }
+
   async findByIdForInternal(orderId: string): Promise<Order> {
     const order = await this.ordersRepository.findById(orderId);
     if (!order) {

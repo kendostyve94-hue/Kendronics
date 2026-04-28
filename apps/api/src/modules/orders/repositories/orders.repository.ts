@@ -112,6 +112,10 @@ export class OrdersRepository {
     return this.toOrder(order);
   }
 
+  async delete(id: string): Promise<void> {
+    await this.prisma.order.delete({ where: { id } });
+  }
+
   private toOrder(order: OrderRecord): Order {
     const latestPayment = order.payments?.[0];
     const paymentStatus =

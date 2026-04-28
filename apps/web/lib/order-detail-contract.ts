@@ -74,6 +74,11 @@ export const orderDetailApiContract = {
     response: 'Customer-safe order summary plus quote snapshot fields when available.',
     customerSafety: 'Do not expose externalManufacturingPartner or externalSupplierOrderId.',
   },
+  deleteOrder: {
+    method: 'DELETE',
+    path: '/api/orders/:orderId',
+    response: '204 No Content when the authenticated customer owns the order.',
+  },
   tracking: {
     method: 'GET',
     path: '/api/tracking/:orderId',
