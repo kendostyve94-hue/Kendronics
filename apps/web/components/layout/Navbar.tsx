@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 const ORDER_STORAGE_KEY = 'kendronics.customer.orders';
 
 const productItems = [
@@ -31,12 +32,25 @@ const mobileActionItems = [
   { label: 'Creer mon compte', href: '/register' },
 ];
 
+const searchItems = [
+  { label: 'Accueil', href: '/', keywords: 'home accueil kendronics' },
+  { label: 'Devis PCB', href: '/quote', keywords: 'devis commande pcb pcba gerber prix' },
+  { label: 'Panier', href: '/orders/demo', keywords: 'panier commande order' },
+  { label: 'Suivi', href: '/tracking', keywords: 'suivi tracking livraison commande' },
+  { label: 'Services', href: '/services', keywords: 'services pcb pcba stencil assemblage' },
+  { label: 'Guide technique', href: '/guide-technique', keywords: 'guide technique gerber kicad easyeda' },
+  { label: 'Centre aide', href: '/centre-aide', keywords: 'aide support faq contact' },
+  { label: 'Compte', href: '/profile', keywords: 'compte profil utilisateur' },
+];
+
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isVisible, setIsVisible] = useState(true);
   const [orders, setOrders] = useState<string[]>([]);
-  const [language, setLanguage] = useState<'fr' | 'en'>('fr');
   const lastScrollY = useRef(0);
+  const pathname = usePathname();
 
   useEffect(() => {
     function handleScroll() {
@@ -60,7 +74,6 @@ export function Navbar() {
   useEffect(() => {
     function refreshClientState() {
       const storedLanguage = window.localStorage.getItem('kendronics.language');
-      setLanguage(storedLanguage === 'en' ? 'en' : 'fr');
       document.documentElement.lang = storedLanguage === 'en' ? 'en' : 'fr';
 
       try {
@@ -86,37 +99,23 @@ export function Navbar() {
     return lastOrderId ? `/orders/${lastOrderId}` : '/orders/demo';
   }, [orders]);
 
-  function switchLanguage() {
-    const nextLanguage = language === 'fr' ? 'en' : 'fr';
-    setLanguage(nextLanguage);
-    window.localStorage.setItem('kendronics.language', nextLanguage);
-    document.documentElement.lang = nextLanguage;
-    window.dispatchEvent(new CustomEvent('kendronics:language-changed', { detail: { language: nextLanguage } }));
-  }
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const items = searchItems.map((item) => (item.label === 'Panier' ? { ...item, href: cartHref } : item));
+    if (!query) return items.slice(0, 5);
+    return items.filter((item) => `${item.label} ${item.keywords}`.toLowerCase().includes(query)).slice(0, 6);
+  }, [cartHref, searchQuery]);
 
   return (
     <>
     <header className={`fixed left-0 right-0 top-0 z-50 text-white transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="border-b border-white/15 bg-[#07324a]/90 px-3 py-1 text-[11px] font-medium backdrop-blur-sm sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4">
-          <p className="min-w-0 truncate font-semibold tracking-wide text-white">Accelere ta creativite</p>
-          <div className="flex shrink-0 items-center gap-2 text-white sm:gap-3">
-            <AccountLink />
-            <LanguageButton language={language} onClick={switchLanguage} />
-            <a href="/centre-aide" className="hidden text-xs font-semibold transition hover:text-[#ffd22e] sm:inline">
-              Centre d'aide
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div className="border-b border-white/10 bg-[#07324a]/80 px-3 py-2 backdrop-blur-md sm:px-6 lg:px-8">
+      <div className="border-b border-white/10 bg-[#07324a] px-3 py-2 shadow-[0_10px_28px_rgba(8,20,32,0.18)] sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-3">
           <a href="/" className="inline-flex min-w-0 items-center" aria-label="Accueil Kendronics">
             <img
               src="/images/kendronics-logo.png"
               alt="Kendronics"
-              className="h-10 w-auto max-w-[11rem] object-contain sm:h-12 sm:max-w-[13rem]"
+              className="h-9 w-auto max-w-[12rem] object-contain sm:h-10 sm:max-w-[13rem]"
             />
           </a>
 
@@ -135,14 +134,28 @@ export function Navbar() {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
-            <CartLink href={cartHref} count={orders.length} />
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center border border-white/25 bg-white/10 text-white backdrop-blur transition hover:border-[#ffd22e]"
+              className="inline-flex h-9 w-9 items-center justify-center text-white transition hover:text-[#ffd22e]"
+              aria-label="Rechercher"
+              aria-expanded={isSearchOpen}
+              onClick={() => {
+                setIsSearchOpen((open) => !open);
+                setIsMenuOpen(false);
+              }}
+            >
+              <SearchIcon />
+            </button>
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center text-white transition hover:text-[#ffd22e]"
               aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation"
-              onClick={() => setIsMenuOpen((open) => !open)}
+              onClick={() => {
+                setIsMenuOpen((open) => !open);
+                setIsSearchOpen(false);
+              }}
             >
               <span className="flex w-5 flex-col gap-1.5">
                 <span className={`h-0.5 bg-current transition ${isMenuOpen ? 'translate-y-2 rotate-45' : ''}`} />
@@ -152,6 +165,45 @@ export function Navbar() {
             </button>
           </div>
         </div>
+
+        {isSearchOpen ? (
+          <div className="mx-auto mt-3 max-w-[1180px] border-t border-white/15 pt-3 lg:hidden">
+            <form
+              role="search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const firstResult = searchResults[0];
+                if (firstResult) window.location.href = firstResult.href;
+              }}
+            >
+              <label className="flex h-11 items-center gap-2 border border-white/20 bg-white px-3 text-ink">
+                <SearchIcon small />
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Rechercher une page, un service..."
+                  className="min-w-0 flex-1 bg-transparent text-sm font-bold outline-none placeholder:text-slate-500"
+                />
+              </label>
+            </form>
+            <div className="mt-2 grid gap-1">
+              {searchResults.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="flex min-h-10 items-center border border-white/10 bg-white/10 px-3 text-sm font-semibold text-white transition hover:border-[#ffd22e] hover:text-[#ffd22e]"
+                  onClick={() => setIsSearchOpen(false)}
+                >
+                  {item.label}
+                </a>
+              ))}
+              {searchResults.length === 0 ? (
+                <p className="border border-white/10 bg-white/10 px-3 py-3 text-sm font-semibold text-white">Aucun resultat trouve.</p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
 
         {isMenuOpen ? (
           <nav id="mobile-navigation" className="mx-auto mt-3 max-h-[calc(100vh-6.5rem)] max-w-[1180px] overflow-y-auto border-t border-white/15 pt-3 lg:hidden">
@@ -183,45 +235,53 @@ export function Navbar() {
         ) : null}
       </div>
     </header>
-    <MobileDock cartHref={cartHref} orderCount={orders.length} />
+    <MobileDock cartHref={cartHref} orderCount={orders.length} pathname={pathname} />
     </>
   );
 }
 
-function MobileDock({ cartHref, orderCount }: { cartHref: string; orderCount: number }) {
+function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orderCount: number; pathname: string }) {
   const items = [
     { label: 'Accueil', href: '/', icon: <HomeIcon /> },
-    { label: 'Devis', href: '/quote', icon: <PlusIcon />, featured: true },
     { label: 'Panier', href: cartHref, icon: <CartIcon />, count: orderCount },
+    { label: 'Devis', href: '/quote', icon: <PlusIcon /> },
     { label: 'Suivi', href: '/tracking', icon: <RouteIcon /> },
     { label: 'Compte', href: '/profile', icon: <UserIcon /> },
   ];
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-[#f4f7fa]/96 px-2 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-1.5 shadow-[0_-12px_32px_rgba(8,20,32,0.16)] backdrop-blur lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-[#f4f7fa] px-2 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-1.5 shadow-[0_-12px_32px_rgba(8,20,32,0.16)] lg:hidden"
       aria-label="Navigation mobile principale"
     >
       <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
-        {items.map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-sm text-[11px] font-black ${
-              item.featured ? 'bg-[#0f8f6b] text-white shadow-sm' : 'text-slate-700 hover:bg-white'
-            }`}
-          >
-            <span className="relative grid h-5 w-5 place-items-center">
-              {item.icon}
-              {item.count != null ? (
-                <span className="absolute -right-2 -top-2 grid min-h-4 min-w-4 place-items-center rounded-full bg-pink-500 px-1 text-[10px] font-black leading-none text-white">
-                  {item.count}
-                </span>
-              ) : null}
-            </span>
-            <span>{item.label}</span>
-          </a>
-        ))}
+        {items.map((item) => {
+          const isActive =
+            item.href === '/'
+              ? pathname === '/'
+              : item.label === 'Panier'
+                ? pathname.startsWith('/orders')
+                : pathname.startsWith(item.href);
+
+          return (
+            <a
+              key={item.label}
+              href={item.href}
+              className="relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-sm text-[11px] font-black text-slate-700 transition hover:bg-white"
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <span className={`relative grid h-5 w-5 place-items-center ${isActive ? 'text-[#0f8f6b]' : ''}`}>
+                {item.icon}
+                {item.count != null ? (
+                  <span className="absolute -right-2 -top-2 grid min-h-4 min-w-4 place-items-center rounded-full bg-pink-500 px-1 text-[10px] font-black leading-none text-white">
+                    {item.count}
+                  </span>
+                ) : null}
+              </span>
+              <span className={isActive ? 'text-[#0f8f6b]' : ''}>{item.label}</span>
+            </a>
+          );
+        })}
       </div>
     </nav>
   );
@@ -311,28 +371,6 @@ function CartLink({ href, count }: { href: string; count: number }) {
   );
 }
 
-function AccountLink() {
-  return (
-    <a href="/profile" className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 transition hover:border-[#ffd22e]" aria-label="Repertoire utilisateur">
-      <UserIcon />
-    </a>
-  );
-}
-
-function LanguageButton({ language, onClick }: { language: 'fr' | 'en'; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 transition hover:border-[#ffd22e]"
-      aria-label={`Basculer en ${language === 'fr' ? 'anglais' : 'francais'}`}
-      title={language === 'fr' ? 'Passer en anglais' : 'Passer en francais'}
-    >
-      <GlobeIcon />
-    </button>
-  );
-}
-
 function CartIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -343,22 +381,29 @@ function CartIcon() {
   );
 }
 
+function SearchIcon({ small = false }: { small?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={small ? 'h-4 w-4 shrink-0' : 'h-6 w-6'}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+}
+
 function UserIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="7.5" r="3.5" />
       <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
-    </svg>
-  );
-}
-
-function GlobeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3.5 12h17" />
-      <path d="M12 3a15 15 0 0 1 0 18" />
-      <path d="M12 3a15 15 0 0 0 0 18" />
     </svg>
   );
 }
