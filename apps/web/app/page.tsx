@@ -120,8 +120,8 @@ function Hero() {
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/88 sm:mt-5 sm:text-base sm:leading-7">
             Kendronics coordonne devis, verification fichiers, paiement, production externe et suivi client pour les equipes hardware africaines.
           </p>
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:gap-3">
-            <Button href="/quote" className="h-11 px-3 text-xs sm:h-12 sm:px-7 sm:text-sm">Demander un devis</Button>
+          <div className="mt-5 grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-2 sm:mt-7 sm:flex sm:gap-3">
+            <Button href="/quote" className="h-11 whitespace-nowrap px-2 text-xs sm:h-12 sm:px-7 sm:text-sm">Demande un devis</Button>
             <Button href="/services" variant="secondary" className="h-11 px-3 text-xs sm:h-12 sm:px-7 sm:text-sm">Voir les services</Button>
           </div>
           <div className="mt-5 grid max-w-2xl grid-cols-2 gap-2 sm:mt-8 sm:grid-cols-4 sm:gap-3">
@@ -285,31 +285,31 @@ function SmartOrdering() {
 
 function TrustBlock() {
   return (
-    <section className="bg-white px-4 py-8 sm:px-6 sm:py-14 lg:px-8">
-      <div className="mx-auto grid max-w-[1180px] gap-8 lg:grid-cols-[1fr_1fr] lg:items-center">
-        <div>
+    <section className="bg-white px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+      <div className="mx-auto grid max-w-[21.5rem] gap-5 sm:max-w-[1180px] sm:gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
+        <div className="min-w-0">
           <p className="label-caps text-deepblue">Capacites et preuves</p>
           <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Une plateforme de coordination, pas une promesse floue.</h2>
-          <div className="mt-6 grid gap-3">
+          <div className="mt-5 grid gap-2.5 sm:mt-6 sm:gap-3">
             {capabilityRows.map(([title, body]) => (
-              <div key={title} className="border border-line bg-slate-50 p-4">
+              <div key={title} className="border border-line bg-slate-50 p-3 sm:p-4">
                 <h3 className="text-sm font-black text-ink">{title}</h3>
-                <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
+                <p className="mt-1 text-[13px] leading-5 text-slate-600 sm:text-sm sm:leading-6">{body}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div>
-          <div className="border border-line bg-white p-6 shadow-glass">
+        <div className="min-w-0">
+          <div className="border border-line bg-white p-4 shadow-glass sm:p-6">
             <p className="label-caps text-deepblue">Pourquoi Kendronics</p>
-            <h3 className="mt-3 text-2xl font-black text-ink">Un seul endroit pour devis, paiement, support et livraison.</h3>
+            <h3 className="mt-3 text-xl font-black leading-tight text-ink sm:text-2xl">Un seul endroit pour devis, paiement, support et livraison.</h3>
             <p className="mt-4 text-sm leading-7 text-slate-600">
               Kendronics sert de couche operationnelle entre vos fichiers, les partenaires de fabrication, la logistique et le support client.
             </p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:gap-3">
               {['Prix lisible', 'Support Gerber', 'Suivi commande', 'Livraison Afrique'].map((item) => (
-                <div key={item} className="border border-line bg-slate-50 p-3 text-sm font-black text-ink">{item}</div>
+                <div key={item} className="flex min-h-12 items-center border border-line bg-slate-50 p-2.5 text-[13px] font-black leading-5 text-ink sm:min-h-14 sm:p-3 sm:text-sm">{item}</div>
               ))}
             </div>
           </div>

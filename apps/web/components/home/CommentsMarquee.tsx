@@ -43,7 +43,7 @@ export function CommentsMarquee() {
   const track = [...comments, ...comments];
 
   return (
-    <div className="mt-8 overflow-hidden border-y border-line bg-white/70 py-4">
+    <div className="mt-5 overflow-hidden border-y border-line bg-white/70 py-4 sm:mt-8">
       <div className="comments-marquee-track flex w-max gap-4">
         {track.map((comment, index) => (
           <article
@@ -80,4 +80,3 @@ function dailyScore(value: string, daySeed: number) {
 
   return hash;
 }
-

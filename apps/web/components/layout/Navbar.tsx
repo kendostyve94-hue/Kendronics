@@ -26,8 +26,6 @@ const aboutItems = [
 ];
 
 const mobileActionItems = [
-  { label: 'Suivi', href: '/tracking' },
-  { label: 'Commande', href: '/quote' },
   { label: 'Connexion', href: '/login' },
   { label: 'Creer mon compte', href: '/register' },
 ];
@@ -102,20 +100,20 @@ export function Navbar() {
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const items = searchItems.map((item) => (item.label === 'Panier' ? { ...item, href: cartHref } : item));
-    if (!query) return items.slice(0, 5);
+    if (!query) return [];
     return items.filter((item) => `${item.label} ${item.keywords}`.toLowerCase().includes(query)).slice(0, 6);
   }, [cartHref, searchQuery]);
 
   return (
     <>
     <header className={`fixed left-0 right-0 top-0 z-50 text-white transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="border-b border-white/10 bg-[#07324a] px-3 py-2 shadow-[0_10px_28px_rgba(8,20,32,0.18)] sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-3">
-          <a href="/" className="inline-flex min-w-0 items-center" aria-label="Accueil Kendronics">
+      <div className="border-b border-white/10 bg-[#07324a] px-3 py-1 shadow-[0_10px_28px_rgba(8,20,32,0.18)] sm:px-6 sm:py-2 lg:px-8">
+        <div className="mx-auto flex max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px]">
+          <a href="/" className="inline-flex min-w-0 items-center pl-1.5" aria-label="Accueil Kendronics">
             <img
               src="/images/kendronics-logo.png"
               alt="Kendronics"
-              className="h-16 w-auto max-w-[18rem] object-contain sm:h-20 sm:max-w-[22rem]"
+              className="h-9 w-auto max-w-[10.25rem] object-contain sm:h-14 sm:max-w-[14rem]"
             />
           </a>
 
@@ -167,7 +165,7 @@ export function Navbar() {
         </div>
 
         {isSearchOpen ? (
-          <div className="mx-auto mt-3 max-w-[1180px] border-t border-white/15 pt-3 lg:hidden">
+          <div className="mx-auto mt-2 max-w-[21.5rem] border-t border-white/15 pt-2 sm:max-w-[1180px] lg:hidden">
             <form
               role="search"
               onSubmit={(event) => {
@@ -176,17 +174,18 @@ export function Navbar() {
                 if (firstResult) window.location.href = firstResult.href;
               }}
             >
-              <label className="flex h-11 items-center gap-2 border border-white/20 bg-white px-3 text-ink">
+              <label className="flex h-10 items-center gap-2 border border-white/20 bg-white px-3 text-ink">
                 <SearchIcon small />
                 <input
                   autoFocus
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   placeholder="Rechercher une page, un service..."
-                  className="min-w-0 flex-1 bg-transparent text-sm font-bold outline-none placeholder:text-slate-500"
+                  className="min-w-0 flex-1 bg-transparent text-[16px] font-bold outline-none placeholder:text-slate-500"
                 />
               </label>
             </form>
+            {searchQuery.trim() ? (
             <div className="mt-2 grid gap-1">
               {searchResults.map((item) => (
                 <a
@@ -202,11 +201,12 @@ export function Navbar() {
                 <p className="border border-white/10 bg-white/10 px-3 py-3 text-sm font-semibold text-white">Aucun resultat trouve.</p>
               ) : null}
             </div>
+            ) : null}
           </div>
         ) : null}
 
         {isMenuOpen ? (
-          <nav id="mobile-navigation" className="mx-auto mt-3 max-h-[calc(100vh-6.5rem)] max-w-[1180px] overflow-y-auto border-t border-white/15 pt-3 lg:hidden">
+          <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6.5rem)] max-w-[21.5rem] overflow-y-auto border-t border-white/15 pt-2 sm:max-w-[1180px] lg:hidden">
             <div className="grid gap-2">
               <MobileSection title="Produit" items={productItems} onNavigate={() => setIsMenuOpen(false)} defaultOpen />
               <MobileSection title="Support" items={supportItems} onNavigate={() => setIsMenuOpen(false)} />
@@ -245,7 +245,6 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
     { label: 'Accueil', href: '/', icon: <HomeIcon /> },
     { label: 'Panier', href: cartHref, icon: <CartIcon />, count: orderCount },
     { label: 'Devis', href: '/quote', icon: <PlusIcon /> },
-    { label: 'Suivi', href: '/tracking', icon: <RouteIcon /> },
     { label: 'Compte', href: '/profile', icon: <UserIcon /> },
   ];
 
@@ -254,7 +253,7 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
       className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-[#f4f7fa] px-2 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-1.5 shadow-[0_-12px_32px_rgba(8,20,32,0.16)] lg:hidden"
       aria-label="Navigation mobile principale"
     >
-      <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
+      <div className="mx-auto grid max-w-[21.5rem] grid-cols-4 gap-1">
         {items.map((item) => {
           const isActive =
             item.href === '/'
@@ -423,16 +422,6 @@ function PlusIcon() {
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
       <path d="M12 5v14" />
       <path d="M5 12h14" />
-    </svg>
-  );
-}
-
-function RouteIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="6" cy="18" r="2" />
-      <circle cx="18" cy="6" r="2" />
-      <path d="M8 18h4a4 4 0 0 0 0-8h-1a4 4 0 0 1 0-8h5" />
     </svg>
   );
 }
