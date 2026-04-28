@@ -63,9 +63,7 @@ export default function ProfilePage() {
       <section className="mx-auto grid max-w-5xl gap-4 px-4 pb-8 pt-36 sm:px-6 sm:py-10 lg:px-8">
         <Card className="p-4 sm:p-6">
           <div className="flex items-start gap-4 sm:gap-6">
-            <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-[radial-gradient(circle_at_35%_30%,#ffd24a_0,#f59e0b_30%,#7c2d12_62%,#111827_100%)] text-xs font-black text-white shadow-sm sm:h-24 sm:w-24">
-              <span className="text-center leading-tight">KEND<br />RONICS</span>
-            </div>
+            <KendronicsAvatar />
             <div className="min-w-0 flex-1">
               <div className="grid gap-3 sm:grid-cols-3">
                 <InfoCell label="Numero de compte" value={accountNumber} />
@@ -148,6 +146,37 @@ function InfoCell({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{label}</p>
       <p className="mt-1 break-words text-base font-black text-ink sm:text-lg">{value}</p>
+    </div>
+  );
+}
+
+function KendronicsAvatar() {
+  return (
+    <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] shadow-[0_10px_24px_rgba(8,20,32,0.18)] ring-2 ring-white sm:h-24 sm:w-24" aria-hidden="true">
+      <svg viewBox="0 0 96 96" className="h-full w-full">
+        <defs>
+          <radialGradient id="avatarGlow" cx="34%" cy="28%" r="72%">
+            <stop offset="0%" stopColor="#ffd76a" />
+            <stop offset="38%" stopColor="#f59e0b" />
+            <stop offset="70%" stopColor="#0f8f6b" />
+            <stop offset="100%" stopColor="#0b1724" />
+          </radialGradient>
+          <linearGradient id="avatarTrace" x1="18" y1="12" x2="78" y2="86">
+            <stop offset="0%" stopColor="#fff4c4" />
+            <stop offset="100%" stopColor="#56e0b2" />
+          </linearGradient>
+        </defs>
+        <circle cx="48" cy="48" r="48" fill="url(#avatarGlow)" />
+        <circle cx="48" cy="48" r="39" fill="#0b1724" opacity="0.72" />
+        <path d="M18 30h15l8 9h14l8-9h15M18 66h14l9-10h14l9 10h14" fill="none" stroke="url(#avatarTrace)" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
+        <path d="M25 49h16M55 49h16M48 20v15M48 61v15" fill="none" stroke="#ffd76a" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
+        {[18, 78, 48, 25, 71].map((x, index) => (
+          <circle key={`${x}-${index}`} cx={x} cy={[30, 30, 20, 49, 49][index]} r="3.4" fill="#fff4c4" />
+        ))}
+        <circle cx="48" cy="48" r="22" fill="#f4f7fa" opacity="0.95" />
+        <path d="M37 63V33h7v12l13-12h9L51 47l16 16H57L44 50v13h-7Z" fill="#0f8f6b" />
+        <circle cx="73" cy="68" r="6" fill="#ffd76a" stroke="#0b1724" strokeWidth="3" />
+      </svg>
     </div>
   );
 }
