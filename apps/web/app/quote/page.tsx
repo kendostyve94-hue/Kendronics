@@ -198,18 +198,23 @@ export default function QuotePage() {
         throw new Error('Connectez-vous avant de televerser un fichier Gerber.');
       }
 
-      const presignResponse = await fetch(`${apiBaseUrl}/api/uploads/presign`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          filename: file.name,
-          mimeType: file.type || 'application/zip',
-          fileSizeBytes: file.size,
-        }),
-      });
+      let presignResponse: Response;
+      try {
+        presignResponse = await fetch(`${apiBaseUrl}/api/uploads/presign`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            filename: file.name,
+            mimeType: file.type || 'application/zip',
+            fileSizeBytes: file.size,
+          }),
+        });
+      } catch {
+        throw new Error("Impossible de contacter l'API Render pour preparer l'upload.");
+      }
 
       if (!presignResponse.ok) {
         const error = await presignResponse.json().catch(() => null);
@@ -217,14 +222,19 @@ export default function QuotePage() {
       }
 
       const presignedUpload = (await presignResponse.json()) as { uploadId: string; uploadUrl: string };
-      const uploadResponse = await fetch(presignedUpload.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type || 'application/zip' },
-        body: file,
-      });
+      let uploadResponse: Response;
+      try {
+        uploadResponse = await fetch(presignedUpload.uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type || 'application/zip' },
+          body: file,
+        });
+      } catch {
+        throw new Error('Cloudflare R2 bloque encore l upload. Verifiez la politique CORS du bucket.');
+      }
 
       if (!uploadResponse.ok) {
-        throw new Error('Le stockage prive a refuse le fichier.');
+        throw new Error(`Le stockage prive a refuse le fichier (${uploadResponse.status}).`);
       }
 
       update('gerberFileName', file.name);
