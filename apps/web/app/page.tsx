@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button';
 import { CommentsMarquee } from '../components/home/CommentsMarquee';
 
 const heroImage =
-  'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=2400&q=85';
+  '/images/home-hero-pcb-assembly.jpeg';
 
 const factoryImage =
   'https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?auto=format&fit=crop&w=1800&q=85';
