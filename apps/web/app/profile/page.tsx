@@ -16,6 +16,14 @@ type ProfileForm = {
   country: string;
 };
 
+type ConfirmationAction = 'account' | 'contacts' | 'delete';
+
+type ConfirmationState = {
+  action: ConfirmationAction;
+  code: string;
+  email: string;
+};
+
 const emptyProfile: ProfileForm = {
   name: '',
   email: '',
@@ -26,34 +34,100 @@ const emptyProfile: ProfileForm = {
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileForm>(emptyProfile);
+  const [accountDraft, setAccountDraft] = useState<Omit<ProfileForm, 'email'>>({
+    name: '',
+    phone: '',
+    company: '',
+    country: '',
+  });
+  const [contactDraft, setContactDraft] = useState({ currentEmail: '', nextEmail: '', nextPhone: '' });
   const [saved, setSaved] = useState(false);
   const [accountId, setAccountId] = useState('');
   const [deleteEmail, setDeleteEmail] = useState('');
+  const [confirmation, setConfirmation] = useState<ConfirmationState | null>(null);
+  const [confirmationInput, setConfirmationInput] = useState('');
 
   useEffect(() => {
     const storedProfile = readStoredProfile();
     const sessionProfile = readSessionProfile();
-    setProfile({
+    const nextProfile = {
       ...emptyProfile,
       ...storedProfile,
       email: sessionProfile.email || storedProfile.email || '',
+    };
+    setProfile(nextProfile);
+    setAccountDraft({
+      name: nextProfile.name,
+      phone: nextProfile.phone,
+      company: nextProfile.company,
+      country: nextProfile.country,
     });
     setAccountId(sessionProfile.id || storedProfile.email || sessionProfile.email);
   }, []);
 
-  function update<K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) {
+  function updateAccountDraft<K extends keyof Omit<ProfileForm, 'email'>>(key: K, value: Omit<ProfileForm, 'email'>[K]) {
     setSaved(false);
-    setProfile((current) => ({ ...current, [key]: value }));
+    setAccountDraft((current) => ({ ...current, [key]: value }));
   }
 
-  function saveProfile() {
-    window.localStorage.setItem(profileStorageKey, JSON.stringify(profile));
+  function saveProfile(nextProfile: ProfileForm) {
+    window.localStorage.setItem(profileStorageKey, JSON.stringify(nextProfile));
+    setProfile(nextProfile);
     setSaved(true);
+  }
+
+  function requestConfirmation(action: ConfirmationAction) {
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    setConfirmation({
+      action,
+      code,
+      email: profile.email,
+    });
+    setConfirmationInput('');
+  }
+
+  function validateConfirmation() {
+    if (!confirmation || confirmationInput.trim() !== confirmation.code) return;
+
+    if (confirmation.action === 'account') {
+      saveProfile({ ...profile, ...accountDraft });
+    }
+
+    if (confirmation.action === 'contacts') {
+      saveProfile({
+        ...profile,
+        email: contactDraft.nextEmail.trim() || profile.email,
+        phone: contactDraft.nextPhone.trim() || profile.phone,
+      });
+      setContactDraft({ currentEmail: '', nextEmail: '', nextPhone: '' });
+    }
+
+    if (confirmation.action === 'delete') {
+      window.localStorage.removeItem(profileStorageKey);
+      window.localStorage.removeItem('kendronics.auth.session');
+      setProfile(emptyProfile);
+      setAccountDraft({ name: '', phone: '', company: '', country: '' });
+      setDeleteEmail('');
+    }
+
+    setConfirmation(null);
+    setConfirmationInput('');
   }
 
   const displayName = profile.name.trim() || emailName(profile.email) || 'Non renseigne';
   const displayEmail = profile.email.trim() || 'Connectez-vous pour afficher votre e-mail';
   const accountNumber = accountId ? formatAccountNumber(accountId) : 'Connexion requise';
+  const hasAccountDraftValue = Object.values(accountDraft).some((value) => value.trim().length > 0);
+  const hasEmailContactChange =
+    isValidEmail(contactDraft.currentEmail) &&
+    isValidEmail(contactDraft.nextEmail) &&
+    contactDraft.currentEmail.trim().toLowerCase() === profile.email.trim().toLowerCase();
+  const hasPhoneOnlyContactChange =
+    contactDraft.nextPhone.trim().length > 0 &&
+    !contactDraft.currentEmail.trim() &&
+    !contactDraft.nextEmail.trim();
+  const hasFullContactChange = hasEmailContactChange && contactDraft.nextPhone.trim().length > 0;
+  const canSaveContacts = hasEmailContactChange || hasPhoneOnlyContactChange || hasFullContactChange;
   const canConfirmDelete = profile.email.trim().length > 0 && deleteEmail.trim().toLowerCase() === profile.email.trim().toLowerCase();
 
   return (
@@ -89,17 +163,42 @@ export default function ProfilePage() {
               <span className="text-xl leading-none text-deepblue">+</span>
             </summary>
             <div className="grid gap-4 border-t border-line bg-slate-50 p-4 sm:grid-cols-2 sm:p-6">
-              <TextField label="Nom complet" value={profile.name} onChange={(value) => update('name', value)} />
-              <TextField label="Email" value={profile.email} onChange={(value) => update('email', value)} />
-              <TextField label="Telephone" value={profile.phone} onChange={(value) => update('phone', value)} />
-              <TextField label="Entreprise ou ecole" value={profile.company} onChange={(value) => update('company', value)} />
-              <TextField label="Pays" value={profile.country} onChange={(value) => update('country', value)} />
+              <TextField label="Nom complet" value={accountDraft.name} onChange={(value) => updateAccountDraft('name', value)} />
+              <TextField label="Telephone" value={accountDraft.phone} onChange={(value) => updateAccountDraft('phone', value)} />
+              <TextField label="Entreprise ou ecole" value={accountDraft.company} onChange={(value) => updateAccountDraft('company', value)} />
+              <TextField label="Pays" value={accountDraft.country} onChange={(value) => updateAccountDraft('country', value)} />
               <div className="flex items-end">
-                <button type="button" onClick={saveProfile} className="h-11 w-full bg-deepblue px-5 text-sm font-black text-white transition hover:bg-signal sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => requestConfirmation('account')}
+                  disabled={!hasAccountDraftValue || !profile.email}
+                  className="h-11 w-full bg-deepblue px-5 text-sm font-black text-white transition hover:bg-signal disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
+                >
                   Enregistrer
                 </button>
               </div>
               {saved ? <p className="text-sm font-black text-deepblue sm:col-span-2">Informations enregistrees sur cet appareil.</p> : null}
+            </div>
+          </details>
+          <details className="border-b border-line">
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between px-4 text-sm font-black text-ink sm:px-6">
+              Changer mes contacts
+              <span className="text-xl leading-none text-deepblue">+</span>
+            </summary>
+            <div className="grid gap-4 border-t border-line bg-slate-50 p-4 sm:grid-cols-3 sm:p-6">
+              <TextField label="Ancien email" value={contactDraft.currentEmail} onChange={(value) => setContactDraft((current) => ({ ...current, currentEmail: value }))} />
+              <TextField label="Nouveau email" value={contactDraft.nextEmail} onChange={(value) => setContactDraft((current) => ({ ...current, nextEmail: value }))} />
+              <TextField label="Nouveau numero" value={contactDraft.nextPhone} onChange={(value) => setContactDraft((current) => ({ ...current, nextPhone: value }))} />
+              <div className="flex items-end sm:col-span-3">
+                <button
+                  type="button"
+                  onClick={() => requestConfirmation('contacts')}
+                  disabled={!canSaveContacts || !profile.email}
+                  className="h-11 w-full bg-deepblue px-5 text-sm font-black text-white transition hover:bg-signal disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
+                >
+                  Enregistrer
+                </button>
+              </div>
             </div>
           </details>
           <details>
@@ -119,6 +218,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   disabled={!canConfirmDelete}
+                  onClick={() => requestConfirmation('delete')}
                   className="h-11 rounded-sm bg-red-600 px-5 text-sm font-black text-white transition disabled:cursor-not-allowed disabled:bg-slate-300"
                 >
                   Confirmer
@@ -137,6 +237,37 @@ export default function ProfilePage() {
       </section>
 
       <Footer />
+      {confirmation ? (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/55 px-4">
+          <div className="w-full max-w-sm rounded-sm bg-white p-5 shadow-premium">
+            <h2 className="text-lg font-black text-ink">Code de confirmation</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Un code de confirmation a ete prepare pour {confirmation.email}. Entrez ce code pour valider l'action.
+            </p>
+            <p className="mt-2 text-xs font-bold text-slate-500">Code temporaire: {confirmation.code}</p>
+            <input
+              value={confirmationInput}
+              onChange={(event) => setConfirmationInput(event.target.value)}
+              inputMode="numeric"
+              maxLength={6}
+              className="mt-4 h-11 w-full rounded-sm border border-slate-200 px-3 text-center text-lg font-black tracking-[0.24em] outline-none focus:border-deepblue focus:ring-2 focus:ring-sky-100"
+            />
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button type="button" className="h-10 rounded-sm border border-line text-sm font-black text-slate-600" onClick={() => setConfirmation(null)}>
+                Annuler
+              </button>
+              <button
+                type="button"
+                disabled={!confirmationInput.trim()}
+                onClick={validateConfirmation}
+                className="h-10 rounded-sm bg-deepblue text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                Valider
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
@@ -216,6 +347,10 @@ function readSessionProfile(): { id: string; email: string } {
 
 function emailName(email: string) {
   return email.includes('@') ? email.split('@')[0] : '';
+}
+
+function isValidEmail(value: string) {
+  return /^\S+@\S+\.\S+$/.test(value.trim());
 }
 
 function formatAccountNumber(seed: string) {
