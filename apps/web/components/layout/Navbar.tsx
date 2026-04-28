@@ -41,7 +41,7 @@ const searchItems = [
   { label: 'Compte', href: '/profile', keywords: 'compte profil utilisateur' },
 ];
 
-export function Navbar({ hideMobileHeader = false }: { hideMobileHeader?: boolean }) {
+export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [openMobileSection, setOpenMobileSection] = useState<string | null>(null);
@@ -124,7 +124,7 @@ export function Navbar({ hideMobileHeader = false }: { hideMobileHeader?: boolea
 
   return (
     <>
-    <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-white transition-transform duration-300 ${hideMobileHeader ? 'hidden lg:block' : ''} ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+    <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-white transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="border-b border-white/10 bg-[#07324a] px-3 py-1 shadow-[0_10px_28px_rgba(8,20,32,0.18)] sm:px-6 sm:py-2 lg:px-8">
         <div className="mx-auto flex max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px]">
           <a href="/" className="-ml-3 inline-flex min-w-0 items-center sm:ml-0" aria-label="Accueil Kendronics">
