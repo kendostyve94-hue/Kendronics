@@ -226,7 +226,7 @@ export default function QuotePage() {
       try {
         uploadResponse = await fetch(presignedUpload.uploadUrl, {
           method: 'PUT',
-          headers: { 'Content-Type': file.type || 'application/zip' },
+          headers: { 'Content-Type': 'application/zip' },
           body: file,
         });
       } catch {

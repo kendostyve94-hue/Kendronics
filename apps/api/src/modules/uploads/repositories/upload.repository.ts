@@ -54,19 +54,19 @@ export class UploadRepository {
     url.searchParams.set('X-Amz-Credential', `${accessKeyId}/${credentialScope}`);
     url.searchParams.set('X-Amz-Date', amzDate);
     url.searchParams.set('X-Amz-Expires', expiresSeconds);
-    url.searchParams.set('X-Amz-SignedHeaders', 'host');
+    url.searchParams.set('X-Amz-SignedHeaders', 'content-type;host');
 
     const canonicalQueryString = [...url.searchParams.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
       .join('&');
-    const canonicalHeaders = `host:${url.host}\n`;
+    const canonicalHeaders = `content-type:application/zip\nhost:${url.host}\n`;
     const canonicalRequest = [
       'PUT',
       url.pathname,
       canonicalQueryString,
       canonicalHeaders,
-      'host',
+      'content-type;host',
       'UNSIGNED-PAYLOAD',
     ].join('\n');
     const stringToSign = [
