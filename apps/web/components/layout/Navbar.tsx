@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { readAuthSession } from '../../lib/auth-session';
 import { Button } from '../ui/Button';
 
 const ORDER_STORAGE_KEY = 'kendronics.customer.orders';
@@ -31,7 +30,6 @@ export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [orders, setOrders] = useState<string[]>([]);
-  const [userLabel, setUserLabel] = useState('Mon compte');
   const [language, setLanguage] = useState<'fr' | 'en'>('fr');
   const lastScrollY = useRef(0);
 
@@ -67,8 +65,6 @@ export function Navbar() {
         setOrders([]);
       }
 
-      const session = readAuthSession();
-      setUserLabel(session?.accessToken ? extractSessionLabel(session.accessToken) : 'Invite');
     }
 
     refreshClientState();
@@ -90,15 +86,16 @@ export function Navbar() {
     setLanguage(nextLanguage);
     window.localStorage.setItem('kendronics.language', nextLanguage);
     document.documentElement.lang = nextLanguage;
+    window.dispatchEvent(new CustomEvent('kendronics:language-changed', { detail: { language: nextLanguage } }));
   }
 
   return (
     <header className={`fixed left-0 right-0 top-0 z-50 text-white transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="border-b border-white/15 bg-[#07324a]/90 px-4 py-2 text-[11px] font-medium backdrop-blur-sm sm:px-6 lg:px-8">
+      <div className="border-b border-white/15 bg-[#07324a]/90 px-4 py-1.5 text-[11px] font-medium backdrop-blur-sm sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4">
           <p className="font-semibold tracking-wide text-white">Accelere ta creativite</p>
           <div className="flex items-center gap-3 text-white">
-            <AccountMenu userLabel={userLabel} />
+            <AccountLink />
             <LanguageButton language={language} onClick={switchLanguage} />
             <a href="/centre-aide" className="hidden text-xs font-semibold transition hover:text-[#ffd22e] sm:inline">
               Centre d'aide
@@ -107,10 +104,10 @@ export function Navbar() {
         </div>
       </div>
 
-      <div className="border-b border-white/10 bg-[#07324a]/80 px-4 py-4 backdrop-blur-md sm:px-6 lg:px-8">
+      <div className="border-b border-white/10 bg-[#07324a]/80 px-4 py-2.5 backdrop-blur-md sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4">
-          <a href="/" className="inline-flex items-center gap-3 text-2xl font-black tracking-tight" aria-label="Accueil Kendronics">
-            <span className="grid h-10 w-10 place-items-center border-2 border-[#ffd22e] text-[10px] font-black leading-none text-[#ffd22e]">
+          <a href="/" className="inline-flex items-center gap-3 text-xl font-black tracking-tight" aria-label="Accueil Kendronics">
+            <span className="grid h-9 w-9 place-items-center border-2 border-[#ffd22e] text-[9px] font-black leading-none text-[#ffd22e]">
               PCB
             </span>
             <span>
@@ -126,7 +123,7 @@ export function Navbar() {
               Suivi
             </a>
             <CartLink href={cartHref} count={orders.length} />
-            <a href="/quote" className="inline-flex h-10 items-center rounded-full border border-[#0f8f6b] px-5 font-medium text-white transition hover:border-[#12a87c] hover:text-[#ffd22e]">
+            <a href="/quote" className="inline-flex h-9 items-center rounded-full border border-[#0f8f6b] px-5 font-medium text-white transition hover:border-[#12a87c] hover:text-[#ffd22e]">
               Commande
             </a>
             <LoginMenu />
@@ -194,7 +191,7 @@ function Dropdown({ label, items }: { label: string; items: Array<{ label: strin
 function LoginMenu() {
   return (
     <div className="group relative">
-      <a href="/login" className="inline-flex h-10 items-center rounded-full bg-[#0f8f6b] px-5 font-medium text-white transition hover:bg-[#0b7558]">
+      <a href="/login" className="inline-flex h-9 items-center rounded-full bg-[#0f8f6b] px-5 font-medium text-white transition hover:bg-[#0b7558]">
         Connexion
       </a>
       <div className="invisible absolute right-0 top-full min-w-60 translate-y-2 border border-slate-200 bg-white p-4 text-slate-950 opacity-0 shadow-[0_18px_44px_rgba(15,23,42,0.22)] transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
@@ -224,19 +221,11 @@ function CartLink({ href, count }: { href: string; count: number }) {
   );
 }
 
-function AccountMenu({ userLabel }: { userLabel: string }) {
+function AccountLink() {
   return (
-    <div className="group relative">
-      <a href="/profile" className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 transition hover:border-[#ffd22e]" aria-label="Repertoire utilisateur">
-        <UserIcon />
-      </a>
-      <div className="invisible absolute right-full top-0 z-[80] mr-3 flex h-9 min-w-72 items-center gap-3 border border-slate-200 bg-white px-3 text-slate-950 opacity-0 shadow-[0_12px_28px_rgba(15,23,42,0.18)] transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-        <span className="truncate text-xs font-medium text-slate-600">{userLabel}</span>
-        <a href="/profile" className="shrink-0 text-xs font-semibold text-[#0f8f6b] hover:text-[#0b7558]">
-          Modifier mes informations
-        </a>
-      </div>
-    </div>
+    <a href="/profile" className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 transition hover:border-[#ffd22e]" aria-label="Repertoire utilisateur">
+      <UserIcon />
+    </a>
   );
 }
 
@@ -245,22 +234,13 @@ function LanguageButton({ language, onClick }: { language: 'fr' | 'en'; onClick:
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/10 transition hover:border-[#ffd22e]"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/10 transition hover:border-[#ffd22e]"
       aria-label={`Basculer en ${language === 'fr' ? 'anglais' : 'francais'}`}
       title={language === 'fr' ? 'Passer en anglais' : 'Passer en francais'}
     >
       <GlobeIcon />
     </button>
   );
-}
-
-function extractSessionLabel(accessToken: string): string {
-  try {
-    const payload = JSON.parse(window.atob(accessToken.split('.')[1] ?? '')) as { email?: string; sub?: string };
-    return payload.email ?? payload.sub ?? 'Mon compte';
-  } catch {
-    return 'Mon compte';
-  }
 }
 
 function CartIcon() {
