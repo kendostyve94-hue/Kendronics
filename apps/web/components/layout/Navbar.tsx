@@ -112,13 +112,12 @@ export function Navbar() {
 
       <div className="border-b border-white/10 bg-[#07324a]/80 px-3 py-2 backdrop-blur-md sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-3">
-          <a href="/" className="inline-flex min-w-0 items-center gap-2 text-lg font-black tracking-tight sm:gap-3 sm:text-xl" aria-label="Accueil Kendronics">
-            <span className="grid h-8 w-8 shrink-0 place-items-center border-2 border-[#ffd22e] text-[8px] font-black leading-none text-[#ffd22e] sm:h-9 sm:w-9 sm:text-[9px]">
-              PCB
-            </span>
-            <span className="truncate">
-              <span className="text-[#ffd22e]">K</span>endronics
-            </span>
+          <a href="/" className="inline-flex min-w-0 items-center" aria-label="Accueil Kendronics">
+            <img
+              src="/images/kendronics-logo.png"
+              alt="Kendronics"
+              className="h-10 w-auto max-w-[11rem] object-contain sm:h-12 sm:max-w-[13rem]"
+            />
           </a>
 
           <nav className="hidden items-center gap-4 text-sm font-medium lg:flex">
@@ -193,6 +192,7 @@ function MobileDock({ cartHref, orderCount }: { cartHref: string; orderCount: nu
   const items = [
     { label: 'Accueil', href: '/', icon: <HomeIcon /> },
     { label: 'Devis', href: '/quote', icon: <PlusIcon />, featured: true },
+    { label: 'Panier', href: cartHref, icon: <CartIcon />, count: orderCount },
     { label: 'Suivi', href: '/tracking', icon: <RouteIcon /> },
     { label: 'Compte', href: '/profile', icon: <UserIcon /> },
   ];
@@ -202,7 +202,7 @@ function MobileDock({ cartHref, orderCount }: { cartHref: string; orderCount: nu
       className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-[#f4f7fa]/96 px-2 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-1.5 shadow-[0_-12px_32px_rgba(8,20,32,0.16)] backdrop-blur lg:hidden"
       aria-label="Navigation mobile principale"
     >
-      <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+      <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
         {items.map((item) => (
           <a
             key={item.href}
@@ -211,13 +211,17 @@ function MobileDock({ cartHref, orderCount }: { cartHref: string; orderCount: nu
               item.featured ? 'bg-[#0f8f6b] text-white shadow-sm' : 'text-slate-700 hover:bg-white'
             }`}
           >
-            <span className="grid h-5 w-5 place-items-center">{item.icon}</span>
+            <span className="relative grid h-5 w-5 place-items-center">
+              {item.icon}
+              {item.count != null ? (
+                <span className="absolute -right-2 -top-2 grid min-h-4 min-w-4 place-items-center rounded-full bg-pink-500 px-1 text-[10px] font-black leading-none text-white">
+                  {item.count}
+                </span>
+              ) : null}
+            </span>
             <span>{item.label}</span>
           </a>
         ))}
-        <a href={cartHref} className="sr-only">
-          Panier {orderCount}
-        </a>
       </div>
     </nav>
   );
