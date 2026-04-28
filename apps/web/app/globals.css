@@ -391,7 +391,7 @@ section {
 }
 
 .comments-marquee-track {
-  animation: comments-marquee 76s linear infinite;
+  animation: comments-marquee 118s linear infinite;
 }
 
 .comments-marquee-track:hover {

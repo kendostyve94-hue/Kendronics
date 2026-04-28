@@ -120,9 +120,9 @@ function Hero() {
           <p className="mt-4 max-w-2xl text-sm leading-6 text-white/88 sm:mt-5 sm:text-base sm:leading-7">
             Kendronics coordonne devis, verification fichiers, paiement, production externe et suivi client pour les equipes hardware africaines.
           </p>
-          <div className="mt-5 grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-2 sm:mt-7 sm:flex sm:gap-3">
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:gap-3">
             <Button href="/quote" className="h-11 whitespace-nowrap px-2 text-xs sm:h-12 sm:px-7 sm:text-sm">Demande un devis</Button>
-            <Button href="/services" variant="secondary" className="h-11 px-3 text-xs sm:h-12 sm:px-7 sm:text-sm">Voir les services</Button>
+            <Button href="/services" variant="secondary" className="h-11 whitespace-nowrap px-2 text-xs sm:h-12 sm:px-7 sm:text-sm">Voir les services</Button>
           </div>
           <div className="mt-5 grid max-w-2xl grid-cols-2 gap-2 sm:mt-8 sm:grid-cols-4 sm:gap-3">
             {proofStats.map(([value, label]) => (
