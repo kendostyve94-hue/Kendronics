@@ -249,10 +249,10 @@ export default function ProfilePage() {
 
       <Footer />
       {confirmation ? (
-        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/55 px-4">
-          <div className="w-full max-w-sm rounded-sm bg-white p-5 shadow-premium">
-            <h2 className="text-lg font-black text-ink">Code de confirmation</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/55 px-5">
+          <div className="w-full max-w-[19rem] rounded-sm bg-white p-4 shadow-premium">
+            <h2 className="text-base font-black text-ink">Code de confirmation</h2>
+            <p className="mt-2 text-xs leading-5 text-slate-600">
               Un code de confirmation a ete prepare pour {confirmation.email}. Entrez ce code pour valider l'action.
             </p>
             <p className="mt-2 text-xs font-bold text-slate-500">Code temporaire: {confirmation.code}</p>
@@ -261,9 +261,9 @@ export default function ProfilePage() {
               onChange={(event) => setConfirmationInput(event.target.value)}
               inputMode="numeric"
               maxLength={6}
-              className="mt-4 h-11 w-full rounded-sm border border-slate-200 px-3 text-center text-lg font-black tracking-[0.24em] outline-none focus:border-deepblue focus:ring-2 focus:ring-sky-100"
+              className="mt-3 h-10 w-full rounded-sm border border-slate-200 px-3 text-center text-base font-black tracking-[0.24em] outline-none focus:border-deepblue focus:ring-2 focus:ring-sky-100"
             />
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2">
               <button type="button" className="h-10 rounded-sm border border-line text-sm font-black text-slate-600" onClick={() => setConfirmation(null)}>
                 Annuler
               </button>
