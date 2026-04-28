@@ -126,6 +126,7 @@ type QuoteSaveState = {
 };
 
 const apiBaseUrl = getApiBaseUrl();
+const customerOrdersStorageKey = 'kendronics.customer.orders';
 
 export default function QuotePage() {
   const [config, setConfig] = useState<QuoteConfig>(initialConfig);
@@ -303,6 +304,7 @@ export default function QuotePage() {
       }
 
       const order = (await orderResponse.json()) as { id: string; orderNumber: string };
+      rememberCustomerOrder(order.id);
       setSaved(true);
       setQuoteSave({
         status: 'saved',
@@ -589,6 +591,20 @@ export default function QuotePage() {
 
 function toMillimeters(value: number, unit: QuoteConfig['unit']): number {
   return unit === 'inch' ? Math.round(value * 25.4 * 100) / 100 : value;
+}
+
+function rememberCustomerOrder(orderId: string) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const current = JSON.parse(window.localStorage.getItem(customerOrdersStorageKey) ?? '[]') as string[];
+    const next = [orderId, ...current.filter((id) => id !== orderId)].slice(0, 20);
+    window.localStorage.setItem(customerOrdersStorageKey, JSON.stringify(next));
+    window.dispatchEvent(new Event('kendronics:orders-updated'));
+  } catch {
+    window.localStorage.setItem(customerOrdersStorageKey, JSON.stringify([orderId]));
+    window.dispatchEvent(new Event('kendronics:orders-updated'));
+  }
 }
 
 function Panel({

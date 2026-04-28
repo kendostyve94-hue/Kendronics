@@ -16,6 +16,7 @@ const serviceImages = [
 
 const services = [
   {
+    id: 'pcb-standard',
     title: 'PCB prototype ordering',
     category: 'Prototype',
     image: serviceImages[0],
@@ -25,6 +26,7 @@ const services = [
     cta: 'Quote a prototype',
   },
   {
+    id: 'pcb-petit-lot',
     title: 'Small-batch PCB ordering',
     category: 'Production',
     image: serviceImages[1],
@@ -34,6 +36,7 @@ const services = [
     cta: 'Start a small batch',
   },
   {
+    id: 'pcb-avance',
     title: 'Advanced PCB request',
     category: 'Custom',
     image: serviceImages[0],
@@ -43,6 +46,7 @@ const services = [
     cta: 'Request review',
   },
   {
+    id: 'pcba',
     title: 'PCBA request',
     category: 'Assembly',
     image: serviceImages[2],
@@ -52,6 +56,7 @@ const services = [
     cta: 'Request PCBA',
   },
   {
+    id: 'stencil',
     title: 'SMT stencil ordering',
     category: 'Assembly',
     image: serviceImages[3],
@@ -61,6 +66,7 @@ const services = [
     cta: 'Quote a stencil',
   },
   {
+    id: 'assistance-technique',
     title: 'Gerber review assistance',
     category: 'Files',
     image: serviceImages[2],
@@ -70,6 +76,7 @@ const services = [
     cta: 'Upload files',
   },
   {
+    id: 'paiement',
     title: 'Payment facilitation',
     category: 'Payments',
     image: serviceImages[1],
@@ -79,6 +86,7 @@ const services = [
     cta: 'Get pricing',
   },
   {
+    id: 'logistique',
     title: 'Africa delivery and logistics coordination',
     category: 'Logistics',
     image: serviceImages[3],
@@ -88,6 +96,7 @@ const services = [
     cta: 'Plan delivery',
   },
   {
+    id: 'suivi',
     title: 'Order tracking',
     category: 'Visibility',
     image: serviceImages[0],
@@ -98,6 +107,7 @@ const services = [
     href: '/tracking',
   },
   {
+    id: 'support',
     title: 'Professional support tickets',
     category: 'Support',
     image: serviceImages[2],
@@ -240,6 +250,7 @@ function ServiceCard({
 }: {
   service: {
     title: string;
+    id: string;
     category: string;
     image: string;
     what: string;
@@ -250,7 +261,7 @@ function ServiceCard({
   };
 }) {
   return (
-    <Card className="group flex h-full flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-glass">
+    <Card id={service.id} className="group flex h-full scroll-mt-36 flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-glass">
       <div className="image-reflection relative overflow-hidden">
         <img
           src={service.image}
