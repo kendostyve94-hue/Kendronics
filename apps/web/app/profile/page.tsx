@@ -134,6 +134,7 @@ export default function ProfilePage() {
   const hasFullContactChange = hasEmailContactChange && contactDraft.nextPhone.trim().length > 0;
   const canSaveContacts = hasEmailContactChange || hasPhoneOnlyContactChange || hasFullContactChange;
   const canConfirmDelete = profile.email.trim().length > 0 && deleteEmail.trim().toLowerCase() === profile.email.trim().toLowerCase();
+  const canSaveAccount = hasAccountDraftValue && Boolean(profile.email);
 
   return (
     <main className="min-h-screen bg-cloud">
@@ -177,8 +178,10 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => requestConfirmation('account')}
-                  disabled={!hasAccountDraftValue || !profile.email}
-                  className="h-11 w-full rounded-sm bg-deepblue px-5 text-sm font-black text-white transition hover:bg-signal disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
+                  disabled={!canSaveAccount}
+                  className={`h-11 w-full rounded-sm px-5 text-sm font-black text-white transition sm:w-auto ${
+                    canSaveAccount ? 'bg-deepblue hover:bg-signal' : 'cursor-not-allowed bg-slate-300'
+                  }`}
                 >
                   Enregistrer
                 </button>
@@ -202,7 +205,9 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => requestConfirmation('contacts')}
                   disabled={!canSaveContacts || !profile.email}
-                  className="h-11 w-full rounded-sm bg-deepblue px-5 text-sm font-black text-white transition hover:bg-signal disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
+                  className={`h-11 w-full rounded-sm px-5 text-sm font-black text-white transition sm:w-auto ${
+                    canSaveContacts && profile.email ? 'bg-deepblue hover:bg-signal' : 'cursor-not-allowed bg-slate-300'
+                  }`}
                 >
                   Enregistrer
                 </button>
