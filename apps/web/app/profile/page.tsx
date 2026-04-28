@@ -46,6 +46,7 @@ export default function ProfilePage() {
   const [deleteEmail, setDeleteEmail] = useState('');
   const [confirmation, setConfirmation] = useState<ConfirmationState | null>(null);
   const [confirmationInput, setConfirmationInput] = useState('');
+  const [openSection, setOpenSection] = useState<'account' | 'contacts' | 'delete' | null>(null);
 
   useEffect(() => {
     const storedProfile = readStoredProfile();
@@ -114,6 +115,10 @@ export default function ProfilePage() {
     setConfirmationInput('');
   }
 
+  function toggleSection(section: 'account' | 'contacts' | 'delete') {
+    setOpenSection((current) => (current === section ? null : section));
+  }
+
   const displayName = profile.name.trim() || emailName(profile.email) || 'Non renseigne';
   const displayEmail = profile.email.trim() || 'Connectez-vous pour afficher votre e-mail';
   const accountNumber = accountId ? formatAccountNumber(accountId) : 'Connexion requise';
@@ -157,11 +162,12 @@ export default function ProfilePage() {
             Conditions generales
             <ChevronIcon />
           </a>
-          <details className="border-b border-line">
-            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between px-4 text-sm font-black text-ink sm:px-6">
+          <div className="border-b border-line">
+            <button type="button" className="flex min-h-14 w-full items-center justify-between px-4 text-left text-sm font-black text-ink sm:px-6" aria-expanded={openSection === 'account'} onClick={() => toggleSection('account')}>
               Modifier le compte
               <span className="text-xl leading-none text-deepblue">+</span>
-            </summary>
+            </button>
+            {openSection === 'account' ? (
             <div className="grid gap-4 border-t border-line bg-slate-50 p-4 sm:grid-cols-2 sm:p-6">
               <TextField label="Nom complet" value={accountDraft.name} onChange={(value) => updateAccountDraft('name', value)} />
               <TextField label="Telephone" value={accountDraft.phone} onChange={(value) => updateAccountDraft('phone', value)} />
@@ -172,19 +178,21 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => requestConfirmation('account')}
                   disabled={!hasAccountDraftValue || !profile.email}
-                  className="h-11 w-full bg-deepblue px-5 text-sm font-black text-white transition hover:bg-signal disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
+                  className="h-11 w-full rounded-sm bg-deepblue px-5 text-sm font-black text-white transition hover:bg-signal disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
                 >
                   Enregistrer
                 </button>
               </div>
               {saved ? <p className="text-sm font-black text-deepblue sm:col-span-2">Informations enregistrees sur cet appareil.</p> : null}
             </div>
-          </details>
-          <details className="border-b border-line">
-            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between px-4 text-sm font-black text-ink sm:px-6">
+            ) : null}
+          </div>
+          <div className="border-b border-line">
+            <button type="button" className="flex min-h-14 w-full items-center justify-between px-4 text-left text-sm font-black text-ink sm:px-6" aria-expanded={openSection === 'contacts'} onClick={() => toggleSection('contacts')}>
               Changer mes contacts
               <span className="text-xl leading-none text-deepblue">+</span>
-            </summary>
+            </button>
+            {openSection === 'contacts' ? (
             <div className="grid gap-4 border-t border-line bg-slate-50 p-4 sm:grid-cols-3 sm:p-6">
               <TextField label="Ancien email" value={contactDraft.currentEmail} onChange={(value) => setContactDraft((current) => ({ ...current, currentEmail: value }))} />
               <TextField label="Nouveau email" value={contactDraft.nextEmail} onChange={(value) => setContactDraft((current) => ({ ...current, nextEmail: value }))} />
@@ -194,18 +202,20 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => requestConfirmation('contacts')}
                   disabled={!canSaveContacts || !profile.email}
-                  className="h-11 w-full bg-deepblue px-5 text-sm font-black text-white transition hover:bg-signal disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
+                  className="h-11 w-full rounded-sm bg-deepblue px-5 text-sm font-black text-white transition hover:bg-signal disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
                 >
                   Enregistrer
                 </button>
               </div>
             </div>
-          </details>
-          <details>
-            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between px-4 text-sm font-black text-ink sm:px-6">
+            ) : null}
+          </div>
+          <div>
+            <button type="button" className="flex min-h-14 w-full items-center justify-between px-4 text-left text-sm font-black text-ink sm:px-6" aria-expanded={openSection === 'delete'} onClick={() => toggleSection('delete')}>
               Supprimer le compte
               <span className="text-xl leading-none text-red-500">+</span>
-            </summary>
+            </button>
+            {openSection === 'delete' ? (
             <div className="border-t border-line bg-slate-50 p-4 sm:p-6">
               <p className="text-sm leading-6 text-slate-600">Entrez l'adresse e-mail du compte pour activer la confirmation.</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
@@ -225,7 +235,8 @@ export default function ProfilePage() {
                 </button>
               </div>
             </div>
-          </details>
+            ) : null}
+          </div>
         </Card>
 
         <Card className="p-0">
