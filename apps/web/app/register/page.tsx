@@ -23,6 +23,7 @@ const initialValues: RegisterFormState = {
   acceptedTerms: false,
 };
 const apiBaseUrl = getApiBaseUrl();
+const profileStorageKey = 'kendronics.customer.profile';
 
 export default function RegisterPage() {
   const [values, setValues] = useState<RegisterFormState>(initialValues);
@@ -69,6 +70,16 @@ export default function RegisterPage() {
         throw new Error('Registration failed.');
       }
 
+      window.localStorage.setItem(
+        profileStorageKey,
+        JSON.stringify({
+          name: `${values.firstName.trim()} ${values.lastName.trim()}`.trim(),
+          email: values.email.trim().toLowerCase(),
+          phone: values.phone.trim(),
+          company: values.company.trim(),
+          country: selectedCountry?.name ?? values.country,
+        }),
+      );
       setStatus('account_created');
     } catch {
       setErrors({ form: 'Impossible de creer votre compte pour le moment. Reessayez.' });
