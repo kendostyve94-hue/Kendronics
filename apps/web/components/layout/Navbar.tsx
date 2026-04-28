@@ -245,6 +245,7 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
     { label: 'Accueil', href: '/', icon: <HomeIcon /> },
     { label: 'Panier', href: cartHref, icon: <CartIcon />, count: orderCount },
     { label: 'Devis', href: '/quote', icon: <PlusIcon /> },
+    { label: 'Suivi', href: '/tracking', icon: <RouteIcon /> },
     { label: 'Compte', href: '/profile', icon: <UserIcon /> },
   ];
 
@@ -253,7 +254,7 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
       className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-[#f4f7fa] px-2 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-1.5 shadow-[0_-12px_32px_rgba(8,20,32,0.16)] lg:hidden"
       aria-label="Navigation mobile principale"
     >
-      <div className="mx-auto grid max-w-[21.5rem] grid-cols-4 gap-1">
+      <div className="mx-auto grid max-w-[21.5rem] grid-cols-5 gap-1">
         {items.map((item) => {
           const isActive =
             item.href === '/'
@@ -422,6 +423,16 @@ function PlusIcon() {
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
       <path d="M12 5v14" />
       <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+function RouteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="6" cy="18" r="2" />
+      <circle cx="18" cy="6" r="2" />
+      <path d="M8 18h4a4 4 0 0 0 0-8h-1a4 4 0 0 1 0-8h5" />
     </svg>
   );
 }
