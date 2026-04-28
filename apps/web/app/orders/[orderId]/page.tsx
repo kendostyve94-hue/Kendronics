@@ -6,7 +6,6 @@ import { Card } from '../../../components/ui/Card';
 import { getApiBaseUrl } from '../../../lib/api-base-url';
 import { readAuthSession, readFreshAuthSession } from '../../../lib/auth-session';
 import {
-  customerTrackingStatuses,
   isCustomerTrackingStatus,
   orderDetailApiContract,
   statusLabels,
@@ -18,7 +17,6 @@ import type {
   OrderDetailResponse,
   PcbSpecs,
   PricingLineItem,
-  TrackingTimelineItem,
 } from '../../../lib/order-detail-contract';
 
 type PageStatus = 'loading' | 'ready' | 'demo' | 'error';
@@ -130,22 +128,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   return (
     <main className="min-h-screen bg-cloud">
       <Navbar />
-      <section className="relative overflow-hidden bg-ink pb-28 pt-32 text-white">
-        <img
-          src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2200&q=85"
-          alt="Macro view of a printed circuit board"
-          className="absolute inset-0 h-full w-full object-cover opacity-[0.34]"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.84] to-deepblue/[0.6]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-100">Details de commande</p>
-          <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <section className="border-b border-line bg-white pt-28">
+        <div className="mx-auto max-w-[1320px] px-4 pb-5 sm:px-6 lg:px-8">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Panier d'achat</p>
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-                {detail.order.orderNumber}
-              </h1>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-200">
-                Progression, paiement, prix et timeline logistique visibles par le client pour cette commande PCB Kendronics.
+              <h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">Details de commande</h1>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Chaque commande est regroupee dans une section deroulante avec ses fichiers, specifications et couts.
               </p>
             </div>
             <StatusBadge status={detail.order.status} />
@@ -153,34 +143,56 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto -mt-16 max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-[1320px] px-4 py-5 sm:px-6 lg:px-8">
         {status === 'demo' && (
-          <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">
+          <div className="mb-5 rounded-sm border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">
             Apercu de donnees client affiche car l API de commande authentifiee est indisponible dans cet environnement.
           </div>
         )}
         {status === 'error' && (
-          <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
+          <div className="mb-5 rounded-sm border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
             Impossible de charger cette commande. Actualisez la page ou contactez le support.
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
-          <div className="space-y-6">
-            <OverviewCards order={detail.order} destination={destination} />
-            <PcbSpecsCard specs={detail.pcbSpecs} gerberFile={detail.gerberFile} />
-            <PricingBreakdownCard order={detail.order} pricingBreakdown={detail.pricingBreakdown} />
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="overflow-hidden rounded-sm border border-line bg-white shadow-sm">
+            <div className="flex flex-col gap-4 border-b border-line p-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-wrap gap-5 text-sm font-black">
+                <span className="text-[#0877ff]">Toutes (1)</span>
+                <span>PCB (1)</span>
+                <span>Assemblage ({detail.pcbSpecs.assemblyRequired ? 1 : 0})</span>
+              </div>
+              <label className="flex h-9 w-full items-center gap-2 rounded-sm border border-line bg-white px-3 md:max-w-56">
+                <input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400" placeholder="Rechercher" />
+                <span className="text-sm text-slate-500">Q</span>
+              </label>
+            </div>
+
+            <div className="hidden grid-cols-[minmax(0,1fr)_5rem_8rem_7rem] bg-slate-100 px-5 py-3 text-sm font-black text-ink md:grid">
+              <span>Article</span>
+              <span>Qte</span>
+              <span>Delais prod</span>
+              <span className="text-right">Prix</span>
+            </div>
+
+            <OrderAccordion
+              order={detail.order}
+              specs={detail.pcbSpecs}
+              gerberFile={detail.gerberFile}
+              pricingBreakdown={detail.pricingBreakdown}
+              destination={destination}
+            />
           </div>
 
-          <div className="space-y-6 lg:sticky lg:top-28 lg:self-start">
-            <PaymentCard
+          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <SummaryCard
               order={detail.order}
               canCheckout={canCheckout}
               checkoutStatus={checkoutStatus}
               checkoutError={checkoutError}
               onCheckout={startStripeCheckout}
             />
-            <TrackingTimeline currentStatus={detail.order.status} items={detail.trackingTimeline} />
             <SupportCard supportHref={supportHref} orderNumber={detail.order.orderNumber} />
           </div>
         </div>
@@ -189,7 +201,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   );
 }
 
-function PaymentCard({
+function SummaryCard({
   order,
   canCheckout,
   checkoutStatus,
@@ -202,54 +214,94 @@ function PaymentCard({
   checkoutError: string;
   onCheckout: () => void;
 }) {
+  const shippingEstimate = order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : '--';
+
   return (
-    <Card className="p-6">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Paiement</p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">{formatMoney(order.totalPrice, order.currency)}</h2>
-      <p className="mt-3 text-sm leading-6 text-slate-600">
-        {order.paymentStatus === 'paid'
-          ? 'Le paiement est confirme pour cette commande.'
-          : 'Payez en securite via Stripe Checkout. Kendronics ne manipule jamais directement les donnees de carte.'}
-      </p>
+    <Card className="p-5">
+      <h2 className="text-xl font-black tracking-tight text-ink">Resume</h2>
+      <div className="mt-5 space-y-4 text-sm">
+        <SummaryLine label="Total marchandises" value={formatMoney(order.totalPrice, order.currency)} />
+        <SummaryLine label="Estimation des frais de port" value="--" />
+        <div className="flex items-center justify-between border-t border-line pt-4 text-base font-black">
+          <span>Total</span>
+          <span className="text-[#ff7a00]">{formatMoney(order.totalPrice, order.currency)}</span>
+        </div>
+        <div className="border-t border-line pt-4">
+          <SummaryLine label="Date d'expedition estimee" value={shippingEstimate} />
+          <p className="mt-3 text-xs leading-5 text-slate-500">
+            La commande ne sera expediee que lorsque les fichiers, le paiement et la revue seront prets.
+          </p>
+        </div>
+        <SummaryLine label="Poids" value="0kg" />
+      </div>
       <button
         type="button"
         disabled={!canCheckout || checkoutStatus === 'loading'}
         onClick={onCheckout}
-        className={`mt-5 inline-flex h-12 w-full items-center justify-center rounded-xl px-5 text-sm font-black text-white transition ${
+        className={`mt-5 inline-flex h-12 w-full items-center justify-center rounded-full px-5 text-base font-black text-white transition ${
           canCheckout && checkoutStatus !== 'loading'
-            ? 'bg-[#635bff] hover:bg-[#4f46e5]'
+            ? 'bg-[#0877ff] hover:bg-[#0068e8]'
             : 'cursor-not-allowed bg-slate-300'
         }`}
       >
-        {checkoutStatus === 'loading' ? 'Ouverture de Stripe...' : order.paymentStatus === 'paid' ? 'Paye' : 'Payer avec Stripe'}
+        {checkoutStatus === 'loading' ? 'Ouverture de Stripe...' : order.paymentStatus === 'paid' ? 'Paiement confirme' : 'Paiement securise'}
       </button>
       {checkoutStatus === 'error' ? <p className="mt-3 text-sm font-bold text-red-700">{checkoutError}</p> : null}
     </Card>
   );
 }
 
-function OverviewCards({ order, destination }: { order: CustomerOrderSummary; destination: string }) {
+function SummaryLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <SummaryTile label="ID commande" value={order.id} />
-      <SummaryTile label="Prix total" value={formatMoney(order.totalPrice, order.currency)} />
-      <SummaryTile label="Paiement" value={capitalize(order.paymentStatus)} />
-      <SummaryTile label="Destination" value={destination} />
-      <SummaryTile
-        label="Livraison estimee"
-        value={order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : 'Confirmation en attente'}
-        className="md:col-span-2 xl:col-span-4"
-      />
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-slate-700">{label}</span>
+      <span className="font-black text-ink">{value}</span>
     </div>
   );
 }
 
-function SummaryTile({ label, value, className = '' }: { label: string; value: string; className?: string }) {
+function OrderAccordion({
+  order,
+  specs,
+  gerberFile,
+  pricingBreakdown,
+  destination,
+}: {
+  order: CustomerOrderSummary;
+  specs: PcbSpecs;
+  gerberFile: GerberFileInfo;
+  pricingBreakdown: PricingLineItem[];
+  destination: string;
+}) {
+  const productionDelay = order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : 'A confirmer';
+
   return (
-    <Card className={`p-5 ${className}`}>
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</p>
-      <p className="mt-2 break-words text-lg font-black text-ink">{value}</p>
-    </Card>
+    <details className="group border-b border-line last:border-b-0" open>
+      <summary className="grid cursor-pointer list-none gap-3 px-5 py-4 transition hover:bg-slate-50 md:grid-cols-[minmax(0,1fr)_5rem_8rem_7rem] md:items-center">
+        <div className="min-w-0">
+          <p className="text-base font-black text-ink">{order.orderNumber}</p>
+          <p className="mt-1 truncate text-sm text-slate-600">{specs.productType} - {specs.dimensions} - {destination}</p>
+        </div>
+        <div className="flex items-center justify-between md:block">
+          <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:hidden">Qte</span>
+          <span className="font-black">{specs.quantity}</span>
+        </div>
+        <div className="flex items-center justify-between md:block">
+          <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:hidden">Delais</span>
+          <span className="text-sm font-bold text-slate-700">{productionDelay}</span>
+        </div>
+        <div className="flex items-center justify-between md:block md:text-right">
+          <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:hidden">Prix</span>
+          <span className="font-black text-[#ff7a00]">{formatMoney(order.totalPrice, order.currency)}</span>
+        </div>
+      </summary>
+      <div className="border-t border-line bg-slate-50 p-4">
+        <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+          <PcbSpecsCard specs={specs} gerberFile={gerberFile} />
+          <PricingBreakdownCard order={order} pricingBreakdown={pricingBreakdown} />
+        </div>
+      </div>
+    </details>
   );
 }
 
@@ -267,7 +319,7 @@ function PcbSpecsCard({ specs, gerberFile }: { specs: PcbSpecs; gerberFile: Gerb
   ];
 
   return (
-    <Card className="p-6">
+    <Card className="p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Specifications PCB</p>
@@ -276,16 +328,16 @@ function PcbSpecsCard({ specs, gerberFile }: { specs: PcbSpecs; gerberFile: Gerb
         <FileBadge status={gerberFile.validationStatus} />
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {rows.map(([label, value]) => (
-          <div key={label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div key={label} className="rounded-sm border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">{label}</p>
             <p className="mt-2 text-sm font-black text-ink">{value}</p>
           </div>
         ))}
       </div>
 
-      <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="mt-4 rounded-sm border border-slate-200 bg-white p-3">
         <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Gerber televerse</p>
         <div className="mt-3 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
           <p><span className="font-black text-ink">Fichier :</span> {gerberFile.fileName}</p>
@@ -305,7 +357,7 @@ function PricingBreakdownCard({
   pricingBreakdown: PricingLineItem[];
 }) {
   return (
-    <Card className="p-6">
+    <Card className="p-5">
       <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Detail du prix</p>
       <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">Resume des couts</h2>
       <div className="mt-5 divide-y divide-slate-100">
@@ -316,66 +368,9 @@ function PricingBreakdownCard({
           </div>
         ))}
       </div>
-      <div className="mt-4 flex items-center justify-between rounded-2xl bg-deepblue p-4 text-white">
+      <div className="mt-4 flex items-center justify-between rounded-sm bg-deepblue p-4 text-white">
         <span className="text-sm font-black">Total paye</span>
         <span className="text-xl font-black">{formatMoney(order.totalPrice, order.currency)}</span>
-      </div>
-    </Card>
-  );
-}
-
-function TrackingTimeline({
-  currentStatus,
-  items,
-}: {
-  currentStatus: CustomerTrackingStatus;
-  items: TrackingTimelineItem[];
-}) {
-  const completedStatuses = new Set(
-    customerTrackingStatuses.slice(0, customerTrackingStatuses.indexOf(currentStatus) + 1),
-  );
-  const itemByStatus = new Map(items.map((item) => [item.status, item]));
-
-  return (
-    <Card className="p-6">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Timeline de suivi</p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">Progression</h2>
-      <div className="mt-6 space-y-0">
-        {customerTrackingStatuses.map((status, index) => {
-          const event = itemByStatus.get(status);
-          const isComplete = completedStatuses.has(status);
-          const isCurrent = status === currentStatus;
-
-          return (
-            <div key={status} className="relative grid grid-cols-[2rem_1fr] gap-3 pb-6 last:pb-0">
-              {index < customerTrackingStatuses.length - 1 && (
-                <div className="absolute left-[0.94rem] top-8 h-full w-px bg-slate-200" />
-              )}
-              <div
-                className={`relative z-10 grid h-8 w-8 place-items-center rounded-full border text-xs font-black ${
-                  isComplete
-                    ? 'border-sky-200 bg-sky-50 text-deepblue'
-                    : 'border-slate-200 bg-white text-slate-400'
-                }`}
-              >
-                {isComplete ? index + 1 : ''}
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-black text-ink">{event?.title ?? statusLabels[status]}</p>
-                  {isCurrent && <span className="rounded-full bg-sky-50 px-2 py-1 text-xs font-black text-deepblue">Actuel</span>}
-                </div>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
-                  {event?.description ?? defaultTimelineDescription(status)}
-                </p>
-                <p className="mt-1 text-xs font-bold text-slate-500">
-                  {event?.occurredAt ? formatDate(event.occurredAt) : isComplete ? 'Termine' : 'En attente'}
-                  {event?.location ? ` - ${event.location}` : ''}
-                </p>
-              </div>
-            </div>
-          );
-        })}
       </div>
     </Card>
   );
@@ -401,7 +396,7 @@ function SupportCard({ supportHref, orderNumber }: { supportHref: string; orderN
 
 function StatusBadge({ status }: { status: CustomerTrackingStatus }) {
   return (
-    <span className="inline-flex h-12 items-center rounded-xl border border-white/[0.18] bg-white/10 px-5 text-sm font-black text-sky-100 backdrop-blur-xl">
+      <span className="inline-flex h-10 items-center rounded-full border border-signal bg-sky-50 px-4 text-sm font-black text-deepblue">
       {statusLabels[status]}
     </span>
   );
@@ -524,31 +519,10 @@ function buildDemoOrderDetail(orderId: string): OrderDetailResponse {
   };
 }
 
-function defaultTimelineDescription(status: CustomerTrackingStatus): string {
-  const descriptions: Record<CustomerTrackingStatus, string> = {
-    paid: 'Payment is confirmed.',
-    awaiting_payment: 'Payment is pending.',
-    supplier_order_pending: 'Kendronics is preparing the external partner order.',
-    supplier_ordered: 'The partner production order has been placed.',
-    supplier_in_production: 'The boards are being produced by an approved external partner.',
-    received_at_france_hub: 'The shipment has reached the France coordination hub.',
-    shipped_to_africa: 'The order has left the France hub for the destination region.',
-    customs_processing: 'The shipment is being processed by customs.',
-    out_for_delivery: 'The package is with the local delivery partner.',
-    delivered: 'The order has been delivered.',
-  };
-
-  return descriptions[status];
-}
-
 function formatMoney(amount: number, currency: CustomerOrderSummary['currency']): string {
   return new Intl.NumberFormat('en', { style: 'currency', currency }).format(amount);
 }
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(value));
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }

@@ -10,12 +10,7 @@ import {
   publicTrackingApiContract,
   publicTrackingStatuses,
 } from '../../lib/public-tracking-contract';
-import type {
-  PublicOrderStatus,
-  PublicTrackingLookupRequest,
-  PublicTrackingStatus,
-  PublicTrackingTimeline,
-} from '../../lib/public-tracking-contract';
+import type { PublicTrackingLookupRequest, PublicTrackingStatus, PublicTrackingTimeline } from '../../lib/public-tracking-contract';
 
 type LookupState = 'idle' | 'loading' | 'ready' | 'not_found' | 'invalid_email' | 'error';
 
@@ -137,17 +132,7 @@ export default function TrackingPage() {
         <LookupMessage state={state} />
 
         {timeline ? (
-          <div className="grid gap-6 lg:grid-cols-[1fr_24rem]">
-            <div className="space-y-6">
-              <PublicOverview timeline={timeline} destination={destination} />
-              {timeline.events.length === 0 ? (
-                <EmptyTrackingState status={timeline.status} />
-              ) : (
-                <PublicTimeline currentStatus={timeline.status} events={timeline.events} />
-              )}
-            </div>
-            <ShipmentCard timeline={timeline} destination={destination} />
-          </div>
+          <PublicTimeline timeline={timeline} destination={destination} />
         ) : (
           <Card className="p-8 text-center">
             <p className="text-sm font-black uppercase tracking-[0.16em] text-signal">Ready when you are</p>
@@ -228,77 +213,9 @@ function Alert({ tone, title, message }: { tone: 'info' | 'error'; title: string
   );
 }
 
-function PublicOverview({ timeline, destination }: { timeline: PublicTrackingTimeline; destination: string }) {
-  return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <SummaryTile label="Current status" value={publicStatusLabels[timeline.status]} highlight={timeline.status === 'delivered'} />
-      <SummaryTile label="Estimated delivery" value={timeline.estimatedDeliveryAt ? formatDate(timeline.estimatedDeliveryAt) : 'Pending confirmation'} />
-      <SummaryTile label="Destination" value={destination} />
-      <SummaryTile label="Numero de commande" value={timeline.orderNumber} />
-    </div>
-  );
-}
-
-function SummaryTile({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <Card className={`p-5 ${highlight ? 'border-emerald-200 bg-emerald-50' : ''}`}>
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</p>
-      <p className={`mt-2 break-words text-lg font-black ${highlight ? 'text-emerald-700' : 'text-ink'}`}>{value}</p>
-    </Card>
-  );
-}
-
-function ShipmentCard({ timeline, destination }: { timeline: PublicTrackingTimeline; destination: string }) {
-  return (
-    <Card className="p-6 lg:sticky lg:top-28 lg:self-start">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Shipment</p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">{timeline.orderNumber}</h2>
-      <div className="mt-5 space-y-4">
-        <ShipmentRow label="Destination country" value={destination} />
-        <ShipmentRow label="Carrier" value={timeline.carrierName || 'Not assigned yet'} />
-        <ShipmentRow label="Numero de suivi" value={timeline.trackingNumber || 'Pas encore disponible'} />
-        <ShipmentRow label="Delivery" value={timeline.status === 'delivered' ? 'Delivered' : timeline.estimatedDeliveryAt ? formatDate(timeline.estimatedDeliveryAt) : 'Pending confirmation'} />
-      </div>
-    </Card>
-  );
-}
-
-function ShipmentRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <p className="mt-2 break-words text-sm font-black text-ink">{value}</p>
-    </div>
-  );
-}
-
-function EmptyTrackingState({ status }: { status: PublicOrderStatus }) {
-  const isDelivered = status === 'delivered';
-
-  return (
-    <Card className="p-8">
-      <p className={`text-sm font-black uppercase tracking-[0.16em] ${isDelivered ? 'text-emerald-700' : 'text-signal'}`}>
-        {isDelivered ? 'Delivered' : 'No tracking yet'}
-      </p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">
-        {isDelivered ? 'This order is marked delivered.' : 'Tracking events will appear here soon.'}
-      </h2>
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-        {isDelivered
-          ? 'There are no public timeline notes attached yet, but the current customer-safe status is delivered.'
-          : 'The order exists and the email matches, but Kendronics has not published public logistics milestones yet.'}
-      </p>
-    </Card>
-  );
-}
-
-function PublicTimeline({
-  currentStatus,
-  events,
-}: {
-  currentStatus: PublicOrderStatus;
-  events: PublicTrackingTimeline['events'];
-}) {
+function PublicTimeline({ timeline, destination }: { timeline: PublicTrackingTimeline; destination: string }) {
+  const currentStatus = timeline.status;
+  const events = timeline.events;
   const currentTrackingStatus = isPublicTrackingStatus(currentStatus) ? currentStatus : null;
   const completedStatuses = useMemo(
     () =>
@@ -310,45 +227,79 @@ function PublicTimeline({
     [currentTrackingStatus],
   );
   const eventByStatus = new Map(events.map((event) => [event.status, event]));
+  const delivery = timeline.status === 'delivered'
+    ? 'Livree'
+    : timeline.estimatedDeliveryAt
+      ? formatDate(timeline.estimatedDeliveryAt)
+      : 'Confirmation en attente';
 
   return (
-    <Card className="p-6">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Timeline</p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">Public milestones</h2>
-      <div className="mt-6">
-        {publicTrackingStatuses.map((status, index) => {
-          const event = eventByStatus.get(status);
-          const isComplete = completedStatuses.has(status);
-          const isCurrent = status === currentTrackingStatus;
+    <Card className="overflow-hidden p-0">
+      <div className="border-b border-line p-5">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Timeline de suivi</p>
+        <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 className="text-2xl font-black tracking-tight text-ink">{timeline.orderNumber}</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Destination {destination} - Transporteur {timeline.carrierName || 'non assigne'} - Suivi {timeline.trackingNumber || 'pas encore disponible'}
+            </p>
+          </div>
+          <div className="grid gap-2 text-sm sm:grid-cols-3 lg:min-w-[30rem]">
+            <MiniMetric label="Statut" value={publicStatusLabels[timeline.status]} />
+            <MiniMetric label="Livraison" value={delivery} />
+            <MiniMetric label="Pays" value={destination} />
+          </div>
+        </div>
+      </div>
 
-          return (
-            <div key={status} className="relative grid grid-cols-[2rem_1fr] gap-3 pb-6 last:pb-0">
-              {index < publicTrackingStatuses.length - 1 && <div className="absolute left-[0.94rem] top-8 h-full w-px bg-slate-200" />}
-              <div
-                className={`relative z-10 grid h-8 w-8 place-items-center rounded-full border text-xs font-black ${
-                  isComplete ? 'border-sky-200 bg-sky-50 text-deepblue' : 'border-slate-200 bg-white text-slate-400'
-                }`}
-              >
-                {isComplete ? index + 1 : ''}
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-black text-ink">{event?.title ?? publicStatusLabels[status]}</p>
-                  {isCurrent && <span className="rounded-full bg-sky-50 px-2 py-1 text-xs font-black text-deepblue">Current</span>}
+      <div className="overflow-x-auto p-5">
+        <div className="grid min-w-[980px] grid-cols-9 gap-3">
+          {publicTrackingStatuses.map((status, index) => {
+            const event = eventByStatus.get(status);
+            const isComplete = completedStatuses.has(status);
+            const isCurrent = status === currentTrackingStatus;
+
+            return (
+              <div key={status} className="relative">
+                {index < publicTrackingStatuses.length - 1 && <div className="absolute left-8 right-[-1rem] top-4 h-px bg-slate-200" />}
+                <div
+                  className={`relative z-10 grid h-8 w-8 place-items-center rounded-full border text-xs font-black ${
+                    isComplete ? 'border-sky-200 bg-sky-50 text-deepblue' : 'border-slate-200 bg-white text-slate-400'
+                  }`}
+                >
+                  {isComplete ? index + 1 : ''}
                 </div>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
-                  {event?.description ?? defaultTimelineDescription(status)}
-                </p>
-                <p className="mt-1 text-xs font-bold text-slate-500">
-                  {event?.occurredAt ? formatDate(event.occurredAt) : isComplete ? 'Completed' : 'Pending'}
-                  {event?.location ? ` - ${event.location}` : ''}
-                </p>
+                <div className={`mt-3 min-h-44 rounded-sm border p-3 ${isCurrent ? 'border-signal bg-sky-50' : 'border-line bg-white'}`}>
+                  <p className="text-sm font-black text-ink">{event?.title ?? publicStatusLabels[status]}</p>
+                  {isCurrent ? <span className="mt-2 inline-flex rounded-full bg-deepblue px-2 py-1 text-[10px] font-black text-white">Actuel</span> : null}
+                  <p className="mt-2 text-xs leading-5 text-slate-600">
+                    {event?.description ?? defaultTimelineDescription(status)}
+                  </p>
+                  <p className="mt-2 text-xs font-bold text-slate-500">
+                    {event?.occurredAt ? formatDate(event.occurredAt) : isComplete ? 'Termine' : 'En attente'}
+                    {event?.location ? ` - ${event.location}` : ''}
+                  </p>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        {events.length === 0 ? (
+          <p className="mt-4 text-sm font-bold text-slate-600">
+            Aucun evenement public detaille n est encore publie, mais le statut courant est affiche ci-dessus.
+          </p>
+        ) : null}
       </div>
     </Card>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-sm border border-line bg-slate-50 p-3">
+      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{label}</p>
+      <p className="mt-1 truncate text-sm font-black text-ink">{value}</p>
+    </div>
   );
 }
 

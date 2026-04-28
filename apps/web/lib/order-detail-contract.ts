@@ -81,7 +81,7 @@ export const orderDetailApiContract = {
   },
   support: {
     method: 'GET',
-    path: '/support?orderId=:orderId',
+    path: '/contact?orderId=:orderId',
     response: 'Support form prefilled with the customer order reference.',
   },
 } as const;
