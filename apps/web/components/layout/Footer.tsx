@@ -8,15 +8,28 @@ const groups = [
   {
     title: 'Produit',
     links: [
-      ['Services', '/services'],
-      ['Capacites', '/capabilities'],
-      ['Guide', '/how-it-works'],
+      ['PCB standard', '/services#pcb-standard'],
+      ['PCB petit lot', '/services#pcb-petit-lot'],
+      ['PCB avance', '/services#pcb-avance'],
+      ['Assistance technique', '/services#assistance-technique'],
     ],
   },
   {
     title: 'Support',
     links: [
-      ["Centre d'aide", '/centre-aide'],
+      ['Capacite', '/capabilities'],
+      ['Comment ca marche', '/how-it-works'],
+      ['Guide technique', '/guide-technique'],
+    ],
+  },
+  {
+    title: 'A propos',
+    links: [
+      ['Qui sommes-nous', '/how-it-works'],
+      ['FAQ', '/faq'],
+      ['Remboursement', '/refund-policy'],
+      ['Termes et conditions', '/terms'],
+      ['Cookies', '/cookie-policy'],
       ['Confidentialite', '/privacy'],
       ['Conditions', '/terms'],
     ],
@@ -83,27 +96,27 @@ export function Footer() {
 
   return (
     <footer id="support" className="border-t border-[#243447] bg-[#132234]">
-      <div className="mx-auto grid max-w-[1040px] gap-5 px-4 py-7 sm:px-5 lg:grid-cols-[1.05fr_1.35fr_1fr] lg:px-6">
+      <div className="mx-auto grid max-w-[1040px] gap-5 px-4 py-6 sm:px-5 lg:grid-cols-[0.95fr_1.45fr_1fr] lg:px-6">
         <div>
           <h2 className="text-lg font-black text-white">Kendronics</h2>
-          <p className="mt-3 max-w-xs text-sm leading-6 text-slate-300">
+          <p className="mt-2 max-w-xs text-sm leading-6 text-slate-300">
             Solution d'approvisionnement et de fabrication electronique pour les ingenieurs exigeants.
           </p>
-          <div className="mt-4 flex flex-wrap gap-2 text-sm font-black text-slate-300">
-            <a href="/centre-aide" className="rounded-sm border border-[#33465b] px-3 py-2 transition hover:border-signal/60 hover:text-white" aria-label="Centre d'aide">
+          <div className="mt-3 flex flex-wrap gap-2 text-sm font-black text-slate-300">
+            <a href="/centre-aide" className="rounded-sm border border-[#33465b] px-3 py-1.5 transition hover:border-signal/60 hover:text-white" aria-label="Centre d'aide">
               Centre d'aide
             </a>
-            <a href="/contact" className="rounded-sm border border-[#33465b] px-3 py-2 transition hover:border-signal/60 hover:text-white" aria-label="Contact">
+            <a href="/contact" className="rounded-sm border border-[#33465b] px-3 py-1.5 transition hover:border-signal/60 hover:text-white" aria-label="Contact">
               Contact
             </a>
           </div>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-3 gap-3">
           {groups.map((group) => (
             <div key={group.title}>
               <h3 className="text-sm font-black text-white">{group.title}</h3>
-              <ul className="mt-3 space-y-1.5 text-sm text-slate-300">
+              <ul className="mt-2 space-y-1 text-[13px] leading-5 text-slate-300 sm:text-sm">
                 {group.links.map(([label, href]) => (
                   <li key={label}>
                     <a href={href} className="transition hover:text-white">
