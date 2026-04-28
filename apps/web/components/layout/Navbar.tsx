@@ -44,9 +44,11 @@ const searchItems = [
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [openMobileSection, setOpenMobileSection] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isVisible, setIsVisible] = useState(true);
   const [orders, setOrders] = useState<string[]>([]);
+  const headerRef = useRef<HTMLElement | null>(null);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
 
@@ -92,6 +94,22 @@ export function Navbar() {
     };
   }, []);
 
+  useEffect(() => {
+    function closeMobilePanels(event: PointerEvent) {
+      if (!headerRef.current?.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+        setIsSearchOpen(false);
+        setOpenMobileSection(null);
+      }
+    }
+
+    if (isMenuOpen || isSearchOpen) {
+      document.addEventListener('pointerdown', closeMobilePanels);
+    }
+
+    return () => document.removeEventListener('pointerdown', closeMobilePanels);
+  }, [isMenuOpen, isSearchOpen]);
+
   const cartHref = useMemo(() => {
     const lastOrderId = orders[0];
     return lastOrderId ? `/orders/${lastOrderId}` : '/orders/demo';
@@ -106,7 +124,7 @@ export function Navbar() {
 
   return (
     <>
-    <header className={`fixed left-0 right-0 top-0 z-50 text-white transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+    <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-white transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="border-b border-white/10 bg-[#07324a] px-3 py-1 shadow-[0_10px_28px_rgba(8,20,32,0.18)] sm:px-6 sm:py-2 lg:px-8">
         <div className="mx-auto flex max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px]">
           <a href="/" className="-ml-3 inline-flex min-w-0 items-center sm:ml-0" aria-label="Accueil Kendronics">
@@ -140,6 +158,7 @@ export function Navbar() {
               onClick={() => {
                 setIsSearchOpen((open) => !open);
                 setIsMenuOpen(false);
+                setOpenMobileSection(null);
               }}
             >
               <SearchIcon />
@@ -153,6 +172,7 @@ export function Navbar() {
               onClick={() => {
                 setIsMenuOpen((open) => !open);
                 setIsSearchOpen(false);
+                setOpenMobileSection(null);
               }}
             >
               <span className="flex w-5 flex-col gap-1.5">
@@ -208,9 +228,9 @@ export function Navbar() {
         {isMenuOpen ? (
           <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6.5rem)] max-w-[21.5rem] overflow-y-auto border-t border-white/15 pt-2 sm:max-w-[1180px] lg:hidden">
             <div className="grid gap-2">
-              <MobileSection title="Produit" items={productItems} onNavigate={() => setIsMenuOpen(false)} defaultOpen />
-              <MobileSection title="Support" items={supportItems} onNavigate={() => setIsMenuOpen(false)} />
-              <MobileSection title="A propos" items={aboutItems} onNavigate={() => setIsMenuOpen(false)} />
+              <MobileSection title="Produit" items={productItems} isOpen={openMobileSection === 'Produit'} onToggle={() => setOpenMobileSection((current) => (current === 'Produit' ? null : 'Produit'))} onNavigate={() => setIsMenuOpen(false)} />
+              <MobileSection title="Support" items={supportItems} isOpen={openMobileSection === 'Support'} onToggle={() => setOpenMobileSection((current) => (current === 'Support' ? null : 'Support'))} onNavigate={() => setIsMenuOpen(false)} />
+              <MobileSection title="A propos" items={aboutItems} isOpen={openMobileSection === 'A propos'} onToggle={() => setOpenMobileSection((current) => (current === 'A propos' ? null : 'A propos'))} onNavigate={() => setIsMenuOpen(false)} />
             </div>
 
             <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/15 pt-3">
@@ -290,20 +310,22 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
 function MobileSection({
   title,
   items,
+  isOpen,
+  onToggle,
   onNavigate,
-  defaultOpen = false,
 }: {
   title: string;
   items: Array<{ label: string; href: string }>;
+  isOpen: boolean;
+  onToggle: () => void;
   onNavigate: () => void;
-  defaultOpen?: boolean;
 }) {
   return (
-    <details className="group border border-[#0f8f6b]/70 bg-[#0f8f6b]/18 shadow-[inset_3px_0_#0f8f6b]" open={defaultOpen}>
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-4 text-base font-semibold text-white">
-        <span>{title}</span>
-        <span className="text-xs text-[#ffd22e] transition group-open:rotate-180">v</span>
-      </summary>
+    <div className="border border-[#0f8f6b]/70 bg-[#0f8f6b]/18 shadow-[inset_3px_0_#0f8f6b]">
+      <button type="button" className="flex min-h-11 w-full items-center px-4 text-left text-base font-semibold text-white" aria-expanded={isOpen} onClick={onToggle}>
+        {title}
+      </button>
+      {isOpen ? (
       <div className="grid border-t border-[#0f8f6b]/40 bg-[#07324a]/75 p-1.5">
         {items.map((item) => (
           <a
@@ -316,7 +338,8 @@ function MobileSection({
           </a>
         ))}
       </div>
-    </details>
+      ) : null}
+    </div>
   );
 }
 
