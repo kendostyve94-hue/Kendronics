@@ -33,7 +33,7 @@ export class ProfileVerificationService {
     } catch (error) {
       this.records.delete(this.keyFor(input.userId, input.action));
       if (error instanceof ServiceUnavailableException) throw error;
-      const message = error instanceof Error ? error.message : 'Unknown SMTP error';
+      const message = smtpErrorDetails(error);
       console.error('Profile verification email failed:', message);
       throw new ServiceUnavailableException(`Unable to send profile verification email. ${message}`);
     }
@@ -61,4 +61,20 @@ export class ProfileVerificationService {
   private keyFor(userId: string, action: ProfileVerificationAction) {
     return `${userId}:${action}`;
   }
+}
+
+function smtpErrorDetails(error: unknown): string {
+  if (error instanceof AggregateError) {
+    const details = error.errors
+      .map((entry) => (entry instanceof Error ? `${entry.name}: ${entry.message}` : String(entry)))
+      .join(' | ');
+
+    return details || error.message || 'Aggregate SMTP connection error';
+  }
+
+  if (error instanceof Error) {
+    return `${error.name}: ${error.message}`;
+  }
+
+  return String(error || 'Unknown SMTP error');
 }
