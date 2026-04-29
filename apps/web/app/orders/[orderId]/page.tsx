@@ -18,6 +18,7 @@ import type {
   OrderDetailResponse,
   PcbSpecs,
   PricingLineItem,
+  TrackingTimelineItem,
 } from '../../../lib/order-detail-contract';
 
 type PageStatus = 'loading' | 'ready' | 'error';
@@ -211,6 +212,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
               specs={detail.pcbSpecs}
               gerberFile={detail.gerberFile}
               pricingBreakdown={detail.pricingBreakdown}
+              trackingTimeline={detail.trackingTimeline}
               destination={destination}
               deleteStatus={deleteStatus}
               deleteError={deleteError}
@@ -298,6 +300,7 @@ function OrderAccordion({
   specs,
   gerberFile,
   pricingBreakdown,
+  trackingTimeline,
   destination,
   deleteStatus,
   deleteError,
@@ -307,6 +310,7 @@ function OrderAccordion({
   specs: PcbSpecs;
   gerberFile: GerberFileInfo;
   pricingBreakdown: PricingLineItem[];
+  trackingTimeline: TrackingTimelineItem[];
   destination: string;
   deleteStatus: DeleteStatus;
   deleteError: string;
@@ -356,6 +360,7 @@ function OrderAccordion({
           <PcbSpecsCard specs={specs} gerberFile={gerberFile} />
           <PricingBreakdownCard order={order} pricingBreakdown={pricingBreakdown} />
         </div>
+        <TrackingTimelineCard events={trackingTimeline} />
       </div>
     </details>
   );
@@ -441,6 +446,29 @@ function PricingBreakdownCard({
       <div className="mt-4 flex items-center justify-between rounded-sm bg-deepblue p-4 text-white">
         <span className="text-sm font-black">{order.paymentStatus === 'paid' ? 'Total paye' : 'Total a payer'}</span>
         <span className="text-xl font-black">{formatMoney(order.totalPrice, order.currency)}</span>
+      </div>
+    </Card>
+  );
+}
+
+function TrackingTimelineCard({ events }: { events: TrackingTimelineItem[] }) {
+  return (
+    <Card className="mt-4 p-5">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Suivi commande</p>
+      <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">Historique</h2>
+      <div className="mt-5 space-y-3">
+        {events.map((event) => (
+          <div key={event.id} className="border-l-4 border-[#0f8f6b] bg-white px-4 py-3 shadow-sm">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-ink">{event.title}</p>
+                {event.description ? <p className="mt-1 text-sm leading-6 text-slate-600">{event.description}</p> : null}
+                {event.location ? <p className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{event.location}</p> : null}
+              </div>
+              <p className="text-xs font-bold text-slate-500">{event.occurredAt ? formatDate(event.occurredAt) : 'Date a confirmer'}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </Card>
   );

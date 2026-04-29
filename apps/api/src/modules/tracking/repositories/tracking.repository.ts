@@ -1,30 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { demoTrackingEvents, demoTrackingOrder } from '../demo-tracking-data';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { TrackingEvent } from '../entities/tracking-event.entity';
 
 @Injectable()
 export class TrackingRepository {
-  private readonly events = new Map<string, TrackingEvent[]>();
-
-  constructor() {
-    this.events.set(demoTrackingOrder.id, demoTrackingEvents);
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findForOwnedOrder(userId: string, orderId: string): Promise<TrackingEvent[]> {
-    void userId;
-    return this.events.get(orderId) ?? [
-      {
-        id: crypto.randomUUID(),
+    const events = await this.prisma.trackingEvent.findMany({
+      where: {
         orderId,
-        status: 'awaiting_payment',
-        title: 'Order created',
-        occurredAt: new Date(),
+        order: { userId },
       },
-    ];
+      orderBy: { occurredAt: 'desc' },
+    });
+    return events.map((event) => this.toTrackingEvent(event));
   }
 
   async findPublicEventsForOrder(orderId: string): Promise<TrackingEvent[]> {
-    return this.events.get(orderId) ?? [];
+    const events = await this.prisma.trackingEvent.findMany({
+      where: { orderId },
+      orderBy: { occurredAt: 'desc' },
+    });
+    return events.map((event) => this.toTrackingEvent(event));
   }
 
   async addEvent(input: {
@@ -35,19 +33,36 @@ export class TrackingRepository {
     location?: string;
     occurredAt?: Date;
   }): Promise<TrackingEvent> {
-    const event: TrackingEvent = {
-      id: crypto.randomUUID(),
-      orderId: input.orderId,
-      status: input.status,
-      title: input.title,
-      description: input.description,
-      location: input.location,
-      occurredAt: input.occurredAt ?? new Date(),
-    };
+    const event = await this.prisma.trackingEvent.create({
+      data: {
+        orderId: input.orderId,
+        status: input.status,
+        title: input.title,
+        description: input.description,
+        location: input.location,
+        occurredAt: input.occurredAt ?? new Date(),
+      },
+    });
+    return this.toTrackingEvent(event);
+  }
 
-    const existing = this.events.get(input.orderId) ?? [];
-    existing.push(event);
-    this.events.set(input.orderId, existing);
-    return event;
+  private toTrackingEvent(event: {
+    id: string;
+    orderId: string;
+    status: string;
+    title: string;
+    description: string | null;
+    location: string | null;
+    occurredAt: Date;
+  }): TrackingEvent {
+    return {
+      id: event.id,
+      orderId: event.orderId,
+      status: event.status,
+      title: event.title,
+      description: event.description ?? undefined,
+      location: event.location ?? undefined,
+      occurredAt: event.occurredAt,
+    };
   }
 }
