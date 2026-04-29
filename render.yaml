@@ -44,6 +44,12 @@ services:
         sync: false
       - key: RESEND_FROM
         sync: false
+      - key: PCBWAY_API_KEY
+        sync: false
+      - key: PCBWAY_QUOTE_ENDPOINT
+        sync: false
+      - key: REQUIRE_LIVE_SUPPLIER_PRICING
+        value: "false"
       - key: S3_BUCKET
         sync: false
       - key: S3_REGION
