@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Navbar } from '../../components/layout/Navbar';
-import { Card } from '../../components/ui/Card';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { readFreshAuthSession } from '../../lib/auth-session';
 import { statusLabels } from '../../lib/order-detail-contract';
@@ -62,16 +61,6 @@ export default function OrdersPage() {
     };
   }, []);
 
-  const totals = useMemo(() => {
-    return orders.reduce(
-      (acc, order) => ({
-        count: acc.count + 1,
-        amount: acc.amount + Number(order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0),
-      }),
-      { count: 0, amount: 0 },
-    );
-  }, [orders]);
-
   return (
     <main className="min-h-screen bg-cloud">
       <Navbar />
@@ -85,7 +74,7 @@ export default function OrdersPage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-[1180px] gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:px-8">
+      <section className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8">
         <div className="space-y-4">
           {state === 'loading' ? <StateCard title="Chargement du panier..." body="Recherche des commandes liees a votre compte." /> : null}
           {state === 'guest' ? (
@@ -125,17 +114,6 @@ export default function OrdersPage() {
             </a>
           ))}
         </div>
-
-        <Card className="h-fit p-5 lg:sticky lg:top-24">
-          <h2 className="text-lg font-black text-ink">Resume panier</h2>
-          <div className="mt-4 space-y-3 text-sm">
-            <SummaryLine label="Commandes" value={`${totals.count}`} />
-            <SummaryLine label="Total" value={formatMoney(totals.amount, 'EUR')} />
-          </div>
-          <a href="/quote" className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-full bg-deepblue px-5 text-sm font-black text-white">
-            Nouveau devis
-          </a>
-        </Card>
       </section>
     </main>
   );
@@ -147,15 +125,6 @@ function StateCard({ title, body, tone = 'default', children }: { title: string;
       <h2 className="text-xl font-black text-ink">{title}</h2>
       <p className="mt-2 text-sm leading-6">{body}</p>
       {children}
-    </div>
-  );
-}
-
-function SummaryLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="text-slate-600">{label}</span>
-      <span className="font-black text-ink">{value}</span>
     </div>
   );
 }

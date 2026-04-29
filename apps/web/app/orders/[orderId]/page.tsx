@@ -196,7 +196,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
           </div>
         ) : (
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="overflow-hidden rounded-sm border border-line bg-white shadow-sm">
             <div className="flex flex-col gap-2 border-b border-line p-4 md:flex-row md:items-center md:justify-between">
               <div>
@@ -204,13 +204,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
                 <p className="mt-1 text-lg font-black text-ink">{detail.order.orderNumber}</p>
               </div>
               <p className="text-sm font-bold text-slate-600">{detail.pcbSpecs.productType}</p>
-            </div>
-
-            <div className="hidden grid-cols-[minmax(0,1fr)_5rem_8rem_7rem] bg-slate-100 px-5 py-3 text-sm font-black text-ink md:grid">
-              <span>Article</span>
-              <span>Qte</span>
-              <span>Delais prod</span>
-              <span className="text-right">Prix</span>
             </div>
 
             <OrderAccordion
@@ -225,7 +218,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
             />
           </div>
 
-          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <div className="space-y-4 xl:sticky xl:top-24 xl:self-start">
             <SummaryCard
               order={detail.order}
               canCheckout={canCheckout}
@@ -323,21 +316,21 @@ function OrderAccordion({
 
   return (
     <details className="group border-b border-line last:border-b-0" open>
-      <summary className="grid cursor-pointer list-none gap-3 px-5 py-4 transition hover:bg-slate-50 md:grid-cols-[minmax(0,1fr)_5rem_8rem_7rem] md:items-center">
+      <summary className="grid cursor-pointer list-none gap-3 px-5 py-4 transition hover:bg-slate-50 md:grid-cols-[minmax(0,1fr)_10rem_9rem_8rem] md:items-center">
         <div className="min-w-0">
           <p className="text-base font-black text-ink">{order.orderNumber}</p>
           <p className="mt-1 truncate text-sm text-slate-600">{specs.productType} - {specs.dimensions} - {destination}</p>
         </div>
         <div className="flex items-center justify-between md:block">
-          <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:hidden">Qte</span>
+          <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:block">Qte</span>
           <span className="font-black">{specs.quantity}</span>
         </div>
         <div className="flex items-center justify-between md:block">
-          <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:hidden">Delais</span>
+          <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:block">Delais</span>
           <span className="text-sm font-bold text-slate-700">{productionDelay}</span>
         </div>
         <div className="flex items-center justify-between md:block md:text-right">
-          <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:hidden">Prix</span>
+          <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-500 md:block">Prix</span>
           <span className="font-black text-[#ff7a00]">{formatMoney(order.totalPrice, order.currency)}</span>
         </div>
       </summary>
