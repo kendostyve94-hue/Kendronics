@@ -89,13 +89,13 @@ export default function PricingPage() {
 
       <Section
         id="pricing-formula"
-        eyebrow="Pricing formula"
+        eyebrow="Structure du prix"
         title="Transparent dynamic pricing for real PCB order contexts."
         description="Kendronics structures pricing around partner manufacturing, handling, logistics, payment, platform service, and destination-specific delivery assumptions."
       >
         <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
           <Card className="p-6">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Formula</p>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Calcul</p>
             <h2 className="mt-3 text-2xl font-black tracking-tight text-ink">
               Total quote = manufacturing + handling + logistics + payment + service + applicable risk buffer
             </h2>
@@ -105,8 +105,8 @@ export default function PricingPage() {
             </p>
           </Card>
           <Card glass className="p-6">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Best next step</p>
-            <h3 className="mt-2 text-xl font-black text-ink">Use the real-time configurator.</h3>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Etape recommandee</p>
+            <h3 className="mt-2 text-xl font-black text-ink">Configurer une demande complete.</h3>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               It reflects the selected order profile instead of forcing every customer into a generic price table.
             </p>
@@ -125,7 +125,7 @@ export default function PricingPage() {
 
       <Section
         id="cost-breakdown"
-        eyebrow="Cost breakdown"
+        eyebrow="Detail des couts"
         title="What the quote is trying to account for."
         description="The total is a composed operational price, not only a bare board production number."
       >
@@ -148,8 +148,8 @@ export default function PricingPage() {
       </Section>
 
       <Section
-        id="example-scenarios"
-        eyebrow="Example scenarios"
+        id="order-scenarios"
+        eyebrow="Cas de commande"
         title="Common scenarios that explain cost drivers."
         description="These examples show why different orders price differently. Final customer pricing is tied to the configured request and supplier validation."
       >
@@ -176,7 +176,7 @@ export default function PricingPage() {
 
       <Section
         id="faq"
-        eyebrow="FAQ"
+        eyebrow="Questions"
         title="Pricing questions customers ask before quoting."
         description="The short version: use the configurator for the customer quote, then rely on supplier and file validation before final production."
       >
@@ -199,7 +199,7 @@ export default function PricingPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-deepblue via-deepblue/[0.9] to-ink/[0.72]" />
           <div className="relative">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Get real pricing</p>
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Devis structure</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
               The configurator is the source of truth for your order.
             </h2>
@@ -212,7 +212,7 @@ export default function PricingPage() {
               Demander un devis
             </Button>
             <Button href="/how-it-works" variant="secondary">
-              How It Works
+              Parcours client
             </Button>
           </div>
         </div>
@@ -231,7 +231,7 @@ function PricingHero() {
       <div className="relative mx-auto grid min-h-[78vh] max-w-7xl gap-10 px-4 pb-24 pt-36 sm:px-6 lg:grid-cols-[1fr_26rem] lg:items-center lg:px-8">
         <div>
           <p className="inline-flex rounded-xl border border-white/[0.18] bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-sky-100 backdrop-blur-xl">
-            Pricing logic
+            Logique de prix
           </p>
           <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
             Dynamic quotes built around your real PCB and delivery path.
@@ -241,9 +241,9 @@ function PricingHero() {
             logistics, destination country, payment processing, service fee, and selected board options.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Button href="/quote">Use Configurator</Button>
+            <Button href="/quote">Configurer un devis</Button>
             <Button href="#pricing-formula" variant="secondary">
-              See Formula
+              Voir le calcul
             </Button>
           </div>
         </div>

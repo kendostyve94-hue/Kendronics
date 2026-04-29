@@ -147,19 +147,19 @@ export default function ContactPage() {
                 className={`w-full rounded-xl border bg-white px-3 py-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100 ${
                   errors.message ? 'border-red-300' : 'border-slate-200'
                 }`}
-                placeholder="Tell us what happened and include any quote, upload, payment, delivery, or technical context."
+                placeholder="Expliquez votre demande et ajoutez le contexte utile : devis, upload, paiement, livraison ou question technique."
               />
               {errors.message && <p className="mt-2 text-xs font-bold text-red-600">{errors.message}</p>}
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">File attachment optional</span>
+              <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">Piece jointe facultative</span>
               <input
                 type="file"
                 onChange={updateAttachment}
                 className="block w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-deepblue file:px-4 file:py-2 file:text-sm file:font-black file:text-white"
               />
-              {values.attachmentName && <p className="mt-2 text-xs font-bold text-slate-500">Selected: {values.attachmentName}</p>}
+              {values.attachmentName && <p className="mt-2 text-xs font-bold text-slate-500">Selection : {values.attachmentName}</p>}
             </label>
 
             {errors.form && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{errors.form}</div>}

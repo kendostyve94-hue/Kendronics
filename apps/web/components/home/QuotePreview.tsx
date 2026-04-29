@@ -30,10 +30,10 @@ export function QuotePreview() {
   }, [countryCode, layers, length, quantity, width]);
 
   return (
-    <section className="glass-light relative z-10 mx-auto max-w-6xl rounded-2xl p-4 sm:p-6" aria-label="Quote preview">
+    <section className="glass-light relative z-10 mx-auto max-w-6xl rounded-2xl p-4 sm:p-6" aria-label="Apercu devis">
       <div className="mb-5 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-signal">Instant quote preview</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-signal">Configuration devis</p>
           <h2 className="mt-1 text-2xl font-black tracking-tight text-ink">Configure the essentials in seconds.</h2>
         </div>
         <p className="max-w-sm text-sm leading-6 text-slate-600">Interactive layout ready for the production pricing API.</p>
@@ -74,11 +74,11 @@ export function QuotePreview() {
 
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:min-w-64">
           <div>
-            <p className="text-xs font-black uppercase tracking-wide text-slate-500">Live quote preview</p>
+            <p className="text-xs font-black uppercase tracking-wide text-slate-500">Total configure</p>
             <p className="mt-1 text-3xl font-black tracking-tight text-deepblue">€{price.toFixed(2)}</p>
           </div>
           <Button href="/quote" className="h-11 px-4">
-            Continue to quote
+            Continuer le devis
           </Button>
         </div>
       </div>

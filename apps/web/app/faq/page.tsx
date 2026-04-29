@@ -190,22 +190,22 @@ export default function FaqPage() {
         <Card glass className="p-5 sm:p-6">
           <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
             <label className="block">
-              <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-600">Search FAQ</span>
+              <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-600">Rechercher dans la FAQ</span>
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search manufacturer, Gerber, pricing, delivery, refunds..."
+                placeholder="Rechercher fabrication, Gerber, prix, livraison, remboursement..."
                 className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
               />
             </label>
             <div className="text-sm font-bold text-slate-600">
-              {resultCount} {resultCount === 1 ? 'answer' : 'answers'} shown
+              {resultCount} {resultCount === 1 ? 'reponse' : 'reponses'} affichees
             </div>
           </div>
 
           <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
             <CategoryButton
-              label="All"
+              label="Tout"
               active={activeCategory === allCategoryId}
               onClick={() => setActiveCategory(allCategoryId)}
             />
@@ -237,10 +237,10 @@ export default function FaqPage() {
 
           {resultCount === 0 && (
             <Card className="p-8 text-center">
-              <p className="text-sm font-black uppercase tracking-[0.16em] text-signal">No matches</p>
-              <h2 className="mt-2 text-2xl font-black text-ink">Try another search term.</h2>
+              <p className="text-sm font-black uppercase tracking-[0.16em] text-signal">Aucun resultat</p>
+              <h2 className="mt-2 text-2xl font-black text-ink">Essayez un autre mot cle.</h2>
               <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-600">
-                Search by topic, such as Gerber, Mobile Money, customs, manufacturer, tracking, delivery, or refund.
+                Recherchez par sujet, par exemple Gerber, paiement, douane, fabrication, suivi, livraison ou remboursement.
               </p>
             </Card>
           )}
@@ -256,12 +256,12 @@ export default function FaqPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-deepblue via-deepblue/[0.9] to-ink/[0.72]" />
           <div className="relative">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Still deciding?</p>
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Encore une question ?</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-              Start with a quote or review the full order journey.
+              Commencez par un devis ou consultez le parcours complet.
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-sky-100 sm:text-base">
-              The configurator and tracking flow keep customer-safe information separate from partner, admin, and supplier data.
+              Le configurateur et le suivi gardent les informations client separees des donnees partenaire, admin et fournisseur.
             </p>
           </div>
           <div className="relative mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col">
@@ -269,7 +269,7 @@ export default function FaqPage() {
               Demander un devis
             </Button>
             <Button href="/how-it-works" variant="secondary">
-              How It Works
+              Parcours client
             </Button>
           </div>
         </div>

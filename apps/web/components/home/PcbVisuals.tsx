@@ -54,7 +54,7 @@ export function PcbVisuals() {
           <div className="absolute left-12 right-12 top-24 h-24 rounded-2xl border border-emerald-300 bg-emerald-100/80 animate-layerLift [animation-delay:240ms]" />
           <div className="absolute left-16 right-16 top-32 h-24 rounded-2xl border border-slate-300 bg-white/80 animate-layerLift [animation-delay:480ms]" />
           <div className="relative z-10">
-            <p className="text-sm font-black uppercase tracking-wide text-deepblue">Exploded stack preview</p>
+            <p className="text-sm font-black uppercase tracking-wide text-deepblue">Structure multicouche</p>
             <p className="mt-2 max-w-xs text-sm leading-6 text-slate-600">A subtle layer animation for fabrication decisions.</p>
           </div>
         </Card>

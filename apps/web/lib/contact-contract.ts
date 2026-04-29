@@ -81,7 +81,7 @@ export function validateContactForm(values: ContactFormState): ContactFormErrors
   }
 
   if (values.message.trim().length < 10) {
-    errors.message = 'Tell us what happened in at least 10 characters.';
+    errors.message = 'Expliquez votre demande en au moins 10 caracteres.';
   }
 
   return errors;

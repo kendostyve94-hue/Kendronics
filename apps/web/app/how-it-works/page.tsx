@@ -110,7 +110,7 @@ export default function HowItWorksPage() {
 
       <Section
         id="journey"
-        eyebrow="Order journey"
+        eyebrow="Parcours commande"
         title="From design files to tracked delivery."
         description="The Kendronics workflow keeps the customer journey clear while separating customer-facing coordination from external manufacturing operations."
       >
@@ -137,7 +137,7 @@ export default function HowItWorksPage() {
 
       <Section
         id="gerber-file-guide"
-        eyebrow="Gerber file guide"
+        eyebrow="Preparation Gerber"
         title="Prepare a clean ZIP before requesting a quote."
         description="A complete Gerber package helps Kendronics coordinate the request more smoothly with external manufacturing partners."
       >
@@ -172,7 +172,7 @@ export default function HowItWorksPage() {
 
       <Section
         id="payment-explanation"
-        eyebrow="Payment explanation"
+        eyebrow="Paiement"
         title="Pay after quote review, before partner fulfillment."
         description="Payment is part of the customer-facing workflow. It helps keep the quote, order, logistics, and tracking records connected."
       >
@@ -185,7 +185,7 @@ export default function HowItWorksPage() {
 
       <Section
         id="delivery-explanation"
-        eyebrow="Delivery explanation"
+        eyebrow="Livraison"
         title="External manufacturing, France logistics, African delivery."
         description="Kendronics coordinates the path between partner production and customer delivery. It does not present itself as the factory producing the boards."
       >
@@ -198,7 +198,7 @@ export default function HowItWorksPage() {
 
       <Section
         id="faq-preview"
-        eyebrow="FAQ preview"
+        eyebrow="Questions utiles"
         title="Common questions before ordering."
         description="These answers set expectations before a customer uploads files or pays for a PCB order."
       >
@@ -221,7 +221,7 @@ export default function HowItWorksPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-deepblue via-deepblue/[0.9] to-ink/[0.7]" />
           <div className="relative">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Ready to begin?</p>
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Pret a commencer ?</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
               Upload Gerbers, configure specs, and get a quote.
             </h2>
@@ -253,7 +253,7 @@ function HowItWorksHero() {
       <div className="relative mx-auto grid min-h-[78vh] max-w-7xl gap-10 px-4 pb-24 pt-36 sm:px-6 lg:grid-cols-[1fr_26rem] lg:items-center lg:px-8">
         <div>
           <p className="inline-flex rounded-xl border border-white/[0.18] bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-sky-100 backdrop-blur-xl">
-            How it works
+            Parcours Kendronics
           </p>
           <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
             A clear path from PCB design to tracked African delivery.
@@ -264,7 +264,7 @@ function HowItWorksHero() {
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Button href="/quote">Commencer le devis</Button>
             <Button href="#journey" variant="secondary">
-              See Timeline
+              Voir les etapes
             </Button>
           </div>
         </div>
