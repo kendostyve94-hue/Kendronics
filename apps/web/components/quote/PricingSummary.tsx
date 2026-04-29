@@ -112,20 +112,20 @@ export function PricingSummary({
 
   return (
     <aside className="space-y-3 lg:sticky lg:top-28">
-      <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-5 shadow-sm">
+      <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 shadow-sm sm:p-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-black text-slate-950">Details des frais</h2>
+          <h2 className="text-sm font-black text-slate-950 sm:text-base">Details des frais</h2>
           <span className="text-lg font-black text-slate-950">^</span>
         </div>
 
-        <div className="mt-5 space-y-3 border-b border-slate-200 pb-4 text-sm">
+        <div className="mt-3 space-y-2 border-b border-slate-200 pb-3 text-xs sm:mt-5 sm:space-y-3 sm:pb-4 sm:text-sm">
           <FeeRow label="Recouvrement des vias" value={pricing.viaCoveringFee} />
           <FeeRow label="Finition de surface" value={pricing.surfaceFinishFee} />
           <FeeRow label="Livraison Afrique" value={pricing.franceToAfricaDelivery} highlight />
         </div>
 
-        <div className="border-b border-slate-200 py-4">
-          <div className="mb-3 flex items-center gap-2">
+        <div className="border-b border-slate-200 py-3 sm:py-4">
+          <div className="mb-2 flex items-center gap-2 sm:mb-3">
             <h3 className="text-sm font-black text-slate-950">PCB Delais prod</h3>
             <span className="grid h-4 w-4 place-items-center rounded-full bg-slate-300 text-[10px] font-black text-white">?</span>
           </div>
@@ -134,19 +134,19 @@ export function PricingSummary({
           <ProductionSpeedRow label="24 heures" value="pcba_24h" price={pricing.productionSpeedFee} badge="PCBA seulement" active={productionSpeed === 'pcba_24h'} onChange={onProductionSpeedChange} />
         </div>
 
-        <div className="py-4">
+        <div className="py-3 sm:py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-black text-slate-950">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif'}</h3>
-              <p className="mt-1 text-xs leading-5 text-slate-500">
+              <h3 className="text-base font-black text-slate-950 sm:text-lg">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif'}</h3>
+              <p className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">
                 {isSupplierPrice
                   ? 'Prix retourne par le fournisseur configure, avec frais Kendronics.'
                   : 'Base de calcul utilisee pendant l integration fournisseur. Le prix final est confirme apres validation.'}
               </p>
             </div>
-            <div className="text-right text-lg font-black">
-              <span className="mr-2 text-slate-400 line-through">${pricing.displayTotalBeforeAdjustment.toFixed(2)}</span>
-              <span className="text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</span>
+            <div className="text-right text-base font-black sm:text-lg">
+              <span className="mr-1 text-slate-400 line-through sm:mr-2">${pricing.displayTotalBeforeAdjustment.toFixed(2)}</span>
+              <span className="block text-[#ff7a00] sm:inline">${pricing.finalTotal.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -166,7 +166,7 @@ export function PricingSummary({
           type="button"
           onClick={onSave}
           disabled={!canSave}
-          className={`mt-3 h-12 w-full rounded-full text-sm font-black uppercase text-white transition ${
+          className={`mt-2 h-11 w-full rounded-full text-xs font-black uppercase text-white transition sm:mt-3 sm:h-12 sm:text-sm ${
             canSave
               ? 'bg-[#0877ff] shadow-[0_10px_24px_rgba(8,119,255,0.24)] hover:bg-[#0068e8] active:translate-y-px'
               : 'cursor-not-allowed bg-slate-300 opacity-70'
@@ -176,7 +176,7 @@ export function PricingSummary({
         </button>
       </div>
 
-      <div className="fixed inset-x-0 bottom-[4.9rem] z-40 border-t border-slate-200 bg-[#f4f7fa]/96 px-4 py-3 shadow-[0_-10px_28px_rgba(8,20,32,0.14)] backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-[4.9rem] z-40 border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 shadow-[0_-10px_28px_rgba(8,20,32,0.14)] backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-md items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estime</p>
@@ -195,13 +195,13 @@ export function PricingSummary({
         </div>
       </div>
 
-      <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-5 shadow-sm">
+      <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 shadow-sm sm:p-5">
         <button type="button" onClick={() => setDeliveryOpen((open) => !open)} className="flex w-full items-center justify-between text-left">
-          <h2 className="text-base font-black text-slate-950">Estimation de la livraison</h2>
+          <h2 className="text-sm font-black text-slate-950 sm:text-base">Estimation de la livraison</h2>
           <span className={`text-lg font-black transition ${deliveryOpen ? 'rotate-180' : ''}`}>v</span>
         </button>
 
-        <div className="mt-4 space-y-3 text-sm">
+        <div className="mt-3 space-y-2 text-xs sm:mt-4 sm:space-y-3 sm:text-sm">
           <div className="flex items-center justify-between gap-4">
             <span>{pricing.shippingCarrier}</span>
             <span>{pricing.estimatedShippingTime}</span>
@@ -213,7 +213,7 @@ export function PricingSummary({
         </div>
 
         {deliveryOpen ? (
-          <div className="mt-5 space-y-4 border-t border-slate-200 pt-4">
+          <div className="mt-3 space-y-3 border-t border-slate-200 pt-3 sm:mt-5 sm:space-y-4 sm:pt-4">
             <CountryDropdown
               countries={countries}
               filteredCountries={filteredCountries}
@@ -231,7 +231,7 @@ export function PricingSummary({
             />
 
             <div>
-              <p className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500">Agences de livraison vers l'Afrique</p>
+              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.12em] text-slate-500 sm:text-xs">Agences de livraison vers l'Afrique</p>
               <div className="space-y-2">
                 <CarrierOption
                   label="DHL Express (DDP)"
@@ -291,7 +291,7 @@ export function PricingSummary({
           </div>
         ) : null}
 
-        <p className="mt-4 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500">
+        <p className="mt-3 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500 sm:mt-4">
           {isSupplierPrice
             ? pricing.transparencyNote
             : 'Le montant affiche sert de previsualisation pendant la configuration. Kendronics travaille a connecter les tarifs fournisseur en temps reel avant validation commerciale finale.'}
@@ -402,7 +402,7 @@ function CarrierOption({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full rounded-sm border p-3 text-left text-sm transition ${
+        className={`w-full rounded-sm border p-2.5 text-left text-xs transition sm:p-3 sm:text-sm ${
         active ? 'border-[#0877ff] bg-[#eaf2fb] shadow-[inset_3px_0_#0877ff]' : 'border-slate-200 bg-white hover:border-[#0877ff]/50'
       }`}
     >
@@ -410,7 +410,7 @@ function CarrierOption({
         <span className="font-black">{label}</span>
         <span className="font-black text-[#ff7a00]">${price.toFixed(2)}</span>
       </span>
-      <span className="mt-1 block text-xs leading-5 text-slate-500">{description} - {time}</span>
+      <span className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{description} - {time}</span>
     </button>
   );
 }
@@ -423,7 +423,7 @@ function LiveCarrierOption({ rate, active, onSelect }: { rate: ShippingRate; act
       type="button"
       disabled={disabled}
       onClick={onSelect}
-      className={`mt-3 w-full rounded-sm border p-3 text-left text-sm transition ${
+      className={`mt-2 w-full rounded-sm border p-2.5 text-left text-xs transition sm:mt-3 sm:p-3 sm:text-sm ${
         active ? 'border-[#0877ff] bg-[#eaf2fb] shadow-[inset_3px_0_#0877ff]' : 'border-slate-200 bg-white hover:border-[#0877ff]/50'
       } ${disabled ? 'cursor-not-allowed opacity-70' : ''}`}
     >
@@ -433,7 +433,7 @@ function LiveCarrierOption({ rate, active, onSelect }: { rate: ShippingRate; act
           {rate.amount == null ? 'Non disponible' : `${rate.amount.toFixed(2)} ${rate.currency}`}
         </span>
       </span>
-      <span className="mt-1 block text-xs leading-5 text-slate-500">
+      <span className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">
         {rate.transitTime ?? 'Transit non communique'} - {rate.note ?? 'Tarif recu depuis le transporteur'}
       </span>
     </button>
@@ -456,7 +456,7 @@ function ProductionSpeedRow({
   onChange: (value: 'standard' | 'express_24h' | 'pcba_24h') => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 py-2 text-sm">
+    <label className="flex cursor-pointer items-center justify-between gap-3 py-1.5 text-xs sm:py-2 sm:text-sm">
       <span className="flex items-center gap-2">
         <input type="radio" checked={active} onChange={() => onChange(value)} className="h-4 w-4 accent-[#0877ff]" />
         <span>{label}</span>

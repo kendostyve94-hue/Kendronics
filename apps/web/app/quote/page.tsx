@@ -333,38 +333,38 @@ export default function QuotePage() {
     <main className="min-h-screen bg-[#f3f5f7] text-[#1f2933]">
       <Navbar />
 
-      <section className="border-b border-slate-200 bg-white pt-32">
-        <div className="mx-auto max-w-[1280px] px-4 pb-5 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <section className="border-b border-slate-200 bg-white pt-24 sm:pt-32">
+        <div className="mx-auto max-w-[1280px] px-3 pb-3 sm:px-6 sm:pb-5 lg:px-8">
+          <div className="flex flex-col gap-2 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="text-xs font-bold text-slate-500">
                 Livraison vers : <span className="text-[#0f8f6b]">{selectedCountry.name}</span> / {selectedCountry.logisticsZone}
               </div>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950">Devis PCB en ligne</h1>
+              <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:mt-2 sm:text-3xl">Devis PCB en ligne</h1>
             </div>
-            <a href="/how-it-works" className="text-sm font-bold text-[#0f8f6b] hover:text-[#096b51]">
+            <a href="/how-it-works" className="text-xs font-bold text-[#0f8f6b] hover:text-[#096b51] sm:text-sm">
               Instructions de commande &gt;
             </a>
           </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3 md:grid-cols-2 xl:grid-cols-4">
             {productCards.map((product) => (
               <button
                 key={product.value}
                 type="button"
                 onClick={() => update('productType', product.value)}
-                className={`flex min-h-24 items-start gap-3 rounded-sm border bg-white p-4 text-left transition ${
+                className={`flex min-h-[4.75rem] items-start gap-2 rounded-sm border bg-white p-2.5 text-left transition sm:min-h-24 sm:gap-3 sm:p-4 ${
                   config.productType === product.value
                     ? 'border-[#0f8f6b] shadow-[inset_0_3px_0_#0f8f6b]'
                     : 'border-slate-200 hover:border-[#0f8f6b]/55'
                 }`}
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-sm bg-[#e8f7f2] text-xs font-black text-[#0f8f6b]">
+                <span className="hidden h-10 w-10 shrink-0 place-items-center rounded-sm bg-[#e8f7f2] text-xs font-black text-[#0f8f6b] sm:grid">
                   PCB
                 </span>
                 <span>
-                  <span className="block text-sm font-black text-slate-950">{product.title}</span>
-                  <span className="mt-1 block text-xs leading-5 text-slate-500">{product.description}</span>
+                  <span className="block text-xs font-black text-slate-950 sm:text-sm">{product.title}</span>
+                  <span className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{product.description}</span>
                 </span>
               </button>
             ))}
@@ -372,8 +372,8 @@ export default function QuotePage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-[1280px] gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
-        <div className="space-y-5">
+      <section className="mx-auto grid max-w-[1280px] gap-3 px-3 py-3 pb-28 sm:gap-5 sm:px-6 sm:py-5 sm:pb-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
+        <div className="space-y-3 sm:space-y-5">
           <Panel title="Devis Express PCB" description="Une seule zone prend en charge Gerber, BOM et CPL." defaultOpen>
             <UnifiedUpload
               gerberFileName={config.gerberFileName}
@@ -552,17 +552,17 @@ export default function QuotePage() {
           </Panel>
 
           {saved ? (
-            <div className="rounded-sm border border-[#b9ebda] bg-[#eefbf6] p-4 text-sm font-bold text-[#116b52]">
+            <div className="rounded-sm border border-[#b9ebda] bg-[#eefbf6] p-3 text-sm font-bold text-[#116b52] sm:p-4">
               Devis sauvegarde cote serveur. Validation fournisseur requise avant paiement final.
             </div>
           ) : null}
           {quoteSave.status === 'error' ? (
-            <div className="rounded-sm border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
+            <div className="rounded-sm border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700 sm:p-4">
               {quoteSave.message}
             </div>
           ) : null}
           {quoteSave.status === 'saved' && quoteSave.message ? (
-            <div className="rounded-sm border border-slate-200 bg-white p-4 text-sm font-bold text-slate-700">
+            <div className="rounded-sm border border-slate-200 bg-white p-3 text-sm font-bold text-slate-700 sm:p-4">
               <p>{quoteSave.message}</p>
               {quoteSave.orderId ? (
                 <a className="mt-3 inline-flex text-[#0877ff] hover:text-[#0068e8]" href={`/orders/${quoteSave.orderId}`}>
@@ -573,7 +573,7 @@ export default function QuotePage() {
           ) : null}
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-3 sm:space-y-5">
           <PricingSummary
             pricing={pricing}
             errors={errors}
@@ -629,10 +629,10 @@ function Panel({
 }) {
   return (
     <details className="group rounded-sm border border-slate-200 bg-white shadow-sm" open={defaultOpen}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 bg-slate-100 px-4 py-3">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-slate-100 px-3 py-2.5 sm:gap-4 sm:px-4 sm:py-3">
         <span>
-          <span className="block text-base font-black text-slate-950">{title}</span>
-          <span className="mt-0.5 block text-xs leading-5 text-slate-500">{description}</span>
+          <span className="block text-sm font-black text-slate-950 sm:text-base">{title}</span>
+          <span className="mt-0.5 hidden text-xs leading-5 text-slate-500 sm:block">{description}</span>
         </span>
         <span className="text-xl font-black text-slate-800 transition group-open:rotate-180">⌄</span>
       </summary>
@@ -643,10 +643,10 @@ function Panel({
 
 function QuoteRow({ label, help, children }: { label: string; help: string; children: React.ReactNode }) {
   return (
-    <div className="grid gap-3 border-b border-slate-100 px-4 py-3 last:border-b-0 lg:grid-cols-[190px_1fr]">
+    <div className="grid gap-2 border-b border-slate-100 px-3 py-2.5 last:border-b-0 sm:gap-3 sm:px-4 sm:py-3 lg:grid-cols-[190px_1fr]">
       <div>
         <h3 className="text-sm font-black text-slate-900">{label}</h3>
-        <p className="mt-1 text-xs leading-5 text-slate-500">{help}</p>
+        <p className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{help}</p>
       </div>
       <div>{children}</div>
     </div>
@@ -671,8 +671,8 @@ function UnifiedUpload({
   onCpl: (name: string) => void;
 }) {
   return (
-    <div className="bg-[#eaf2fb] px-5 py-8 text-center">
-      <label className="inline-flex cursor-pointer items-center justify-center gap-3 rounded-full bg-[#0877ff] px-12 py-4 text-base font-black text-white shadow-sm transition hover:bg-[#0068e8]">
+    <div className="bg-[#eaf2fb] px-3 py-4 text-center sm:px-5 sm:py-8">
+      <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0877ff] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#0068e8] sm:gap-3 sm:px-12 sm:py-4 sm:text-base">
         <input
           type="file"
           accept=".zip,application/zip,application/x-zip-compressed"
@@ -690,9 +690,9 @@ function UnifiedUpload({
       {gerberUpload.message ? (
         <p className={`mt-5 text-sm font-bold ${gerberUpload.status === 'error' ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{gerberUpload.message}</p>
       ) : null}
-      <p className="mt-5 text-sm text-slate-500">Accepte uniquement les fichiers ZIP, Max 50 Mo, Voir exemple &gt;.</p>
-      <p className="mt-3 text-sm text-slate-500">Tous les televersements sont effectues en toute securite et dans le respect de la confidentialite</p>
-      <div className="mx-auto mt-5 grid max-w-2xl gap-3 sm:grid-cols-2">
+      <p className="mt-3 text-xs text-slate-500 sm:mt-5 sm:text-sm">ZIP Gerber, Max 50 Mo, Voir exemple &gt;.</p>
+      <p className="mt-3 hidden text-sm text-slate-500 sm:block">Tous les televersements sont effectues en toute securite et dans le respect de la confidentialite</p>
+      <div className="mx-auto mt-3 grid max-w-2xl gap-2 sm:mt-5 sm:gap-3 sm:grid-cols-2">
         <CompactFile label="BOM" fileName={bomFileName} accept=".csv,.xlsx,.xls" onFile={onBom} />
         <CompactFile label="CPL" fileName={cplFileName} accept=".csv,.xlsx,.xls" onFile={onCpl} />
       </div>
@@ -712,7 +712,7 @@ function CompactFile({
   onFile: (name: string) => void;
 }) {
   return (
-    <label className="cursor-pointer rounded-sm border border-dashed border-slate-300 bg-white/70 px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-[#0877ff]">
+    <label className="cursor-pointer rounded-sm border border-dashed border-slate-300 bg-white/70 px-3 py-2.5 text-sm font-bold text-slate-700 transition hover:border-[#0877ff] sm:px-4 sm:py-3">
       <input
         type="file"
         accept={accept}
@@ -737,18 +737,18 @@ function CardOptions({
   options: Array<[string, string]>;
 }) {
   return (
-    <div className="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-2 p-3 sm:gap-3 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
       {options.map(([option, description]) => (
         <button
           key={option}
           type="button"
           onClick={() => onChange(option)}
-          className={`min-h-28 rounded-sm border p-4 text-left transition ${
+          className={`min-h-16 rounded-sm border p-3 text-left transition sm:min-h-28 sm:p-4 ${
             value === option ? 'border-[#0f8f6b] bg-[#eefbf6]' : 'border-slate-200 hover:border-[#0f8f6b]/55'
           }`}
         >
           <span className="block text-sm font-black text-slate-950">{option}</span>
-          <span className="mt-2 block text-xs leading-5 text-slate-500">{description}</span>
+          <span className="mt-2 hidden text-xs leading-5 text-slate-500 sm:block">{description}</span>
         </button>
       ))}
     </div>
@@ -765,7 +765,7 @@ function Pills({
   options: Array<string | number | [string | number, string]>;
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5 sm:gap-2">
       {options.map((item) => {
         const optionValue = Array.isArray(item) ? item[0] : item;
         const label = Array.isArray(item) ? item[1] : item;
@@ -774,7 +774,7 @@ function Pills({
             key={String(optionValue)}
             type="button"
             onClick={() => onChange(optionValue)}
-            className={`min-h-10 rounded-sm border px-4 text-sm font-bold transition ${
+            className={`min-h-9 rounded-sm border px-3 text-xs font-bold transition sm:min-h-10 sm:px-4 sm:text-sm ${
               value === optionValue ? 'border-[#0f8f6b] bg-[#0f8f6b] text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
             }`}
           >
@@ -799,13 +799,13 @@ function ColorPills({ value, onChange }: { value: string; onChange: (value: stri
   ];
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5 sm:gap-2">
       {colors.map(([label, color]) => (
         <button
           key={label}
           type="button"
           onClick={() => onChange(label)}
-          className={`flex min-h-11 items-center gap-2 rounded-sm border px-4 text-sm font-bold transition ${
+          className={`flex min-h-9 items-center gap-2 rounded-sm border px-3 text-xs font-bold transition sm:min-h-11 sm:px-4 sm:text-sm ${
             value === label ? 'border-[#0f8f6b] bg-[#eefbf6] text-[#0f6f54]' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
           }`}
         >
@@ -836,7 +836,7 @@ function NumberBox({
         min={min}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-11 w-full rounded-sm border border-slate-200 bg-white px-3 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15"
+        className="h-10 w-full rounded-sm border border-slate-200 bg-white px-3 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11"
       />
     </label>
   );
@@ -855,7 +855,7 @@ function SelectBox({
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="h-11 w-full rounded-sm border border-slate-200 bg-white px-3 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15"
+      className="h-10 w-full rounded-sm border border-slate-200 bg-white px-3 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11"
     >
       {options.map((item) => {
         const optionValue = Array.isArray(item) ? item[0] : item;
@@ -872,7 +872,7 @@ function SelectBox({
 
 function Switch({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
-    <label className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-sm border px-3 text-sm font-bold transition ${
+    <label className={`flex min-h-10 cursor-pointer items-center justify-between gap-2 rounded-sm border px-3 text-xs font-bold transition sm:min-h-11 sm:gap-3 sm:text-sm ${
       checked ? 'border-[#0f8f6b] bg-[#eefbf6] text-[#0f6f54]' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
     }`}>
       <span>{label}</span>
@@ -883,7 +883,7 @@ function Switch({ label, checked, onChange }: { label: string; checked: boolean;
 
 function SupportCard() {
   return (
-    <aside className="rounded-sm border border-slate-200 bg-white p-5 shadow-sm">
+    <aside className="hidden rounded-sm border border-slate-200 bg-white p-5 shadow-sm lg:block">
       <h2 className="text-lg font-black text-slate-950">Besoin d aide ?</h2>
       <div className="mt-4 space-y-3 text-sm">
         <a href="/contact" className="block rounded-sm border border-slate-200 p-3 font-bold text-[#0f8f6b] hover:border-[#0f8f6b]">
