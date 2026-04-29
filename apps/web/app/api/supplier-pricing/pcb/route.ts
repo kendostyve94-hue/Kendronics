@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   if (!apiKey) {
     return NextResponse.json(
       {
-        error: 'Supplier API is not configured. Set PCBWAY_API_KEY server-side before using supplier live pricing.',
+        error: 'Supplier live pricing is not available yet. Kendronics is completing supplier API configuration.',
       },
       { status: 501 },
     );

@@ -60,8 +60,8 @@ const faqs = [
     'PCB pricing changes with files, board dimensions, quantity, material, layers, finish, destination country, logistics lane, payment method, and partner availability. Fixed prices would be misleading.',
   ],
   [
-    'Are example scenarios real quotes?',
-    'No. They are illustrative scenarios that explain how the pricing model behaves. Use the real-time configurator for an actual quote.',
+    'Are scenario descriptions final quotes?',
+    'No. Scenario descriptions explain cost drivers. A customer quote is generated from the configurator and then confirmed through supplier and file validation.',
   ],
   [
     'Why does destination country matter?',
@@ -90,8 +90,8 @@ export default function PricingPage() {
       <Section
         id="pricing-formula"
         eyebrow="Pricing formula"
-        title="Transparent dynamic pricing, not fake fixed price lists."
-        description="Kendronics calculates pricing from the real order context: partner manufacturing, handling, logistics, payment, platform service, and destination-specific delivery assumptions."
+        title="Transparent dynamic pricing for real PCB order contexts."
+        description="Kendronics structures pricing around partner manufacturing, handling, logistics, payment, platform service, and destination-specific delivery assumptions."
       >
         <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
           <Card className="p-6">
@@ -150,8 +150,8 @@ export default function PricingPage() {
       <Section
         id="example-scenarios"
         eyebrow="Example scenarios"
-        title="Illustrative scenarios only, not fixed prices."
-        description="These examples explain how the model behaves. They are not quotes, price promises, or published rate cards."
+        title="Common scenarios that explain cost drivers."
+        description="These examples show why different orders price differently. Final customer pricing is tied to the configured request and supplier validation."
       >
         <div className="grid gap-5 md:grid-cols-3">
           {scenarios.map((scenario) => (
@@ -178,7 +178,7 @@ export default function PricingPage() {
         id="faq"
         eyebrow="FAQ"
         title="Pricing questions customers ask before quoting."
-        description="The short version: use the configurator for actual numbers, and treat scenarios as education only."
+        description="The short version: use the configurator for the customer quote, then rely on supplier and file validation before final production."
       >
         <div className="grid gap-4 md:grid-cols-2">
           {faqs.map(([question, answer]) => (
@@ -204,7 +204,7 @@ export default function PricingPage() {
               The configurator is the source of truth for your order.
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-sky-100 sm:text-base">
-              Upload files, choose specs, select an African destination, and let the quote flow calculate the current scenario instead of relying on fixed placeholders.
+              Upload files, choose specs, select an African destination, and let the quote flow calculate the current request from the selected production and delivery context.
             </p>
           </div>
           <div className="relative mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col">
@@ -237,7 +237,7 @@ function PricingHero() {
             Dynamic quotes built around your real PCB and delivery path.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
-            Kendronics does not publish fake fixed PCB prices. The quote changes with manufacturing partner cost,
+            Kendronics does not publish static PCB price tables. The quote changes with manufacturing partner cost,
             logistics, destination country, payment processing, service fee, and selected board options.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">

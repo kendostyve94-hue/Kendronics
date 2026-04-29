@@ -137,11 +137,11 @@ export function PricingSummary({
         <div className="py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-lg font-black text-slate-950">{isSupplierPrice ? 'Prix fournisseur live' : 'Estimation interne'}</h3>
+              <h3 className="text-lg font-black text-slate-950">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif'}</h3>
               <p className="mt-1 text-xs leading-5 text-slate-500">
                 {isSupplierPrice
                   ? 'Prix retourne par le fournisseur configure, avec frais Kendronics.'
-                  : 'Simulation Kendronics: a remplacer par une API PCBWay/JLCPCB avant usage commercial.'}
+                  : 'Base de calcul utilisee pendant l integration fournisseur. Le prix final est confirme apres validation.'}
               </p>
             </div>
             <div className="text-right text-lg font-black">
@@ -294,7 +294,7 @@ export function PricingSummary({
         <p className="mt-4 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500">
           {isSupplierPrice
             ? pricing.transparencyNote
-            : 'Mode estimation: le prix affiche n est pas un tarif marche officiel. Activez PCBWAY_API_KEY cote serveur puis REQUIRE_LIVE_SUPPLIER_PRICING=true pour passer en mode reel strict.'}
+            : 'Le montant affiche sert de previsualisation pendant la configuration. Kendronics travaille a connecter les tarifs fournisseur en temps reel avant validation commerciale finale.'}
         </p>
       </div>
     </aside>

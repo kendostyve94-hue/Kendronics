@@ -30,7 +30,7 @@ const services = [
     title: 'Commande PCB petit lot',
     category: 'Production',
     image: serviceImages[1],
-    what: 'Commande reproductible pour les petites series lorsque le design est pret pour pilote, demonstration ou deploiement limite.',
+    what: 'Commande reproductible pour les petites series lorsque le design est pret pour pilote, validation terrain ou deploiement limite.',
     audience: 'Startups hardware, laboratoires, equipes de reparation et equipes produit qui ont besoin de petites quantites fiables.',
     benefit: 'Les equipes planifient avec des jalons clairs et une logistique adaptee au pays de destination.',
     cta: 'Lancer un petit lot',

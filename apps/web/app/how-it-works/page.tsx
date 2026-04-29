@@ -95,13 +95,11 @@ const faqs = [
 ];
 
 const componentPlan = [
-  ['Hero', '#hero'],
-  ['Timeline', '#timeline'],
-  ['Gerber guide', '#gerber-file-guide'],
-  ['Payment explanation', '#payment-explanation'],
-  ['Delivery explanation', '#delivery-explanation'],
-  ['FAQ preview', '#faq-preview'],
-  ['CTA', '#cta'],
+  ['Parcours client', '#timeline'],
+  ['Preparation Gerber', '#gerber-file-guide'],
+  ['Paiement', '#payment-explanation'],
+  ['Livraison', '#delivery-explanation'],
+  ['Questions utiles', '#faq-preview'],
 ];
 
 export default function HowItWorksPage() {
@@ -118,8 +116,8 @@ export default function HowItWorksPage() {
       >
         <div className="grid gap-4 lg:grid-cols-[18rem_1fr]">
           <Card glass className="p-6 lg:sticky lg:top-28 lg:self-start">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Component plan</p>
-            <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">Page structure</h2>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Parcours</p>
+            <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">Sections utiles</h2>
             <div className="mt-5 space-y-3 text-sm font-bold text-slate-600">
               {componentPlan.map(([label, href]) => (
                 <a key={label} href={href} className="block rounded-xl border border-slate-200 bg-white px-3 py-3 transition hover:border-sky-200 hover:text-deepblue">

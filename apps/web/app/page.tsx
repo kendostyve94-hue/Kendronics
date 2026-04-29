@@ -75,10 +75,10 @@ const productCards = [
 ];
 
 const quoteFields = [
-  ['Couches', '2'],
-  ['Dimensions', '80 x 60 mm'],
-  ['Quantite', '10'],
-  ['Destination', 'Senegal'],
+  ['Couches', 'A definir'],
+  ['Dimensions', 'Selon Gerber'],
+  ['Quantite', 'Au choix'],
+  ['Destination', 'Afrique'],
 ];
 
 const workflowSteps = [
@@ -207,8 +207,8 @@ function QuickQuotePanel() {
 
       <div className="mt-4 flex items-end justify-between gap-4 border-t border-line pt-4 sm:mt-5">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Estimation</p>
-          <p className="mt-1 text-sm font-bold text-slate-600">Ajustee apres fichier</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Prix</p>
+          <p className="mt-1 text-sm font-bold text-slate-600">Confirme apres configuration</p>
         </div>
         <a href="/quote" className="inline-flex h-10 items-center rounded-full bg-deepblue px-5 text-sm font-black text-white">
           Configurer

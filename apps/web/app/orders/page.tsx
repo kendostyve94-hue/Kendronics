@@ -89,7 +89,7 @@ export default function OrdersPage() {
         <div className="space-y-4">
           {state === 'loading' ? <StateCard title="Chargement du panier..." body="Recherche des commandes liees a votre compte." /> : null}
           {state === 'guest' ? (
-            <StateCard title="Connectez-vous pour voir le panier" body="Les commandes reelles sont rattachees au compte client, pas au mode demonstration.">
+            <StateCard title="Connectez-vous pour voir le panier" body="Les commandes sont rattachees au compte client afin de proteger les devis, paiements et fichiers associes.">
               <a href="/login" className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-[#0f8f6b] px-5 text-sm font-black text-white">
                 Connexion
               </a>
