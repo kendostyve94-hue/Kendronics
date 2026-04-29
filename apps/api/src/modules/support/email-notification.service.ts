@@ -14,10 +14,16 @@ type SmtpConfig = {
 
 type SmtpSocket = Socket | TLSSocket;
 
+type EmailMessage = {
+  to: string;
+  replyTo?: string;
+  subject: string;
+  text: string;
+};
+
 @Injectable()
 export class EmailNotificationService {
   async sendSupportTicketNotification(ticket: SupportTicket): Promise<void> {
-    const config = getSmtpConfig();
     const subject = `[Kendronics] ${ticket.ticketNumber} - ${ticket.subject}`;
     const body = [
       'New Kendronics support request',
@@ -35,7 +41,7 @@ export class EmailNotificationService {
       ticket.message ?? '',
     ].join('\n');
 
-    await sendSmtpMail(config, {
+    await sendTransactionalMail({
       to: officialContactEmail,
       replyTo: ticket.requesterEmail,
       subject,
@@ -44,7 +50,6 @@ export class EmailNotificationService {
   }
 
   async sendProfileVerificationCode(input: { to: string; code: string; action: string }): Promise<void> {
-    const config = getSmtpConfig();
     const subject = '[Kendronics] Code de verification du compte';
     const body = [
       'Code de verification Kendronics',
@@ -57,7 +62,7 @@ export class EmailNotificationService {
     ].join('\n');
 
     try {
-      await sendSmtpMail(config, {
+      await sendTransactionalMail({
         to: input.to,
         subject,
         text: body,
@@ -68,6 +73,16 @@ export class EmailNotificationService {
       throw new ServiceUnavailableException(`SMTP profile verification send failed. ${message}`);
     }
   }
+}
+
+async function sendTransactionalMail(message: EmailMessage): Promise<void> {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (resendApiKey) {
+    await sendResendMail(resendApiKey, message);
+    return;
+  }
+
+  await sendSmtpMail(getSmtpConfig(), message);
 }
 
 function smtpErrorDetails(error: unknown): string {
@@ -115,7 +130,7 @@ function getSmtpConfig(): SmtpConfig {
 
 async function sendSmtpMail(
   config: SmtpConfig,
-  message: { to: string; replyTo?: string; subject: string; text: string },
+  message: EmailMessage,
 ): Promise<void> {
   const connection = await openSmtpConnection(config);
   const socket = connection.socket;
@@ -134,6 +149,44 @@ async function sendSmtpMail(
   } finally {
     socket.end();
   }
+}
+
+async function sendResendMail(apiKey: string, message: EmailMessage): Promise<void> {
+  const from = process.env.RESEND_FROM ?? process.env.SMTP_FROM ?? process.env.SMTP_USER;
+  if (!from) {
+    throw new ServiceUnavailableException('RESEND_FROM or SMTP_FROM is required to send email through Resend.');
+  }
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: formatSender(from),
+      to: [message.to],
+      subject: message.subject,
+      text: message.text,
+      reply_to: message.replyTo,
+    }),
+  });
+
+  if (!response.ok) {
+    let detail = `${response.status} ${response.statusText}`;
+    try {
+      const payload = (await response.json()) as { message?: string; name?: string };
+      detail = payload.message || payload.name || detail;
+    } catch {
+      // Keep HTTP status detail when Resend does not return JSON.
+    }
+
+    throw new ServiceUnavailableException(`Resend email failed. ${detail}`);
+  }
+}
+
+function formatSender(from: string) {
+  return from.includes('<') ? from : `Kendronics <${from}>`;
 }
 
 async function openSmtpConnection(config: SmtpConfig): Promise<{ socket: SmtpSocket; reader: ReturnType<typeof createSmtpReader> }> {
@@ -244,7 +297,7 @@ async function command(
 
 function formatEmail(
   from: string,
-  message: { to: string; replyTo?: string; subject: string; text: string },
+  message: EmailMessage,
 ): string {
   const headers = [
     `From: Kendronics <${from}>`,

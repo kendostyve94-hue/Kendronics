@@ -40,6 +40,10 @@ services:
         sync: false
       - key: SMTP_HELO_DOMAIN
         value: kendronics.com
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        sync: false
       - key: S3_BUCKET
         sync: false
       - key: S3_REGION
