@@ -1,4 +1,5 @@
 import { CommentsMarquee } from '../components/home/CommentsMarquee';
+import { HeroQuickQuote } from '../components/home/HeroQuickQuote';
 import { Footer } from '../components/layout/Footer';
 import { Navbar } from '../components/layout/Navbar';
 import { Button } from '../components/ui/Button';
@@ -74,25 +75,11 @@ const productCards = [
   },
 ];
 
-const quoteFields = [
-  ['Couches', 'A definir'],
-  ['Dimensions', 'Selon Gerber'],
-  ['Quantite', 'Au choix'],
-  ['Destination', 'Afrique'],
-];
-
 const workflowSteps = [
   ['01', 'Uploader les fichiers', 'Ajoutez Gerber ZIP, BOM et CPL si assemblage.'],
   ['02', 'Configurer le PCB', 'Choisissez couches, dimensions, quantite, finition et livraison.'],
   ['03', 'Reviser le devis', 'Visualisez fabrication, logistique, paiement et frais de service.'],
   ['04', 'Commander et suivre', 'Payez puis suivez les jalons dans la page Suivi.'],
-];
-
-const proofStats = [
-  ['24h+', 'Cycle rapide selon options'],
-  ['Afrique', 'Livraison pensee par pays'],
-  ['Gerber', 'Revue fichier avant blocage'],
-  ['Stripe', 'Paiement securise'],
 ];
 
 const capabilityRows = [
@@ -162,59 +149,11 @@ function Hero() {
             <span className="home-hero-dot h-1.5 w-6 bg-white" />
             <span className="home-hero-dot home-hero-slide-delayed h-1.5 w-6 bg-white" />
           </div>
-          <div className="mt-[20rem] hidden max-w-2xl grid-cols-2 gap-2 sm:grid sm:grid-cols-4 sm:gap-3 lg:mt-8">
-            {proofStats.map(([value, label]) => (
-              <div key={label} className="border border-white/20 bg-white/10 p-2.5 sm:p-3">
-                <p className="text-base font-black text-white sm:text-lg">{value}</p>
-                <p className="mt-1 text-xs leading-4 text-white/75">{label}</p>
-              </div>
-            ))}
-          </div>
         </div>
 
-        <QuickQuotePanel />
+        <HeroQuickQuote />
       </div>
     </section>
-  );
-}
-
-function QuickQuotePanel() {
-  return (
-    <aside className="hidden border border-white/25 bg-white/95 p-4 text-ink shadow-premium sm:p-5 lg:block">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-deepblue">Devis rapide</p>
-          <h2 className="mt-1 text-lg font-black sm:text-xl">Ajouter vos fichiers</h2>
-        </div>
-        <span className="grid h-9 w-9 place-items-center bg-deepblue text-lg font-black text-white sm:h-10 sm:w-10">+</span>
-      </div>
-
-      <div className="mt-4 grid min-h-24 place-items-center border border-dashed border-signal/45 bg-sky-50 p-4 text-center sm:mt-5 sm:min-h-28 sm:p-5">
-        <div>
-          <p className="text-sm font-black">Gerber ZIP / BOM / CPL</p>
-          <p className="mt-1 text-xs text-slate-500">Upload securise et confidentiel</p>
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3">
-        {quoteFields.map(([label, value]) => (
-          <div key={label} className="border border-line bg-white p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{label}</p>
-            <p className="mt-1 text-sm font-black">{value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-4 flex items-end justify-between gap-4 border-t border-line pt-4 sm:mt-5">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Prix</p>
-          <p className="mt-1 text-sm font-bold text-slate-600">Confirme apres configuration</p>
-        </div>
-        <a href="/quote" className="inline-flex h-10 items-center rounded-full bg-deepblue px-5 text-sm font-black text-white">
-          Configurer
-        </a>
-      </div>
-    </aside>
   );
 }
 
