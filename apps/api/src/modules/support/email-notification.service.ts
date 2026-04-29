@@ -56,12 +56,34 @@ export class EmailNotificationService {
       "Si vous n'avez pas demande cette action, ignorez cet e-mail.",
     ].join('\n');
 
-    await sendSmtpMail(config, {
-      to: input.to,
-      subject,
-      text: body,
-    });
+    try {
+      await sendSmtpMail(config, {
+        to: input.to,
+        subject,
+        text: body,
+      });
+    } catch (error) {
+      const message = smtpErrorDetails(error);
+      console.error('SMTP profile verification send failed:', message);
+      throw new ServiceUnavailableException(`SMTP profile verification send failed. ${message}`);
+    }
   }
+}
+
+function smtpErrorDetails(error: unknown): string {
+  if (error instanceof AggregateError) {
+    const details = error.errors
+      .map((entry) => (entry instanceof Error ? `${entry.name}: ${entry.message}` : String(entry)))
+      .join(' | ');
+
+    return details || error.message || 'Aggregate SMTP connection error';
+  }
+
+  if (error instanceof Error) {
+    return `${error.name}: ${error.message}`;
+  }
+
+  return String(error || 'Unknown SMTP error');
 }
 
 function labelForAction(action: string) {
