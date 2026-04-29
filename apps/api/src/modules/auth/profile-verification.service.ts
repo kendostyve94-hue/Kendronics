@@ -33,7 +33,9 @@ export class ProfileVerificationService {
     } catch (error) {
       this.records.delete(this.keyFor(input.userId, input.action));
       if (error instanceof ServiceUnavailableException) throw error;
-      throw new ServiceUnavailableException('Unable to send profile verification email.');
+      const message = error instanceof Error ? error.message : 'Unknown SMTP error';
+      console.error('Profile verification email failed:', message);
+      throw new ServiceUnavailableException(`Unable to send profile verification email. ${message}`);
     }
 
     return { ok: true };
