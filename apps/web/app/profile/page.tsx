@@ -100,7 +100,7 @@ export default function ProfilePage() {
       });
 
       if (!response.ok) {
-        throw new Error("Impossible d'envoyer le code de confirmation.");
+        throw new Error(await responseErrorMessage(response, "Impossible d'envoyer le code de confirmation."));
       }
 
       setConfirmation({
@@ -140,7 +140,7 @@ export default function ProfilePage() {
       });
 
       if (!response.ok) {
-        throw new Error('Code de confirmation invalide ou expire.');
+        throw new Error(await responseErrorMessage(response, 'Code de confirmation invalide ou expire.'));
       }
 
       if (confirmation.action === 'account') {
@@ -430,6 +430,16 @@ function emailName(email: string) {
 
 function isValidEmail(value: string) {
   return /^\S+@\S+\.\S+$/.test(value.trim());
+}
+
+async function responseErrorMessage(response: Response, fallback: string) {
+  try {
+    const payload = (await response.json()) as { message?: string | string[]; error?: string };
+    const message = Array.isArray(payload.message) ? payload.message.join(' ') : payload.message;
+    return message || payload.error || `${fallback} (${response.status})`;
+  } catch {
+    return `${fallback} (${response.status})`;
+  }
 }
 
 function formatAccountNumber(seed: string) {

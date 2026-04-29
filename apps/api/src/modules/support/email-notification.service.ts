@@ -1,4 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { connect as netConnect, Socket } from 'node:net';
 import { connect as tlsConnect, TLSSocket } from 'node:tls';
 import { officialContactEmail } from '../../config/official-contact';
 import { SupportTicket } from './entities/support-ticket.entity';
@@ -10,6 +11,8 @@ type SmtpConfig = {
   pass: string;
   from: string;
 };
+
+type SmtpSocket = Socket | TLSSocket;
 
 @Injectable()
 export class EmailNotificationService {
@@ -92,12 +95,11 @@ async function sendSmtpMail(
   config: SmtpConfig,
   message: { to: string; replyTo?: string; subject: string; text: string },
 ): Promise<void> {
-  const socket = await openSocket(config.host, config.port);
-  const reader = createSmtpReader(socket);
+  const connection = await openSmtpConnection(config);
+  const socket = connection.socket;
+  const reader = connection.reader;
 
   try {
-    await reader.expect([220]);
-    await command(socket, reader, `EHLO ${process.env.SMTP_HELO_DOMAIN ?? 'kendronics.local'}`, [250]);
     await command(socket, reader, 'AUTH LOGIN', [334]);
     await command(socket, reader, Buffer.from(config.user).toString('base64'), [334]);
     await command(socket, reader, Buffer.from(config.pass).toString('base64'), [235]);
@@ -112,14 +114,50 @@ async function sendSmtpMail(
   }
 }
 
-function openSocket(host: string, port: number): Promise<TLSSocket> {
+async function openSmtpConnection(config: SmtpConfig): Promise<{ socket: SmtpSocket; reader: ReturnType<typeof createSmtpReader> }> {
+  if (config.port === 587) {
+    const plainSocket = await openPlainSocket(config.host, config.port);
+    const plainReader = createSmtpReader(plainSocket);
+    await plainReader.expect([220]);
+    await command(plainSocket, plainReader, `EHLO ${process.env.SMTP_HELO_DOMAIN ?? 'kendronics.local'}`, [250]);
+    await command(plainSocket, plainReader, 'STARTTLS', [220]);
+
+    const tlsSocket = await upgradeSocket(plainSocket, config.host);
+    const tlsReader = createSmtpReader(tlsSocket);
+    await command(tlsSocket, tlsReader, `EHLO ${process.env.SMTP_HELO_DOMAIN ?? 'kendronics.local'}`, [250]);
+    return { socket: tlsSocket, reader: tlsReader };
+  }
+
+  const socket = await openTlsSocket(config.host, config.port);
+  const reader = createSmtpReader(socket);
+  await reader.expect([220]);
+  await command(socket, reader, `EHLO ${process.env.SMTP_HELO_DOMAIN ?? 'kendronics.local'}`, [250]);
+  return { socket, reader };
+}
+
+function openPlainSocket(host: string, port: number): Promise<Socket> {
+  return new Promise((resolve, reject) => {
+    const socket = netConnect({ host, port }, () => resolve(socket));
+    socket.once('error', reject);
+  });
+}
+
+function openTlsSocket(host: string, port: number): Promise<TLSSocket> {
   return new Promise((resolve, reject) => {
     const socket = tlsConnect({ host, port, servername: host }, () => resolve(socket));
     socket.once('error', reject);
   });
 }
 
-function createSmtpReader(socket: TLSSocket) {
+function upgradeSocket(socket: Socket, host: string): Promise<TLSSocket> {
+  return new Promise((resolve, reject) => {
+    socket.removeAllListeners('data');
+    const tlsSocket = tlsConnect({ socket, servername: host }, () => resolve(tlsSocket));
+    tlsSocket.once('error', reject);
+  });
+}
+
+function createSmtpReader(socket: SmtpSocket) {
   let buffer = '';
   const waiters: Array<{
     codes: number[];
@@ -173,7 +211,7 @@ function createSmtpReader(socket: TLSSocket) {
 }
 
 async function command(
-  socket: TLSSocket,
+  socket: SmtpSocket,
   reader: ReturnType<typeof createSmtpReader>,
   line: string,
   expectedCodes: number[],
