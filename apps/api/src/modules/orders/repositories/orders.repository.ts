@@ -26,7 +26,21 @@ type OrderRecord = Omit<
   estimatedDeliveryAt: Date | null;
   paidAt: Date | null;
   deliveredAt: Date | null;
-  quote?: { finalTotal: Prisma.Decimal; currency: string } | null;
+  quote?: {
+    productType: string;
+    gerberFileId: string;
+    layers: number;
+    lengthMm: Prisma.Decimal;
+    widthMm: Prisma.Decimal;
+    quantity: number;
+    shippingMode: string;
+    finalTotal: Prisma.Decimal;
+    currency: string;
+    breakdown: Prisma.JsonValue;
+    configSnapshot: Prisma.JsonValue | null;
+    validUntil: Date;
+    createdAt: Date;
+  } | null;
   payments?: Array<{ status: string }>;
 };
 
@@ -138,6 +152,23 @@ export class OrdersRepository {
       totalPrice: order.quote ? order.quote.finalTotal.toNumber() : undefined,
       currency: order.quote?.currency === 'EUR' ? 'EUR' : undefined,
       paymentStatus,
+      quoteSnapshot: order.quote
+        ? {
+            productType: order.quote.productType,
+            gerberFileId: order.quote.gerberFileId,
+            layers: order.quote.layers,
+            lengthMm: order.quote.lengthMm.toNumber(),
+            widthMm: order.quote.widthMm.toNumber(),
+            quantity: order.quote.quantity,
+            shippingMode: order.quote.shippingMode,
+            finalTotal: order.quote.finalTotal.toNumber(),
+            currency: 'EUR',
+            breakdown: order.quote.breakdown as Record<string, number>,
+            configSnapshot: order.quote.configSnapshot as Record<string, unknown> | null,
+            validUntil: order.quote.validUntil,
+            createdAt: order.quote.createdAt,
+          }
+        : undefined,
     };
   }
 }

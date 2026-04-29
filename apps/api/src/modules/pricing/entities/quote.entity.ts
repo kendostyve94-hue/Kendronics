@@ -30,4 +30,5 @@ export interface Quote {
   validUntil: Date;
   createdAt?: Date;
   breakdown: PricingBreakdown;
+  configSnapshot?: Record<string, unknown> | null;
 }

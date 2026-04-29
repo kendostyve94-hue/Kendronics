@@ -67,6 +67,7 @@ export class PricingService {
         shippingMode: dto.shippingMode,
         currency: 'EUR',
         finalTotal: breakdown.finalTotal,
+        configSnapshot: dto.configSnapshot as Prisma.InputJsonObject | undefined,
         validUntil,
         breakdown: breakdown as unknown as Prisma.InputJsonObject,
       },
@@ -79,6 +80,7 @@ export class PricingService {
       finalTotal: Number(quote.finalTotal),
       currency: 'EUR',
       breakdown: quote.breakdown as unknown as PricingBreakdown,
+      configSnapshot: quote.configSnapshot as Record<string, unknown> | null,
     };
   }
 }

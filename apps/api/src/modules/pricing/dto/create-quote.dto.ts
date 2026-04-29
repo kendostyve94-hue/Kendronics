@@ -1,4 +1,4 @@
-import { IsIn, IsInt, IsNumber, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsIn, IsInt, IsNumber, IsObject, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreateQuoteDto {
   @IsIn(['standard_pcb', 'advanced_pcb', 'pcb_assembly', 'smt_stencil'])
@@ -36,4 +36,8 @@ export class CreateQuoteDto {
 
   @IsIn(['economy', 'standard', 'express'])
   shippingMode!: string;
+
+  @IsOptional()
+  @IsObject()
+  configSnapshot?: Record<string, unknown>;
 }

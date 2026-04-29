@@ -277,6 +277,15 @@ export default function QuotePage() {
           quantity: config.quantity,
           destinationCountryIso2: config.destinationCountry,
           shippingMode: config.shippingMode,
+          configSnapshot: {
+            ...config,
+            lengthMm: toMillimeters(config.length, config.unit),
+            widthMm: toMillimeters(config.width, config.unit),
+            gerberFileId: gerberUpload.uploadId,
+            gerberFileName: config.gerberFileName,
+            bomFileName: config.bomFileName,
+            cplFileName: config.cplFileName,
+          },
         }),
       });
 

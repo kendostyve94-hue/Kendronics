@@ -39,6 +39,7 @@ model Quote {
   currency               String   @default("EUR")
   finalTotal             Decimal  @db.Decimal(12, 2)
   breakdown              Json
+  configSnapshot          Json?
   validUntil             DateTime
   createdAt              DateTime @default(now())
 

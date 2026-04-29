@@ -20,7 +20,7 @@ import type {
   PricingLineItem,
 } from '../../../lib/order-detail-contract';
 
-type PageStatus = 'loading' | 'ready' | 'demo' | 'error';
+type PageStatus = 'loading' | 'ready' | 'error';
 type CheckoutStatus = 'idle' | 'loading' | 'error';
 type DeleteStatus = 'idle' | 'deleting' | 'error';
 const apiBaseUrl = getApiBaseUrl();
@@ -40,7 +40,7 @@ const countryNames: Record<string, string> = {
 export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = use(params);
   const router = useRouter();
-  const [detail, setDetail] = useState<OrderDetailResponse>(() => buildDemoOrderDetail(orderId));
+  const [detail, setDetail] = useState<OrderDetailResponse | null>(null);
   const [status, setStatus] = useState<PageStatus>('loading');
   const [checkoutStatus, setCheckoutStatus] = useState<CheckoutStatus>('idle');
   const [checkoutError, setCheckoutError] = useState('');
@@ -72,13 +72,13 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
         const trackingPayload = await trackingResponse.json();
 
         if (!cancelled) {
-          setDetail(normalizeOrderDetail(orderId, orderPayload, trackingPayload));
+          setDetail(buildOrderDetail(orderPayload, trackingPayload));
           setStatus('ready');
         }
       } catch {
         if (!cancelled) {
-          setDetail(buildDemoOrderDetail(orderId));
-          setStatus('demo');
+          setDetail(null);
+          setStatus('error');
         }
       }
     }
@@ -90,11 +90,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     };
   }, [orderId]);
 
-  const destination = countryNames[detail.order.destinationCountryIso2] ?? detail.order.destinationCountryIso2;
-  const supportHref = `/contact?orderId=${encodeURIComponent(detail.order.id)}`;
-  const canCheckout = status === 'ready' && detail.order.paymentStatus === 'pending';
+  const destination = detail ? countryNames[detail.order.destinationCountryIso2] ?? detail.order.destinationCountryIso2 : '';
+  const supportHref = detail ? `/contact?orderId=${encodeURIComponent(detail.order.id)}` : '/contact';
+  const canCheckout = status === 'ready' && detail?.order.paymentStatus === 'pending';
 
   async function startStripeCheckout() {
+    if (!detail) return;
     setCheckoutStatus('loading');
     setCheckoutError('');
 
@@ -132,6 +133,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   }
 
   async function deleteOrder() {
+    if (!detail) return;
     const confirmed = window.confirm(`Supprimer la commande ${detail.order.orderNumber} ? Cette action retire la commande de votre panier.`);
     if (!confirmed) return;
 
@@ -176,22 +178,23 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
                 Chaque commande est regroupee dans une section deroulante avec ses fichiers, specifications et couts.
               </p>
             </div>
-            <StatusBadge status={detail.order.status} />
+            {detail ? <StatusBadge status={detail.order.status} /> : null}
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-[1320px] px-4 py-5 sm:px-6 lg:px-8">
-        {status === 'demo' && (
-          <div className="mb-5 rounded-sm border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">
-            Apercu de donnees client affiche car l API de commande authentifiee est indisponible dans cet environnement.
-          </div>
-        )}
         {status === 'error' && (
           <div className="mb-5 rounded-sm border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
-            Impossible de charger cette commande. Actualisez la page ou contactez le support.
+            Impossible de charger cette commande reelle. Connectez-vous avec le bon compte ou ouvrez votre panier.
+            <a href="/orders" className="ml-2 underline">Voir le panier</a>
           </div>
         )}
+        {status === 'loading' || !detail ? (
+          <div className="rounded-sm border border-line bg-white p-6 text-sm font-bold text-slate-600">
+            {status === 'loading' ? 'Chargement de la commande...' : 'Aucune donnee de commande a afficher.'}
+          </div>
+        ) : (
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] xl:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="overflow-hidden rounded-sm border border-line bg-white shadow-sm">
@@ -237,6 +240,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
             <SupportCard supportHref={supportHref} orderNumber={detail.order.orderNumber} />
           </div>
         </div>
+        )}
       </section>
     </main>
   );
@@ -492,109 +496,95 @@ function FileBadge({ status }: { status: GerberFileInfo['validationStatus'] }) {
   return <span className={`rounded-full px-3 py-2 text-xs font-black ring-1 ${classes}`}>{label}</span>;
 }
 
-function normalizeOrderDetail(orderId: string, orderPayload: Partial<CustomerOrderSummary>, trackingPayload: unknown): OrderDetailResponse {
-  const demo = buildDemoOrderDetail(orderId);
+function buildOrderDetail(orderPayload: CustomerOrderSummary, trackingPayload: unknown): OrderDetailResponse {
+  const quote = orderPayload.quoteSnapshot;
+  const config = quote?.configSnapshot ?? {};
+  const fallbackStatus = isCustomerTrackingStatus(orderPayload.status) ? orderPayload.status : 'awaiting_payment';
   const timeline = Array.isArray(trackingPayload)
     ? trackingPayload
         .filter((event): event is Record<string, string> => Boolean(event && typeof event === 'object'))
         .map((event) => ({
-          id: event.id ?? crypto.randomUUID(),
-          status: isCustomerTrackingStatus(event.status) ? event.status : demo.order.status,
-          title: event.title ?? statusLabels[demo.order.status],
+          id: event.id ?? `${orderPayload.id}-${event.status ?? 'event'}`,
+          status: isCustomerTrackingStatus(event.status) ? event.status : fallbackStatus,
+          title: event.title ?? statusLabels[fallbackStatus],
           description: event.description,
           location: event.location,
           occurredAt: event.occurredAt,
         }))
-    : demo.trackingTimeline;
-
-  const status = orderPayload.status && isCustomerTrackingStatus(orderPayload.status) ? orderPayload.status : demo.order.status;
+    : [];
 
   return {
-    ...demo,
     order: {
-      ...demo.order,
-      id: orderPayload.id ?? demo.order.id,
-      orderNumber: orderPayload.orderNumber ?? demo.order.orderNumber,
-      status,
-      destinationCountryIso2: orderPayload.destinationCountryIso2 ?? demo.order.destinationCountryIso2,
-      estimatedDeliveryAt: orderPayload.estimatedDeliveryAt ?? demo.order.estimatedDeliveryAt,
-      paymentStatus: orderPayload.paymentStatus ?? (status === 'paid' ? 'paid' : demo.order.paymentStatus),
-      totalPrice: orderPayload.totalPrice ?? demo.order.totalPrice,
-      currency: orderPayload.currency ?? demo.order.currency,
+      ...orderPayload,
+      status: fallbackStatus,
+      paymentStatus: orderPayload.paymentStatus ?? (fallbackStatus === 'paid' ? 'paid' : 'pending'),
+      totalPrice: orderPayload.totalPrice ?? quote?.finalTotal ?? 0,
+      currency: orderPayload.currency ?? quote?.currency ?? 'EUR',
     },
-    trackingTimeline: timeline,
+    pcbSpecs: {
+      productType: productLabel(stringValue(config.productType) ?? quote?.productType ?? 'PCB'),
+      layers: numberValue(config.layers) ?? quote?.layers ?? 0,
+      dimensions: `${numberValue(config.lengthMm) ?? quote?.lengthMm ?? numberValue(config.length) ?? 0} x ${numberValue(config.widthMm) ?? quote?.widthMm ?? numberValue(config.width) ?? 0} mm`,
+      quantity: numberValue(config.quantity) ?? quote?.quantity ?? 0,
+      baseMaterial: stringValue(config.baseMaterial) ?? 'A confirmer',
+      thickness: stringValue(config.thickness) ?? 'A confirmer',
+      solderMaskColor: stringValue(config.solderMaskColor) ?? 'A confirmer',
+      surfaceFinish: stringValue(config.surfaceFinish) ?? 'A confirmer',
+      assemblyRequired: booleanValue(config.assemblyRequired) ?? quote?.productType === 'pcb_assembly',
+    },
+    gerberFile: {
+      fileName: stringValue(config.gerberFileName) ?? (quote ? `Upload ${quote.gerberFileId.slice(0, 8)}` : 'Gerber non renseigne'),
+      fileSize: 'Stockage prive',
+      uploadedAt: quote?.createdAt ?? new Date().toISOString(),
+      validationStatus: 'pending_review',
+    },
+    pricingBreakdown: quote ? breakdownLines(quote.breakdown) : [],
+    trackingTimeline: timeline.length > 0 ? timeline : [{
+      id: `${orderPayload.id}-created`,
+      status: fallbackStatus,
+      title: statusLabels[fallbackStatus],
+      occurredAt: quote?.createdAt,
+    }],
   };
 }
 
-function buildDemoOrderDetail(orderId: string): OrderDetailResponse {
-  const now = Date.now();
-
-  return {
-    order: {
-      id: orderId,
-      orderNumber: `KEN-${orderId.slice(0, 8).toUpperCase()}`,
-      status: 'supplier_in_production',
-      paymentStatus: 'paid',
-      destinationCountryIso2: 'SN',
-      totalPrice: 184.4,
-      currency: 'EUR',
-      estimatedDeliveryAt: new Date(now + 13 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-    pcbSpecs: {
-      productType: 'Standard PCB',
-      layers: 4,
-      dimensions: '80 x 60 mm',
-      quantity: 20,
-      baseMaterial: 'FR4',
-      thickness: '1.6mm',
-      solderMaskColor: 'Green',
-      surfaceFinish: 'HASL lead-free',
-      assemblyRequired: false,
-    },
-    gerberFile: {
-      fileName: 'kendronics-controller-rev-a.zip',
-      fileSize: '3.8 MB',
-      uploadedAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      validationStatus: 'validated',
-    },
-    pricingBreakdown: [
-      { label: 'PCB production', amount: 72 },
-      { label: 'Engineering and handling', amount: 24 },
-      { label: 'International logistics', amount: 58 },
-      { label: 'Payment processing', amount: 6.4 },
-      { label: 'Customs buffer', amount: 24 },
-    ],
-    trackingTimeline: [
-      {
-        id: 'paid',
-        status: 'paid',
-        title: 'Payment confirmed',
-        description: 'Payment was confirmed and the order moved into fulfillment.',
-        occurredAt: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'supplier_order_pending',
-        status: 'supplier_order_pending',
-        title: 'Partner order prepared',
-        description: 'Kendronics reviewed the files and prepared the external partner order.',
-        occurredAt: new Date(now - 36 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'supplier_ordered',
-        status: 'supplier_ordered',
-        title: 'Partner order placed',
-        description: 'The production request was placed with an approved external manufacturing partner.',
-        occurredAt: new Date(now - 24 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'supplier_in_production',
-        status: 'supplier_in_production',
-        title: 'In production',
-        description: 'The boards are in production. Supplier identifiers remain internal.',
-        occurredAt: new Date(now - 8 * 60 * 60 * 1000).toISOString(),
-      },
-    ],
+function breakdownLines(breakdown: Record<string, number>): PricingLineItem[] {
+  const labels: Record<string, string> = {
+    partnerManufacturingCost: 'Production PCB',
+    partnerHandlingCost: 'Traitement fournisseur',
+    ChinaToFranceLogistics: 'Logistique Chine-France',
+    FranceProcessingFee: 'Traitement France',
+    FranceToAfricaDelivery: 'Livraison Afrique',
+    customsRiskBuffer: 'Marge douane',
+    paymentProcessingFee: 'Frais paiement',
+    KendronicsServiceFee: 'Service Kendronics',
+    taxesIfApplicable: 'Taxes applicables',
   };
+
+  return Object.entries(labels)
+    .map(([key, label]) => ({ label, amount: Number(breakdown[key] ?? 0) }))
+    .filter((item) => item.amount > 0);
+}
+
+function productLabel(value: string): string {
+  return {
+    standard_pcb: 'PCB standard',
+    advanced_pcb: 'PCB avance',
+    pcb_assembly: 'Assemblage PCB',
+    smt_stencil: 'Stencil SMT',
+  }[value] ?? value;
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+function numberValue(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function booleanValue(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
 }
 
 function formatMoney(amount: number, currency: CustomerOrderSummary['currency']): string {

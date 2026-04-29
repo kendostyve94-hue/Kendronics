@@ -33,4 +33,19 @@ export interface Order {
   deliveredAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  quoteSnapshot?: {
+    productType: string;
+    gerberFileId: string;
+    layers: number;
+    lengthMm: number;
+    widthMm: number;
+    quantity: number;
+    shippingMode: string;
+    finalTotal: number;
+    currency: 'EUR';
+    breakdown: Record<string, number>;
+    configSnapshot?: Record<string, unknown> | null;
+    validUntil: Date;
+    createdAt: Date;
+  };
 }

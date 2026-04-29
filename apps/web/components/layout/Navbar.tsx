@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { getApiBaseUrl } from '../../lib/api-base-url';
+import { readAuthSession } from '../../lib/auth-session';
 const ORDER_STORAGE_KEY = 'kendronics.customer.orders';
+const apiBaseUrl = getApiBaseUrl();
 
 const productItems = [
   { label: 'PCB standard', href: '/services#pcb-standard' },
@@ -33,7 +36,7 @@ const mobileActionItems = [
 const searchItems = [
   { label: 'Accueil', href: '/', keywords: 'home accueil kendronics' },
   { label: 'Devis PCB', href: '/quote', keywords: 'devis commande pcb pcba gerber prix' },
-  { label: 'Panier', href: '/orders/demo', keywords: 'panier commande order' },
+  { label: 'Panier', href: '/orders', keywords: 'panier commande order' },
   { label: 'Suivi', href: '/tracking', keywords: 'suivi tracking livraison commande' },
   { label: 'Services', href: '/services', keywords: 'services pcb pcba stencil assemblage' },
   { label: 'Guide technique', href: '/guide-technique', keywords: 'guide technique gerber kicad easyeda' },
@@ -86,6 +89,27 @@ export function Navbar() {
     }
 
     refreshClientState();
+
+    async function refreshServerOrders() {
+      const session = readAuthSession();
+      if (!session) return;
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/orders`, {
+          headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+          cache: 'no-store',
+        });
+        if (!response.ok) return;
+        const payload = (await response.json()) as Array<{ id?: string }>;
+        const ids = payload.map((order) => order.id).filter((id): id is string => Boolean(id));
+        window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(ids.slice(0, 20)));
+        setOrders(ids);
+      } catch {
+        // The dock keeps the last local cart state if the API is temporarily unavailable.
+      }
+    }
+
+    void refreshServerOrders();
     window.addEventListener('storage', refreshClientState);
     window.addEventListener('kendronics:orders-updated', refreshClientState);
     return () => {
@@ -111,8 +135,7 @@ export function Navbar() {
   }, [isMenuOpen, isSearchOpen]);
 
   const cartHref = useMemo(() => {
-    const lastOrderId = orders[0];
-    return lastOrderId ? `/orders/${lastOrderId}` : '/orders/demo';
+    return '/orders';
   }, [orders]);
 
   const searchResults = useMemo(() => {
