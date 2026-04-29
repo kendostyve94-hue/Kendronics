@@ -173,9 +173,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
           <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Panier d'achat</p>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">Details de commande</h1>
+              <h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">Detail de commande</h1>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Chaque commande est regroupee dans une section deroulante avec ses fichiers, specifications et couts.
+                Consultez les fichiers, specifications, couts et actions disponibles pour cette commande.
               </p>
             </div>
             {detail ? <StatusBadge status={detail.order.status} /> : null}
@@ -186,7 +186,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
       <section className="mx-auto max-w-[1320px] px-4 py-5 sm:px-6 lg:px-8">
         {status === 'error' && (
           <div className="mb-5 rounded-sm border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
-            Impossible de charger cette commande reelle. Connectez-vous avec le bon compte ou ouvrez votre panier.
+            Impossible de charger cette commande. Connectez-vous avec le bon compte ou ouvrez votre panier.
             <a href="/orders" className="ml-2 underline">Voir le panier</a>
           </div>
         )}
@@ -198,16 +198,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] xl:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="overflow-hidden rounded-sm border border-line bg-white shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-line p-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-wrap gap-5 text-sm font-black">
-                <span className="text-[#0877ff]">Toutes (1)</span>
-                <span>PCB (1)</span>
-                <span>Assemblage ({detail.pcbSpecs.assemblyRequired ? 1 : 0})</span>
+            <div className="flex flex-col gap-2 border-b border-line p-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Commande</p>
+                <p className="mt-1 text-lg font-black text-ink">{detail.order.orderNumber}</p>
               </div>
-              <label className="flex h-9 w-full items-center gap-2 rounded-sm border border-line bg-white px-3 md:max-w-56">
-                <input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400" placeholder="Rechercher" />
-                <span className="text-sm text-slate-500">Q</span>
-              </label>
+              <p className="text-sm font-bold text-slate-600">{detail.pcbSpecs.productType}</p>
             </div>
 
             <div className="hidden grid-cols-[minmax(0,1fr)_5rem_8rem_7rem] bg-slate-100 px-5 py-3 text-sm font-black text-ink md:grid">
@@ -266,7 +262,7 @@ function SummaryCard({
       <h2 className="text-xl font-black tracking-tight text-ink">Resume</h2>
       <div className="mt-5 space-y-4 text-sm">
         <SummaryLine label="Total marchandises" value={formatMoney(order.totalPrice, order.currency)} />
-        <SummaryLine label="Estimation des frais de port" value="--" />
+        <SummaryLine label="Livraison" value="Incluse ou confirmee au paiement" />
         <div className="flex items-center justify-between border-t border-line pt-4 text-base font-black">
           <span>Total</span>
           <span className="text-[#ff7a00]">{formatMoney(order.totalPrice, order.currency)}</span>
@@ -274,10 +270,9 @@ function SummaryCard({
         <div className="border-t border-line pt-4">
           <SummaryLine label="Date d'expedition estimee" value={shippingEstimate} />
           <p className="mt-3 text-xs leading-5 text-slate-500">
-            La commande ne sera expediee que lorsque les fichiers, le paiement et la revue seront prets.
+            La commande avance apres validation des fichiers, paiement et disponibilite fournisseur.
           </p>
         </div>
-        <SummaryLine label="Poids" value="0kg" />
       </div>
       <button
         type="button"
@@ -324,7 +319,7 @@ function OrderAccordion({
   deleteError: string;
   onDelete: () => void;
 }) {
-  const productionDelay = order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : 'A confirmer';
+  const productionDelay = order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : 'A confirmer apres validation';
 
   return (
     <details className="group border-b border-line last:border-b-0" open>
@@ -451,7 +446,7 @@ function PricingBreakdownCard({
         ))}
       </div>
       <div className="mt-4 flex items-center justify-between rounded-sm bg-deepblue p-4 text-white">
-        <span className="text-sm font-black">Total paye</span>
+        <span className="text-sm font-black">{order.paymentStatus === 'paid' ? 'Total paye' : 'Total a payer'}</span>
         <span className="text-xl font-black">{formatMoney(order.totalPrice, order.currency)}</span>
       </div>
     </Card>
@@ -485,7 +480,7 @@ function StatusBadge({ status }: { status: CustomerTrackingStatus }) {
 }
 
 function FileBadge({ status }: { status: GerberFileInfo['validationStatus'] }) {
-  const label = status === 'validated' ? 'Gerber validated' : status === 'pending_review' ? 'Review pending' : 'Review failed';
+  const label = status === 'validated' ? 'Gerber valide' : status === 'pending_review' ? 'Revue en attente' : 'Revue refusee';
   const classes =
     status === 'validated'
       ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
@@ -526,15 +521,15 @@ function buildOrderDetail(orderPayload: CustomerOrderSummary, trackingPayload: u
       layers: numberValue(config.layers) ?? quote?.layers ?? 0,
       dimensions: `${numberValue(config.lengthMm) ?? quote?.lengthMm ?? numberValue(config.length) ?? 0} x ${numberValue(config.widthMm) ?? quote?.widthMm ?? numberValue(config.width) ?? 0} mm`,
       quantity: numberValue(config.quantity) ?? quote?.quantity ?? 0,
-      baseMaterial: stringValue(config.baseMaterial) ?? 'A confirmer',
-      thickness: stringValue(config.thickness) ?? 'A confirmer',
-      solderMaskColor: stringValue(config.solderMaskColor) ?? 'A confirmer',
-      surfaceFinish: stringValue(config.surfaceFinish) ?? 'A confirmer',
+      baseMaterial: stringValue(config.baseMaterial) ?? 'Non renseigne',
+      thickness: stringValue(config.thickness) ?? 'Non renseigne',
+      solderMaskColor: stringValue(config.solderMaskColor) ?? 'Non renseigne',
+      surfaceFinish: stringValue(config.surfaceFinish) ?? 'Non renseigne',
       assemblyRequired: booleanValue(config.assemblyRequired) ?? quote?.productType === 'pcb_assembly',
     },
     gerberFile: {
-      fileName: stringValue(config.gerberFileName) ?? (quote ? `Upload ${quote.gerberFileId.slice(0, 8)}` : 'Gerber non renseigne'),
-      fileSize: 'Stockage prive',
+      fileName: stringValue(config.gerberFileName) ?? 'Fichier rattache au devis',
+      fileSize: 'Archive privee',
       uploadedAt: quote?.createdAt ?? new Date().toISOString(),
       validationStatus: 'pending_review',
     },
@@ -588,9 +583,9 @@ function booleanValue(value: unknown): boolean | undefined {
 }
 
 function formatMoney(amount: number, currency: CustomerOrderSummary['currency']): string {
-  return new Intl.NumberFormat('en', { style: 'currency', currency }).format(amount);
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount);
 }
 
 function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(value));
+  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(value));
 }

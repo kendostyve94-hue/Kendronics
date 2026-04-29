@@ -77,10 +77,10 @@ export default function OrdersPage() {
       <Navbar />
       <section className="border-b border-line bg-white pt-28">
         <div className="mx-auto max-w-[1180px] px-4 pb-6 sm:px-6 lg:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Panier reel</p>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Panier</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-ink sm:text-4xl">Mes commandes</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            Le panier affiche uniquement les commandes creees depuis un devis sauvegarde avec votre compte connecte.
+            Retrouvez les commandes creees depuis vos devis sauvegardes avec votre compte connecte.
           </p>
         </div>
       </section>
@@ -97,7 +97,7 @@ export default function OrdersPage() {
           ) : null}
           {state === 'error' ? <StateCard title="Panier indisponible" body={message} tone="error" /> : null}
           {state === 'ready' && orders.length === 0 ? (
-            <StateCard title="Votre panier est vide" body="Creez un devis reel avec vos fichiers Gerber pour ouvrir une commande.">
+            <StateCard title="Votre panier est vide" body="Creez un devis avec vos fichiers Gerber pour ouvrir une commande.">
               <a href="/quote" className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-[#0877ff] px-5 text-sm font-black text-white">
                 Demander un devis
               </a>
