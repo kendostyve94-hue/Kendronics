@@ -3,6 +3,7 @@ export interface CreateProviderCheckoutInput {
   orderId: string;
   amount: number;
   currency: 'EUR';
+  customerEmail: string;
   successUrl: string;
   cancelUrl: string;
 }

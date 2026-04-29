@@ -36,7 +36,14 @@ export class StripePaymentProvider {
       mode: 'payment',
       success_url: input.successUrl,
       cancel_url: input.cancelUrl,
+      customer_email: input.customerEmail,
       client_reference_id: input.orderId,
+      invoice_creation: {
+        enabled: true,
+        invoice_data: {
+          description: `Kendronics PCB order ${input.orderId}`,
+        },
+      },
       metadata: {
         paymentId: input.paymentId,
         orderId: input.orderId,

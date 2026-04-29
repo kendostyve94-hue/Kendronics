@@ -14,7 +14,7 @@ export class PaymentsController {
   @Post('checkout')
   @UseGuards(JwtAuthGuard)
   checkout(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateCheckoutDto) {
-    return this.paymentsService.createCheckout(user.id, dto);
+    return this.paymentsService.createCheckout(user.id, user.email, dto);
   }
 
   @Post('mobile-money')

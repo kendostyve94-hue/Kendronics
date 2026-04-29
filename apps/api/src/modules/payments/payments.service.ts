@@ -20,7 +20,7 @@ export class PaymentsService {
     private readonly webhookHandler: PaymentWebhookHandler,
   ) {}
 
-  async createCheckout(userId: string, dto: CreateCheckoutDto): Promise<CheckoutSession> {
+  async createCheckout(userId: string, customerEmail: string, dto: CreateCheckoutDto): Promise<CheckoutSession> {
     const order = await this.ordersService.findOwnedOrder(userId, dto.orderId);
     if (!order.totalPrice || order.totalPrice < 0.5) {
       throw new BadRequestException('Order quote amount is unavailable for checkout.');
@@ -39,6 +39,7 @@ export class PaymentsService {
       orderId: order.id,
       amount: payment.amount,
       currency: payment.currency,
+      customerEmail,
       successUrl: dto.successUrl,
       cancelUrl: dto.cancelUrl,
     });
