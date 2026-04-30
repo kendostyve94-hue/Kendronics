@@ -158,7 +158,7 @@ export function Navbar() {
             />
           </a>
 
-          <nav className="hidden items-center gap-2 text-xs font-medium lg:flex">
+          <nav className="hidden items-center gap-1 text-[10px] font-medium lg:flex">
             <Dropdown label="Produit" items={productItems} />
             <Dropdown label="Support" items={supportItems} />
             <Dropdown label="A propos" items={aboutItems} />
@@ -166,7 +166,7 @@ export function Navbar() {
               Suivi
             </a>
             <CartLink href={cartHref} count={orders.length} />
-            <a href="/quote" className="inline-flex h-9 items-center rounded-full border border-[#0f8f6b] px-3 font-medium text-white transition hover:border-[#12a87c] hover:text-[#ffd22e]">
+            <a href="/quote" className="inline-flex h-8 items-center rounded-full border border-[#0f8f6b] px-2 font-medium text-white transition hover:border-[#12a87c] hover:text-[#ffd22e]">
               Commande
             </a>
             <LoginMenu />
@@ -373,7 +373,7 @@ function MobileSection({
 function Dropdown({ label, items }: { label: string; items: Array<{ label: string; href: string }> }) {
   return (
     <div className="group relative">
-      <button type="button" className="inline-flex h-10 items-center gap-1 text-white transition hover:text-[#ffd22e]" aria-haspopup="true">
+      <button type="button" className="inline-flex h-8 items-center gap-0.5 text-white transition hover:text-[#ffd22e]" aria-haspopup="true">
         {label}
         <span className="text-[10px]">v</span>
       </button>
@@ -391,7 +391,7 @@ function Dropdown({ label, items }: { label: string; items: Array<{ label: strin
 function LoginMenu() {
   return (
     <div className="group relative">
-      <a href="/login" className="inline-flex h-9 items-center rounded-full bg-[#0f8f6b] px-3 font-medium text-white transition hover:bg-[#0b7558]">
+      <a href="/login" className="inline-flex h-8 items-center rounded-full bg-[#0f8f6b] px-2 font-medium text-white transition hover:bg-[#0b7558]">
         Connexion
       </a>
       <div className="invisible absolute right-0 top-full min-w-60 translate-y-2 border border-slate-200 bg-white p-4 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
@@ -412,7 +412,7 @@ function LoginMenu() {
 
 function CartLink({ href, count }: { href: string; count: number }) {
   return (
-    <a href={href} className="relative inline-flex h-9 w-9 items-center justify-center text-white transition hover:text-[#ffd22e] sm:h-10 sm:w-10" aria-label="Panier">
+    <a href={href} className="relative inline-flex h-8 w-8 items-center justify-center text-white transition hover:text-[#ffd22e] sm:h-8 sm:w-8" aria-label="Panier">
       <CartIcon />
       <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-pink-500 px-1 text-[11px] font-semibold leading-none text-white">
         {count}
