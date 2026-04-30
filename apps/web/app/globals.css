@@ -54,6 +54,176 @@ body {
   }
 }
 
+@media (max-width: 767px) {
+  :root {
+    --surface: #e9eff5;
+    --surface-muted: #dfe7ef;
+    --surface-raised: #f1f5f9;
+    --surface-tint: #d7e1ea;
+    --color-cloud: #e9eff5;
+    --color-line: rgba(128, 146, 164, 0.32);
+    --neumo-radius: 0.5rem;
+    --neumo-shadow: 10px 10px 20px rgba(125, 145, 164, 0.34), -10px -10px 20px rgba(255, 255, 255, 0.82);
+    --neumo-shadow-soft: 6px 6px 14px rgba(125, 145, 164, 0.28), -6px -6px 14px rgba(255, 255, 255, 0.76);
+    --neumo-shadow-tight: 4px 4px 10px rgba(125, 145, 164, 0.24), -4px -4px 10px rgba(255, 255, 255, 0.74);
+    --neumo-shadow-inset: inset 4px 4px 10px rgba(125, 145, 164, 0.28), inset -4px -4px 10px rgba(255, 255, 255, 0.82);
+    --neumo-primary-shadow: 6px 6px 14px rgba(8, 20, 32, 0.22), -4px -4px 12px rgba(255, 255, 255, 0.24);
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 18% 0%, rgba(15, 143, 107, 0.1), transparent 20rem),
+      linear-gradient(180deg, #f1f5f9 0%, #e9eff5 48%, #dfe7ef 100%);
+  }
+
+  main {
+    background-color: transparent !important;
+  }
+
+  main > section,
+  main > div,
+  article,
+  aside,
+  form,
+  details,
+  [class*="bg-white"],
+  [class*="bg-slate-50"],
+  [class*="bg-slate-100"],
+  [class*="bg-[#f4f7fa]"],
+  [class*="bg-[#f3f5f7]"],
+  [class*="bg-[#eaf2fb]"],
+  [class*="bg-cloud"] {
+    border-color: rgba(142, 158, 174, 0.26) !important;
+  }
+
+  .rounded-sm,
+  .rounded,
+  .rounded-md,
+  .rounded-lg,
+  .rounded-xl,
+  .rounded-2xl,
+  .rounded-3xl {
+    border-radius: var(--neumo-radius) !important;
+  }
+
+  section:not(.bg-ink) > div[class*="border"],
+  article[class*="border"],
+  aside[class*="border"],
+  form[class*="border"],
+  details[class*="border"],
+  label[class*="border"][class*="bg-white"],
+  label[class*="border"][class*="bg-slate"],
+  div[class*="rounded"][class*="border"][class*="bg-white"],
+  div[class*="rounded"][class*="border"][class*="bg-slate"],
+  div[class*="rounded"][class*="border"][class*="bg-[#f4f7fa]"],
+  a[class*="border"][class*="bg-white"],
+  a[class*="border"][class*="bg-slate"],
+  button[class*="border"][class*="bg-white"],
+  button[class*="border"][class*="bg-slate"] {
+    background: linear-gradient(145deg, #f1f6fb, #dfe7ef) !important;
+    box-shadow: var(--neumo-shadow) !important;
+  }
+
+  .glass,
+  .glass-light,
+  .shadow-sm,
+  .shadow-glass,
+  .shadow-premium,
+  [class*="shadow-"] {
+    box-shadow: var(--neumo-shadow-soft) !important;
+  }
+
+  section[class*="bg-white"],
+  section[class*="bg-cloud"],
+  section[class*="bg-slate"] {
+    background: transparent !important;
+  }
+
+  summary,
+  details > summary[class*="bg-slate"] {
+    background: linear-gradient(145deg, #eef4fa, #dce5ee) !important;
+    border-radius: var(--neumo-radius) var(--neumo-radius) 0 0 !important;
+    box-shadow: var(--neumo-shadow-inset) !important;
+  }
+
+  details[open] > summary {
+    border-bottom: 1px solid rgba(128, 146, 164, 0.22);
+  }
+
+  li[class*="border"],
+  [class*="min-w-"][class*="border"],
+  [class*="grid"][class*="border"] {
+    border-color: rgba(128, 146, 164, 0.28) !important;
+  }
+
+  button,
+  a[class*="rounded"],
+  label[class*="rounded"],
+  summary,
+  [role="button"] {
+    border-color: rgba(142, 158, 174, 0.3) !important;
+    box-shadow: var(--neumo-shadow-soft);
+  }
+
+  button:active,
+  a[class*="rounded"]:active,
+  label[class*="rounded"]:active,
+  summary:active,
+  [role="button"]:active {
+    transform: translateY(1px);
+    box-shadow: var(--neumo-shadow-inset) !important;
+  }
+
+  button[class*="bg-transparent"],
+  a[class*="bg-transparent"] {
+    box-shadow: none !important;
+  }
+
+  input,
+  select,
+  textarea {
+    background: #edf3f8 !important;
+    border-color: rgba(142, 158, 174, 0.34) !important;
+    box-shadow: var(--neumo-shadow-inset) !important;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    box-shadow: none !important;
+  }
+
+  header,
+  footer,
+  nav,
+  [class*="fixed"][class*="bottom"] {
+    box-shadow: var(--neumo-shadow-soft) !important;
+  }
+
+  [class*="bg-deepblue"],
+  [class*="bg-signal"],
+  [class*="bg-[#0f8f6b]"],
+  [class*="bg-[#0877ff]"],
+  [class*="bg-[#07324a]"] {
+    box-shadow: var(--neumo-primary-shadow) !important;
+  }
+
+  [class*="border-t"],
+  [class*="border-b"],
+  [class*="divide-y"] > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(128, 146, 164, 0.24) !important;
+  }
+
+  .label-caps {
+    letter-spacing: 0.06em;
+  }
+
+  table,
+  thead,
+  tbody {
+    background: transparent !important;
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;

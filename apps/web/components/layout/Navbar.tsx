@@ -147,14 +147,14 @@ export function Navbar() {
 
   return (
     <>
-    <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-white transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="border-b border-white/10 bg-[#07324a] px-3 py-1 shadow-[0_10px_28px_rgba(8,20,32,0.18)] sm:px-6 sm:py-2 lg:px-8">
+    <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 lg:text-white ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+      <div className="border-b border-slate-200 bg-[#e9eff5] px-3 py-1 shadow-[0_10px_28px_rgba(8,20,32,0.18)] sm:px-6 sm:py-2 lg:border-white/10 lg:px-8 lg:[background:#07324a]">
         <div className="mx-auto flex max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px]">
           <a href="/" className="-ml-3 inline-flex min-w-0 items-center sm:ml-0" aria-label="Accueil Kendronics">
             <img
               src="/images/kendronics-logo.png"
               alt="Kendronics"
-              className="h-[4.5rem] w-auto max-w-[20.5rem] object-contain sm:h-14 sm:max-w-[14rem]"
+              className="h-[4.5rem] w-auto max-w-[20.5rem] object-contain sm:h-14 sm:max-w-[14rem] lg:h-28 lg:max-w-[28rem]"
             />
           </a>
 
@@ -175,7 +175,7 @@ export function Navbar() {
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center text-white transition hover:text-[#ffd22e]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-[#edf3f8] text-[#0f8f6b] transition hover:text-[#0b7558] lg:text-white lg:hover:text-[#ffd22e]"
               aria-label="Rechercher"
               aria-expanded={isSearchOpen}
               onClick={() => {
@@ -188,7 +188,7 @@ export function Navbar() {
             </button>
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center text-white transition hover:text-[#ffd22e]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-[#edf3f8] text-[#0f8f6b] transition hover:text-[#0b7558] lg:text-white lg:hover:text-[#ffd22e]"
               aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation"
@@ -208,7 +208,7 @@ export function Navbar() {
         </div>
 
         {isSearchOpen ? (
-          <div className="mx-auto mt-2 max-w-[21.5rem] border-t border-white/15 pt-2 sm:max-w-[1180px] lg:hidden">
+          <div className="mx-auto mt-2 max-w-[21.5rem] border-t border-slate-200 pt-2 sm:max-w-[1180px] lg:hidden">
             <form
               role="search"
               onSubmit={(event) => {
@@ -217,7 +217,7 @@ export function Navbar() {
                 if (firstResult) window.location.href = firstResult.href;
               }}
             >
-              <label className="flex h-10 items-center gap-2 border border-white/20 bg-white px-3 text-ink">
+              <label className="flex h-10 items-center gap-2 rounded-sm border border-slate-200 bg-[#edf3f8] px-3 text-ink">
                 <SearchIcon small />
                 <input
                   autoFocus
@@ -234,14 +234,14 @@ export function Navbar() {
                 <a
                   key={item.href}
                   href={item.href}
-                  className="flex min-h-10 items-center border border-white/10 bg-white/10 px-3 text-sm font-semibold text-white transition hover:border-[#ffd22e] hover:text-[#ffd22e]"
+                  className="flex min-h-10 items-center rounded-sm border border-slate-200 bg-[#edf3f8] px-3 text-sm font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]"
                   onClick={() => setIsSearchOpen(false)}
                 >
                   {item.label}
                 </a>
               ))}
               {searchResults.length === 0 ? (
-                <p className="border border-white/10 bg-white/10 px-3 py-3 text-sm font-semibold text-white">Aucun resultat trouve.</p>
+                <p className="rounded-sm border border-slate-200 bg-[#edf3f8] px-3 py-3 text-sm font-semibold text-slate-700">Aucun resultat trouve.</p>
               ) : null}
             </div>
             ) : null}
@@ -249,24 +249,24 @@ export function Navbar() {
         ) : null}
 
         {isMenuOpen ? (
-          <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6.5rem)] max-w-[21.5rem] overflow-y-auto border-t border-white/15 pt-2 sm:max-w-[1180px] lg:hidden">
+          <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6.5rem)] max-w-[21.5rem] overflow-y-auto border-t border-slate-200 pt-2 sm:max-w-[1180px] lg:hidden">
             <div className="grid gap-2">
               <MobileSection title="Produit" items={productItems} isOpen={openMobileSection === 'Produit'} onToggle={() => setOpenMobileSection((current) => (current === 'Produit' ? null : 'Produit'))} onNavigate={() => setIsMenuOpen(false)} />
               <MobileSection title="Support" items={supportItems} isOpen={openMobileSection === 'Support'} onToggle={() => setOpenMobileSection((current) => (current === 'Support' ? null : 'Support'))} onNavigate={() => setIsMenuOpen(false)} />
               <MobileSection title="A propos" items={aboutItems} isOpen={openMobileSection === 'A propos'} onToggle={() => setOpenMobileSection((current) => (current === 'A propos' ? null : 'A propos'))} onNavigate={() => setIsMenuOpen(false)} />
             </div>
 
-            <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/15 pt-3">
+            <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
               {mobileActionItems.map((item) => (
                 <a
                   key={`${item.label}-${item.href}`}
                   href={item.href}
-                  className={`flex min-h-10 items-center justify-center border px-3 text-center text-xs font-semibold text-white transition hover:border-[#ffd22e] hover:text-[#ffd22e] ${
+                  className={`flex min-h-10 items-center justify-center rounded-full border px-3 text-center text-xs font-semibold transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] ${
                     item.label === 'Commande' || item.label === 'Suivi'
-                      ? 'rounded-full border-[#0f8f6b] bg-[#07324a]/40'
+                      ? 'border-[#0f8f6b] bg-[#edf3f8] text-[#0f8f6b]'
                       : item.label === 'Connexion' || item.label === 'Creer mon compte'
-                        ? 'rounded-full border-[#0f8f6b] bg-[#0f8f6b]'
-                        : 'border-white/15 bg-white/10'
+                        ? 'border-[#0f8f6b] bg-[#0f8f6b] text-white'
+                        : 'border-slate-200 bg-[#edf3f8] text-slate-700'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -294,7 +294,7 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-[#f4f7fa] px-2 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-1.5 shadow-[0_-12px_32px_rgba(8,20,32,0.16)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-[#e9eff5] px-2 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-1.5 shadow-[0_-12px_32px_rgba(8,20,32,0.16)] lg:hidden"
       aria-label="Navigation mobile principale"
     >
       <div className="mx-auto grid max-w-[21.5rem] grid-cols-5 gap-1">
@@ -310,7 +310,11 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
             <a
               key={item.label}
               href={item.href}
-              className="relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-sm text-[11px] font-black text-slate-700 transition hover:bg-white"
+              className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-sm border text-[11px] font-black transition ${
+                isActive
+                  ? 'border-[#0f8f6b]/45 bg-[#edf3f8] text-[#0f8f6b]'
+                  : 'border-transparent text-slate-700 hover:bg-[#edf3f8]'
+              }`}
               aria-current={isActive ? 'page' : undefined}
             >
               <span className={`relative grid h-5 w-5 place-items-center ${isActive ? 'text-[#0f8f6b]' : ''}`}>
@@ -344,17 +348,17 @@ function MobileSection({
   onNavigate: () => void;
 }) {
   return (
-    <div className="border border-[#0f8f6b]/70 bg-[#0f8f6b]/18 shadow-[inset_3px_0_#0f8f6b]">
-      <button type="button" className="flex min-h-11 w-full items-center px-4 text-left text-base font-semibold text-white" aria-expanded={isOpen} onClick={onToggle}>
+    <div className="rounded-sm border border-slate-200 bg-[#edf3f8]">
+      <button type="button" className="flex min-h-11 w-full items-center px-4 text-left text-base font-semibold text-slate-800" aria-expanded={isOpen} onClick={onToggle}>
         {title}
       </button>
       {isOpen ? (
-      <div className="grid border-t border-[#0f8f6b]/40 bg-[#07324a]/75 p-1.5">
+      <div className="grid border-t border-slate-200 bg-[#e5edf4] p-1.5">
         {items.map((item) => (
           <a
             key={item.href}
             href={item.href}
-            className="flex min-h-10 items-center px-3 text-sm font-medium text-white transition hover:bg-white/10 hover:text-[#ffd22e]"
+            className="flex min-h-10 items-center rounded-sm px-3 text-sm font-medium text-slate-700 transition hover:bg-[#edf3f8] hover:text-[#0f8f6b]"
             onClick={onNavigate}
           >
             {item.label}
