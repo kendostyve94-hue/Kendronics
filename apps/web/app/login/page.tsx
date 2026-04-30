@@ -263,7 +263,7 @@ function MobileLoginScreen({
 }) {
   if (status === 'authenticated') {
     return (
-      <section className="mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
+      <section className="auth-neumo mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
         <AuthenticatedState />
       </section>
     );
@@ -271,7 +271,7 @@ function MobileLoginScreen({
 
   if (mode === 'forgot_password') {
     return (
-      <section className="mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
+      <section className="auth-neumo mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
         <h1 className="text-[30px] font-black leading-none tracking-normal text-ink">Mot de passe oublie</h1>
         <form onSubmit={onForgotSubmit} className="mt-7 space-y-3" noValidate>
           {forgotErrors.form && <AlertBox tone={status === 'reset_sent' ? 'success' : 'error'} message={forgotErrors.form} />}
@@ -295,7 +295,7 @@ function MobileLoginScreen({
   }
 
   return (
-    <section className="mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
+    <section className="auth-neumo mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
       <h1 className="text-[30px] font-black leading-none tracking-normal text-ink">Connexion Kendronics</h1>
       <form onSubmit={onSubmit} className="mt-7 space-y-3" noValidate>
         {errors.form && <AlertBox tone="error" message={errors.form} />}

@@ -187,6 +187,31 @@ textarea {
   tbody {
     background: transparent !important;
   }
+
+  .auth-neumo input,
+  .auth-neumo select,
+  .auth-neumo button,
+  .auth-neumo a[class*="flex"],
+  .auth-neumo [class*="border"] {
+    border-radius: 1.15rem !important;
+    box-shadow: none !important;
+  }
+
+  .auth-neumo input[type="checkbox"] {
+    border-radius: 0.45rem !important;
+  }
+
+  .auth-neumo input[type="radio"],
+  .auth-neumo [class*="rounded-full"] {
+    border-radius: 9999px !important;
+  }
+
+  .auth-neumo form,
+  .auth-neumo footer,
+  .auth-neumo div,
+  .auth-neumo span {
+    box-shadow: none !important;
+  }
 }
 
 a {

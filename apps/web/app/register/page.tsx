@@ -249,14 +249,14 @@ function MobileRegisterScreen({
 }) {
   if (status === 'account_created') {
     return (
-      <section className="mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
+      <section className="auth-neumo mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
         <AccountCreatedState email={values.email} />
       </section>
     );
   }
 
   return (
-    <section className="mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
+    <section className="auth-neumo mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
       <h1 className="text-[30px] font-black leading-tight tracking-normal text-ink">Creer votre compte</h1>
       <form onSubmit={onSubmit} className="mt-7 space-y-3" noValidate>
         <div className="grid grid-cols-2 gap-3">
