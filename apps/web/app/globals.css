@@ -24,6 +24,17 @@
 
 * {
   box-sizing: border-box;
+  --tw-shadow: 0 0 #0000 !important;
+  --tw-shadow-colored: 0 0 #0000 !important;
+  --tw-drop-shadow: drop-shadow(0 0 #0000) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+*::before,
+*::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
 }
 
 html {
