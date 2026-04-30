@@ -393,11 +393,28 @@ function Divider({ label }: { label: string }) {
 function SocialButton({ provider, label }: { provider: 'google' | 'apple'; label: string }) {
   return (
     <button type="button" className="flex h-11 w-full items-center justify-center gap-4 rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-600 ring-1 ring-white/70">
-      <span className={provider === 'google' ? 'text-2xl font-black text-[#4285f4]' : 'text-2xl font-black text-black'}>
-        {provider === 'google' ? 'G' : 'A'}
-      </span>
+      {provider === 'google' ? <GoogleLogo /> : <AppleLogo />}
       <span>{label}</span>
     </button>
+  );
+}
+
+function GoogleLogo() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6 shrink-0">
+      <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5a5.6 5.6 0 0 1-2.4 3.6v2.9h3.8c2.2-2.1 3.6-5.1 3.6-8.6z" />
+      <path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-3l-3.8-2.9a7.1 7.1 0 0 1-10.6-3.7H1.6v3A12 12 0 0 0 12 24z" />
+      <path fill="#FBBC05" d="M5.5 14.4a7.2 7.2 0 0 1 0-4.6v-3H1.6a12 12 0 0 0 0 10.6l3.9-3z" />
+      <path fill="#EA4335" d="M12 4.8c1.8 0 3.4.6 4.6 1.8L20 3.2A11.5 11.5 0 0 0 12 0 12 12 0 0 0 1.6 6.7l3.9 3A7.1 7.1 0 0 1 12 4.8z" />
+    </svg>
+  );
+}
+
+function AppleLogo() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-7 w-7 shrink-0 fill-black">
+      <path d="M16.5 1.5c0 1.2-.5 2.3-1.3 3.2-.9 1-2.1 1.6-3.2 1.5-.1-1.2.4-2.4 1.2-3.3.9-.9 2.2-1.5 3.3-1.4zM20.5 17.4c-.4.9-.7 1.3-1.2 2.1-.8 1.2-1.9 2.8-3.3 2.8-1.2 0-1.5-.8-3.2-.8s-2.1.8-3.2.8c-1.4 0-2.5-1.5-3.3-2.7-2.3-3.5-2.5-7.6-1.1-9.8 1-1.5 2.5-2.4 4-2.4s2.5.8 3.7.8 2-.8 3.8-.8c1.3 0 2.7.7 3.7 2a4 4 0 0 0-2.2 3.6 4.2 4.2 0 0 0 2.3 4.4z" />
+    </svg>
   );
 }
 

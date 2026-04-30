@@ -193,7 +193,7 @@ textarea {
   .auth-neumo button,
   .auth-neumo a[class*="flex"],
   .auth-neumo [class*="border"] {
-    border-radius: 1.15rem !important;
+    border-radius: var(--neumo-radius) !important;
     box-shadow: none !important;
   }
 
