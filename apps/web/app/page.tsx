@@ -111,47 +111,43 @@ export default function HomePage() {
 }
 
 function Hero() {
-  const heroTrack = [...heroSlides, heroSlides[0]];
-
   return (
     <section className="relative min-h-[30rem] overflow-hidden bg-[#07324a] pt-24 text-white sm:min-h-[40rem] sm:pt-28">
       <div className="absolute inset-0">
-        <div className="home-hero-media-track flex h-full w-[300%]">
-          {heroTrack.map((slide, index) => (
-            <div key={`${slide.title}-${index}`} className="relative h-full w-1/3 shrink-0">
-              {slide.type === 'video' ? (
-                <video className="h-full w-full object-cover opacity-70" autoPlay muted loop playsInline preload="metadata">
-                  <source src={slide.media} type="video/quicktime" />
-                </video>
-              ) : (
-                <img src={slide.media} alt="" className="h-full w-full object-cover opacity-70" />
-              )}
-              <div className="absolute inset-0 bg-[#06283b]/68" />
-            </div>
-          ))}
-        </div>
+        {heroSlides.map((slide, index) => (
+          <div key={slide.title} className={`home-hero-slide absolute inset-0 ${index === 1 ? 'home-hero-slide-delayed' : ''}`}>
+            {slide.type === 'video' ? (
+              <video className="h-full w-full object-cover opacity-70" autoPlay muted loop playsInline preload="metadata">
+                <source src={slide.media} type="video/quicktime" />
+              </video>
+            ) : (
+              <img src={slide.media} alt="" className="h-full w-full object-cover opacity-70" />
+            )}
+            <div className="absolute inset-0 bg-[#06283b]/68" />
+          </div>
+        ))}
       </div>
 
-      <div className="relative mx-auto grid max-w-[1180px] gap-6 px-4 pb-8 pt-8 sm:px-6 sm:pb-12 sm:pt-12 lg:min-h-[640px] lg:grid-cols-[minmax(0,1fr)_25rem] lg:items-center lg:gap-8 lg:px-8">
-        <div className="flex min-h-[22rem] max-w-[43rem] flex-col justify-center lg:min-h-0 lg:pr-4">
-          <div className="min-h-[15.5rem] overflow-hidden sm:min-h-[17rem] lg:min-h-[20rem]">
-            <div className="home-hero-media-track flex w-[300%]">
-              {heroTrack.map((slide, index) => (
-                <div key={`${slide.title}-copy-${index}`} className="flex w-1/3 shrink-0 flex-col justify-center pr-4 sm:pr-10 lg:min-h-[20rem]">
-                  <p className="label-caps text-[0.66rem] text-[#ffd22e] sm:text-[0.72rem]">{slide.eyebrow}</p>
-                  <h1 className="mt-3 max-w-[40rem] text-[1.52rem] font-black leading-[1.12] tracking-tight text-white sm:mt-4 sm:text-[2.55rem] sm:leading-[1.08] lg:text-[3.2rem]">
-                    {slide.title}
-                  </h1>
-                  <p className="mt-3 max-w-[35rem] text-[0.86rem] leading-6 text-white/88 sm:mt-5 sm:text-[0.98rem] sm:leading-7">
-                    {slide.body}
-                  </p>
-                </div>
-              ))}
+      <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-7 pt-7 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[640px] lg:grid-cols-[1fr_25rem] lg:items-center lg:px-8">
+        <div className="relative min-h-[20rem] lg:min-h-0 lg:pr-4">
+          {heroSlides.map((slide, index) => (
+            <div key={slide.title} className={`home-hero-copy absolute inset-0 flex flex-col justify-center ${index === 1 ? 'home-hero-slide-delayed' : ''}`}>
+              <p className="label-caps text-[#ffd22e]">{slide.eyebrow}</p>
+              <h1 className="mt-3 max-w-3xl text-[1.72rem] font-black leading-tight tracking-tight text-white sm:mt-4 sm:text-5xl lg:text-6xl">
+                {slide.title}
+              </h1>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/88 sm:mt-5 sm:text-base sm:leading-7">
+                {slide.body}
+              </p>
+              <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:gap-3">
+                <Button href="/quote" className="h-11 whitespace-nowrap px-2 text-xs sm:h-12 sm:px-7 sm:text-sm">Demande un devis</Button>
+                <Button href="/services" variant="secondary" className="h-11 whitespace-nowrap px-2 text-xs sm:h-12 sm:px-7 sm:text-sm">Voir les services</Button>
+              </div>
             </div>
-          </div>
-          <div className="mx-auto mt-4 grid w-full max-w-[22rem] grid-cols-2 gap-2 sm:mx-0 sm:mt-6 sm:flex sm:max-w-none sm:justify-center sm:gap-3 lg:justify-start">
-            <Button href="/quote" className="h-10 min-w-0 whitespace-nowrap px-2 text-[11px] sm:h-11 sm:min-w-[9.5rem] sm:px-5 sm:text-[13px]">Demande un devis</Button>
-            <Button href="/services" variant="secondary" className="h-10 min-w-0 whitespace-nowrap px-2 text-[11px] sm:h-11 sm:min-w-[9.5rem] sm:px-5 sm:text-[13px]">Voir les services</Button>
+          ))}
+          <div className="absolute bottom-0 left-0 flex gap-2 sm:hidden" aria-hidden="true">
+            <span className="home-hero-dot h-1.5 w-6 bg-white" />
+            <span className="home-hero-dot home-hero-slide-delayed h-1.5 w-6 bg-white" />
           </div>
         </div>
 

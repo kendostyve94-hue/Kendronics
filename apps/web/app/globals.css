@@ -498,23 +498,29 @@ section {
   }
 }
 
-.home-hero-media-track {
-  animation: home-hero-strip 12s ease-in-out infinite;
+.home-hero-slide,
+.home-hero-copy,
+.home-hero-dot {
+  animation: home-hero-skip 10s ease-in-out infinite;
 }
 
-@keyframes home-hero-strip {
+.home-hero-slide-delayed {
+  animation-delay: 5s;
+  opacity: 0;
+}
+
+@keyframes home-hero-skip {
   0%,
-  34% {
-    transform: translateX(0);
+  44% {
+    opacity: 1;
   }
 
-  44%,
-  78% {
-    transform: translateX(-33.333333%);
+  50%,
+  94% {
+    opacity: 0;
   }
 
-  88%,
   100% {
-    transform: translateX(-66.666667%);
+    opacity: 1;
   }
 }
