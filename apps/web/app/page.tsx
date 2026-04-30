@@ -149,7 +149,7 @@ function Hero() {
               ))}
             </div>
           </div>
-          <div className="mt-4 grid w-full max-w-[22rem] grid-cols-2 gap-2 sm:mt-6 sm:flex sm:max-w-none sm:gap-3">
+          <div className="mx-auto mt-4 grid w-full max-w-[22rem] grid-cols-2 gap-2 sm:mx-0 sm:mt-6 sm:flex sm:max-w-none sm:justify-center sm:gap-3 lg:justify-start">
             <Button href="/quote" className="h-10 min-w-0 whitespace-nowrap px-2 text-[11px] sm:h-11 sm:min-w-[9.5rem] sm:px-5 sm:text-[13px]">Demande un devis</Button>
             <Button href="/services" variant="secondary" className="h-10 min-w-0 whitespace-nowrap px-2 text-[11px] sm:h-11 sm:min-w-[9.5rem] sm:px-5 sm:text-[13px]">Voir les services</Button>
           </div>
