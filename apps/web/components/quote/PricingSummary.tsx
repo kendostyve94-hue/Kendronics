@@ -111,7 +111,7 @@ export function PricingSummary({
   }, [deliveryOpen, destinationCountry, pricing.deliveryWeightKg]);
 
   return (
-    <aside className="space-y-3 lg:sticky lg:top-28">
+    <aside className="space-y-3">
       <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 sm:p-5">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-black text-slate-950 sm:text-base">Details des frais</h2>

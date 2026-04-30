@@ -573,7 +573,7 @@ export default function QuotePage() {
           ) : null}
         </div>
 
-        <div className="space-y-3 sm:space-y-5">
+        <div className="space-y-3 sm:space-y-5 lg:sticky lg:top-28 lg:self-start">
           <PricingSummary
             pricing={pricing}
             errors={errors}
