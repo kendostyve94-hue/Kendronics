@@ -147,7 +147,7 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto grid max-w-7xl gap-6 px-4 pb-16 pt-24 sm:-mt-16 sm:px-6 sm:pt-0 lg:grid-cols-[1fr_27rem] lg:px-8">
+      <section className="relative z-10 mx-auto grid max-w-7xl gap-6 px-4 pb-10 pt-20 sm:-mt-16 sm:px-6 sm:pb-16 sm:pt-0 lg:grid-cols-[1fr_27rem] lg:px-8">
         <div className="hidden space-y-6 sm:block">
           <div className="grid gap-4 md:grid-cols-3">
             {[
@@ -182,7 +182,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-[#f1f5f9] p-5 text-ink sm:bg-white sm:p-7 lg:sticky lg:top-28 lg:self-start">
+        <div className="rounded-2xl border border-slate-200 bg-[#f1f5f9] p-3 text-ink sm:bg-white sm:p-7 lg:sticky lg:top-28 lg:self-start">
           {status === 'authenticated' ? (
             <AuthenticatedState />
           ) : mode === 'forgot_password' ? (
@@ -226,10 +226,10 @@ function LoginForm({
   onUpdate: <K extends keyof LoginFormState>(key: K, value: LoginFormState[K]) => void;
 }) {
   return (
-    <form onSubmit={onSubmit} className="space-y-5 rounded-2xl border border-slate-200 bg-[#f1f5f9] p-4 sm:border-0 sm:bg-transparent sm:p-0" noValidate>
+    <form onSubmit={onSubmit} className="space-y-3 sm:space-y-5" noValidate>
       <div>
-        <h2 className="text-2xl font-black tracking-tight text-ink">Log in</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+        <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Log in</h2>
+        <p className="mt-1 text-xs leading-5 text-slate-600 sm:mt-2 sm:text-sm sm:leading-6">
           Use the email and password connected to your Kendronics account.
         </p>
       </div>
@@ -252,7 +252,7 @@ function LoginForm({
         onChange={(value) => onUpdate('password', value)}
       />
 
-      <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center justify-between gap-3 text-xs sm:text-sm">
         <button
           type="button"
           onClick={onForgotPassword}
@@ -268,7 +268,7 @@ function LoginForm({
       <button
         type="submit"
         disabled={status === 'submitting'}
-        className="h-12 w-full rounded-xl bg-deepblue text-sm font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60"
+        className="h-10 w-full rounded-xl bg-deepblue text-xs font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60 sm:h-12 sm:text-sm"
       >
         {status === 'submitting' ? 'Signing in...' : 'Log in'}
       </button>
@@ -294,10 +294,10 @@ function ForgotPasswordForm({
   const messageTone = status === 'reset_sent' ? 'success' : 'error';
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5 rounded-2xl border border-slate-200 bg-[#f1f5f9] p-4 sm:border-0 sm:bg-transparent sm:p-0" noValidate>
+    <form onSubmit={onSubmit} className="space-y-3 sm:space-y-5" noValidate>
       <div>
-        <h2 className="text-2xl font-black tracking-tight text-ink">Reset password</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+        <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Reset password</h2>
+        <p className="mt-1 text-xs leading-5 text-slate-600 sm:mt-2 sm:text-sm sm:leading-6">
           Enter your email and we will handle the request without revealing whether an account exists.
         </p>
       </div>
@@ -316,7 +316,7 @@ function ForgotPasswordForm({
       <button
         type="submit"
         disabled={status === 'submitting'}
-        className="h-12 w-full rounded-xl bg-deepblue text-sm font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60"
+        className="h-10 w-full rounded-xl bg-deepblue text-xs font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60 sm:h-12 sm:text-sm"
       >
         {status === 'submitting' ? 'Sending request...' : 'Send reset instructions'}
       </button>
@@ -324,7 +324,7 @@ function ForgotPasswordForm({
       <button
         type="button"
         onClick={onBack}
-        className="h-12 w-full rounded-xl border border-slate-200 bg-white text-sm font-black text-slate-700 transition hover:border-sky-200 hover:text-deepblue"
+        className="h-10 w-full rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-700 transition hover:border-sky-200 hover:text-deepblue sm:h-12 sm:text-sm"
       >
         Back to login
       </button>
@@ -349,18 +349,18 @@ function TextInput({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</span>
+      <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.14em] text-slate-500 sm:mb-2 sm:text-xs sm:tracking-[0.16em]">{label}</span>
       <input
         type={type}
         value={value}
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
         onChange={(event) => onChange(event.target.value)}
-        className={`h-12 w-full rounded-xl border bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100 ${
+        className={`h-10 w-full rounded-xl border bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100 sm:h-12 ${
           error ? 'border-red-300' : 'border-slate-200'
         }`}
       />
-      {error && <span className="mt-1 block text-xs font-bold text-red-600">{error}</span>}
+      {error && <span className="mt-1 block text-[11px] font-bold text-red-600 sm:text-xs">{error}</span>}
     </label>
   );
 }
