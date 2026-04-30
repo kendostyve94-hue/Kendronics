@@ -15,6 +15,7 @@
   --surface-muted: #e4ebf1;
   --surface-raised: #f4f7fa;
   --surface-tint: #d8e2ea;
+  --neumo-radius: 0.5rem;
   --brand-gradient: linear-gradient(90deg, #0f8f6b, #12a87c);
   --glass-light: rgba(244, 247, 250, 0.82);
   --glass-dark: rgba(237, 242, 246, 0.88);
@@ -50,6 +51,98 @@ body {
   }
 }
 
+.rounded-sm,
+.rounded,
+.rounded-md,
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl,
+.rounded-3xl {
+  border-radius: var(--neumo-radius) !important;
+}
+
+main {
+  background-color: var(--surface) !important;
+}
+
+main > section,
+main > div,
+article,
+aside,
+form,
+details,
+[class*="bg-white"],
+[class*="bg-slate-50"],
+[class*="bg-slate-100"],
+[class*="bg-[#f4f7fa]"],
+[class*="bg-[#f3f5f7]"],
+[class*="bg-[#eaf2fb]"],
+[class*="bg-cloud"] {
+  border-color: rgba(142, 158, 174, 0.26) !important;
+}
+
+section:not(.bg-ink) > div[class*="border"],
+article[class*="border"],
+aside[class*="border"],
+form[class*="border"],
+details[class*="border"],
+label[class*="border"][class*="bg-white"],
+label[class*="border"][class*="bg-slate"],
+div[class*="rounded"][class*="border"][class*="bg-white"],
+div[class*="rounded"][class*="border"][class*="bg-slate"],
+div[class*="rounded"][class*="border"][class*="bg-[#f4f7fa]"],
+a[class*="border"][class*="bg-white"],
+a[class*="border"][class*="bg-slate"],
+button[class*="border"][class*="bg-white"],
+button[class*="border"][class*="bg-slate"] {
+  background: var(--surface-raised) !important;
+}
+
+summary,
+details > summary[class*="bg-slate"] {
+  background: var(--surface-muted) !important;
+  border-radius: var(--neumo-radius) var(--neumo-radius) 0 0 !important;
+}
+
+details[open] > summary {
+  border-bottom: 1px solid rgba(128, 146, 164, 0.22);
+}
+
+li[class*="border"],
+[class*="min-w-"][class*="border"],
+[class*="grid"][class*="border"] {
+  border-color: rgba(128, 146, 164, 0.28) !important;
+}
+
+button,
+a[class*="rounded"],
+label[class*="rounded"],
+summary,
+[role="button"] {
+  border-color: rgba(142, 158, 174, 0.3) !important;
+}
+
+button:active,
+a[class*="rounded"]:active,
+label[class*="rounded"]:active,
+summary:active,
+[role="button"]:active {
+  transform: translateY(1px);
+}
+
+input,
+select,
+textarea {
+  background: #edf3f8 !important;
+  border-color: rgba(142, 158, 174, 0.34) !important;
+}
+
+[class*="border-t"],
+[class*="border-b"],
+[class*="divide-y"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(128, 146, 164, 0.24) !important;
+}
+
 @media (max-width: 767px) {
   :root {
     --surface: #e9eff5;
@@ -58,103 +151,10 @@ body {
     --surface-tint: #d7e1ea;
     --color-cloud: #e9eff5;
     --color-line: rgba(128, 146, 164, 0.32);
-    --neumo-radius: 0.5rem;
   }
 
   body {
     background: #e9eff5;
-  }
-
-  main {
-    background-color: var(--surface) !important;
-  }
-
-  main > section,
-  main > div,
-  article,
-  aside,
-  form,
-  details,
-  [class*="bg-white"],
-  [class*="bg-slate-50"],
-  [class*="bg-slate-100"],
-  [class*="bg-[#f4f7fa]"],
-  [class*="bg-[#f3f5f7]"],
-  [class*="bg-[#eaf2fb]"],
-  [class*="bg-cloud"] {
-    border-color: rgba(142, 158, 174, 0.26) !important;
-  }
-
-  .rounded-sm,
-  .rounded,
-  .rounded-md,
-  .rounded-lg,
-  .rounded-xl,
-  .rounded-2xl,
-  .rounded-3xl {
-    border-radius: var(--neumo-radius) !important;
-  }
-
-  section:not(.bg-ink) > div[class*="border"],
-  article[class*="border"],
-  aside[class*="border"],
-  form[class*="border"],
-  details[class*="border"],
-  label[class*="border"][class*="bg-white"],
-  label[class*="border"][class*="bg-slate"],
-  div[class*="rounded"][class*="border"][class*="bg-white"],
-  div[class*="rounded"][class*="border"][class*="bg-slate"],
-  div[class*="rounded"][class*="border"][class*="bg-[#f4f7fa]"],
-  a[class*="border"][class*="bg-white"],
-  a[class*="border"][class*="bg-slate"],
-  button[class*="border"][class*="bg-white"],
-  button[class*="border"][class*="bg-slate"] {
-    background: var(--surface-raised) !important;
-  }
-
-  summary,
-  details > summary[class*="bg-slate"] {
-    background: var(--surface-muted) !important;
-    border-radius: var(--neumo-radius) var(--neumo-radius) 0 0 !important;
-  }
-
-  details[open] > summary {
-    border-bottom: 1px solid rgba(128, 146, 164, 0.22);
-  }
-
-  li[class*="border"],
-  [class*="min-w-"][class*="border"],
-  [class*="grid"][class*="border"] {
-    border-color: rgba(128, 146, 164, 0.28) !important;
-  }
-
-  button,
-  a[class*="rounded"],
-  label[class*="rounded"],
-  summary,
-  [role="button"] {
-    border-color: rgba(142, 158, 174, 0.3) !important;
-  }
-
-  button:active,
-  a[class*="rounded"]:active,
-  label[class*="rounded"]:active,
-  summary:active,
-  [role="button"]:active {
-    transform: translateY(1px);
-  }
-
-  input,
-  select,
-  textarea {
-    background: #edf3f8 !important;
-    border-color: rgba(142, 158, 174, 0.34) !important;
-  }
-
-  [class*="border-t"],
-  [class*="border-b"],
-  [class*="divide-y"] > :not([hidden]) ~ :not([hidden]) {
-    border-color: rgba(128, 146, 164, 0.24) !important;
   }
 
   .label-caps {
