@@ -187,8 +187,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
       <section className="mx-auto max-w-[1320px] px-4 py-5 sm:px-6 lg:px-8">
         {status === 'error' && (
           <div className="mb-5 rounded-sm border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
-            Impossible de charger cette commande. Connectez-vous avec le bon compte ou ouvrez votre panier.
-            <a href="/orders" className="ml-2 underline">Voir le panier</a>
+            Impossible de charger cette commande. Connectez-vous avec le bon compte ou creez un nouveau devis.
+            <a href="/quote" className="ml-2 underline">Ouvrir le devis</a>
           </div>
         )}
         {status === 'loading' || !detail ? (

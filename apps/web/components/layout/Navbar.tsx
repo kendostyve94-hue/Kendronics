@@ -135,7 +135,7 @@ export function Navbar() {
   }, [isMenuOpen, isSearchOpen]);
 
   const cartHref = useMemo(() => {
-    return '/orders';
+    return orders[0] ? `/orders/${orders[0]}` : '/quote';
   }, [orders]);
 
   const searchResults = useMemo(() => {
