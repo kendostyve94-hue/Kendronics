@@ -498,29 +498,16 @@ section {
   }
 }
 
-.home-hero-slide,
-.home-hero-copy,
-.home-hero-dot {
-  animation: home-hero-skip 10s ease-in-out infinite;
+.home-hero-media-track {
+  animation: home-hero-strip 18s linear infinite;
 }
 
-.home-hero-slide-delayed {
-  animation-delay: 5s;
-  opacity: 0;
-}
-
-@keyframes home-hero-skip {
-  0%,
-  44% {
-    opacity: 1;
+@keyframes home-hero-strip {
+  from {
+    transform: translateX(0);
   }
 
-  50%,
-  94% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
+  to {
+    transform: translateX(-50%);
   }
 }
