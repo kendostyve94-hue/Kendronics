@@ -249,17 +249,17 @@ function MobileRegisterScreen({
 }) {
   if (status === 'account_created') {
     return (
-      <section className="px-5 pb-8 pt-10 sm:hidden">
+      <section className="mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
         <AccountCreatedState email={values.email} />
       </section>
     );
   }
 
   return (
-    <section className="px-5 pb-8 pt-10 sm:hidden">
-      <h1 className="text-[36px] font-black leading-tight tracking-normal text-ink">Creer votre compte</h1>
-      <form onSubmit={onSubmit} className="mt-12 space-y-6" noValidate>
-        <div className="grid grid-cols-2 gap-6">
+    <section className="mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
+      <h1 className="text-[30px] font-black leading-tight tracking-normal text-ink">Creer votre compte</h1>
+      <form onSubmit={onSubmit} className="mt-7 space-y-3" noValidate>
+        <div className="grid grid-cols-2 gap-3">
           <AccountChoice
             label="Entreprise"
             selected={values.accountType === 'company'}
@@ -315,16 +315,16 @@ function MobileRegisterScreen({
           Recevoir les nouveautes Kendronics. <a href="/privacy" className="font-bold text-slate-600 underline">Voir la politique newsletter</a>
         </MobileCheck>
 
-        <button type="submit" disabled={status === 'submitting'} className="h-[52px] w-full rounded-xl bg-deepblue text-xl font-black text-white disabled:opacity-60">
+        <button type="submit" disabled={status === 'submitting'} className="h-11 w-full rounded-xl bg-deepblue text-base font-black text-white ring-1 ring-white/60 disabled:opacity-60">
           {status === 'submitting' ? 'Creation...' : 'Creer le compte'}
         </button>
-        <a href="/login" className="flex h-[52px] items-center justify-center rounded-xl border border-slate-200 bg-white text-[20px] font-bold text-slate-600">
+        <a href="/login" className="flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-600 ring-1 ring-white/70">
           Deja un compte? Se connecter
         </a>
       </form>
 
       <Divider label="ou continuer avec" />
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-2 gap-3">
         <SocialButton provider="google" label="Google" />
         <SocialButton provider="apple" label="Apple" />
       </div>
@@ -335,8 +335,8 @@ function MobileRegisterScreen({
 
 function AccountChoice({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex h-[52px] items-center gap-5 rounded-xl border border-slate-200 bg-white px-5 text-[20px] font-bold text-ink">
-      <span className={`h-6 w-6 rounded-full border-2 ${selected ? 'border-deepblue bg-deepblue' : 'border-[#d9d9d9] bg-white'}`} />
+    <button type="button" onClick={onClick} className="flex h-11 items-center gap-3 rounded-xl border border-slate-200 bg-[#f1f5f9] px-3 text-base font-bold text-ink ring-1 ring-white/70">
+      <span className={`h-5 w-5 rounded-full border-2 ${selected ? 'border-deepblue bg-deepblue' : 'border-slate-300 bg-[#edf3f8]'}`} />
       <span>{label}</span>
     </button>
   );
@@ -366,11 +366,11 @@ function MobileInput({
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
           onChange={(event) => onChange(event.target.value)}
-          className={`h-[52px] w-full rounded-xl border bg-white px-6 pr-14 text-[20px] font-bold text-ink outline-none placeholder:text-slate-400 focus:border-deepblue ${
+          className={`h-11 w-full rounded-xl border bg-[#edf3f8] px-4 pr-12 text-base font-bold text-ink outline-none ring-1 ring-white/70 placeholder:text-slate-400 focus:border-deepblue ${
             error ? 'border-red-300' : 'border-[#d9d9d9]'
           }`}
         />
-        {hasIcon && <span className="absolute right-5 top-1/2 -translate-y-1/2 text-2xl text-slate-400">/</span>}
+        {hasIcon && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-slate-400">/</span>}
       </span>
       {error && <span className="mt-2 block text-sm font-medium text-red-600">{error}</span>}
     </label>
@@ -398,7 +398,7 @@ function MobileSelect({
           aria-label={placeholder}
           aria-invalid={Boolean(error)}
           onChange={(event) => onChange(event.target.value)}
-          className={`h-[52px] w-full appearance-none rounded-xl border bg-white px-6 pr-14 text-[20px] font-bold outline-none focus:border-deepblue ${
+          className={`h-11 w-full appearance-none rounded-xl border bg-[#edf3f8] px-4 pr-12 text-base font-bold outline-none ring-1 ring-white/70 focus:border-deepblue ${
             value ? 'text-ink' : 'text-slate-400'
           } ${error ? 'border-red-300' : 'border-[#d9d9d9]'}`}
         >
@@ -408,7 +408,7 @@ function MobileSelect({
             </option>
           ))}
         </select>
-        <span className="absolute right-6 top-1/2 h-4 w-4 -translate-y-1/2 rotate-45 border-b-2 border-r-2 border-[#333]" />
+        <span className="absolute right-5 top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-b-2 border-r-2 border-slate-600" />
       </span>
       {error && <span className="mt-2 block text-sm font-medium text-red-600">{error}</span>}
     </label>
@@ -425,12 +425,12 @@ function MobileCheck({
   children: ReactNode;
 }) {
   return (
-    <label className="flex items-start gap-3 text-[18px] leading-8 text-slate-600">
+    <label className="flex items-start gap-3 text-sm leading-5 text-slate-600">
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="mt-1 h-6 w-6 shrink-0 rounded border-2 border-[#d8d8d8]"
+        className="mt-0.5 h-5 w-5 shrink-0 rounded border-2 border-slate-300 bg-[#edf3f8]"
       />
       <span>{children}</span>
     </label>
@@ -439,18 +439,18 @@ function MobileCheck({
 
 function Divider({ label }: { label: string }) {
   return (
-    <div className="my-9 flex items-center justify-center gap-3 text-xl text-slate-400">
-      <span className="h-px w-16 bg-[#eeeeee]" />
+    <div className="my-5 flex items-center justify-center gap-3 text-sm font-bold text-slate-400">
+      <span className="h-px w-12 bg-slate-300/70" />
       <span>{label}</span>
-      <span className="h-px w-16 bg-[#eeeeee]" />
+      <span className="h-px w-12 bg-slate-300/70" />
     </div>
   );
 }
 
 function SocialButton({ provider, label }: { provider: 'google' | 'apple'; label: string }) {
   return (
-    <button type="button" className="flex h-[52px] w-full items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white text-[20px] font-bold text-slate-600">
-      <span className={provider === 'google' ? 'text-3xl font-black text-[#4285f4]' : 'text-3xl font-black text-black'}>
+    <button type="button" className="flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-600 ring-1 ring-white/70">
+      <span className={provider === 'google' ? 'text-2xl font-black text-[#4285f4]' : 'text-2xl font-black text-black'}>
         {provider === 'google' ? 'G' : 'A'}
       </span>
       <span>{label}</span>
@@ -460,10 +460,10 @@ function SocialButton({ provider, label }: { provider: 'google' | 'apple'; label
 
 function AuthFooter() {
   return (
-    <footer className="mt-20 text-center text-[16px] leading-9 text-slate-500">
-      <div className="flex items-center justify-center gap-5">
+    <footer className="mt-7 text-center text-xs leading-6 text-slate-500">
+      <div className="flex items-center justify-center gap-3">
         <a href="/terms">Terms &amp; Conditions</a>
-        <span className="h-6 w-px bg-[#eeeeee]" />
+        <span className="h-4 w-px bg-slate-300/70" />
         <a href="/privacy">Privacy Policy</a>
       </div>
       <p className="mt-2">&copy; 2026 Kendronics. Tous droits reserves.</p>
