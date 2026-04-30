@@ -172,7 +172,7 @@ export default function ContactPage() {
             <button
               type="submit"
               disabled={submitState === 'submitting'}
-              className="h-12 rounded-xl bg-signal px-5 text-sm font-black text-white shadow-lg shadow-sky-950/20 transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="h-12 rounded-xl bg-signal px-5 text-sm font-black text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               {submitState === 'submitting' ? 'Submitting ticket...' : 'Submit support ticket'}
             </button>

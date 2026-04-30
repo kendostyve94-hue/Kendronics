@@ -24,7 +24,7 @@ export function HelpTooltip({
         ?
       </button>
       {open && (
-        <span className="absolute right-0 top-7 z-30 w-72 rounded-lg border border-line bg-white p-4 text-left shadow-glass">
+        <span className="absolute right-0 top-7 z-30 w-72 rounded-lg border border-line bg-white p-4 text-left">
           <span className="block text-sm font-black text-ink">{title}</span>
           <span className="mt-2 block text-xs leading-5 text-slate-600">{children}</span>
           {visual && <TooltipVisual visual={visual} />}
@@ -38,7 +38,7 @@ function TooltipVisual({ visual }: { visual: 'via' | 'stack' | 'barcode' }) {
   if (visual === 'via') {
     return (
       <span className="mt-3 grid h-20 place-items-center rounded bg-cloud">
-        <span className="h-12 w-12 rounded-full border-8 border-signal bg-white shadow-inner" />
+        <span className="h-12 w-12 rounded-full border-8 border-signal bg-white" />
       </span>
     );
   }

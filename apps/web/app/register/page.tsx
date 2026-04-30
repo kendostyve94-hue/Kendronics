@@ -161,7 +161,7 @@ export default function RegisterPage() {
                         onClick={() => update('accountType', type)}
                         className={`rounded-2xl border px-4 py-3 text-sm font-black capitalize transition ${
                           values.accountType === type
-                            ? 'border-sky-300 bg-sky-50 text-deepblue shadow-sm'
+                            ? 'border-sky-300 bg-sky-50 text-deepblue'
                             : 'border-slate-200 bg-white text-slate-600 hover:border-sky-200'
                         }`}
                       >
@@ -194,7 +194,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={status === 'submitting'}
-                  className="h-12 w-full rounded-xl bg-deepblue text-sm font-black text-white shadow-lg shadow-sky-950/20 transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60"
+                  className="h-12 w-full rounded-xl bg-deepblue text-sm font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {status === 'submitting' ? 'Creation du compte...' : 'Creer un compte'}
                 </button>

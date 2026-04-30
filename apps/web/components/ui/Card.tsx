@@ -11,7 +11,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`${glass ? 'glass-light' : 'border border-line bg-white shadow-sm'} rounded-sm ${className}`}
+      className={`${glass ? 'glass-light' : 'border border-line bg-white'} rounded-sm ${className}`}
       {...props}
     >
       {children}

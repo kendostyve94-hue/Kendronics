@@ -96,7 +96,7 @@ export default function OrdersPage() {
             <a
               key={order.id}
               href={`/orders/${order.id}`}
-              className="block rounded-sm border border-line bg-white p-4 shadow-sm transition hover:border-[#0f8f6b] hover:shadow-md"
+              className="block rounded-sm border border-line bg-white p-4 transition hover:border-[#0f8f6b]"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -121,7 +121,7 @@ export default function OrdersPage() {
 
 function StateCard({ title, body, tone = 'default', children }: { title: string; body: string; tone?: 'default' | 'error'; children?: ReactNode }) {
   return (
-    <div className={`rounded-sm border p-5 shadow-sm ${tone === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-line bg-white text-slate-700'}`}>
+    <div className={`rounded-sm border p-5 ${tone === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-line bg-white text-slate-700'}`}>
       <h2 className="text-xl font-black text-ink">{title}</h2>
       <p className="mt-2 text-sm leading-6">{body}</p>
       {children}

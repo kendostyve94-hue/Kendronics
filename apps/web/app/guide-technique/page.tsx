@@ -99,13 +99,13 @@ export default function TechnicalGuidePage() {
 
       <Section className="pt-0">
         <div className="grid gap-4 md:grid-cols-3">
-          <a href="/quote" className="border border-line bg-deepblue p-5 text-sm font-black text-white shadow-sm">
+          <a href="/quote" className="border border-line bg-deepblue p-5 text-sm font-black text-white">
             Configurer une commande
           </a>
-          <a href="/capabilities" className="border border-line bg-white p-5 text-sm font-black text-deepblue shadow-sm">
+          <a href="/capabilities" className="border border-line bg-white p-5 text-sm font-black text-deepblue">
             Voir les capacites PCB
           </a>
-          <a href="/contact" className="border border-line bg-white p-5 text-sm font-black text-deepblue shadow-sm">
+          <a href="/contact" className="border border-line bg-white p-5 text-sm font-black text-deepblue">
             Contacter le support
           </a>
         </div>

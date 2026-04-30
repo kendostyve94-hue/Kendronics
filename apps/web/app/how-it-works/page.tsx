@@ -144,7 +144,7 @@ export default function HowItWorksPage() {
         <div className="grid gap-5 lg:grid-cols-[1fr_25rem]">
           <div className="grid gap-4 md:grid-cols-2">
             {gerberGuide.map(([title, body]) => (
-              <Card key={title} className="p-5 transition duration-300 hover:-translate-y-1 hover:shadow-glass">
+              <Card key={title} className="p-5 transition duration-300 hover:-translate-y-1">
                 <h3 className="text-lg font-black text-ink">{title}</h3>
                 <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
               </Card>
@@ -213,7 +213,7 @@ export default function HowItWorksPage() {
       </Section>
 
       <Section id="cta" className="pt-4">
-        <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white shadow-2xl shadow-sky-950/25 sm:p-10 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
+        <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white sm:p-10 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
           <img
             src="https://images.pexels.com/photos/7174650/pexels-photo-7174650.jpeg?auto=compress&cs=tinysrgb&w=1800"
             alt="Close-up of electronic board components"
@@ -312,7 +312,7 @@ function JourneyStep({ index, title, body }: { index: number; title: string; bod
 
 function InfoCard({ title, body }: { title: string; body: string }) {
   return (
-    <Card className="p-6 transition duration-300 hover:-translate-y-1 hover:shadow-glass">
+    <Card className="p-6 transition duration-300 hover:-translate-y-1">
       <h3 className="text-lg font-black text-ink">{title}</h3>
       <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
     </Card>

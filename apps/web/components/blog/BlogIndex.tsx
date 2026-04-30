@@ -111,7 +111,7 @@ function CategoryButton({ label, active, onClick }: { label: string; active: boo
 
 function ArticleCard({ article }: { article: BlogArticle }) {
   return (
-    <Card className="group flex h-full flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-glass">
+    <Card className="group flex h-full flex-col overflow-hidden transition duration-300 hover:-translate-y-1">
       <div className="image-reflection relative overflow-hidden">
         <img
           src={article.image}

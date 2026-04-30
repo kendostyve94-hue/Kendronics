@@ -248,7 +248,7 @@ export default function FaqPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white shadow-2xl shadow-sky-950/25 sm:p-10 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
+        <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white sm:p-10 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
           <img
             src="https://images.pexels.com/photos/7174650/pexels-photo-7174650.jpeg?auto=compress&cs=tinysrgb&w=1800"
             alt="Close-up of PCB components"
@@ -318,7 +318,7 @@ function CategoryButton({ label, active, onClick }: { label: string; active: boo
 
 function FaqCard({ item }: { item: FaqItem }) {
   return (
-    <Card className="p-6 transition duration-300 hover:-translate-y-1 hover:shadow-glass">
+    <Card className="p-6 transition duration-300 hover:-translate-y-1">
       <h3 className="text-lg font-black text-ink">{item.question}</h3>
       <p className="mt-3 text-sm leading-6 text-slate-600">{item.answer}</p>
     </Card>

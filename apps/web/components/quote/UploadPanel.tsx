@@ -73,7 +73,7 @@ function FileDrop({
           if (file) onFile(file.name);
         }}
       />
-      <span className="grid min-h-28 place-items-center rounded-[10px] border border-line bg-white px-4 text-center shadow-sm">
+      <span className="grid min-h-28 place-items-center rounded-[10px] border border-line bg-white px-4 text-center">
         <span>
           <span className="mx-auto mb-3 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-r from-signal to-electric text-lg font-black text-white">+</span>
           <span className="block text-sm font-black text-ink">{fileName ?? 'Ajouter un fichier'}</span>

@@ -198,7 +198,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
         ) : (
 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="overflow-hidden rounded-sm border border-line bg-white shadow-sm">
+          <div className="overflow-hidden rounded-sm border border-line bg-white">
             <div className="flex flex-col gap-2 border-b border-line p-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Commande</p>
@@ -458,7 +458,7 @@ function TrackingTimelineCard({ events }: { events: TrackingTimelineItem[] }) {
       <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">Historique</h2>
       <div className="mt-5 space-y-3">
         {events.map((event) => (
-          <div key={event.id} className="border-l-4 border-[#0f8f6b] bg-white px-4 py-3 shadow-sm">
+          <div key={event.id} className="border-l-4 border-[#0f8f6b] bg-white px-4 py-3">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-sm font-black text-ink">{event.title}</p>

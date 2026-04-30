@@ -27,7 +27,7 @@ export function PcbVisuals() {
         <div className="mt-7 grid max-w-md gap-3">
           {['Gerber validation ready', 'Quote breakdown by cost line', 'External partner order reference', 'Delivery tracking to destination'].map(
             (item) => (
-              <div key={item} className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm">
+              <div key={item} className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700">
                 {item}
               </div>
             ),
@@ -37,7 +37,7 @@ export function PcbVisuals() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {images.map((image) => (
-          <div key={image.src} className="image-reflection group relative overflow-hidden rounded-2xl shadow-glass">
+          <div key={image.src} className="image-reflection group relative overflow-hidden rounded-2xl">
             <img
               src={image.src}
               alt={image.alt}

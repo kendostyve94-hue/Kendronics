@@ -72,7 +72,7 @@ export function QuotePreview() {
           </label>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:min-w-64">
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:min-w-64">
           <div>
             <p className="text-xs font-black uppercase tracking-wide text-slate-500">Total configure</p>
             <p className="mt-1 text-3xl font-black tracking-tight text-deepblue">€{price.toFixed(2)}</p>

@@ -78,7 +78,7 @@ export function HeroQuickQuote() {
   }
 
   return (
-    <aside className="hidden border border-white/25 bg-white/95 p-5 text-ink shadow-premium lg:block">
+    <aside className="hidden border border-white/25 bg-white/95 p-5 text-ink lg:block">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.14em] text-deepblue">Devis rapide</p>

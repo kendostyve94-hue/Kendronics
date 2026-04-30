@@ -18,8 +18,6 @@
   --brand-gradient: linear-gradient(90deg, #0f8f6b, #12a87c);
   --glass-light: rgba(244, 247, 250, 0.82);
   --glass-dark: rgba(237, 242, 246, 0.88);
-  --shadow-glass: 0 18px 50px rgba(8, 20, 32, 0.12);
-  --shadow-premium: 0 26px 72px rgba(8, 20, 32, 0.16);
 }
 
 * {
@@ -63,11 +61,6 @@ body {
     --color-cloud: #e9eff5;
     --color-line: rgba(128, 146, 164, 0.32);
     --neumo-radius: 0.5rem;
-    --neumo-shadow: 10px 10px 20px rgba(125, 145, 164, 0.34), -10px -10px 20px rgba(255, 255, 255, 0.82);
-    --neumo-shadow-soft: 6px 6px 14px rgba(125, 145, 164, 0.28), -6px -6px 14px rgba(255, 255, 255, 0.76);
-    --neumo-shadow-tight: 4px 4px 10px rgba(125, 145, 164, 0.24), -4px -4px 10px rgba(255, 255, 255, 0.74);
-    --neumo-shadow-inset: inset 4px 4px 10px rgba(125, 145, 164, 0.28), inset -4px -4px 10px rgba(255, 255, 255, 0.82);
-    --neumo-primary-shadow: 6px 6px 14px rgba(8, 20, 32, 0.22), -4px -4px 12px rgba(255, 255, 255, 0.24);
   }
 
   body {
@@ -121,16 +114,6 @@ body {
   button[class*="border"][class*="bg-white"],
   button[class*="border"][class*="bg-slate"] {
     background: linear-gradient(145deg, #f1f6fb, #dfe7ef) !important;
-    box-shadow: var(--neumo-shadow) !important;
-  }
-
-  .glass,
-  .glass-light,
-  .shadow-sm,
-  .shadow-glass,
-  .shadow-premium,
-  [class*="shadow-"] {
-    box-shadow: var(--neumo-shadow-soft) !important;
   }
 
   section[class*="bg-white"],
@@ -143,7 +126,6 @@ body {
   details > summary[class*="bg-slate"] {
     background: linear-gradient(145deg, #eef4fa, #dce5ee) !important;
     border-radius: var(--neumo-radius) var(--neumo-radius) 0 0 !important;
-    box-shadow: var(--neumo-shadow-inset) !important;
   }
 
   details[open] > summary {
@@ -162,7 +144,6 @@ body {
   summary,
   [role="button"] {
     border-color: rgba(142, 158, 174, 0.3) !important;
-    box-shadow: var(--neumo-shadow-soft);
   }
 
   button:active,
@@ -171,12 +152,6 @@ body {
   summary:active,
   [role="button"]:active {
     transform: translateY(1px);
-    box-shadow: var(--neumo-shadow-inset) !important;
-  }
-
-  button[class*="bg-transparent"],
-  a[class*="bg-transparent"] {
-    box-shadow: none !important;
   }
 
   input,
@@ -184,27 +159,6 @@ body {
   textarea {
     background: #edf3f8 !important;
     border-color: rgba(142, 158, 174, 0.34) !important;
-    box-shadow: var(--neumo-shadow-inset) !important;
-  }
-
-  input[type="checkbox"],
-  input[type="radio"] {
-    box-shadow: none !important;
-  }
-
-  header,
-  footer,
-  nav,
-  [class*="fixed"][class*="bottom"] {
-    box-shadow: var(--neumo-shadow-soft) !important;
-  }
-
-  [class*="bg-deepblue"],
-  [class*="bg-signal"],
-  [class*="bg-[#0f8f6b]"],
-  [class*="bg-[#0877ff]"],
-  [class*="bg-[#07324a]"] {
-    box-shadow: var(--neumo-primary-shadow) !important;
   }
 
   [class*="border-t"],
@@ -240,17 +194,11 @@ canvas {
 .glass {
   border: 1px solid rgba(117, 134, 150, 0.32);
   background: var(--glass-dark);
-  box-shadow: var(--shadow-glass);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 .glass-light {
   border: 1px solid rgba(117, 134, 150, 0.3);
   background: var(--glass-light);
-  box-shadow: var(--shadow-glass);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 .route-line {
@@ -445,11 +393,6 @@ section.bg-ink p {
   --tw-ring-color: rgba(95, 168, 211, 0.24) !important;
 }
 
-.shadow-sm,
-.shadow-glass {
-  box-shadow: 0 14px 40px rgba(8, 20, 32, 0.1) !important;
-}
-
 .rounded-xl,
 .rounded-2xl,
 .rounded-3xl {
@@ -603,15 +546,4 @@ section {
   100% {
     opacity: 1;
   }
-}
-
-*,
-*::before,
-*::after {
-  --tw-shadow: 0 0 #0000 !important;
-  --tw-shadow-colored: 0 0 #0000 !important;
-  --tw-drop-shadow: drop-shadow(0 0 #0000) !important;
-  box-shadow: none !important;
-  text-shadow: none !important;
-  filter: none !important;
 }

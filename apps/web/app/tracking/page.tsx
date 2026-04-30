@@ -119,7 +119,7 @@ export default function TrackingPage() {
               <button
                 type="submit"
                 disabled={state === 'loading' || !orderId.trim() || !email.trim()}
-                className="h-12 w-full rounded-xl bg-signal px-5 text-sm font-black text-white shadow-lg shadow-sky-950/20 transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="h-12 w-full rounded-xl bg-signal px-5 text-sm font-black text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 {state === 'loading' ? 'Verification du suivi...' : 'Suivre la commande'}
               </button>

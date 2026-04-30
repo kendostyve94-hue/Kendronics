@@ -112,7 +112,7 @@ export function PricingSummary({
 
   return (
     <aside className="space-y-3 lg:sticky lg:top-28">
-      <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 shadow-sm sm:p-5">
+      <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 sm:p-5">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-black text-slate-950 sm:text-base">Details des frais</h2>
           <span className="text-lg font-black text-slate-950">^</span>
@@ -168,7 +168,7 @@ export function PricingSummary({
           disabled={!canSave}
           className={`mt-2 h-11 w-full rounded-full text-xs font-black uppercase text-white transition sm:mt-3 sm:h-12 sm:text-sm ${
             canSave
-              ? 'bg-[#0877ff] shadow-[0_10px_24px_rgba(8,119,255,0.24)] hover:bg-[#0068e8] active:translate-y-px'
+              ? 'bg-[#0877ff] hover:bg-[#0068e8] active:translate-y-px'
               : 'cursor-not-allowed bg-slate-300 opacity-70'
           }`}
         >
@@ -176,7 +176,7 @@ export function PricingSummary({
         </button>
       </div>
 
-      <div className="fixed inset-x-0 bottom-[4.9rem] z-40 border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 shadow-[0_-10px_28px_rgba(8,20,32,0.14)] backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-[4.9rem] z-40 border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-md items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estime</p>
@@ -195,7 +195,7 @@ export function PricingSummary({
         </div>
       </div>
 
-      <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 shadow-sm sm:p-5">
+      <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 sm:p-5">
         <button type="button" onClick={() => setDeliveryOpen((open) => !open)} className="flex w-full items-center justify-between text-left">
           <h2 className="text-sm font-black text-slate-950 sm:text-base">Estimation de la livraison</h2>
           <span className={`text-lg font-black transition ${deliveryOpen ? 'rotate-180' : ''}`}>v</span>
@@ -328,7 +328,7 @@ function CountryDropdown({
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
-        className="flex h-11 w-full items-center justify-between rounded-sm border border-slate-200 bg-white px-3 text-left text-sm font-bold text-slate-950 shadow-sm transition hover:border-[#0877ff]/50"
+        className="flex h-11 w-full items-center justify-between rounded-sm border border-slate-200 bg-white px-3 text-left text-sm font-bold text-slate-950 transition hover:border-[#0877ff]/50"
       >
         <span className="flex items-center gap-2">
           <span className="text-lg leading-none">{countryFlag(selectedCountry.iso2)}</span>
@@ -338,7 +338,7 @@ function CountryDropdown({
       </button>
 
       {open ? (
-        <div className="absolute z-30 mt-1 w-full rounded-sm border border-slate-200 bg-white p-2 shadow-[0_16px_38px_rgba(15,23,42,0.18)]">
+        <div className="absolute z-30 mt-1 w-full rounded-sm border border-slate-200 bg-white p-2">
           <label className="flex h-9 items-center gap-2 rounded-sm bg-slate-100 px-3">
             <input
               autoFocus
@@ -403,7 +403,7 @@ function CarrierOption({
       type="button"
       onClick={onClick}
         className={`w-full rounded-sm border p-2.5 text-left text-xs transition sm:p-3 sm:text-sm ${
-        active ? 'border-[#0877ff] bg-[#eaf2fb] shadow-[inset_3px_0_#0877ff]' : 'border-slate-200 bg-white hover:border-[#0877ff]/50'
+        active ? 'border-[#0877ff] bg-[#eaf2fb]' : 'border-slate-200 bg-white hover:border-[#0877ff]/50'
       }`}
     >
       <span className="flex items-center justify-between gap-3">
@@ -424,7 +424,7 @@ function LiveCarrierOption({ rate, active, onSelect }: { rate: ShippingRate; act
       disabled={disabled}
       onClick={onSelect}
       className={`mt-2 w-full rounded-sm border p-2.5 text-left text-xs transition sm:mt-3 sm:p-3 sm:text-sm ${
-        active ? 'border-[#0877ff] bg-[#eaf2fb] shadow-[inset_3px_0_#0877ff]' : 'border-slate-200 bg-white hover:border-[#0877ff]/50'
+        active ? 'border-[#0877ff] bg-[#eaf2fb]' : 'border-slate-200 bg-white hover:border-[#0877ff]/50'
       } ${disabled ? 'cursor-not-allowed opacity-70' : ''}`}
     >
       <span className="flex items-center justify-between gap-3">

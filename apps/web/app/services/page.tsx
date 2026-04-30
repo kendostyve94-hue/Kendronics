@@ -164,7 +164,7 @@ export default function ServicesPage() {
       </Section>
 
       <Section id="support-options" className="pt-4">
-        <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white shadow-2xl shadow-sky-950/25 sm:p-10 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
+        <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white sm:p-10 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
           <img
             src="https://images.pexels.com/photos/7285976/pexels-photo-7285976.jpeg?auto=compress&cs=tinysrgb&w=1800"
             alt="Engineer inspecting a printed circuit board"
@@ -261,7 +261,7 @@ function ServiceCard({
   };
 }) {
   return (
-    <Card id={service.id} className="group flex h-full scroll-mt-36 flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-glass">
+    <Card id={service.id} className="group flex h-full scroll-mt-36 flex-col overflow-hidden transition duration-300 hover:-translate-y-1">
       <div className="image-reflection relative overflow-hidden">
         <img
           src={service.image}

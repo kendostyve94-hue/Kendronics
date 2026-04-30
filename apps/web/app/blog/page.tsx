@@ -40,7 +40,7 @@ export default function BlogPage() {
 
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         <div className="grid gap-5 lg:grid-cols-[1fr_24rem]">
-          <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white shadow-2xl shadow-sky-950/25 sm:p-10">
+          <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white sm:p-10">
             <img
               src="https://images.pexels.com/photos/7174650/pexels-photo-7174650.jpeg?auto=compress&cs=tinysrgb&w=1800"
               alt="Close-up of PCB components"
@@ -68,7 +68,7 @@ export default function BlogPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6">
             <p className="text-sm font-black uppercase tracking-[0.18em] text-signal">SEO metadata strategy</p>
             <h3 className="mt-2 text-xl font-black text-ink">Education-first topic clusters</h3>
             <div className="mt-4 flex flex-wrap gap-2">

@@ -313,7 +313,7 @@ export default function ProfilePage() {
       <Footer />
       {confirmation ? (
         <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/55 px-5">
-          <div className="w-full max-w-[19rem] rounded-sm bg-white p-4 shadow-premium">
+          <div className="w-full max-w-[19rem] rounded-sm bg-white p-4">
             <h2 className="text-base font-black text-ink">Code de confirmation</h2>
             <p className="mt-2 text-xs leading-5 text-slate-600">
               Un code de confirmation vient d'etre envoye a {confirmation.email}. Entrez ce code pour valider l'action.
@@ -343,7 +343,7 @@ export default function ProfilePage() {
         </div>
       ) : null}
       {!confirmation && verificationError ? (
-        <p className="fixed bottom-24 left-4 right-4 z-[70] mx-auto max-w-sm rounded-sm bg-red-50 px-4 py-3 text-sm font-bold text-red-700 shadow-sm">
+        <p className="fixed bottom-24 left-4 right-4 z-[70] mx-auto max-w-sm rounded-sm bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
           {verificationError}
         </p>
       ) : null}
@@ -362,7 +362,7 @@ function InfoCell({ label, value }: { label: string; value: string }) {
 
 function KendronicsAvatar() {
   return (
-    <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] shadow-[0_10px_24px_rgba(8,20,32,0.18)] ring-2 ring-white sm:h-24 sm:w-24" aria-hidden="true">
+    <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] ring-2 ring-white sm:h-24 sm:w-24" aria-hidden="true">
       <svg viewBox="0 0 96 96" className="h-full w-full">
         <defs>
           <radialGradient id="avatarGlow" cx="34%" cy="28%" r="72%">

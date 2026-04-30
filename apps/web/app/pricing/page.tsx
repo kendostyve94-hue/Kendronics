@@ -155,7 +155,7 @@ export default function PricingPage() {
       >
         <div className="grid gap-5 md:grid-cols-3">
           {scenarios.map((scenario) => (
-            <Card key={scenario.title} className="overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-glass">
+            <Card key={scenario.title} className="overflow-hidden transition duration-300 hover:-translate-y-1">
               <div className="image-reflection relative overflow-hidden">
                 <img
                   src="https://images.pexels.com/photos/7285976/pexels-photo-7285976.jpeg?auto=compress&cs=tinysrgb&w=1200"
@@ -191,7 +191,7 @@ export default function PricingPage() {
       </Section>
 
       <Section id="cta" className="pt-4">
-        <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white shadow-2xl shadow-sky-950/25 sm:p-10 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
+        <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white sm:p-10 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-10">
           <img
             src="https://images.pexels.com/photos/7174650/pexels-photo-7174650.jpeg?auto=compress&cs=tinysrgb&w=1800"
             alt="Close-up of PCB components"

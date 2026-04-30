@@ -166,14 +166,14 @@ function MobileQuickAccess() {
   ];
 
   return (
-    <section className="bg-white px-4 py-4 shadow-sm sm:px-6 lg:hidden">
+    <section className="bg-white px-4 py-4 sm:px-6 lg:hidden">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-sm font-black text-ink">Acces rapide</h2>
         <a href="/quote" className="text-xs font-black text-deepblue">Devis</a>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {links.map(([title, subtitle, href]) => (
-          <a key={title} href={href} className="min-w-[8.5rem] border border-line bg-slate-50 p-3 shadow-sm">
+          <a key={title} href={href} className="min-w-[8.5rem] border border-line bg-slate-50 p-3">
             <p className="text-sm font-black text-ink">{title}</p>
             <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
           </a>
@@ -197,7 +197,7 @@ function ProductCatalog() {
 
         <div className="mt-6 flex gap-3 overflow-x-auto pb-2 md:mt-8 md:grid md:gap-4 md:overflow-visible md:pb-0 md:grid-cols-2 xl:grid-cols-3">
           {productCards.map((card) => (
-            <article key={card.title} className="group min-w-[17.5rem] border border-line bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-glass md:min-w-0 md:p-5">
+            <article key={card.title} className="group min-w-[17.5rem] border border-line bg-white p-4 transition hover:-translate-y-1 md:min-w-0 md:p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-deepblue">{card.tag}</p>
@@ -247,7 +247,7 @@ function SmartOrdering() {
 
           <div className="flex gap-3 overflow-x-auto pb-2 md:grid md:overflow-visible md:pb-0 md:grid-cols-2">
             {workflowSteps.map(([number, title, body]) => (
-              <article key={number} className="min-w-[16rem] border border-line bg-white p-4 shadow-sm md:min-w-0 md:p-5">
+              <article key={number} className="min-w-[16rem] border border-line bg-white p-4 md:min-w-0 md:p-5">
                 <span className="text-sm font-black text-deepblue">{number}</span>
                 <h3 className="mt-3 text-lg font-black text-ink">{title}</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
@@ -278,7 +278,7 @@ function TrustBlock() {
         </div>
 
         <div className="min-w-0">
-          <div className="border border-line bg-white p-4 shadow-glass sm:p-6">
+          <div className="border border-line bg-white p-4 sm:p-6">
             <p className="label-caps text-deepblue">Pourquoi Kendronics</p>
             <h3 className="mt-3 text-xl font-black leading-tight text-ink sm:text-2xl">Un seul endroit pour devis, paiement, support et livraison.</h3>
             <p className="mt-4 text-sm leading-7 text-slate-600">
@@ -307,7 +307,7 @@ function Resources() {
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {resourceItems.map(([title, body, href]) => (
-            <a key={title} href={href} className="block border border-line bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-glass">
+            <a key={title} href={href} className="block border border-line bg-white p-5 transition hover:-translate-y-1">
               <h3 className="text-lg font-black text-ink">{title}</h3>
               <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
               <span className="mt-5 inline-flex text-sm font-black text-deepblue">Lire</span>

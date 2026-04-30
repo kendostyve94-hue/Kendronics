@@ -97,7 +97,7 @@ export function ToggleField({
   visual?: 'via' | 'stack' | 'barcode';
 }) {
   return (
-    <label className="flex min-h-16 items-center justify-between gap-3 rounded-[10px] border border-line bg-white px-4 py-3 shadow-sm transition hover:border-signal/60">
+    <label className="flex min-h-16 items-center justify-between gap-3 rounded-[10px] border border-line bg-white px-4 py-3 transition hover:border-signal/60">
       <span>
         <FieldLabel label={label} help={help} visual={visual} />
       </span>

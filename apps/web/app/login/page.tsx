@@ -155,7 +155,7 @@ export default function LoginPage() {
               ['Order continuity', 'Return to saved quote, payment, and tracking flows.'],
               ['Private recovery', 'Password reset never reveals whether an email exists.'],
             ].map(([title, body]) => (
-              <div key={title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div key={title} className="rounded-2xl border border-slate-200 bg-white p-5">
                 <div className="mb-4 h-10 w-10 rounded-xl bg-sky-50 ring-1 ring-sky-100" />
                 <h2 className="text-base font-black text-ink">{title}</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
@@ -163,7 +163,7 @@ export default function LoginPage() {
             ))}
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl bg-deepblue p-6 text-white shadow-2xl shadow-sky-950/20 sm:p-8">
+          <div className="relative overflow-hidden rounded-3xl bg-deepblue p-6 text-white sm:p-8">
             <img
               src="https://images.pexels.com/photos/7285976/pexels-photo-7285976.jpeg?auto=compress&cs=tinysrgb&w=1400"
               alt="Hands inspecting a printed circuit board"
@@ -182,7 +182,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 text-ink shadow-sm sm:p-7 lg:sticky lg:top-28 lg:self-start">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 text-ink sm:p-7 lg:sticky lg:top-28 lg:self-start">
           {status === 'authenticated' ? (
             <AuthenticatedState />
           ) : mode === 'forgot_password' ? (
@@ -268,7 +268,7 @@ function LoginForm({
       <button
         type="submit"
         disabled={status === 'submitting'}
-        className="h-12 w-full rounded-xl bg-deepblue text-sm font-black text-white shadow-lg shadow-sky-950/20 transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60"
+        className="h-12 w-full rounded-xl bg-deepblue text-sm font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60"
       >
         {status === 'submitting' ? 'Signing in...' : 'Log in'}
       </button>
@@ -316,7 +316,7 @@ function ForgotPasswordForm({
       <button
         type="submit"
         disabled={status === 'submitting'}
-        className="h-12 w-full rounded-xl bg-deepblue text-sm font-black text-white shadow-lg shadow-sky-950/20 transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60"
+        className="h-12 w-full rounded-xl bg-deepblue text-sm font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60"
       >
         {status === 'submitting' ? 'Sending request...' : 'Send reset instructions'}
       </button>
@@ -390,7 +390,7 @@ function AuthenticatedState() {
       </p>
       <a
         href="/quote"
-        className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-deepblue px-6 text-sm font-black text-white shadow-lg shadow-sky-950/20 transition hover:bg-deepblue-dark"
+        className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-deepblue px-6 text-sm font-black text-white transition hover:bg-deepblue-dark"
       >
         Continue to quote
       </a>

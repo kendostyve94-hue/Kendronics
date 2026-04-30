@@ -66,9 +66,9 @@ export function AfricaMap() {
         <div className="grid gap-3">
           {['North Africa', 'West Africa', 'Central Africa', 'East Africa', 'Southern Africa', 'African island markets'].map(
             (zone) => (
-              <div key={zone} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+              <div key={zone} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3">
                 <span className="text-sm font-bold text-slate-700">{zone}</span>
-                <span className="h-2.5 w-2.5 rounded-full bg-signal shadow-[0_0_18px_rgba(14,165,233,0.75)]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-signal" />
               </div>
             ),
           )}

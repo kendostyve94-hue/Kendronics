@@ -48,7 +48,7 @@ export function CommentsMarquee() {
         {track.map((comment, index) => (
           <article
             key={`${comment.id}-${index}`}
-            className="h-36 w-[280px] shrink-0 rounded-sm border border-line bg-white px-4 py-4 shadow-sm sm:w-[340px]"
+            className="h-36 w-[280px] shrink-0 rounded-sm border border-line bg-white px-4 py-4 sm:w-[340px]"
           >
             <div className="flex items-center justify-between gap-3">
               <div>

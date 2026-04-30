@@ -355,7 +355,7 @@ export default function QuotePage() {
                 onClick={() => update('productType', product.value)}
                 className={`flex min-h-[4.75rem] items-start gap-2 rounded-sm border bg-white p-2.5 text-left transition sm:min-h-24 sm:gap-3 sm:p-4 ${
                   config.productType === product.value
-                    ? 'border-[#0f8f6b] shadow-[inset_0_3px_0_#0f8f6b]'
+                    ? 'border-[#0f8f6b]'
                     : 'border-slate-200 hover:border-[#0f8f6b]/55'
                 }`}
               >
@@ -628,7 +628,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <details className="group rounded-sm border border-slate-200 bg-white shadow-sm" open={defaultOpen}>
+    <details className="group rounded-sm border border-slate-200 bg-white" open={defaultOpen}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-slate-100 px-3 py-2.5 sm:gap-4 sm:px-4 sm:py-3">
         <span>
           <span className="block text-sm font-black text-slate-950 sm:text-base">{title}</span>
@@ -672,7 +672,7 @@ function UnifiedUpload({
 }) {
   return (
     <div className="bg-[#eaf2fb] px-3 py-4 text-center sm:px-5 sm:py-8">
-      <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0877ff] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#0068e8] sm:gap-3 sm:px-12 sm:py-4 sm:text-base">
+      <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0877ff] px-5 py-3 text-sm font-black text-white transition hover:bg-[#0068e8] sm:gap-3 sm:px-12 sm:py-4 sm:text-base">
         <input
           type="file"
           accept=".zip,application/zip,application/x-zip-compressed"
@@ -883,7 +883,7 @@ function Switch({ label, checked, onChange }: { label: string; checked: boolean;
 
 function SupportCard() {
   return (
-    <aside className="hidden rounded-sm border border-slate-200 bg-white p-5 shadow-sm lg:block">
+    <aside className="hidden rounded-sm border border-slate-200 bg-white p-5 lg:block">
       <h2 className="text-lg font-black text-slate-950">Besoin d aide ?</h2>
       <div className="mt-4 space-y-3 text-sm">
         <a href="/contact" className="block rounded-sm border border-slate-200 p-3 font-bold text-[#0f8f6b] hover:border-[#0f8f6b]">
