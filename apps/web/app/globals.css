@@ -31,9 +31,7 @@ html {
 body {
   margin: 0;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background:
-    radial-gradient(circle at 12% 0%, rgba(15, 143, 107, 0.1), transparent 28rem),
-    linear-gradient(180deg, #e4ebf1 0%, #dfe6ed 44%, #d7e1e8 100%);
+  background: #dfe6ed;
   color: #0b1724;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -64,13 +62,11 @@ body {
   }
 
   body {
-    background:
-      radial-gradient(circle at 18% 0%, rgba(15, 143, 107, 0.1), transparent 20rem),
-      linear-gradient(180deg, #f1f5f9 0%, #e9eff5 48%, #dfe7ef 100%);
+    background: #e9eff5;
   }
 
   main {
-    background-color: transparent !important;
+    background-color: var(--surface) !important;
   }
 
   main > section,
@@ -113,18 +109,12 @@ body {
   a[class*="border"][class*="bg-slate"],
   button[class*="border"][class*="bg-white"],
   button[class*="border"][class*="bg-slate"] {
-    background: linear-gradient(145deg, #f1f6fb, #dfe7ef) !important;
-  }
-
-  section[class*="bg-white"],
-  section[class*="bg-cloud"],
-  section[class*="bg-slate"] {
-    background: transparent !important;
+    background: var(--surface-raised) !important;
   }
 
   summary,
   details > summary[class*="bg-slate"] {
-    background: linear-gradient(145deg, #eef4fa, #dce5ee) !important;
+    background: var(--surface-muted) !important;
     border-radius: var(--neumo-radius) var(--neumo-radius) 0 0 !important;
   }
 
@@ -204,19 +194,6 @@ canvas {
 .route-line {
   stroke-dasharray: 10 18;
   stroke-linecap: round;
-}
-
-.image-reflection::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.18) 42%, transparent 58%);
-  transform: translateX(-120%);
-  transition: transform 700ms ease;
-}
-
-.image-reflection:hover::after {
-  transform: translateX(120%);
 }
 
 ::selection {

@@ -37,13 +37,13 @@ export function PcbVisuals() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {images.map((image) => (
-          <div key={image.src} className="image-reflection group relative overflow-hidden rounded-2xl">
+          <div key={image.src} className="group relative overflow-hidden rounded-2xl">
             <img
               src={image.src}
               alt={image.alt}
               className="aspect-[4/3] w-full object-cover transition duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent p-4">
+            <div className="absolute inset-x-0 bottom-0 bg-[#0b1724]/58 p-4">
               <span className="text-xs font-black uppercase tracking-[0.18em] text-white/80">{image.source}</span>
             </div>
           </div>

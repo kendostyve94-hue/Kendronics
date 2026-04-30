@@ -117,13 +117,13 @@ function Hero() {
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className={`home-hero-slide absolute inset-0 ${index === 1 ? 'home-hero-slide-delayed' : ''}`}>
             {slide.type === 'video' ? (
-              <video className="h-full w-full object-cover opacity-60" autoPlay muted loop playsInline preload="metadata">
+              <video className="h-full w-full object-cover opacity-70" autoPlay muted loop playsInline preload="metadata">
                 <source src={slide.media} type="video/quicktime" />
               </video>
             ) : (
-              <img src={slide.media} alt="" className="h-full w-full object-cover opacity-60" />
+              <img src={slide.media} alt="" className="h-full w-full object-cover opacity-70" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#06283b]/96 via-[#06283b]/78 to-[#06283b]/32" />
+            <div className="absolute inset-0 bg-[#06283b]/68" />
           </div>
         ))}
       </div>
