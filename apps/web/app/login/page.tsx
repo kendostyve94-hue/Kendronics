@@ -183,6 +183,7 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-[#f1f5f9] p-3 text-ink sm:bg-white sm:p-7 lg:sticky lg:top-28 lg:self-start">
+          <MobileAuthTabs active="login" />
           {status === 'authenticated' ? (
             <AuthenticatedState />
           ) : mode === 'forgot_password' ? (
@@ -210,6 +211,26 @@ export default function LoginPage() {
   );
 }
 
+function MobileAuthTabs({ active }: { active: 'login' | 'register' }) {
+  const tabClass = (tab: 'login' | 'register') =>
+    `flex h-9 items-center justify-center rounded-full text-[11px] font-black transition ${
+      active === tab ? 'bg-deepblue text-white' : 'text-slate-600'
+    }`;
+
+  return (
+    <div className="mb-4 rounded-full border border-slate-200 bg-white p-1 sm:hidden">
+      <div className="grid grid-cols-2 gap-1">
+        <a href="/login" className={tabClass('login')}>
+          Sign in
+        </a>
+        <a href="/register" className={tabClass('register')}>
+          Create Account
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function LoginForm({
   values,
   errors,
@@ -229,7 +250,7 @@ function LoginForm({
     <form onSubmit={onSubmit} className="space-y-3 sm:space-y-5" noValidate>
       <div>
         <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Log in</h2>
-        <p className="mt-1 text-xs leading-5 text-slate-600 sm:mt-2 sm:text-sm sm:leading-6">
+        <p className="hidden mt-1 text-xs leading-5 text-slate-600 sm:mt-2 sm:block sm:text-sm sm:leading-6">
           Use the email and password connected to your Kendronics account.
         </p>
       </div>
@@ -260,7 +281,7 @@ function LoginForm({
         >
           Forgot password?
         </button>
-        <a href="/register" className="font-black text-deepblue transition hover:text-signal-dark">
+        <a href="/register" className="hidden font-black text-deepblue transition hover:text-signal-dark sm:inline">
           Creer un compte
         </a>
       </div>
@@ -297,7 +318,7 @@ function ForgotPasswordForm({
     <form onSubmit={onSubmit} className="space-y-3 sm:space-y-5" noValidate>
       <div>
         <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Reset password</h2>
-        <p className="mt-1 text-xs leading-5 text-slate-600 sm:mt-2 sm:text-sm sm:leading-6">
+        <p className="hidden mt-1 text-xs leading-5 text-slate-600 sm:mt-2 sm:block sm:text-sm sm:leading-6">
           Enter your email and we will handle the request without revealing whether an account exists.
         </p>
       </div>
@@ -375,7 +396,7 @@ function AlertBox({ message, tone }: { message: string; tone: 'error' | 'success
       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
       : 'border-red-200 bg-red-50 text-red-700';
 
-  return <div className={`rounded-2xl border p-4 text-sm font-bold ${classes}`}>{message}</div>;
+  return <div className={`rounded-2xl border p-3 text-xs font-bold sm:p-4 sm:text-sm ${classes}`}>{message}</div>;
 }
 
 function AuthenticatedState() {

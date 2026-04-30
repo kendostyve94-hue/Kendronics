@@ -93,18 +93,18 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-ink text-white">
+    <main className="min-h-screen bg-cloud text-ink sm:bg-ink sm:text-white">
       <Navbar />
-      <section className="relative min-h-screen overflow-hidden px-4 pb-12 pt-28 sm:px-6 lg:px-8">
+      <section className="relative min-h-screen overflow-hidden px-4 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-28 lg:px-8">
         <img
           src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2200&q=85"
           alt="Macro close-up of a printed circuit board"
-          className="absolute inset-0 h-full w-full object-cover opacity-[0.32]"
+          className="absolute inset-0 hidden h-full w-full object-cover opacity-[0.32] sm:block"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.86] to-deepblue/[0.66]" />
+        <div className="absolute inset-0 hidden bg-gradient-to-br from-ink via-ink/[0.86] to-deepblue/[0.66] sm:block" />
 
         <div className="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div className="max-w-xl">
+          <div className="hidden max-w-xl sm:block">
             <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-100">Creez votre compte Kendronics</p>
             <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
               Commencez a demander des devis PCB pour une livraison en Afrique.
@@ -119,21 +119,22 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="glass-light rounded-3xl p-5 text-ink sm:p-7">
+          <div className="rounded-2xl border border-slate-200 bg-[#f1f5f9] p-3 text-ink sm:rounded-3xl sm:bg-white sm:p-7">
+            <MobileAuthTabs active="register" />
             {status === 'account_created' ? (
               <AccountCreatedState email={values.email} />
             ) : (
-              <form onSubmit={submit} className="space-y-5" noValidate>
+              <form onSubmit={submit} className="space-y-3 sm:space-y-5" noValidate>
                 <div>
-                  <h2 className="text-2xl font-black tracking-tight text-ink">Creer un compte</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                  <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Create your Account</h2>
+                  <p className="hidden mt-2 text-sm leading-6 text-slate-600 sm:block">
                     Use a professional email when possible. Your account is created immediately after signup.
                   </p>
                 </div>
 
                 {errors.form && <ErrorBox message={errors.form} />}
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                   <TextInput label="First name" value={values.firstName} error={errors.firstName} onChange={(value) => update('firstName', value)} />
                   <TextInput label="Last name" value={values.lastName} error={errors.lastName} onChange={(value) => update('lastName', value)} />
                   <TextInput label="Email" type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
@@ -152,14 +153,14 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <p className="mb-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">Account type</p>
-                  <div className="grid gap-3 sm:grid-cols-4">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500 sm:mb-3 sm:text-xs sm:tracking-[0.16em]">Account type</p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
                     {(['individual', 'student', 'startup', 'company'] satisfies AccountType[]).map((type) => (
                       <button
                         key={type}
                         type="button"
                         onClick={() => update('accountType', type)}
-                        className={`rounded-2xl border px-4 py-3 text-sm font-black capitalize transition ${
+                        className={`h-10 rounded-xl border px-3 text-xs font-black capitalize transition sm:h-auto sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm ${
                           values.accountType === type
                             ? 'border-sky-300 bg-sky-50 text-deepblue'
                             : 'border-slate-200 bg-white text-slate-600 hover:border-sky-200'
@@ -172,12 +173,12 @@ export default function RegisterPage() {
                 </div>
 
                 {selectedCountry && (
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-3 text-xs text-slate-600 sm:p-4 sm:text-sm">
                     Logistics zone: <span className="font-black text-deepblue">{selectedCountry.logisticsZone}</span>
                   </div>
                 )}
 
-                <label className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600">
+                <label className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-600 sm:p-4 sm:text-sm sm:leading-6">
                   <input
                     type="checkbox"
                     checked={values.acceptedTerms}
@@ -194,12 +195,12 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={status === 'submitting'}
-                  className="h-12 w-full rounded-xl bg-deepblue text-sm font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60"
+                  className="h-10 w-full rounded-xl bg-deepblue text-xs font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60 sm:h-12 sm:text-sm"
                 >
                   {status === 'submitting' ? 'Creation du compte...' : 'Creer un compte'}
                 </button>
 
-                <p className="text-center text-sm text-slate-600">
+                <p className="hidden text-center text-sm text-slate-600 sm:block">
                   Already registered? <a href="/login" className="font-black text-deepblue">Log in</a>
                 </p>
               </form>
@@ -208,6 +209,26 @@ export default function RegisterPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function MobileAuthTabs({ active }: { active: 'login' | 'register' }) {
+  const tabClass = (tab: 'login' | 'register') =>
+    `flex h-9 items-center justify-center rounded-full text-[11px] font-black transition ${
+      active === tab ? 'bg-deepblue text-white' : 'text-slate-600'
+    }`;
+
+  return (
+    <div className="mb-4 rounded-full border border-slate-200 bg-white p-1 sm:hidden">
+      <div className="grid grid-cols-2 gap-1">
+        <a href="/login" className={tabClass('login')}>
+          Sign in
+        </a>
+        <a href="/register" className={tabClass('register')}>
+          Create Account
+        </a>
+      </div>
+    </div>
   );
 }
 
@@ -228,12 +249,12 @@ function TextInput({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</span>
+      <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.14em] text-slate-500 sm:mb-2 sm:text-xs sm:tracking-[0.16em]">{label}</span>
       <input
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={`h-12 w-full rounded-xl border bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100 ${
+        className={`h-10 w-full rounded-xl border bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100 sm:h-12 ${
           error ? 'border-red-300' : 'border-slate-200'
         }`}
       />
@@ -261,11 +282,11 @@ function SelectInput({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</span>
+      <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.14em] text-slate-500 sm:mb-2 sm:text-xs sm:tracking-[0.16em]">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={`h-12 w-full rounded-xl border bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100 ${
+        className={`h-10 w-full rounded-xl border bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100 sm:h-12 ${
           error ? 'border-red-300' : 'border-slate-200'
         }`}
       >
@@ -281,7 +302,7 @@ function SelectInput({
 }
 
 function ErrorBox({ message }: { message: string }) {
-  return <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{message}</div>;
+  return <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-xs font-bold text-red-700 sm:p-4 sm:text-sm">{message}</div>;
 }
 
 function AccountCreatedState({ email }: { email: string }) {
