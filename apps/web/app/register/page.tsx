@@ -257,16 +257,16 @@ function MobileRegisterScreen({
 
   return (
     <section className="px-5 pb-8 pt-10 sm:hidden">
-      <h1 className="text-[36px] font-medium leading-tight tracking-normal text-[#111]">Create Your Account</h1>
+      <h1 className="text-[36px] font-black leading-tight tracking-normal text-ink">Creer votre compte</h1>
       <form onSubmit={onSubmit} className="mt-12 space-y-6" noValidate>
         <div className="grid grid-cols-2 gap-6">
           <AccountChoice
-            label="Company"
+            label="Entreprise"
             selected={values.accountType === 'company'}
             onClick={() => onUpdate('accountType', 'company')}
           />
           <AccountChoice
-            label="Personal"
+            label="Personnel"
             selected={values.accountType !== 'company'}
             onClick={() => onUpdate('accountType', 'individual')}
           />
@@ -275,7 +275,7 @@ function MobileRegisterScreen({
         {errors.form && <ErrorBox message={errors.form} />}
 
         <MobileInput
-          placeholder="Username"
+          placeholder="Nom d'utilisateur"
           value={values.firstName}
           error={errors.firstName || errors.lastName}
           onChange={(value) => onUpdate('firstName', value)}
@@ -307,23 +307,23 @@ function MobileRegisterScreen({
         />
 
         <MobileCheck checked={values.acceptedTerms} onChange={(checked) => onUpdate('acceptedTerms', checked)}>
-          I agree to KENDRONICS&apos;s <a href="/terms" className="text-[#666] underline">Terms of Use</a> and{' '}
-          <a href="/privacy" className="text-[#1277d9] underline">Privacy Policy</a>
+          J'accepte les <a href="/terms" className="font-bold text-slate-600 underline">conditions d'utilisation</a> et la{' '}
+          <a href="/privacy" className="font-bold text-deepblue underline">politique de confidentialite</a>
           {errors.acceptedTerms && <span className="mt-1 block text-sm font-medium text-red-600">{errors.acceptedTerms}</span>}
         </MobileCheck>
         <MobileCheck checked={newsletter} onChange={onNewsletter}>
-          Subscribe to our newsletter. <a href="/privacy" className="text-[#666] underline">View Newsletter Policy</a>
+          Recevoir les nouveautes Kendronics. <a href="/privacy" className="font-bold text-slate-600 underline">Voir la politique newsletter</a>
         </MobileCheck>
 
-        <button type="submit" disabled={status === 'submitting'} className="h-[52px] w-full rounded-md bg-[#1277f2] text-xl font-medium text-white disabled:opacity-60">
-          {status === 'submitting' ? 'Signing Up...' : 'Sign Up'}
+        <button type="submit" disabled={status === 'submitting'} className="h-[52px] w-full rounded-xl bg-deepblue text-xl font-black text-white disabled:opacity-60">
+          {status === 'submitting' ? 'Creation...' : 'Creer le compte'}
         </button>
-        <a href="/login" className="flex h-[52px] items-center justify-center rounded-md bg-[#f2f3f6] text-[20px] font-normal text-[#666]">
-          Already have an account? Sign In
+        <a href="/login" className="flex h-[52px] items-center justify-center rounded-xl border border-slate-200 bg-white text-[20px] font-bold text-slate-600">
+          Deja un compte? Se connecter
         </a>
       </form>
 
-      <Divider label="or continue with" />
+      <Divider label="ou continuer avec" />
       <div className="grid grid-cols-2 gap-5">
         <SocialButton provider="google" label="Google" />
         <SocialButton provider="apple" label="Apple" />
@@ -335,8 +335,8 @@ function MobileRegisterScreen({
 
 function AccountChoice({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex h-[52px] items-center gap-5 rounded-md border border-[#d9d9d9] bg-white px-5 text-[20px] font-normal text-[#111]">
-      <span className={`h-6 w-6 rounded-full border-2 ${selected ? 'border-[#1277f2] bg-[#1277f2]' : 'border-[#d9d9d9] bg-white'}`} />
+    <button type="button" onClick={onClick} className="flex h-[52px] items-center gap-5 rounded-xl border border-slate-200 bg-white px-5 text-[20px] font-bold text-ink">
+      <span className={`h-6 w-6 rounded-full border-2 ${selected ? 'border-deepblue bg-deepblue' : 'border-[#d9d9d9] bg-white'}`} />
       <span>{label}</span>
     </button>
   );
@@ -366,11 +366,11 @@ function MobileInput({
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
           onChange={(event) => onChange(event.target.value)}
-          className={`h-[52px] w-full rounded-md border bg-white px-6 pr-14 text-[20px] font-normal text-[#111] outline-none placeholder:text-[#999] focus:border-[#1277f2] ${
+          className={`h-[52px] w-full rounded-xl border bg-white px-6 pr-14 text-[20px] font-bold text-ink outline-none placeholder:text-slate-400 focus:border-deepblue ${
             error ? 'border-red-300' : 'border-[#d9d9d9]'
           }`}
         />
-        {hasIcon && <span className="absolute right-5 top-1/2 -translate-y-1/2 text-2xl text-[#999]">/</span>}
+        {hasIcon && <span className="absolute right-5 top-1/2 -translate-y-1/2 text-2xl text-slate-400">/</span>}
       </span>
       {error && <span className="mt-2 block text-sm font-medium text-red-600">{error}</span>}
     </label>
@@ -398,8 +398,8 @@ function MobileSelect({
           aria-label={placeholder}
           aria-invalid={Boolean(error)}
           onChange={(event) => onChange(event.target.value)}
-          className={`h-[52px] w-full appearance-none rounded-md border bg-white px-6 pr-14 text-[20px] font-normal outline-none ${
-            value ? 'text-[#111]' : 'text-[#999]'
+          className={`h-[52px] w-full appearance-none rounded-xl border bg-white px-6 pr-14 text-[20px] font-bold outline-none focus:border-deepblue ${
+            value ? 'text-ink' : 'text-slate-400'
           } ${error ? 'border-red-300' : 'border-[#d9d9d9]'}`}
         >
           {options.map((option) => (
@@ -425,7 +425,7 @@ function MobileCheck({
   children: ReactNode;
 }) {
   return (
-    <label className="flex items-start gap-3 text-[18px] leading-8 text-[#666]">
+    <label className="flex items-start gap-3 text-[18px] leading-8 text-slate-600">
       <input
         type="checkbox"
         checked={checked}
@@ -439,7 +439,7 @@ function MobileCheck({
 
 function Divider({ label }: { label: string }) {
   return (
-    <div className="my-9 flex items-center justify-center gap-3 text-xl text-[#c4c4c4]">
+    <div className="my-9 flex items-center justify-center gap-3 text-xl text-slate-400">
       <span className="h-px w-16 bg-[#eeeeee]" />
       <span>{label}</span>
       <span className="h-px w-16 bg-[#eeeeee]" />
@@ -449,7 +449,7 @@ function Divider({ label }: { label: string }) {
 
 function SocialButton({ provider, label }: { provider: 'google' | 'apple'; label: string }) {
   return (
-    <button type="button" className="flex h-[52px] w-full items-center justify-center gap-4 rounded-md border border-[#d9d9d9] bg-white text-[20px] font-normal text-[#666]">
+    <button type="button" className="flex h-[52px] w-full items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white text-[20px] font-bold text-slate-600">
       <span className={provider === 'google' ? 'text-3xl font-black text-[#4285f4]' : 'text-3xl font-black text-black'}>
         {provider === 'google' ? 'G' : 'A'}
       </span>
@@ -460,13 +460,13 @@ function SocialButton({ provider, label }: { provider: 'google' | 'apple'; label
 
 function AuthFooter() {
   return (
-    <footer className="mt-20 text-center text-[16px] leading-9 text-[#999]">
+    <footer className="mt-20 text-center text-[16px] leading-9 text-slate-500">
       <div className="flex items-center justify-center gap-5">
         <a href="/terms">Terms &amp; Conditions</a>
         <span className="h-6 w-px bg-[#eeeeee]" />
         <a href="/privacy">Privacy Policy</a>
       </div>
-      <p className="mt-2">&copy; 2026 KENDRONICS All Rights Reserved</p>
+      <p className="mt-2">&copy; 2026 Kendronics. Tous droits reserves.</p>
     </footer>
   );
 }

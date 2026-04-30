@@ -128,7 +128,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white sm:bg-cloud">
+    <main className="min-h-screen bg-cloud sm:bg-cloud">
       <div className="hidden sm:block">
         <Navbar />
       </div>
@@ -272,7 +272,7 @@ function MobileLoginScreen({
   if (mode === 'forgot_password') {
     return (
       <section className="px-5 pb-8 pt-12 sm:hidden">
-        <h1 className="text-[36px] font-medium leading-none tracking-normal text-[#111]">Reset password</h1>
+        <h1 className="text-[36px] font-black leading-none tracking-normal text-ink">Mot de passe oublie</h1>
         <form onSubmit={onForgotSubmit} className="mt-12 space-y-6" noValidate>
           {forgotErrors.form && <AlertBox tone={status === 'reset_sent' ? 'success' : 'error'} message={forgotErrors.form} />}
           <MobileInput
@@ -282,11 +282,11 @@ function MobileLoginScreen({
             error={forgotErrors.email}
             onChange={(value) => onForgotUpdate('email', value)}
           />
-          <button type="submit" disabled={status === 'submitting'} className="h-[52px] w-full rounded-md bg-[#1277f2] text-xl font-medium text-white disabled:opacity-60">
-            {status === 'submitting' ? 'Sending...' : 'Send reset instructions'}
+          <button type="submit" disabled={status === 'submitting'} className="h-[52px] w-full rounded-xl bg-deepblue text-xl font-black text-white disabled:opacity-60">
+            {status === 'submitting' ? 'Envoi...' : 'Recevoir les instructions'}
           </button>
-          <button type="button" onClick={onBack} className="h-[52px] w-full rounded-md bg-[#f2f3f6] text-xl font-normal text-[#666]">
-            Back to Sign In
+          <button type="button" onClick={onBack} className="h-[52px] w-full rounded-xl border border-slate-200 bg-white text-xl font-bold text-slate-600">
+            Retour a la connexion
           </button>
         </form>
         <AuthFooter />
@@ -296,7 +296,7 @@ function MobileLoginScreen({
 
   return (
     <section className="px-5 pb-8 pt-12 sm:hidden">
-      <h1 className="text-[36px] font-medium leading-none tracking-normal text-[#111]">Sign in to JLPCB</h1>
+      <h1 className="text-[36px] font-black leading-none tracking-normal text-ink">Connexion Kendronics</h1>
       <form onSubmit={onSubmit} className="mt-14 space-y-6" noValidate>
         {errors.form && <AlertBox tone="error" message={errors.form} />}
         <MobileInput
@@ -322,23 +322,23 @@ function MobileLoginScreen({
               onChange={(event) => onRememberMe(event.target.checked)}
               className="h-6 w-6 rounded border-2 border-[#d8d8d8]"
             />
-            <span>Remember me</span>
+            <span>Se souvenir de moi</span>
           </label>
-          <button type="button" onClick={onForgotPassword} className="text-[#1277d9]">
-            Forgot password?
+          <button type="button" onClick={onForgotPassword} className="font-bold text-deepblue">
+            Mot de passe oublie?
           </button>
         </div>
-        <button type="submit" disabled={status === 'submitting'} className="h-[52px] w-full rounded-md bg-[#1277f2] text-xl font-medium text-white disabled:opacity-60">
-          {status === 'submitting' ? 'Signing in...' : 'Sign In'}
+        <button type="submit" disabled={status === 'submitting'} className="h-[52px] w-full rounded-xl bg-deepblue text-xl font-black text-white disabled:opacity-60">
+          {status === 'submitting' ? 'Connexion...' : 'Se connecter'}
         </button>
-        <a href="/register" className="flex h-[52px] items-center justify-center rounded-md bg-[#f2f3f6] text-[20px] font-normal text-[#666]">
-          Need new account? Sign up now
+        <a href="/register" className="flex h-[52px] items-center justify-center rounded-xl border border-slate-200 bg-white text-[20px] font-bold text-slate-600">
+          Nouveau compte? S'inscrire
         </a>
       </form>
       <Divider label="OR" />
       <div className="space-y-6">
-        <SocialButton provider="google" label="Sign in with Google" />
-        <SocialButton provider="apple" label="Sign in with Apple" />
+        <SocialButton provider="google" label="Continuer avec Google" />
+        <SocialButton provider="apple" label="Continuer avec Apple" />
       </div>
       <AuthFooter />
     </section>
@@ -369,11 +369,11 @@ function MobileInput({
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
           onChange={(event) => onChange(event.target.value)}
-          className={`h-[52px] w-full rounded-md border bg-white px-6 pr-14 text-[20px] font-normal text-[#111] outline-none placeholder:text-[#999] focus:border-[#1277f2] ${
+          className={`h-[52px] w-full rounded-xl border bg-white px-6 pr-14 text-[20px] font-bold text-ink outline-none placeholder:text-slate-400 focus:border-deepblue ${
             error ? 'border-red-300' : 'border-[#d9d9d9]'
           }`}
         />
-        {hasIcon && <span className="absolute right-5 top-1/2 -translate-y-1/2 text-2xl text-[#999]">/</span>}
+        {hasIcon && <span className="absolute right-5 top-1/2 -translate-y-1/2 text-2xl text-slate-400">/</span>}
       </span>
       {error && <span className="mt-2 block text-sm font-medium text-red-600">{error}</span>}
     </label>
@@ -382,7 +382,7 @@ function MobileInput({
 
 function Divider({ label }: { label: string }) {
   return (
-    <div className="my-9 flex items-center justify-center gap-3 text-xl text-[#c4c4c4]">
+    <div className="my-9 flex items-center justify-center gap-3 text-xl text-slate-400">
       <span className="h-px w-16 bg-[#eeeeee]" />
       <span>{label}</span>
       <span className="h-px w-16 bg-[#eeeeee]" />
@@ -392,7 +392,7 @@ function Divider({ label }: { label: string }) {
 
 function SocialButton({ provider, label }: { provider: 'google' | 'apple'; label: string }) {
   return (
-    <button type="button" className="flex h-[52px] w-full items-center justify-center gap-5 rounded-md border border-[#d9d9d9] bg-white text-[20px] font-normal text-[#666]">
+    <button type="button" className="flex h-[52px] w-full items-center justify-center gap-5 rounded-xl border border-slate-200 bg-white text-[20px] font-bold text-slate-600">
       <span className={provider === 'google' ? 'text-3xl font-black text-[#4285f4]' : 'text-3xl font-black text-black'}>
         {provider === 'google' ? 'G' : 'A'}
       </span>
@@ -403,13 +403,13 @@ function SocialButton({ provider, label }: { provider: 'google' | 'apple'; label
 
 function AuthFooter() {
   return (
-    <footer className="mt-20 text-center text-[16px] leading-9 text-[#999]">
+    <footer className="mt-20 text-center text-[16px] leading-9 text-slate-500">
       <div className="flex items-center justify-center gap-5">
         <a href="/terms">Terms &amp; Conditions</a>
         <span className="h-6 w-px bg-[#eeeeee]" />
         <a href="/privacy">Privacy Policy</a>
       </div>
-      <p className="mt-2">&copy; 2026 KENDRONICS All Rights Reserved</p>
+      <p className="mt-2">&copy; 2026 Kendronics. Tous droits reserves.</p>
     </footer>
   );
 }
