@@ -61,6 +61,27 @@ body {
   border-radius: var(--neumo-radius) !important;
 }
 
+article,
+aside,
+form,
+details,
+summary,
+fieldset,
+table,
+thead,
+tbody,
+[role="button"],
+[class*="border"],
+[class*="bg-white"],
+[class*="bg-slate-50"],
+[class*="bg-slate-100"],
+[class*="bg-cloud"],
+[class*="bg-[#f4f7fa]"],
+[class*="bg-[#f3f5f7]"],
+[class*="bg-[#eaf2fb]"] {
+  border-radius: var(--neumo-radius);
+}
+
 main {
   background-color: var(--surface) !important;
 }
