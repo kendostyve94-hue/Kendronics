@@ -34,6 +34,7 @@ export default function LoginPage() {
   const [loginErrors, setLoginErrors] = useState<LoginErrors>({});
   const [forgotErrors, setForgotErrors] = useState<ForgotPasswordErrors>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'authenticated' | 'reset_sent'>('idle');
+  const [rememberMe, setRememberMe] = useState(false);
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -127,8 +128,26 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-cloud">
-      <Navbar />
+    <main className="min-h-screen bg-white sm:bg-cloud">
+      <div className="hidden sm:block">
+        <Navbar />
+      </div>
+      <MobileLoginScreen
+        mode={mode}
+        values={loginValues}
+        forgotValues={forgotValues}
+        errors={loginErrors}
+        forgotErrors={forgotErrors}
+        status={status}
+        rememberMe={rememberMe}
+        onRememberMe={setRememberMe}
+        onSubmit={submitLogin}
+        onForgotSubmit={submitForgotPassword}
+        onForgotPassword={showForgotPassword}
+        onBack={showLogin}
+        onUpdate={updateLogin}
+        onForgotUpdate={updateForgotPassword}
+      />
       <section className="relative hidden overflow-hidden bg-ink pb-28 pt-32 text-white sm:block">
         <img
           src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2200&q=85"
@@ -147,7 +166,7 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto grid max-w-7xl gap-6 px-4 pb-10 pt-20 sm:-mt-16 sm:px-6 sm:pb-16 sm:pt-0 lg:grid-cols-[1fr_27rem] lg:px-8">
+      <section className="relative z-10 mx-auto hidden max-w-7xl gap-6 px-4 pb-10 pt-20 sm:-mt-16 sm:grid sm:px-6 sm:pb-16 sm:pt-0 lg:grid-cols-[1fr_27rem] lg:px-8">
         <div className="hidden space-y-6 sm:block">
           <div className="grid gap-4 md:grid-cols-3">
             {[
@@ -208,6 +227,190 @@ export default function LoginPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function MobileLoginScreen({
+  mode,
+  values,
+  forgotValues,
+  errors,
+  forgotErrors,
+  status,
+  rememberMe,
+  onRememberMe,
+  onSubmit,
+  onForgotSubmit,
+  onForgotPassword,
+  onBack,
+  onUpdate,
+  onForgotUpdate,
+}: {
+  mode: 'login' | 'forgot_password';
+  values: LoginFormState;
+  forgotValues: ForgotPasswordFormState;
+  errors: LoginErrors;
+  forgotErrors: ForgotPasswordErrors;
+  status: 'idle' | 'submitting' | 'authenticated' | 'reset_sent';
+  rememberMe: boolean;
+  onRememberMe: (value: boolean) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onForgotSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onForgotPassword: () => void;
+  onBack: () => void;
+  onUpdate: <K extends keyof LoginFormState>(key: K, value: LoginFormState[K]) => void;
+  onForgotUpdate: <K extends keyof ForgotPasswordFormState>(key: K, value: ForgotPasswordFormState[K]) => void;
+}) {
+  if (status === 'authenticated') {
+    return (
+      <section className="px-5 pb-8 pt-12 sm:hidden">
+        <AuthenticatedState />
+      </section>
+    );
+  }
+
+  if (mode === 'forgot_password') {
+    return (
+      <section className="px-5 pb-8 pt-12 sm:hidden">
+        <h1 className="text-[36px] font-medium leading-none tracking-normal text-[#111]">Reset password</h1>
+        <form onSubmit={onForgotSubmit} className="mt-12 space-y-6" noValidate>
+          {forgotErrors.form && <AlertBox tone={status === 'reset_sent' ? 'success' : 'error'} message={forgotErrors.form} />}
+          <MobileInput
+            placeholder="Username or Email"
+            type="email"
+            value={forgotValues.email}
+            error={forgotErrors.email}
+            onChange={(value) => onForgotUpdate('email', value)}
+          />
+          <button type="submit" disabled={status === 'submitting'} className="h-[52px] w-full rounded-md bg-[#1277f2] text-xl font-medium text-white disabled:opacity-60">
+            {status === 'submitting' ? 'Sending...' : 'Send reset instructions'}
+          </button>
+          <button type="button" onClick={onBack} className="h-[52px] w-full rounded-md bg-[#f2f3f6] text-xl font-normal text-[#666]">
+            Back to Sign In
+          </button>
+        </form>
+        <AuthFooter />
+      </section>
+    );
+  }
+
+  return (
+    <section className="px-5 pb-8 pt-12 sm:hidden">
+      <h1 className="text-[36px] font-medium leading-none tracking-normal text-[#111]">Sign in to JLPCB</h1>
+      <form onSubmit={onSubmit} className="mt-14 space-y-6" noValidate>
+        {errors.form && <AlertBox tone="error" message={errors.form} />}
+        <MobileInput
+          placeholder="Username or Email"
+          type="email"
+          value={values.email}
+          error={errors.email}
+          onChange={(value) => onUpdate('email', value)}
+        />
+        <MobileInput
+          placeholder="Password"
+          type="password"
+          value={values.password}
+          error={errors.password}
+          hasIcon
+          onChange={(value) => onUpdate('password', value)}
+        />
+        <div className="flex items-center justify-between gap-4 text-[18px] leading-none">
+          <label className="flex items-center gap-3 text-[#8a8a8a]">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(event) => onRememberMe(event.target.checked)}
+              className="h-6 w-6 rounded border-2 border-[#d8d8d8]"
+            />
+            <span>Remember me</span>
+          </label>
+          <button type="button" onClick={onForgotPassword} className="text-[#1277d9]">
+            Forgot password?
+          </button>
+        </div>
+        <button type="submit" disabled={status === 'submitting'} className="h-[52px] w-full rounded-md bg-[#1277f2] text-xl font-medium text-white disabled:opacity-60">
+          {status === 'submitting' ? 'Signing in...' : 'Sign In'}
+        </button>
+        <a href="/register" className="flex h-[52px] items-center justify-center rounded-md bg-[#f2f3f6] text-[20px] font-normal text-[#666]">
+          Need new account? Sign up now
+        </a>
+      </form>
+      <Divider label="OR" />
+      <div className="space-y-6">
+        <SocialButton provider="google" label="Sign in with Google" />
+        <SocialButton provider="apple" label="Sign in with Apple" />
+      </div>
+      <AuthFooter />
+    </section>
+  );
+}
+
+function MobileInput({
+  placeholder,
+  value,
+  onChange,
+  error,
+  type = 'text',
+  hasIcon = false,
+}: {
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  type?: string;
+  hasIcon?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="relative block">
+        <input
+          type={type}
+          value={value}
+          placeholder={placeholder}
+          aria-invalid={Boolean(error)}
+          onChange={(event) => onChange(event.target.value)}
+          className={`h-[52px] w-full rounded-md border bg-white px-6 pr-14 text-[20px] font-normal text-[#111] outline-none placeholder:text-[#999] focus:border-[#1277f2] ${
+            error ? 'border-red-300' : 'border-[#d9d9d9]'
+          }`}
+        />
+        {hasIcon && <span className="absolute right-5 top-1/2 -translate-y-1/2 text-2xl text-[#999]">/</span>}
+      </span>
+      {error && <span className="mt-2 block text-sm font-medium text-red-600">{error}</span>}
+    </label>
+  );
+}
+
+function Divider({ label }: { label: string }) {
+  return (
+    <div className="my-9 flex items-center justify-center gap-3 text-xl text-[#c4c4c4]">
+      <span className="h-px w-16 bg-[#eeeeee]" />
+      <span>{label}</span>
+      <span className="h-px w-16 bg-[#eeeeee]" />
+    </div>
+  );
+}
+
+function SocialButton({ provider, label }: { provider: 'google' | 'apple'; label: string }) {
+  return (
+    <button type="button" className="flex h-[52px] w-full items-center justify-center gap-5 rounded-md border border-[#d9d9d9] bg-white text-[20px] font-normal text-[#666]">
+      <span className={provider === 'google' ? 'text-3xl font-black text-[#4285f4]' : 'text-3xl font-black text-black'}>
+        {provider === 'google' ? 'G' : 'A'}
+      </span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function AuthFooter() {
+  return (
+    <footer className="mt-20 text-center text-[16px] leading-9 text-[#999]">
+      <div className="flex items-center justify-center gap-5">
+        <a href="/terms">Terms &amp; Conditions</a>
+        <span className="h-6 w-px bg-[#eeeeee]" />
+        <a href="/privacy">Privacy Policy</a>
+      </div>
+      <p className="mt-2">&copy; 2026 KENDRONICS All Rights Reserved</p>
+    </footer>
   );
 }
 
@@ -418,3 +621,4 @@ function AuthenticatedState() {
     </div>
   );
 }
+

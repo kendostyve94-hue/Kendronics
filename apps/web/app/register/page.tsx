@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { Navbar } from '../../components/layout/Navbar';
 import { Button } from '../../components/ui/Button';
 import { africanCountries } from '../../lib/african-countries';
@@ -29,6 +29,7 @@ export default function RegisterPage() {
   const [values, setValues] = useState<RegisterFormState>(initialValues);
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'account_created'>('idle');
+  const [newsletter, setNewsletter] = useState(false);
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === values.country),
@@ -37,7 +38,13 @@ export default function RegisterPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextErrors = validateRegisterForm(values);
+    const submissionValues: RegisterFormState = {
+      ...values,
+      lastName: values.lastName.trim() || values.firstName.trim(),
+      confirmPassword: values.confirmPassword || values.password,
+      city: values.city.trim() || 'Not specified',
+    };
+    const nextErrors = validateRegisterForm(submissionValues);
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
@@ -51,17 +58,17 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: values.email.trim().toLowerCase(),
-          password: values.password,
-          fullName: `${values.firstName.trim()} ${values.lastName.trim()}`,
-          companyName: values.company.trim() || undefined,
+          email: submissionValues.email.trim().toLowerCase(),
+          password: submissionValues.password,
+          fullName: `${submissionValues.firstName.trim()} ${submissionValues.lastName.trim()}`,
+          companyName: submissionValues.company.trim() || undefined,
           profile: {
-            firstName: values.firstName.trim(),
-            lastName: values.lastName.trim(),
-            country: values.country,
-            city: values.city.trim(),
-            phone: values.phone.trim() || undefined,
-            accountType: values.accountType,
+            firstName: submissionValues.firstName.trim(),
+            lastName: submissionValues.lastName.trim(),
+            country: submissionValues.country,
+            city: submissionValues.city.trim(),
+            phone: submissionValues.phone.trim() || undefined,
+            accountType: submissionValues.accountType,
           },
         }),
       });
@@ -73,11 +80,11 @@ export default function RegisterPage() {
       window.localStorage.setItem(
         profileStorageKey,
         JSON.stringify({
-          name: `${values.firstName.trim()} ${values.lastName.trim()}`.trim(),
-          email: values.email.trim().toLowerCase(),
-          phone: values.phone.trim(),
-          company: values.company.trim(),
-          country: selectedCountry?.name ?? values.country,
+          name: `${submissionValues.firstName.trim()} ${submissionValues.lastName.trim()}`.trim(),
+          email: submissionValues.email.trim().toLowerCase(),
+          phone: submissionValues.phone.trim(),
+          company: submissionValues.company.trim(),
+          country: selectedCountry?.name ?? submissionValues.country,
         }),
       );
       setStatus('account_created');
@@ -94,8 +101,19 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-cloud text-ink sm:bg-ink sm:text-white">
-      <Navbar />
-      <section className="relative min-h-screen overflow-hidden px-4 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-28 lg:px-8">
+      <div className="hidden sm:block">
+        <Navbar />
+      </div>
+      <MobileRegisterScreen
+        values={values}
+        errors={errors}
+        status={status}
+        newsletter={newsletter}
+        onNewsletter={setNewsletter}
+        onSubmit={submit}
+        onUpdate={update}
+      />
+      <section className="relative hidden min-h-screen overflow-hidden px-4 pb-10 pt-20 sm:block sm:px-6 sm:pb-12 sm:pt-28 lg:px-8">
         <img
           src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2200&q=85"
           alt="Macro close-up of a printed circuit board"
@@ -212,6 +230,247 @@ export default function RegisterPage() {
   );
 }
 
+function MobileRegisterScreen({
+  values,
+  errors,
+  status,
+  newsletter,
+  onNewsletter,
+  onSubmit,
+  onUpdate,
+}: {
+  values: RegisterFormState;
+  errors: RegisterErrors;
+  status: 'idle' | 'submitting' | 'account_created';
+  newsletter: boolean;
+  onNewsletter: (value: boolean) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onUpdate: <K extends keyof RegisterFormState>(key: K, value: RegisterFormState[K]) => void;
+}) {
+  if (status === 'account_created') {
+    return (
+      <section className="px-5 pb-8 pt-10 sm:hidden">
+        <AccountCreatedState email={values.email} />
+      </section>
+    );
+  }
+
+  return (
+    <section className="px-5 pb-8 pt-10 sm:hidden">
+      <h1 className="text-[36px] font-medium leading-tight tracking-normal text-[#111]">Create Your Account</h1>
+      <form onSubmit={onSubmit} className="mt-12 space-y-6" noValidate>
+        <div className="grid grid-cols-2 gap-6">
+          <AccountChoice
+            label="Company"
+            selected={values.accountType === 'company'}
+            onClick={() => onUpdate('accountType', 'company')}
+          />
+          <AccountChoice
+            label="Personal"
+            selected={values.accountType !== 'company'}
+            onClick={() => onUpdate('accountType', 'individual')}
+          />
+        </div>
+
+        {errors.form && <ErrorBox message={errors.form} />}
+
+        <MobileInput
+          placeholder="Username"
+          value={values.firstName}
+          error={errors.firstName || errors.lastName}
+          onChange={(value) => onUpdate('firstName', value)}
+        />
+        <MobileInput
+          placeholder="Email"
+          type="email"
+          value={values.email}
+          error={errors.email}
+          onChange={(value) => onUpdate('email', value)}
+        />
+        <MobileInput
+          placeholder="Password"
+          type="password"
+          value={values.password}
+          error={errors.password || errors.confirmPassword}
+          hasIcon
+          onChange={(value) => {
+            onUpdate('password', value);
+            onUpdate('confirmPassword', value);
+          }}
+        />
+        <MobileSelect
+          placeholder="Country"
+          value={values.country}
+          error={errors.country}
+          onChange={(value) => onUpdate('country', value)}
+          options={[{ value: '', label: 'Country' }, ...africanCountries.map((country) => ({ value: country.iso2, label: country.name }))]}
+        />
+
+        <MobileCheck checked={values.acceptedTerms} onChange={(checked) => onUpdate('acceptedTerms', checked)}>
+          I agree to KENDRONICS&apos;s <a href="/terms" className="text-[#666] underline">Terms of Use</a> and{' '}
+          <a href="/privacy" className="text-[#1277d9] underline">Privacy Policy</a>
+          {errors.acceptedTerms && <span className="mt-1 block text-sm font-medium text-red-600">{errors.acceptedTerms}</span>}
+        </MobileCheck>
+        <MobileCheck checked={newsletter} onChange={onNewsletter}>
+          Subscribe to our newsletter. <a href="/privacy" className="text-[#666] underline">View Newsletter Policy</a>
+        </MobileCheck>
+
+        <button type="submit" disabled={status === 'submitting'} className="h-[52px] w-full rounded-md bg-[#1277f2] text-xl font-medium text-white disabled:opacity-60">
+          {status === 'submitting' ? 'Signing Up...' : 'Sign Up'}
+        </button>
+        <a href="/login" className="flex h-[52px] items-center justify-center rounded-md bg-[#f2f3f6] text-[20px] font-normal text-[#666]">
+          Already have an account? Sign In
+        </a>
+      </form>
+
+      <Divider label="or continue with" />
+      <div className="grid grid-cols-2 gap-5">
+        <SocialButton provider="google" label="Google" />
+        <SocialButton provider="apple" label="Apple" />
+      </div>
+      <AuthFooter />
+    </section>
+  );
+}
+
+function AccountChoice({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="flex h-[52px] items-center gap-5 rounded-md border border-[#d9d9d9] bg-white px-5 text-[20px] font-normal text-[#111]">
+      <span className={`h-6 w-6 rounded-full border-2 ${selected ? 'border-[#1277f2] bg-[#1277f2]' : 'border-[#d9d9d9] bg-white'}`} />
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function MobileInput({
+  placeholder,
+  value,
+  onChange,
+  error,
+  type = 'text',
+  hasIcon = false,
+}: {
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  type?: string;
+  hasIcon?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="relative block">
+        <input
+          type={type}
+          value={value}
+          placeholder={placeholder}
+          aria-invalid={Boolean(error)}
+          onChange={(event) => onChange(event.target.value)}
+          className={`h-[52px] w-full rounded-md border bg-white px-6 pr-14 text-[20px] font-normal text-[#111] outline-none placeholder:text-[#999] focus:border-[#1277f2] ${
+            error ? 'border-red-300' : 'border-[#d9d9d9]'
+          }`}
+        />
+        {hasIcon && <span className="absolute right-5 top-1/2 -translate-y-1/2 text-2xl text-[#999]">/</span>}
+      </span>
+      {error && <span className="mt-2 block text-sm font-medium text-red-600">{error}</span>}
+    </label>
+  );
+}
+
+function MobileSelect({
+  placeholder,
+  value,
+  onChange,
+  options,
+  error,
+}: {
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<{ value: string; label: string }>;
+  error?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="relative block">
+        <select
+          value={value}
+          aria-label={placeholder}
+          aria-invalid={Boolean(error)}
+          onChange={(event) => onChange(event.target.value)}
+          className={`h-[52px] w-full appearance-none rounded-md border bg-white px-6 pr-14 text-[20px] font-normal outline-none ${
+            value ? 'text-[#111]' : 'text-[#999]'
+          } ${error ? 'border-red-300' : 'border-[#d9d9d9]'}`}
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <span className="absolute right-6 top-1/2 h-4 w-4 -translate-y-1/2 rotate-45 border-b-2 border-r-2 border-[#333]" />
+      </span>
+      {error && <span className="mt-2 block text-sm font-medium text-red-600">{error}</span>}
+    </label>
+  );
+}
+
+function MobileCheck({
+  checked,
+  onChange,
+  children,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  children: ReactNode;
+}) {
+  return (
+    <label className="flex items-start gap-3 text-[18px] leading-8 text-[#666]">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="mt-1 h-6 w-6 shrink-0 rounded border-2 border-[#d8d8d8]"
+      />
+      <span>{children}</span>
+    </label>
+  );
+}
+
+function Divider({ label }: { label: string }) {
+  return (
+    <div className="my-9 flex items-center justify-center gap-3 text-xl text-[#c4c4c4]">
+      <span className="h-px w-16 bg-[#eeeeee]" />
+      <span>{label}</span>
+      <span className="h-px w-16 bg-[#eeeeee]" />
+    </div>
+  );
+}
+
+function SocialButton({ provider, label }: { provider: 'google' | 'apple'; label: string }) {
+  return (
+    <button type="button" className="flex h-[52px] w-full items-center justify-center gap-4 rounded-md border border-[#d9d9d9] bg-white text-[20px] font-normal text-[#666]">
+      <span className={provider === 'google' ? 'text-3xl font-black text-[#4285f4]' : 'text-3xl font-black text-black'}>
+        {provider === 'google' ? 'G' : 'A'}
+      </span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function AuthFooter() {
+  return (
+    <footer className="mt-20 text-center text-[16px] leading-9 text-[#999]">
+      <div className="flex items-center justify-center gap-5">
+        <a href="/terms">Terms &amp; Conditions</a>
+        <span className="h-6 w-px bg-[#eeeeee]" />
+        <a href="/privacy">Privacy Policy</a>
+      </div>
+      <p className="mt-2">&copy; 2026 KENDRONICS All Rights Reserved</p>
+    </footer>
+  );
+}
+
 function MobileAuthTabs({ active }: { active: 'login' | 'register' }) {
   const tabClass = (tab: 'login' | 'register') =>
     `flex h-9 items-center justify-center rounded-full text-[11px] font-black transition ${
@@ -322,3 +581,4 @@ function AccountCreatedState({ email }: { email: string }) {
     </div>
   );
 }
+
