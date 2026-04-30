@@ -111,14 +111,14 @@ export default function HomePage() {
 }
 
 function Hero() {
-  const heroTrack = [...heroSlides, ...heroSlides];
+  const heroTrack = [...heroSlides, heroSlides[0]];
 
   return (
     <section className="relative min-h-[30rem] overflow-hidden bg-[#07324a] pt-24 text-white sm:min-h-[40rem] sm:pt-28">
       <div className="absolute inset-0">
-        <div className="home-hero-media-track flex h-full w-[400%]">
+        <div className="home-hero-media-track flex h-full w-[300%]">
           {heroTrack.map((slide, index) => (
-            <div key={`${slide.title}-${index}`} className="relative h-full w-1/4 shrink-0">
+            <div key={`${slide.title}-${index}`} className="relative h-full w-1/3 shrink-0">
               {slide.type === 'video' ? (
                 <video className="h-full w-full object-cover opacity-70" autoPlay muted loop playsInline preload="metadata">
                   <source src={slide.media} type="video/quicktime" />
@@ -135,9 +135,9 @@ function Hero() {
       <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-7 pt-7 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[640px] lg:grid-cols-[1fr_25rem] lg:items-center lg:px-8">
         <div className="flex min-h-[20rem] flex-col justify-center lg:min-h-0 lg:pr-4">
           <div className="overflow-hidden">
-            <div className="home-hero-media-track flex w-[400%]">
+            <div className="home-hero-media-track flex w-[300%]">
               {heroTrack.map((slide, index) => (
-                <div key={`${slide.title}-copy-${index}`} className="w-1/4 shrink-0 pr-3 sm:pr-8">
+                <div key={`${slide.title}-copy-${index}`} className="w-1/3 shrink-0 pr-3 sm:pr-8">
                   <p className="label-caps text-[#ffd22e]">{slide.eyebrow}</p>
                   <h1 className="mt-3 max-w-3xl text-[1.72rem] font-black leading-tight tracking-tight text-white sm:mt-4 sm:text-5xl lg:text-6xl">
                     {slide.title}

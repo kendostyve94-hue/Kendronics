@@ -499,15 +499,22 @@ section {
 }
 
 .home-hero-media-track {
-  animation: home-hero-strip 18s linear infinite;
+  animation: home-hero-strip 12s ease-in-out infinite;
 }
 
 @keyframes home-hero-strip {
-  from {
+  0%,
+  34% {
     transform: translateX(0);
   }
 
-  to {
-    transform: translateX(-50%);
+  44%,
+  78% {
+    transform: translateX(-33.333333%);
+  }
+
+  88%,
+  100% {
+    transform: translateX(-66.666667%);
   }
 }
