@@ -129,7 +129,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-cloud">
       <Navbar />
-      <section className="relative overflow-hidden bg-ink pb-28 pt-32 text-white">
+      <section className="relative hidden overflow-hidden bg-ink pb-28 pt-32 text-white sm:block">
         <img
           src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2200&q=85"
           alt="Macro view of a printed circuit board"
@@ -147,8 +147,8 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto -mt-16 grid max-w-7xl gap-6 px-4 pb-16 sm:px-6 lg:grid-cols-[1fr_27rem] lg:px-8">
-        <div className="space-y-6">
+      <section className="relative z-10 mx-auto grid max-w-7xl gap-6 px-4 pb-16 pt-24 sm:-mt-16 sm:px-6 sm:pt-0 lg:grid-cols-[1fr_27rem] lg:px-8">
+        <div className="hidden space-y-6 sm:block">
           <div className="grid gap-4 md:grid-cols-3">
             {[
               ['Secure session', 'Refresh-token based access after login.'],
@@ -182,7 +182,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 text-ink sm:p-7 lg:sticky lg:top-28 lg:self-start">
+        <div className="rounded-2xl border border-slate-200 bg-[#f1f5f9] p-5 text-ink sm:bg-white sm:p-7 lg:sticky lg:top-28 lg:self-start">
           {status === 'authenticated' ? (
             <AuthenticatedState />
           ) : mode === 'forgot_password' ? (
@@ -226,7 +226,7 @@ function LoginForm({
   onUpdate: <K extends keyof LoginFormState>(key: K, value: LoginFormState[K]) => void;
 }) {
   return (
-    <form onSubmit={onSubmit} className="space-y-5" noValidate>
+    <form onSubmit={onSubmit} className="space-y-5 rounded-2xl border border-slate-200 bg-[#f1f5f9] p-4 sm:border-0 sm:bg-transparent sm:p-0" noValidate>
       <div>
         <h2 className="text-2xl font-black tracking-tight text-ink">Log in</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -294,7 +294,7 @@ function ForgotPasswordForm({
   const messageTone = status === 'reset_sent' ? 'success' : 'error';
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5" noValidate>
+    <form onSubmit={onSubmit} className="space-y-5 rounded-2xl border border-slate-200 bg-[#f1f5f9] p-4 sm:border-0 sm:bg-transparent sm:p-0" noValidate>
       <div>
         <h2 className="text-2xl font-black tracking-tight text-ink">Reset password</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
