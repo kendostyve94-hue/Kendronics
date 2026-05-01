@@ -23,7 +23,7 @@ const profileStorageKey = 'kendronics.customer.profile';
 const newsletterStorageKey = 'kendronics.newsletter.consent';
 const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
 const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
-const accountCreatedRedirectDelayMs = 1800;
+const accountCreatedRedirectDelayMs = 3500;
 
 export default function RegisterPage() {
   const [values, setValues] = useState<RegisterFormState>(initialValues);
