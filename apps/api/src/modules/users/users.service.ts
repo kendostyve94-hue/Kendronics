@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { PasswordService } from '../auth/password.service';
 import { User } from './entities/user.entity';
@@ -19,6 +20,22 @@ export class UsersService {
       fullName: dto.fullName,
       passwordHash: await this.passwordService.hash(dto.password),
       roles: this.rolesForEmail(email),
+    });
+  }
+
+  async findOrCreateOAuthUser(input: { email: string; fullName?: string }): Promise<User> {
+    const email = input.email.toLowerCase();
+    const existingUser = await this.usersRepository.findByEmail(email);
+    if (existingUser) {
+      return existingUser;
+    }
+
+    return this.usersRepository.create({
+      email,
+      fullName: input.fullName?.trim() || email,
+      passwordHash: await this.passwordService.hash(randomUUID()),
+      roles: this.rolesForEmail(email),
+      emailVerifiedAt: new Date(),
     });
   }
 

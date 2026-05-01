@@ -24,6 +24,12 @@ services:
         value: https://kendronics.vercel.app
       - key: OFFICIAL_CONTACT_EMAIL
         value: contact.kendronics@gmail.com
+      - key: GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_OAUTH_REDIRECT_URI
+        sync: false
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET

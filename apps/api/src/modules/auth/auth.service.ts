@@ -30,6 +30,11 @@ export class AuthService {
     return this.issueTokens(user.id, user.email);
   }
 
+  async loginWithOAuth(input: { email: string; fullName?: string }): Promise<AuthTokens> {
+    const user = await this.usersService.findOrCreateOAuthUser(input);
+    return this.issueTokens(user.id, user.email);
+  }
+
   async forgotPassword(_dto: ForgotPasswordDto): Promise<{ ok: true; message: string }> {
     return {
       ok: true,

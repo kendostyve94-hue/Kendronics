@@ -31,6 +31,9 @@ Variables utiles pour l'API:
 - `FRONTEND_ORIGIN=https://url-de-ton-site-vercel`
 - `PORT` fourni par l'hebergeur
 - `OFFICIAL_CONTACT_EMAIL`
+- `GOOGLE_OAUTH_CLIENT_ID`
+- `GOOGLE_OAUTH_CLIENT_SECRET`
+- `GOOGLE_OAUTH_REDIRECT_URI=https://url-publique-de-ton-api/api/auth/oauth/google/callback`
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_USER`
@@ -65,7 +68,9 @@ Commandes utiles:
 - L'API Render repond sur `/api/health`.
 - `NEXT_PUBLIC_API_BASE_URL` dans Vercel pointe vers l'URL publique Render.
 - `NEXT_PUBLIC_OFFICIAL_CONTACT_EMAIL` dans Vercel correspond a l'adresse publique Kendronics.
+- `NEXT_PUBLIC_GOOGLE_OAUTH_URL` dans Vercel pointe vers `https://url-publique-de-ton-api/api/auth/oauth/google/start`.
 - `FRONTEND_ORIGIN` dans Render vaut `https://kendronics.vercel.app`.
+- Les variables Google OAuth sont definies dans Render et l'URI de callback correspond exactement a Google Cloud.
 - `JWT_SECRET` est une valeur longue et unique, pas la valeur exemple.
 - `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` sont en mode live quand tu acceptes de vrais paiements.
 - Le webhook Stripe pointe vers `https://url-publique-de-ton-api/api/payments/webhooks/stripe`.

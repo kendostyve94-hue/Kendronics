@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Navbar } from '../../components/layout/Navbar';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { authApiContract } from '../../lib/auth-contract';
 import type { ForgotPasswordResponse, LoginResponse } from '../../lib/auth-contract';
+import type { AuthTokens } from '../../lib/auth-contract';
 import { persistAuthSession } from '../../lib/auth-session';
 import {
   validateForgotPasswordForm,
@@ -37,6 +38,30 @@ export default function LoginPage() {
   const [forgotErrors, setForgotErrors] = useState<ForgotPasswordErrors>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'authenticated' | 'reset_sent'>('idle');
   const [rememberMe, setRememberMe] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.location.hash) return;
+
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken = params.get('accessToken');
+    const refreshToken = params.get('refreshToken');
+    const tokenType = params.get('tokenType');
+    const expiresIn = Number(params.get('expiresIn'));
+
+    if (!accessToken || !refreshToken || tokenType !== 'Bearer' || !Number.isFinite(expiresIn)) {
+      return;
+    }
+
+    const tokens: AuthTokens = {
+      accessToken,
+      refreshToken,
+      tokenType,
+      expiresIn,
+    };
+    persistAuthSession(tokens, { remember: true });
+    window.history.replaceState(null, document.title, window.location.pathname);
+    setStatus('authenticated');
+  }, []);
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
