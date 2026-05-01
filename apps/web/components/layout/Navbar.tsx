@@ -294,7 +294,7 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-[#e9eff5] px-2 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-1.5 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 bg-[#e9eff5] px-2 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-0 lg:hidden"
       aria-label="Navigation mobile principale"
     >
       <div className="mx-auto grid max-w-[21.5rem] grid-cols-5 gap-1">
