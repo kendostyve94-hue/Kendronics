@@ -125,6 +125,8 @@ type QuoteSaveState = {
   message?: string;
 };
 
+type QuotePanelId = 'upload' | 'base' | 'specs' | 'highSpec' | 'advanced';
+
 const apiBaseUrl = getApiBaseUrl();
 const customerOrdersStorageKey = 'kendronics.customer.orders';
 
@@ -133,6 +135,7 @@ export default function QuotePage() {
   const [saved, setSaved] = useState(false);
   const [gerberUpload, setGerberUpload] = useState<UploadState>({ status: 'idle' });
   const [quoteSave, setQuoteSave] = useState<QuoteSaveState>({ status: 'idle' });
+  const [openPanel, setOpenPanel] = useState<QuotePanelId>('upload');
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === config.destinationCountry) ?? africanCountries[0],
@@ -374,7 +377,12 @@ export default function QuotePage() {
 
       <section className="mx-auto grid max-w-[1280px] gap-3 px-3 py-3 pb-28 sm:gap-5 sm:px-6 sm:py-5 sm:pb-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
         <div className="space-y-3 sm:space-y-5">
-          <Panel title="Devis Express PCB" description="Une seule zone prend en charge Gerber, BOM et CPL." defaultOpen>
+          <Panel
+            title="Devis Express PCB"
+            description="Une seule zone prend en charge Gerber, BOM et CPL."
+            isOpen={openPanel === 'upload'}
+            onToggle={() => setOpenPanel('upload')}
+          >
             <UnifiedUpload
               gerberFileName={config.gerberFileName}
               bomFileName={config.bomFileName}
@@ -386,7 +394,12 @@ export default function QuotePage() {
             />
           </Panel>
 
-          <Panel title="Paramètres de base" description="Materiau, couches, dimensions, quantite et type de produit." defaultOpen>
+          <Panel
+            title="Paramètres de base"
+            description="Materiau, couches, dimensions, quantite et type de produit."
+            isOpen={openPanel === 'base'}
+            onToggle={() => setOpenPanel('base')}
+          >
             <CardOptions
               value={config.baseMaterial}
               onChange={(value) => update('baseMaterial', value as QuoteConfig['baseMaterial'])}
@@ -428,7 +441,12 @@ export default function QuotePage() {
             </QuoteRow>
           </Panel>
 
-          <Panel title="Spécifications PCB" description="Epaisseur, couleur, finition, cuivre et recouvrement des vias.">
+          <Panel
+            title="Spécifications PCB"
+            description="Epaisseur, couleur, finition, cuivre et recouvrement des vias."
+            isOpen={openPanel === 'specs'}
+            onToggle={() => setOpenPanel('specs')}
+          >
             <QuoteRow label="Designs differents" help="Nombre de designs uniques separes par V-cut, mouse bites ou fraisage.">
               <Pills value={config.differentDesigns} onChange={(value) => update('differentDesigns', Number(value))} options={[1, 2, 3, 4]} />
             </QuoteRow>
@@ -466,7 +484,12 @@ export default function QuotePage() {
             </QuoteRow>
           </Panel>
 
-          <Panel title="Options de haute spécification" description="Precision, tests, marquage et processus speciaux.">
+          <Panel
+            title="Options de haute spécification"
+            description="Precision, tests, marquage et processus speciaux."
+            isOpen={openPanel === 'highSpec'}
+            onToggle={() => setOpenPanel('highSpec')}
+          >
             <QuoteRow label="Taille trou via / diametre" help="Les petits vias peuvent augmenter le cout de precision.">
               <div className="grid gap-3 sm:grid-cols-2">
                 <SelectBox value={config.minimumViaHole} onChange={(value) => update('minimumViaHole', value)} options={['0.2mm', '0.25mm', '0.3mm', '0.4mm']} />
@@ -507,7 +530,12 @@ export default function QuotePage() {
             </QuoteRow>
           </Panel>
 
-          <Panel title="Options avancées" description="Flex, assemblage, stencil et livraison.">
+          <Panel
+            title="Options avancées"
+            description="Flex, assemblage, stencil et livraison."
+            isOpen={openPanel === 'advanced'}
+            onToggle={() => setOpenPanel('advanced')}
+          >
             <QuoteRow label="Coverlay / Stiffener" help="Add reinforcement and coverlay information for flexible circuits.">
               <div className="grid gap-3 md:grid-cols-3">
                 <SelectBox value={config.coverlayThickness} onChange={(value) => update('coverlayThickness', value)} options={['', '12.5um', '25um', '50um']} />
@@ -619,25 +647,32 @@ function rememberCustomerOrder(orderId: string) {
 function Panel({
   title,
   description,
-  defaultOpen = false,
+  isOpen,
+  onToggle,
   children,
 }: {
   title: string;
   description: string;
-  defaultOpen?: boolean;
+  isOpen: boolean;
+  onToggle: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <details className="group rounded-sm border border-slate-200 bg-white" open={defaultOpen}>
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-slate-100 px-3 py-2.5 sm:gap-4 sm:px-4 sm:py-3">
+    <section className="group rounded-sm border border-slate-200 bg-white">
+      <button
+        type="button"
+        className="flex w-full cursor-pointer list-none items-center justify-between gap-3 bg-slate-100 px-3 py-2.5 text-left sm:gap-4 sm:px-4 sm:py-3"
+        aria-expanded={isOpen}
+        onClick={onToggle}
+      >
         <span>
           <span className="block text-sm font-black text-slate-950 sm:text-base">{title}</span>
           <span className="mt-0.5 hidden text-xs leading-5 text-slate-500 sm:block">{description}</span>
         </span>
-        <span className="text-xl font-black text-slate-800 transition group-open:rotate-180">⌄</span>
-      </summary>
-      <div>{children}</div>
-    </details>
+        <span className={`text-xl font-black text-slate-800 transition ${isOpen ? 'rotate-180' : ''}`}>⌄</span>
+      </button>
+      {isOpen ? <div>{children}</div> : null}
+    </section>
   );
 }
 
