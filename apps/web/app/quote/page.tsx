@@ -26,16 +26,6 @@ const productCards: Array<{
     title: 'Advanced PCB/PCBA',
     description: 'HDI, impedance, high-frequency materials and reliability options.',
   },
-  {
-    value: 'smt_stencil',
-    title: 'SMT Stencil',
-    description: 'Prototype or production stencil ordered together with PCB.',
-  },
-  {
-    value: 'pcb_assembly',
-    title: 'PCB Assembly',
-    description: 'BOM, CPL, component sourcing and SMT/THT assembly request.',
-  },
 ];
 
 const initialConfig: QuoteConfig = {
@@ -350,7 +340,7 @@ export default function QuotePage() {
             </a>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3 md:grid-cols-2">
             {productCards.map((product) => (
               <button
                 key={product.value}
@@ -501,37 +491,65 @@ export default function QuotePage() {
                   <SelectBox value={config.viaDiameter} onChange={(value) => update('viaDiameter', value)} options={['0.45mm', '0.5mm', '0.6mm', '0.8mm']} />
                 </div>
               </QuoteRow>
-              <QuoteRow label="Marquage PCB" help="Choisissez numero de commande, code-barres, serie ou suppression du marquage." mobileWide>
-                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                  <Switch label="Order Number" checked={config.orderNumberMarking} onChange={(value) => update('orderNumberMarking', value)} />
-                  <Switch label="Specify Position" checked={config.markingLocationSpecified} onChange={(value) => update('markingLocationSpecified', value)} />
-                  <Switch label="Remove Mark" checked={config.removeMarking} onChange={(value) => update('removeMarking', value)} />
-                  <Switch label="2D Barcode" checked={config.twoDBarcode} onChange={(value) => update('twoDBarcode', value)} />
-                  <Switch label="Serial Number" checked={config.serialNumber} onChange={(value) => update('serialNumber', value)} />
-                </div>
+              <QuoteRow label="Order Number" help="Marquage numero de commande sur le PCB.">
+                <Switch label="Order Number" checked={config.orderNumberMarking} onChange={(value) => update('orderNumberMarking', value)} />
               </QuoteRow>
-              <QuoteRow label="Test electrique" help="Les choix de test influencent qualite et delai." mobileWide>
-                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                  <Switch label="Flying Probe" checked={config.flyingProbe} onChange={(value) => update('flyingProbe', value)} />
-                  <Switch label="Full Test" checked={config.fullElectricalTest} onChange={(value) => update('fullElectricalTest', value)} />
-                  <Switch label="Random Test" checked={config.randomElectricalTest} onChange={(value) => update('randomElectricalTest', value)} />
-                  <Switch label="4-Wire Kelvin" checked={config.fourWireKelvinTest} onChange={(value) => update('fourWireKelvinTest', value)} />
-                  <Switch label="AOI" checked={config.aoi} onChange={(value) => update('aoi', value)} />
-                </div>
+              <QuoteRow label="Specify Position" help="Preciser la position du marquage.">
+                <Switch label="Specify Position" checked={config.markingLocationSpecified} onChange={(value) => update('markingLocationSpecified', value)} />
               </QuoteRow>
-              <QuoteRow label="Procede speciaux" help="Les options avancees sont revues avant production." mobileWide>
-                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                  <Switch label="Impedance Control" checked={config.impedanceControl} onChange={(value) => update('impedanceControl', value)} />
-                  <Switch label="Gold Fingers" checked={config.goldFingers} onChange={(value) => update('goldFingers', value)} />
-                  <Switch label="Castellated Holes" checked={config.castellatedHoles} onChange={(value) => update('castellatedHoles', value)} />
-                  <Switch label="Edge Plating" checked={config.edgePlating} onChange={(value) => update('edgePlating', value)} />
-                  <Switch label="Blind/Buried Vias" checked={config.blindBuriedVias} onChange={(value) => update('blindBuriedVias', value)} />
-                  <Switch label="Via-in-pad" checked={config.viaInPad} onChange={(value) => update('viaInPad', value)} />
-                  <Switch label="Peelable Mask" checked={config.peelableMask} onChange={(value) => update('peelableMask', value)} />
-                  <Switch label="Carbon Ink" checked={config.carbonInk} onChange={(value) => update('carbonInk', value)} />
-                  <Switch label="Countersink" checked={config.countersink} onChange={(value) => update('countersink', value)} />
-                  <Switch label="Press-fit Holes" checked={config.pressFitHoles} onChange={(value) => update('pressFitHoles', value)} />
-                </div>
+              <QuoteRow label="Remove Mark" help="Supprimer le marquage fournisseur.">
+                <Switch label="Remove Mark" checked={config.removeMarking} onChange={(value) => update('removeMarking', value)} />
+              </QuoteRow>
+              <QuoteRow label="2D Barcode" help="Ajouter un code-barres 2D.">
+                <Switch label="2D Barcode" checked={config.twoDBarcode} onChange={(value) => update('twoDBarcode', value)} />
+              </QuoteRow>
+              <QuoteRow label="Serial Number" help="Ajouter un numero de serie.">
+                <Switch label="Serial Number" checked={config.serialNumber} onChange={(value) => update('serialNumber', value)} />
+              </QuoteRow>
+              <QuoteRow label="Flying Probe" help="Test electrique par flying probe.">
+                <Switch label="Flying Probe" checked={config.flyingProbe} onChange={(value) => update('flyingProbe', value)} />
+              </QuoteRow>
+              <QuoteRow label="Full Test" help="Test electrique complet.">
+                <Switch label="Full Test" checked={config.fullElectricalTest} onChange={(value) => update('fullElectricalTest', value)} />
+              </QuoteRow>
+              <QuoteRow label="Random Test" help="Test electrique aleatoire.">
+                <Switch label="Random Test" checked={config.randomElectricalTest} onChange={(value) => update('randomElectricalTest', value)} />
+              </QuoteRow>
+              <QuoteRow label="4-Wire Kelvin Test" help="Test Kelvin 4 fils.">
+                <Switch label="4-Wire Kelvin Test" checked={config.fourWireKelvinTest} onChange={(value) => update('fourWireKelvinTest', value)} />
+              </QuoteRow>
+              <QuoteRow label="AOI" help="Inspection optique automatique.">
+                <Switch label="AOI" checked={config.aoi} onChange={(value) => update('aoi', value)} />
+              </QuoteRow>
+              <QuoteRow label="Impedance Control" help="Controle d impedance.">
+                <Switch label="Impedance Control" checked={config.impedanceControl} onChange={(value) => update('impedanceControl', value)} />
+              </QuoteRow>
+              <QuoteRow label="Gold Fingers" help="Contacts bord de carte dores.">
+                <Switch label="Gold Fingers" checked={config.goldFingers} onChange={(value) => update('goldFingers', value)} />
+              </QuoteRow>
+              <QuoteRow label="Castellated Holes" help="Demi-trous metallises en bord de carte.">
+                <Switch label="Castellated Holes" checked={config.castellatedHoles} onChange={(value) => update('castellatedHoles', value)} />
+              </QuoteRow>
+              <QuoteRow label="Edge Plating" help="Metallisation du bord de carte.">
+                <Switch label="Edge Plating" checked={config.edgePlating} onChange={(value) => update('edgePlating', value)} />
+              </QuoteRow>
+              <QuoteRow label="Blind/Buried Vias" help="Vias borgnes ou enterres.">
+                <Switch label="Blind/Buried Vias" checked={config.blindBuriedVias} onChange={(value) => update('blindBuriedVias', value)} />
+              </QuoteRow>
+              <QuoteRow label="Via-in-pad" help="Via place dans le pad.">
+                <Switch label="Via-in-pad" checked={config.viaInPad} onChange={(value) => update('viaInPad', value)} />
+              </QuoteRow>
+              <QuoteRow label="Peelable Mask" help="Masque pelable.">
+                <Switch label="Peelable Mask" checked={config.peelableMask} onChange={(value) => update('peelableMask', value)} />
+              </QuoteRow>
+              <QuoteRow label="Carbon Ink" help="Encre carbone.">
+                <Switch label="Carbon Ink" checked={config.carbonInk} onChange={(value) => update('carbonInk', value)} />
+              </QuoteRow>
+              <QuoteRow label="Countersink" help="Fraisage conique.">
+                <Switch label="Countersink" checked={config.countersink} onChange={(value) => update('countersink', value)} />
+              </QuoteRow>
+              <QuoteRow label="Press-fit Holes" help="Trous press-fit.">
+                <Switch label="Press-fit Holes" checked={config.pressFitHoles} onChange={(value) => update('pressFitHoles', value)} />
               </QuoteRow>
             </PanelGrid>
           </Panel>
@@ -663,15 +681,15 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="group rounded-sm border border-slate-200 bg-white">
+    <section className="group overflow-hidden rounded-sm border border-slate-200 bg-white">
       <button
         type="button"
-        className="flex w-full cursor-pointer list-none items-center justify-between gap-3 bg-slate-100 px-3 py-2.5 text-left sm:gap-4 sm:px-4 sm:py-3"
+        className="flex w-full cursor-pointer list-none items-center justify-between gap-3 bg-[#eef7ff] px-4 py-4 text-left sm:gap-4 sm:bg-slate-100 sm:px-4 sm:py-3"
         aria-expanded={isOpen}
         onClick={onToggle}
       >
         <span>
-          <span className="block text-sm font-black text-slate-950 sm:text-base">{title}</span>
+          <span className="block text-xl font-black text-slate-950 sm:text-base">{title}</span>
           <span className="mt-0.5 hidden text-xs leading-5 text-slate-500 sm:block">{description}</span>
         </span>
         <span className={`text-xl font-black text-slate-800 transition ${isOpen ? 'rotate-180' : ''}`}>⌄</span>
@@ -682,7 +700,7 @@ function Panel({
 }
 
 function PanelGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-2 gap-2 p-2 sm:block sm:p-0">{children}</div>;
+  return <div className="space-y-5 p-4 sm:block sm:space-y-0 sm:p-0">{children}</div>;
 }
 
 function QuoteRow({
@@ -698,12 +716,12 @@ function QuoteRow({
 }) {
   return (
     <div
-      className={`grid gap-2 rounded-sm border border-slate-100 bg-white px-2.5 py-2.5 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:px-4 sm:py-3 sm:last:border-b-0 lg:grid-cols-[190px_1fr] ${
+      className={`grid gap-3 bg-white sm:rounded-none sm:border-b sm:border-slate-100 sm:px-4 sm:py-3 sm:last:border-b-0 lg:grid-cols-[190px_1fr] ${
         mobileWide ? 'col-span-2' : ''
       }`}
     >
       <div>
-        <h3 className="text-sm font-black text-slate-900">{label}</h3>
+        <h3 className="text-xl font-medium text-slate-950 sm:text-sm sm:font-black sm:text-slate-900">{label}</h3>
         <p className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{help}</p>
       </div>
       <div>{children}</div>
@@ -795,17 +813,17 @@ function CardOptions({
   options: Array<[string, string]>;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 p-4 sm:gap-3 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
       {options.map(([option, description]) => (
         <button
           key={option}
           type="button"
           onClick={() => onChange(option)}
-          className={`min-h-14 rounded-sm border p-2.5 text-left transition sm:min-h-28 sm:p-4 ${
-            value === option ? 'border-[#0f8f6b] bg-[#eefbf6]' : 'border-slate-200 hover:border-[#0f8f6b]/55'
+          className={`min-h-16 rounded-sm border p-3 text-left transition sm:min-h-28 sm:p-4 ${
+            value === option ? 'border-[#0877ff] bg-[#eaf2fb]' : 'border-slate-100 bg-[#f6f8fb] hover:border-[#0877ff]/55'
           }`}
         >
-          <span className="block text-sm font-black text-slate-950">{option}</span>
+          <span className={`block text-base font-black sm:text-sm ${value === option ? 'text-[#0877ff]' : 'text-slate-950'}`}>{option}</span>
           <span className="mt-2 hidden text-xs leading-5 text-slate-500 sm:block">{description}</span>
         </button>
       ))}
@@ -822,8 +840,10 @@ function Pills({
   onChange: (value: string | number) => void;
   options: Array<string | number | [string | number, string]>;
 }) {
+  const gridClass = options.length <= 4 ? 'grid-cols-4' : 'grid-cols-3';
+
   return (
-    <div className="flex flex-wrap gap-1 sm:gap-2">
+    <div className={`grid gap-2 ${gridClass} sm:flex sm:flex-wrap sm:gap-2`}>
       {options.map((item) => {
         const optionValue = Array.isArray(item) ? item[0] : item;
         const label = Array.isArray(item) ? item[1] : item;
@@ -832,8 +852,8 @@ function Pills({
             key={String(optionValue)}
             type="button"
             onClick={() => onChange(optionValue)}
-            className={`min-h-8 rounded-sm border px-2.5 text-xs font-bold transition sm:min-h-10 sm:px-4 sm:text-sm ${
-              value === optionValue ? 'border-[#0f8f6b] bg-[#0f8f6b] text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
+            className={`min-h-12 rounded-sm border px-2 text-base font-bold transition sm:min-h-10 sm:px-4 sm:text-sm ${
+              value === optionValue ? 'border-[#0877ff] bg-[#eaf2fb] text-[#0877ff]' : 'border-slate-100 bg-[#f6f8fb] text-slate-900 hover:border-[#0877ff]/55'
             }`}
           >
             {label}
@@ -857,14 +877,14 @@ function ColorPills({ value, onChange }: { value: string; onChange: (value: stri
   ];
 
   return (
-    <div className="flex flex-wrap gap-1 sm:gap-2">
+    <div className="grid gap-2 sm:flex sm:flex-wrap sm:gap-2">
       {colors.map(([label, color]) => (
         <button
           key={label}
           type="button"
           onClick={() => onChange(label)}
-          className={`flex min-h-8 items-center gap-1.5 rounded-sm border px-2.5 text-xs font-bold transition sm:min-h-11 sm:gap-2 sm:px-4 sm:text-sm ${
-            value === label ? 'border-[#0f8f6b] bg-[#eefbf6] text-[#0f6f54]' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
+          className={`flex min-h-12 items-center gap-3 rounded-sm border px-3 text-base font-bold transition sm:min-h-11 sm:gap-2 sm:px-4 sm:text-sm ${
+            value === label ? 'border-[#0877ff] bg-[#eaf2fb] text-[#0877ff]' : 'border-slate-100 bg-[#f6f8fb] text-slate-700 hover:border-[#0877ff]/55'
           }`}
         >
           <span className="h-4 w-4 rounded-full border border-slate-300" style={{ backgroundColor: color }} />
@@ -894,7 +914,7 @@ function NumberBox({
         min={min}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-9 w-full rounded-sm border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11 sm:px-3"
+        className="h-12 w-full rounded-sm border border-slate-100 bg-[#f6f8fb] px-3 text-lg font-medium text-slate-950 outline-none transition focus:border-[#0877ff] focus:ring-2 focus:ring-[#0877ff]/15 sm:h-11 sm:bg-white sm:px-3 sm:text-sm sm:font-bold"
       />
     </label>
   );
@@ -913,7 +933,7 @@ function SelectBox({
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="h-9 w-full rounded-sm border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11 sm:px-3"
+      className="h-12 w-full rounded-sm border border-slate-100 bg-[#f6f8fb] px-3 text-lg font-medium text-slate-950 outline-none transition focus:border-[#0877ff] focus:ring-2 focus:ring-[#0877ff]/15 sm:h-11 sm:bg-white sm:px-3 sm:text-sm sm:font-bold"
     >
       {options.map((item) => {
         const optionValue = Array.isArray(item) ? item[0] : item;
@@ -930,11 +950,25 @@ function SelectBox({
 
 function Switch({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
-    <label className={`flex min-h-9 cursor-pointer items-center justify-between gap-2 rounded-sm border px-2.5 text-[11px] font-bold transition sm:min-h-11 sm:gap-3 sm:px-3 sm:text-sm ${
-      checked ? 'border-[#0f8f6b] bg-[#eefbf6] text-[#0f6f54]' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
-    }`}>
-      <span>{label}</span>
-      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="h-4 w-4 accent-[#0f8f6b]" />
-    </label>
+    <div className="grid grid-cols-2 gap-2" role="group" aria-label={label}>
+      <button
+        type="button"
+        onClick={() => onChange(false)}
+        className={`min-h-12 rounded-sm border px-3 text-base font-bold transition sm:min-h-11 sm:text-sm ${
+          !checked ? 'border-[#0877ff] bg-[#eaf2fb] text-[#0877ff]' : 'border-slate-100 bg-[#f6f8fb] text-slate-900 hover:border-[#0877ff]/55'
+        }`}
+      >
+        No
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange(true)}
+        className={`min-h-12 rounded-sm border px-3 text-base font-bold transition sm:min-h-11 sm:text-sm ${
+          checked ? 'border-[#0877ff] bg-[#eaf2fb] text-[#0877ff]' : 'border-slate-100 bg-[#f6f8fb] text-slate-900 hover:border-[#0877ff]/55'
+        }`}
+      >
+        Yes
+      </button>
+    </div>
   );
 }

@@ -58,6 +58,7 @@ export function PricingSummary({
   const [countryQuery, setCountryQuery] = useState('');
   const [rates, setRates] = useState<ShippingRate[]>([]);
   const [ratesState, setRatesState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [chargesOpen, setChargesOpen] = useState(false);
   const countryMenuRef = useRef<HTMLDivElement>(null);
   const canSave = errors.length === 0 && saveState !== 'saving';
 
@@ -171,15 +172,26 @@ export function PricingSummary({
         </button>
       </div>
 
-      <div className="fixed inset-x-0 bottom-[4.9rem] z-40 border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur lg:hidden">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setChargesOpen(true)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') setChargesOpen(true);
+        }}
+        className="fixed inset-x-0 bottom-[4.9rem] z-40 cursor-pointer border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 text-left backdrop-blur lg:hidden"
+      >
         <div className="mx-auto flex max-w-md items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estime</p>
-            <p className="mt-0.5 text-lg font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
+            <p className="mt-0.5 text-lg font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)} <span className="text-xs text-slate-500">Details</span></p>
           </div>
           <button
             type="button"
-            onClick={onSave}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSave();
+            }}
             disabled={!canSave}
             className={`h-11 shrink-0 rounded-sm px-5 text-xs font-black uppercase text-white transition ${
               canSave ? 'bg-[#0f8f6b] hover:bg-[#0b7558]' : 'cursor-not-allowed bg-slate-300 opacity-70'
@@ -189,6 +201,57 @@ export function PricingSummary({
           </button>
         </div>
       </div>
+
+      {chargesOpen ? (
+        <div className="fixed inset-0 z-50 bg-black/45 lg:hidden" onClick={() => setChargesOpen(false)}>
+          <div
+            className="absolute inset-x-0 bottom-0 max-h-[82vh] overflow-y-auto rounded-t-[28px] bg-white px-5 pb-6 pt-5"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black text-slate-950">Prix calcule</h2>
+                <p className="mt-1 text-sm text-slate-500">Frais additionnels possibles apres validation.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setChargesOpen(false)}
+                className="grid h-11 w-11 place-items-center rounded-full text-3xl leading-none text-slate-950"
+                aria-label="Fermer les details des frais"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-5">
+              <span className="text-sm font-black uppercase tracking-[0.12em] text-slate-500">Total</span>
+              <div className="text-right text-xl font-black">
+                <span className="mr-2 text-slate-300 line-through">${pricing.displayTotalBeforeAdjustment.toFixed(2)}</span>
+                <span className="text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="border-b border-slate-100 pb-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-xl font-black text-slate-950">Details des frais</h3>
+                <span className="text-2xl text-slate-950">⌃</span>
+              </div>
+              <div className="space-y-4 text-lg">
+                <FeeRow label="Recouvrement des vias" value={pricing.viaCoveringFee} />
+                <FeeRow label="Finition de surface" value={pricing.surfaceFinishFee} />
+                <FeeRow label="Livraison Afrique" value={pricing.franceToAfricaDelivery} />
+              </div>
+            </div>
+
+            <div className="pt-5">
+              <h3 className="mb-4 text-xl font-black text-slate-950">Delai fabrication</h3>
+              <ProductionSpeedRow label="2 jours" value="standard" price={0} active={productionSpeed === 'standard'} onChange={onProductionSpeedChange} />
+              <ProductionSpeedRow label="24 heures" value="express_24h" price={pricing.productionSpeedFee || 7.5} active={productionSpeed === 'express_24h'} onChange={onProductionSpeedChange} />
+              <ProductionSpeedRow label="24 heures" value="pcba_24h" price={pricing.productionSpeedFee} badge="PCBA seulement" active={productionSpeed === 'pcba_24h'} onChange={onProductionSpeedChange} />
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 sm:p-5">
         <button type="button" onClick={() => setDeliveryOpen((open) => !open)} className="flex w-full items-center justify-between text-left">
