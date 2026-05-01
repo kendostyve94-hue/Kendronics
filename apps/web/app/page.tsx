@@ -112,18 +112,18 @@ export default function HomePage() {
 
 function Hero() {
   return (
-    <section className="relative min-h-[30rem] overflow-hidden bg-[#07324a] pt-24 text-white sm:min-h-[40rem] sm:pt-28">
+    <section className="relative min-h-[30rem] overflow-hidden bg-cloud pt-24 text-ink sm:min-h-[40rem] sm:pt-28">
       <div className="absolute inset-0">
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className={`home-hero-slide absolute inset-0 ${index === 1 ? 'home-hero-slide-delayed' : ''}`}>
             {slide.type === 'video' ? (
-              <video className="h-full w-full object-cover opacity-70" autoPlay muted loop playsInline preload="metadata">
+              <video className="h-full w-full object-cover opacity-20" autoPlay muted loop playsInline preload="metadata">
                 <source src={slide.media} type="video/quicktime" />
               </video>
             ) : (
-              <img src={slide.media} alt="" className="h-full w-full object-cover opacity-70" />
+              <img src={slide.media} alt="" className="h-full w-full object-cover opacity-20" />
             )}
-            <div className="absolute inset-0 bg-[#06283b]/68" />
+            <div className="absolute inset-0 bg-[#e9eff5]/82" />
           </div>
         ))}
       </div>
@@ -133,10 +133,10 @@ function Hero() {
           {heroSlides.map((slide, index) => (
             <div key={slide.title} className={`home-hero-copy absolute inset-0 flex flex-col justify-center ${index === 1 ? 'home-hero-slide-delayed' : ''}`}>
               <p className="label-caps text-[#ffd22e]">{slide.eyebrow}</p>
-              <h1 className="mt-3 max-w-3xl text-[1.72rem] font-black leading-tight tracking-tight text-white sm:mt-4 sm:text-5xl lg:text-6xl">
+              <h1 className="mt-3 max-w-3xl text-[1.72rem] font-black leading-tight tracking-tight text-ink sm:mt-4 sm:text-5xl lg:text-6xl">
                 {slide.title}
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/88 sm:mt-5 sm:text-base sm:leading-7">
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:mt-5 sm:text-base sm:leading-7">
                 {slide.body}
               </p>
               <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:gap-3">
@@ -146,8 +146,8 @@ function Hero() {
             </div>
           ))}
           <div className="absolute bottom-0 left-0 flex gap-2 sm:hidden" aria-hidden="true">
-            <span className="home-hero-dot h-1.5 w-6 bg-white" />
-            <span className="home-hero-dot home-hero-slide-delayed h-1.5 w-6 bg-white" />
+            <span className="home-hero-dot h-1.5 w-6 bg-deepblue" />
+            <span className="home-hero-dot home-hero-slide-delayed h-1.5 w-6 bg-deepblue" />
           </div>
         </div>
 

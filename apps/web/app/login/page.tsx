@@ -155,10 +155,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-cloud sm:bg-cloud">
-      <div className="hidden sm:block">
-        <Navbar />
-      </div>
+    <main className="min-h-screen bg-cloud">
+      <Navbar />
       <MobileLoginScreen
         mode={mode}
         values={loginValues}
@@ -177,7 +175,7 @@ export default function LoginPage() {
         onUpdate={updateLogin}
         onForgotUpdate={updateForgotPassword}
       />
-      <section className="relative hidden overflow-hidden bg-ink pb-28 pt-32 text-white sm:block">
+      <section className="relative hidden overflow-hidden bg-ink pb-28 pt-32 text-white">
         <img
           src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2200&q=85"
           alt="Macro view of a printed circuit board"
@@ -195,7 +193,7 @@ export default function LoginPage() {
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto hidden max-w-7xl gap-6 px-4 pb-10 pt-20 sm:-mt-16 sm:grid sm:px-6 sm:pb-16 sm:pt-0 lg:grid-cols-[1fr_27rem] lg:px-8">
+      <section className="relative z-10 mx-auto hidden max-w-7xl gap-6 px-4 pb-10 pt-20 sm:-mt-16 sm:px-6 sm:pb-16 sm:pt-0 lg:grid-cols-[1fr_27rem] lg:px-8">
         <div className="hidden space-y-6 sm:block">
           <div className="grid gap-4 md:grid-cols-3">
             {[
@@ -296,7 +294,7 @@ function MobileLoginScreen({
 }) {
   if (status === 'authenticated') {
     return (
-      <section className="auth-neumo mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
+      <section className="auth-neumo mx-auto max-w-md px-4 pb-8 pt-28 sm:px-0 sm:pt-32">
         <AuthenticatedState />
       </section>
     );
@@ -304,7 +302,7 @@ function MobileLoginScreen({
 
   if (mode === 'forgot_password') {
     return (
-      <section className="auth-neumo mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
+      <section className="auth-neumo mx-auto max-w-md px-4 pb-8 pt-28 sm:px-0 sm:pt-32">
         <h1 className="text-[30px] font-black leading-none tracking-normal text-ink">Mot de passe oublie</h1>
         <form onSubmit={onForgotSubmit} className="mt-7 space-y-3" noValidate>
           {forgotErrors.form && <AlertBox tone={status === 'reset_sent' ? 'success' : 'error'} message={forgotErrors.form} />}
@@ -328,7 +326,7 @@ function MobileLoginScreen({
   }
 
   return (
-    <section className="auth-neumo mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
+    <section className="auth-neumo mx-auto max-w-md px-4 pb-8 pt-28 sm:px-0 sm:pt-32">
       <h1 className="text-[30px] font-black leading-none tracking-normal text-ink">Connexion Kendronics</h1>
       <form onSubmit={onSubmit} className="mt-7 space-y-3" noValidate>
         {errors.form && <AlertBox tone="error" message={errors.form} />}
@@ -502,7 +500,7 @@ function MobileAuthTabs({ active }: { active: 'login' | 'register' }) {
     }`;
 
   return (
-    <div className="mb-4 rounded-full border border-slate-200 bg-white p-1 sm:hidden">
+    <div className="mb-4 rounded-full border border-slate-200 bg-white p-1">
       <div className="grid grid-cols-2 gap-1">
         <a href="/login" className={tabClass('login')}>
           Sign in

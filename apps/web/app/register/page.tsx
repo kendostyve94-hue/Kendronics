@@ -95,10 +95,8 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-cloud text-ink sm:bg-ink sm:text-white">
-      <div className="hidden sm:block">
-        <Navbar />
-      </div>
+    <main className="min-h-screen bg-cloud text-ink">
+      <Navbar />
       <MobileRegisterScreen
         values={values}
         errors={errors}
@@ -110,7 +108,7 @@ export default function RegisterPage() {
         onSubmit={submit}
         onUpdate={update}
       />
-      <section className="relative hidden min-h-screen overflow-hidden px-4 pb-10 pt-20 sm:block sm:px-6 sm:pb-12 sm:pt-28 lg:px-8">
+      <section className="relative hidden min-h-screen overflow-hidden px-4 pb-10 pt-20 sm:px-6 sm:pb-12 sm:pt-28 lg:px-8">
         <img
           src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2200&q=85"
           alt="Macro close-up of a printed circuit board"
@@ -246,14 +244,14 @@ function MobileRegisterScreen({
 }) {
   if (status === 'account_created') {
     return (
-      <section className="auth-neumo mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
+      <section className="auth-neumo mx-auto max-w-md px-4 pb-8 pt-28 sm:px-0 sm:pt-32">
         <AccountCreatedState email={values.email} />
       </section>
     );
   }
 
   return (
-    <section className="auth-neumo mx-auto max-w-md px-4 pb-5 pt-6 sm:hidden">
+    <section className="auth-neumo mx-auto max-w-md px-4 pb-8 pt-28 sm:px-0 sm:pt-32">
       <h1 className="text-[30px] font-black leading-tight tracking-normal text-ink">Creer votre compte</h1>
       <form onSubmit={onSubmit} className="mt-7 space-y-3" noValidate>
         <div className="grid grid-cols-2 gap-3">
@@ -528,7 +526,7 @@ function MobileAuthTabs({ active }: { active: 'login' | 'register' }) {
     }`;
 
   return (
-    <div className="mb-4 rounded-full border border-slate-200 bg-white p-1 sm:hidden">
+    <div className="mb-4 rounded-full border border-slate-200 bg-white p-1">
       <div className="grid grid-cols-2 gap-1">
         <a href="/login" className={tabClass('login')}>
           Sign in

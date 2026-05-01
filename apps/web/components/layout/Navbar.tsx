@@ -147,26 +147,26 @@ export function Navbar() {
 
   return (
     <>
-    <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 lg:text-white ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="border-b border-slate-200 bg-[#e9eff5] px-3 py-1 sm:px-6 sm:py-2 lg:border-white/10 lg:px-8 lg:[background:#07324a]">
+    <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+      <div className="border-b border-slate-200 bg-[#e9eff5] px-3 py-1 sm:px-6 sm:py-2 lg:px-8">
         <div className="mx-auto flex max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px]">
           <a href="/" className="-ml-3 inline-flex min-w-0 items-center sm:ml-0" aria-label="Accueil Kendronics">
             <img
               src="/images/kendronics-logo.png"
               alt="Kendronics"
-              className="h-[4.5rem] w-auto max-w-[20.5rem] object-contain sm:h-14 sm:max-w-[14rem] lg:h-28 lg:max-w-[28rem]"
+              className="h-[4.5rem] w-auto max-w-[20.5rem] object-contain sm:h-16 sm:max-w-[16rem] lg:h-[5.5rem] lg:max-w-[20rem]"
             />
           </a>
 
-          <nav className="hidden max-w-[590px] items-center justify-end gap-4 text-sm font-medium lg:flex">
+          <nav className="hidden max-w-[650px] items-center justify-end gap-3 text-sm font-bold text-slate-700 lg:flex">
             <Dropdown label="Produit" items={productItems} />
             <Dropdown label="Support" items={supportItems} />
             <Dropdown label="A propos" items={aboutItems} />
-            <a href="/tracking" className="text-white transition hover:text-[#ffd22e]">
+            <a href="/tracking" className="transition hover:text-[#0f8f6b]">
               Suivi
             </a>
             <CartLink href={cartHref} count={orders.length} />
-            <a href="/quote" className="inline-flex h-9 items-center rounded-full border border-[#0f8f6b] px-5 font-medium text-white transition hover:border-[#12a87c] hover:text-[#ffd22e]">
+            <a href="/quote" className="inline-flex h-9 items-center rounded-full border border-[#0f8f6b] bg-[#edf3f8] px-5 font-bold text-[#0f8f6b] transition hover:border-[#0b7558] hover:text-[#0b7558]">
               Commande
             </a>
             <LoginMenu />
@@ -175,7 +175,7 @@ export function Navbar() {
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-[#edf3f8] text-[#0f8f6b] transition hover:text-[#0b7558] lg:text-white lg:hover:text-[#ffd22e]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-[#edf3f8] text-[#0f8f6b] transition hover:text-[#0b7558]"
               aria-label="Rechercher"
               aria-expanded={isSearchOpen}
               onClick={() => {
@@ -188,7 +188,7 @@ export function Navbar() {
             </button>
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-[#edf3f8] text-[#0f8f6b] transition hover:text-[#0b7558] lg:text-white lg:hover:text-[#ffd22e]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-[#edf3f8] text-[#0f8f6b] transition hover:text-[#0b7558]"
               aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation"
@@ -373,13 +373,13 @@ function MobileSection({
 function Dropdown({ label, items }: { label: string; items: Array<{ label: string; href: string }> }) {
   return (
     <div className="group relative">
-      <button type="button" className="inline-flex h-10 items-center gap-1 text-white transition hover:text-[#ffd22e]" aria-haspopup="true">
+      <button type="button" className="inline-flex h-10 items-center gap-1 text-slate-700 transition hover:text-[#0f8f6b]" aria-haspopup="true">
         {label}
         <span className="text-[10px]">v</span>
       </button>
-      <div className="invisible absolute right-0 top-full min-w-44 translate-y-2 border border-slate-200 bg-white p-1.5 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+      <div className="invisible absolute right-0 top-full min-w-44 translate-y-2 border border-slate-200 bg-[#edf3f8] p-1.5 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
         {items.map((item) => (
-          <a key={item.href} href={item.href} className="block px-3 py-1.5 text-xs font-medium text-slate-800 transition hover:bg-[#eaf2fb] hover:text-[#0877ff]">
+          <a key={item.href} href={item.href} className="block px-3 py-1.5 text-xs font-bold text-slate-800 transition hover:bg-[#f1f5f9] hover:text-[#0f8f6b]">
             {item.label}
           </a>
         ))}
@@ -391,11 +391,11 @@ function Dropdown({ label, items }: { label: string; items: Array<{ label: strin
 function LoginMenu() {
   return (
     <div className="group relative">
-      <a href="/login" className="inline-flex h-9 items-center rounded-full bg-[#0f8f6b] px-5 font-medium text-white transition hover:bg-[#0b7558]">
+      <a href="/login" className="inline-flex h-9 items-center rounded-full bg-[#0f8f6b] px-5 font-bold text-white transition hover:bg-[#0b7558]">
         Connexion
       </a>
-      <div className="invisible absolute right-0 top-full min-w-60 translate-y-2 border border-slate-200 bg-white p-4 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
-        <span className="absolute -top-2 right-8 h-4 w-4 rotate-45 border-l border-t border-slate-200 bg-white" />
+      <div className="invisible absolute right-0 top-full min-w-60 translate-y-2 border border-slate-200 bg-[#edf3f8] p-4 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+        <span className="absolute -top-2 right-8 h-4 w-4 rotate-45 border-l border-t border-slate-200 bg-[#edf3f8]" />
         <a href="/login" className="flex h-10 items-center justify-center rounded-full bg-[#0f8f6b] text-sm font-semibold text-white hover:bg-[#0b7558]">
           Connexion
         </a>
@@ -412,7 +412,7 @@ function LoginMenu() {
 
 function CartLink({ href, count }: { href: string; count: number }) {
   return (
-    <a href={href} className="relative inline-flex h-9 w-9 items-center justify-center text-white transition hover:text-[#ffd22e] sm:h-10 sm:w-10" aria-label="Panier">
+    <a href={href} className="relative inline-flex h-9 w-9 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-10 sm:w-10" aria-label="Panier">
       <CartIcon />
       <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-pink-500 px-1 text-[11px] font-semibold leading-none text-white">
         {count}
