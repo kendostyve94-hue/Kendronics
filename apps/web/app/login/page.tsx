@@ -29,6 +29,7 @@ const neutralForgotPasswordMessage =
 const apiBaseUrl = getApiBaseUrl();
 const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
 const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
+const postAuthRedirectPath = '/';
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'forgot_password'>('login');
@@ -59,8 +60,7 @@ export default function LoginPage() {
       expiresIn,
     };
     persistAuthSession(tokens, { remember: true });
-    window.history.replaceState(null, document.title, window.location.pathname);
-    setStatus('authenticated');
+    window.location.replace(postAuthRedirectPath);
   }, []);
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
@@ -90,7 +90,7 @@ export default function LoginPage() {
 
       const tokens = (await response.json()) as LoginResponse;
       persistAuthSession(tokens, { remember: rememberMe });
-      setStatus('authenticated');
+      window.location.assign(postAuthRedirectPath);
     } catch {
       setLoginErrors({ form: authApiContract.login.failureMessage });
       setStatus('idle');

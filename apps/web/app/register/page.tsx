@@ -23,6 +23,7 @@ const profileStorageKey = 'kendronics.customer.profile';
 const newsletterStorageKey = 'kendronics.newsletter.consent';
 const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
 const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
+const accountCreatedRedirectDelayMs = 1800;
 
 export default function RegisterPage() {
   const [values, setValues] = useState<RegisterFormState>(initialValues);
@@ -83,6 +84,9 @@ export default function RegisterPage() {
         }),
       );
       setStatus('account_created');
+      window.setTimeout(() => {
+        window.location.assign('/');
+      }, accountCreatedRedirectDelayMs);
     } catch {
       setErrors({ form: 'Impossible de creer votre compte pour le moment. Reessayez.' });
       setStatus('idle');
