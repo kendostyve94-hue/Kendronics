@@ -112,7 +112,7 @@ export function PricingSummary({
 
   return (
     <aside className="space-y-3">
-      <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 sm:p-5">
+      <div className="hidden rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 sm:p-5 lg:block">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-black text-slate-950 sm:text-base">Details des frais</h2>
           <span className="text-lg font-black text-slate-950">^</span>

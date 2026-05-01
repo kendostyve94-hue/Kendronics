@@ -412,33 +412,35 @@ export default function QuotePage() {
                 ['PTFE Teflon', 'High-frequency, high-temperature applications.'],
               ]}
             />
-            <QuoteRow label="Couches" help="Les nombres impairs sont souvent ajustes au nombre pair superieur par les fabricants.">
-              <Pills value={config.layers} onChange={(value) => update('layers', Number(value))} options={[1, 2, 4, 6, 8, 10, 12, 14, 16]} />
-            </QuoteRow>
-            <QuoteRow label="Dimensions" help="Dimension of the single PCB or panel you upload.">
-              <div className="grid gap-3 sm:grid-cols-[1fr_1fr_110px]">
-                <NumberBox label="Longueur" value={config.length} onChange={(value) => update('length', value)} />
-                <NumberBox label="Largeur" value={config.width} onChange={(value) => update('width', value)} />
-                <SelectBox value={config.unit} onChange={(value) => update('unit', value as QuoteConfig['unit'])} options={['mm', 'inch']} />
-              </div>
-            </QuoteRow>
-            <QuoteRow label="Quantite PCB" help="Choisissez une quantite courante ou entrez une valeur personnalisee.">
-              <div className="space-y-3">
-                <Pills value={config.quantity} onChange={(value) => update('quantity', Number(value))} options={quantityOptions} />
-                <NumberBox label="Quantite personnalisee" value={config.quantity} min={1} onChange={(value) => update('quantity', value)} />
-              </div>
-            </QuoteRow>
-            <QuoteRow label="Type d usage" help="Les exigences medicales et aerospatiales ajoutent des couts de validation.">
-              <Pills
-                value={config.usageType}
-                onChange={(value) => update('usageType', value as QuoteConfig['usageType'])}
-                options={[
-                  ['consumer_industrial', 'Industrial/Consumer electronics'],
-                  ['aerospace', 'Aerospace'],
-                  ['medical', 'Medical'],
-                ]}
-              />
-            </QuoteRow>
+            <PanelGrid>
+              <QuoteRow label="Couches" help="Les nombres impairs sont souvent ajustes au nombre pair superieur par les fabricants.">
+                <Pills value={config.layers} onChange={(value) => update('layers', Number(value))} options={[1, 2, 4, 6, 8, 10, 12, 14, 16]} />
+              </QuoteRow>
+              <QuoteRow label="Dimensions" help="Dimension of the single PCB or panel you upload." mobileWide>
+                <div className="grid grid-cols-[1fr_1fr_82px] gap-2 sm:gap-3">
+                  <NumberBox label="Longueur" value={config.length} onChange={(value) => update('length', value)} />
+                  <NumberBox label="Largeur" value={config.width} onChange={(value) => update('width', value)} />
+                  <SelectBox value={config.unit} onChange={(value) => update('unit', value as QuoteConfig['unit'])} options={['mm', 'inch']} />
+                </div>
+              </QuoteRow>
+              <QuoteRow label="Quantite PCB" help="Choisissez une quantite courante ou entrez une valeur personnalisee." mobileWide>
+                <div className="space-y-2 sm:space-y-3">
+                  <Pills value={config.quantity} onChange={(value) => update('quantity', Number(value))} options={quantityOptions} />
+                  <NumberBox label="Quantite personnalisee" value={config.quantity} min={1} onChange={(value) => update('quantity', value)} />
+                </div>
+              </QuoteRow>
+              <QuoteRow label="Type d usage" help="Les exigences medicales et aerospatiales ajoutent des couts de validation.">
+                <Pills
+                  value={config.usageType}
+                  onChange={(value) => update('usageType', value as QuoteConfig['usageType'])}
+                  options={[
+                    ['consumer_industrial', 'Industrial/Consumer electronics'],
+                    ['aerospace', 'Aerospace'],
+                    ['medical', 'Medical'],
+                  ]}
+                />
+              </QuoteRow>
+            </PanelGrid>
           </Panel>
 
           <Panel
@@ -447,41 +449,43 @@ export default function QuotePage() {
             isOpen={openPanel === 'specs'}
             onToggle={() => setOpenPanel('specs')}
           >
-            <QuoteRow label="Designs differents" help="Nombre de designs uniques separes par V-cut, mouse bites ou fraisage.">
-              <Pills value={config.differentDesigns} onChange={(value) => update('differentDesigns', Number(value))} options={[1, 2, 3, 4]} />
-            </QuoteRow>
-            <QuoteRow label="Format de livraison" help="Carte seule, panneau client ou panneau cree par le fournisseur.">
-              <Pills
-                value={config.deliveryFormat}
-                onChange={(value) => update('deliveryFormat', value as QuoteConfig['deliveryFormat'])}
-                options={[
-                  ['single_pcb', 'Single PCB'],
-                  ['customer_panel', 'Panel by Customer'],
-                  ['panel_by_partner', 'Panel by Supplier'],
-                ]}
-              />
-            </QuoteRow>
-            <QuoteRow label="Epaisseur PCB" help="Epaisseur finale de la carte. Les cartes fines ou epaisses influencent le prix.">
-              <Pills value={config.thickness} onChange={(value) => update('thickness', String(value))} options={['0.8mm', '1.0mm', '1.2mm', '1.6mm', '2.0mm']} />
-            </QuoteRow>
-            <QuoteRow label="Couleur PCB" help="Le vert est generalement la couleur de masque la plus rapide et economique.">
-              <ColorPills value={config.solderMaskColor} onChange={(value) => update('solderMaskColor', value)} />
-            </QuoteRow>
-            <QuoteRow label="Serigraphie" help="References et libelles imprimes sur la carte.">
-              <Pills value={config.silkscreenColor} onChange={(value) => update('silkscreenColor', String(value))} options={['White', 'Black', 'Yellow']} />
-            </QuoteRow>
-            <QuoteRow label="Finition de surface" help="HASL est economique; ENIG apporte planeite, duree de stockage et tolerances plus serrees.">
-              <Pills value={config.surfaceFinish} onChange={(value) => update('surfaceFinish', String(value))} options={['HASL lead-free', 'ENIG', 'OSP', 'Immersion silver']} />
-            </QuoteRow>
-            <QuoteRow label="Via Covering" help="Le recouvrement des vias influence la fabrication et le cout.">
-              <Pills value={config.viaCovering} onChange={(value) => update('viaCovering', String(value))} options={['Tented', 'Plugged', 'Epoxy filled']} />
-            </QuoteRow>
-            <QuoteRow label="Cuivre externe" help="Epaisseur de cuivre sur les couches externes.">
-              <Pills value={config.outerCopperWeight} onChange={(value) => update('outerCopperWeight', String(value))} options={['1 oz', '2 oz', '3 oz']} />
-            </QuoteRow>
-            <QuoteRow label="Cuivre interne" help="Epaisseur de cuivre sur les couches internes des cartes multicouches.">
-              <Pills value={config.innerCopperWeight} onChange={(value) => update('innerCopperWeight', String(value))} options={['0.5 oz', '1 oz', '2 oz']} />
-            </QuoteRow>
+            <PanelGrid>
+              <QuoteRow label="Designs differents" help="Nombre de designs uniques separes par V-cut, mouse bites ou fraisage.">
+                <Pills value={config.differentDesigns} onChange={(value) => update('differentDesigns', Number(value))} options={[1, 2, 3, 4]} />
+              </QuoteRow>
+              <QuoteRow label="Format de livraison" help="Carte seule, panneau client ou panneau cree par le fournisseur.">
+                <Pills
+                  value={config.deliveryFormat}
+                  onChange={(value) => update('deliveryFormat', value as QuoteConfig['deliveryFormat'])}
+                  options={[
+                    ['single_pcb', 'Single PCB'],
+                    ['customer_panel', 'Panel by Customer'],
+                    ['panel_by_partner', 'Panel by Supplier'],
+                  ]}
+                />
+              </QuoteRow>
+              <QuoteRow label="Epaisseur PCB" help="Epaisseur finale de la carte. Les cartes fines ou epaisses influencent le prix.">
+                <Pills value={config.thickness} onChange={(value) => update('thickness', String(value))} options={['0.8mm', '1.0mm', '1.2mm', '1.6mm', '2.0mm']} />
+              </QuoteRow>
+              <QuoteRow label="Couleur PCB" help="Le vert est generalement la couleur de masque la plus rapide et economique.">
+                <ColorPills value={config.solderMaskColor} onChange={(value) => update('solderMaskColor', value)} />
+              </QuoteRow>
+              <QuoteRow label="Serigraphie" help="References et libelles imprimes sur la carte.">
+                <Pills value={config.silkscreenColor} onChange={(value) => update('silkscreenColor', String(value))} options={['White', 'Black', 'Yellow']} />
+              </QuoteRow>
+              <QuoteRow label="Finition de surface" help="HASL est economique; ENIG apporte planeite, duree de stockage et tolerances plus serrees.">
+                <Pills value={config.surfaceFinish} onChange={(value) => update('surfaceFinish', String(value))} options={['HASL lead-free', 'ENIG', 'OSP', 'Immersion silver']} />
+              </QuoteRow>
+              <QuoteRow label="Via Covering" help="Le recouvrement des vias influence la fabrication et le cout.">
+                <Pills value={config.viaCovering} onChange={(value) => update('viaCovering', String(value))} options={['Tented', 'Plugged', 'Epoxy filled']} />
+              </QuoteRow>
+              <QuoteRow label="Cuivre externe" help="Epaisseur de cuivre sur les couches externes.">
+                <Pills value={config.outerCopperWeight} onChange={(value) => update('outerCopperWeight', String(value))} options={['1 oz', '2 oz', '3 oz']} />
+              </QuoteRow>
+              <QuoteRow label="Cuivre interne" help="Epaisseur de cuivre sur les couches internes des cartes multicouches.">
+                <Pills value={config.innerCopperWeight} onChange={(value) => update('innerCopperWeight', String(value))} options={['0.5 oz', '1 oz', '2 oz']} />
+              </QuoteRow>
+            </PanelGrid>
           </Panel>
 
           <Panel
@@ -490,44 +494,46 @@ export default function QuotePage() {
             isOpen={openPanel === 'highSpec'}
             onToggle={() => setOpenPanel('highSpec')}
           >
-            <QuoteRow label="Taille trou via / diametre" help="Les petits vias peuvent augmenter le cout de precision.">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <SelectBox value={config.minimumViaHole} onChange={(value) => update('minimumViaHole', value)} options={['0.2mm', '0.25mm', '0.3mm', '0.4mm']} />
-                <SelectBox value={config.viaDiameter} onChange={(value) => update('viaDiameter', value)} options={['0.45mm', '0.5mm', '0.6mm', '0.8mm']} />
-              </div>
-            </QuoteRow>
-            <QuoteRow label="Marquage PCB" help="Choisissez numero de commande, code-barres, serie ou suppression du marquage.">
-              <div className="grid gap-3 md:grid-cols-3">
-                <Switch label="Order Number" checked={config.orderNumberMarking} onChange={(value) => update('orderNumberMarking', value)} />
-                <Switch label="Specify Position" checked={config.markingLocationSpecified} onChange={(value) => update('markingLocationSpecified', value)} />
-                <Switch label="Remove Mark" checked={config.removeMarking} onChange={(value) => update('removeMarking', value)} />
-                <Switch label="2D Barcode" checked={config.twoDBarcode} onChange={(value) => update('twoDBarcode', value)} />
-                <Switch label="Serial Number" checked={config.serialNumber} onChange={(value) => update('serialNumber', value)} />
-              </div>
-            </QuoteRow>
-            <QuoteRow label="Test electrique" help="Les choix de test influencent qualite et delai.">
-              <div className="grid gap-3 md:grid-cols-3">
-                <Switch label="Flying Probe" checked={config.flyingProbe} onChange={(value) => update('flyingProbe', value)} />
-                <Switch label="Full Test" checked={config.fullElectricalTest} onChange={(value) => update('fullElectricalTest', value)} />
-                <Switch label="Random Test" checked={config.randomElectricalTest} onChange={(value) => update('randomElectricalTest', value)} />
-                <Switch label="4-Wire Kelvin" checked={config.fourWireKelvinTest} onChange={(value) => update('fourWireKelvinTest', value)} />
-                <Switch label="AOI" checked={config.aoi} onChange={(value) => update('aoi', value)} />
-              </div>
-            </QuoteRow>
-            <QuoteRow label="Procede speciaux" help="Les options avancees sont revues avant production.">
-              <div className="grid gap-3 md:grid-cols-3">
-                <Switch label="Impedance Control" checked={config.impedanceControl} onChange={(value) => update('impedanceControl', value)} />
-                <Switch label="Gold Fingers" checked={config.goldFingers} onChange={(value) => update('goldFingers', value)} />
-                <Switch label="Castellated Holes" checked={config.castellatedHoles} onChange={(value) => update('castellatedHoles', value)} />
-                <Switch label="Edge Plating" checked={config.edgePlating} onChange={(value) => update('edgePlating', value)} />
-                <Switch label="Blind/Buried Vias" checked={config.blindBuriedVias} onChange={(value) => update('blindBuriedVias', value)} />
-                <Switch label="Via-in-pad" checked={config.viaInPad} onChange={(value) => update('viaInPad', value)} />
-                <Switch label="Peelable Mask" checked={config.peelableMask} onChange={(value) => update('peelableMask', value)} />
-                <Switch label="Carbon Ink" checked={config.carbonInk} onChange={(value) => update('carbonInk', value)} />
-                <Switch label="Countersink" checked={config.countersink} onChange={(value) => update('countersink', value)} />
-                <Switch label="Press-fit Holes" checked={config.pressFitHoles} onChange={(value) => update('pressFitHoles', value)} />
-              </div>
-            </QuoteRow>
+            <PanelGrid>
+              <QuoteRow label="Taille trou via / diametre" help="Les petits vias peuvent augmenter le cout de precision." mobileWide>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <SelectBox value={config.minimumViaHole} onChange={(value) => update('minimumViaHole', value)} options={['0.2mm', '0.25mm', '0.3mm', '0.4mm']} />
+                  <SelectBox value={config.viaDiameter} onChange={(value) => update('viaDiameter', value)} options={['0.45mm', '0.5mm', '0.6mm', '0.8mm']} />
+                </div>
+              </QuoteRow>
+              <QuoteRow label="Marquage PCB" help="Choisissez numero de commande, code-barres, serie ou suppression du marquage." mobileWide>
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                  <Switch label="Order Number" checked={config.orderNumberMarking} onChange={(value) => update('orderNumberMarking', value)} />
+                  <Switch label="Specify Position" checked={config.markingLocationSpecified} onChange={(value) => update('markingLocationSpecified', value)} />
+                  <Switch label="Remove Mark" checked={config.removeMarking} onChange={(value) => update('removeMarking', value)} />
+                  <Switch label="2D Barcode" checked={config.twoDBarcode} onChange={(value) => update('twoDBarcode', value)} />
+                  <Switch label="Serial Number" checked={config.serialNumber} onChange={(value) => update('serialNumber', value)} />
+                </div>
+              </QuoteRow>
+              <QuoteRow label="Test electrique" help="Les choix de test influencent qualite et delai." mobileWide>
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                  <Switch label="Flying Probe" checked={config.flyingProbe} onChange={(value) => update('flyingProbe', value)} />
+                  <Switch label="Full Test" checked={config.fullElectricalTest} onChange={(value) => update('fullElectricalTest', value)} />
+                  <Switch label="Random Test" checked={config.randomElectricalTest} onChange={(value) => update('randomElectricalTest', value)} />
+                  <Switch label="4-Wire Kelvin" checked={config.fourWireKelvinTest} onChange={(value) => update('fourWireKelvinTest', value)} />
+                  <Switch label="AOI" checked={config.aoi} onChange={(value) => update('aoi', value)} />
+                </div>
+              </QuoteRow>
+              <QuoteRow label="Procede speciaux" help="Les options avancees sont revues avant production." mobileWide>
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                  <Switch label="Impedance Control" checked={config.impedanceControl} onChange={(value) => update('impedanceControl', value)} />
+                  <Switch label="Gold Fingers" checked={config.goldFingers} onChange={(value) => update('goldFingers', value)} />
+                  <Switch label="Castellated Holes" checked={config.castellatedHoles} onChange={(value) => update('castellatedHoles', value)} />
+                  <Switch label="Edge Plating" checked={config.edgePlating} onChange={(value) => update('edgePlating', value)} />
+                  <Switch label="Blind/Buried Vias" checked={config.blindBuriedVias} onChange={(value) => update('blindBuriedVias', value)} />
+                  <Switch label="Via-in-pad" checked={config.viaInPad} onChange={(value) => update('viaInPad', value)} />
+                  <Switch label="Peelable Mask" checked={config.peelableMask} onChange={(value) => update('peelableMask', value)} />
+                  <Switch label="Carbon Ink" checked={config.carbonInk} onChange={(value) => update('carbonInk', value)} />
+                  <Switch label="Countersink" checked={config.countersink} onChange={(value) => update('countersink', value)} />
+                  <Switch label="Press-fit Holes" checked={config.pressFitHoles} onChange={(value) => update('pressFitHoles', value)} />
+                </div>
+              </QuoteRow>
+            </PanelGrid>
           </Panel>
 
           <Panel
@@ -675,9 +681,27 @@ function Panel({
   );
 }
 
-function QuoteRow({ label, help, children }: { label: string; help: string; children: React.ReactNode }) {
+function PanelGrid({ children }: { children: React.ReactNode }) {
+  return <div className="grid grid-cols-2 gap-2 p-2 sm:block sm:p-0">{children}</div>;
+}
+
+function QuoteRow({
+  label,
+  help,
+  mobileWide = false,
+  children,
+}: {
+  label: string;
+  help: string;
+  mobileWide?: boolean;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="grid gap-2 border-b border-slate-100 px-3 py-2.5 last:border-b-0 sm:gap-3 sm:px-4 sm:py-3 lg:grid-cols-[190px_1fr]">
+    <div
+      className={`grid gap-2 rounded-sm border border-slate-100 bg-white px-2.5 py-2.5 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:px-4 sm:py-3 sm:last:border-b-0 lg:grid-cols-[190px_1fr] ${
+        mobileWide ? 'col-span-2' : ''
+      }`}
+    >
       <div>
         <h3 className="text-sm font-black text-slate-900">{label}</h3>
         <p className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{help}</p>
@@ -771,13 +795,13 @@ function CardOptions({
   options: Array<[string, string]>;
 }) {
   return (
-    <div className="grid gap-2 p-3 sm:gap-3 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
       {options.map(([option, description]) => (
         <button
           key={option}
           type="button"
           onClick={() => onChange(option)}
-          className={`min-h-16 rounded-sm border p-3 text-left transition sm:min-h-28 sm:p-4 ${
+          className={`min-h-14 rounded-sm border p-2.5 text-left transition sm:min-h-28 sm:p-4 ${
             value === option ? 'border-[#0f8f6b] bg-[#eefbf6]' : 'border-slate-200 hover:border-[#0f8f6b]/55'
           }`}
         >
@@ -799,7 +823,7 @@ function Pills({
   options: Array<string | number | [string | number, string]>;
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+    <div className="flex flex-wrap gap-1 sm:gap-2">
       {options.map((item) => {
         const optionValue = Array.isArray(item) ? item[0] : item;
         const label = Array.isArray(item) ? item[1] : item;
@@ -808,7 +832,7 @@ function Pills({
             key={String(optionValue)}
             type="button"
             onClick={() => onChange(optionValue)}
-            className={`min-h-9 rounded-sm border px-3 text-xs font-bold transition sm:min-h-10 sm:px-4 sm:text-sm ${
+            className={`min-h-8 rounded-sm border px-2.5 text-xs font-bold transition sm:min-h-10 sm:px-4 sm:text-sm ${
               value === optionValue ? 'border-[#0f8f6b] bg-[#0f8f6b] text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
             }`}
           >
@@ -833,13 +857,13 @@ function ColorPills({ value, onChange }: { value: string; onChange: (value: stri
   ];
 
   return (
-    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+    <div className="flex flex-wrap gap-1 sm:gap-2">
       {colors.map(([label, color]) => (
         <button
           key={label}
           type="button"
           onClick={() => onChange(label)}
-          className={`flex min-h-9 items-center gap-2 rounded-sm border px-3 text-xs font-bold transition sm:min-h-11 sm:px-4 sm:text-sm ${
+          className={`flex min-h-8 items-center gap-1.5 rounded-sm border px-2.5 text-xs font-bold transition sm:min-h-11 sm:gap-2 sm:px-4 sm:text-sm ${
             value === label ? 'border-[#0f8f6b] bg-[#eefbf6] text-[#0f6f54]' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
           }`}
         >
@@ -864,13 +888,13 @@ function NumberBox({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-bold text-slate-500">{label}</span>
+      <span className="mb-1 block text-[11px] font-bold text-slate-500 sm:text-xs">{label}</span>
       <input
         type="number"
         min={min}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-10 w-full rounded-sm border border-slate-200 bg-white px-3 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11"
+        className="h-9 w-full rounded-sm border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11 sm:px-3"
       />
     </label>
   );
@@ -889,7 +913,7 @@ function SelectBox({
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="h-10 w-full rounded-sm border border-slate-200 bg-white px-3 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11"
+      className="h-9 w-full rounded-sm border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11 sm:px-3"
     >
       {options.map((item) => {
         const optionValue = Array.isArray(item) ? item[0] : item;
@@ -906,7 +930,7 @@ function SelectBox({
 
 function Switch({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
-    <label className={`flex min-h-10 cursor-pointer items-center justify-between gap-2 rounded-sm border px-3 text-xs font-bold transition sm:min-h-11 sm:gap-3 sm:text-sm ${
+    <label className={`flex min-h-9 cursor-pointer items-center justify-between gap-2 rounded-sm border px-2.5 text-[11px] font-bold transition sm:min-h-11 sm:gap-3 sm:px-3 sm:text-sm ${
       checked ? 'border-[#0f8f6b] bg-[#eefbf6] text-[#0f6f54]' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
     }`}>
       <span>{label}</span>
