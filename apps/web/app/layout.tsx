@@ -3,7 +3,7 @@ import { LanguageRuntime } from '../components/layout/LanguageRuntime';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Kendronics | Commandes PCB et logistique pour l Afrique',
+  title: 'Kendronics',
   description:
     'Plateforme de commande PCB, paiement, coordination et logistique pour les ingenieurs, etudiants et startups en Afrique.',
 };
