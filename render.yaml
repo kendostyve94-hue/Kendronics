@@ -23,7 +23,7 @@ services:
       - key: FRONTEND_ORIGIN
         value: https://kendronics.vercel.app
       - key: OFFICIAL_CONTACT_EMAIL
-        value: kendostyve94@gmail.com
+        value: contact.kendronics@gmail.com
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET

@@ -14,7 +14,7 @@ Le site `apps/web` est une application Next.js. Vercel est donc l'option la plus
    - Output Directory: `apps/web/.next`
 6. Pour le site web seul, tu peux deployer sans variable d'environnement.
 7. Pour modifier l'adresse de contact affichee sur le site, ajoute:
-   - `NEXT_PUBLIC_OFFICIAL_CONTACT_EMAIL=contact@ton-domaine.com`
+   - `NEXT_PUBLIC_OFFICIAL_CONTACT_EMAIL=contact.kendronics@gmail.com`
 8. Si l'API est deployee plus tard, ajoute cette variable dans Vercel:
    - `NEXT_PUBLIC_API_BASE_URL=https://url-de-ton-api`
 
@@ -27,7 +27,7 @@ Variables utiles pour l'API:
 - `DATABASE_URL=postgresql://...`
 - `JWT_SECRET` valeur longue et aleatoire
 - `JWT_ACCESS_TOKEN_TTL_SECONDS=900`
-- `ADMIN_EMAILS=admin@ton-domaine.com`
+- `ADMIN_EMAILS=contact.kendronics@gmail.com`
 - `FRONTEND_ORIGIN=https://url-de-ton-site-vercel`
 - `PORT` fourni par l'hebergeur
 - `OFFICIAL_CONTACT_EMAIL`
@@ -57,7 +57,7 @@ Commandes utiles:
 5. L'URL de sante de l'API sera `/api/health`.
 6. Quand l'API est publique, ajoute dans Vercel:
    - `NEXT_PUBLIC_API_BASE_URL=https://url-publique-de-ton-api`
-   - `NEXT_PUBLIC_OFFICIAL_CONTACT_EMAIL=contact@ton-domaine.com`
+   - `NEXT_PUBLIC_OFFICIAL_CONTACT_EMAIL=contact.kendronics@gmail.com`
 7. Redeploie le site web Vercel.
 
 ### Checklist production avant ouverture grand public
