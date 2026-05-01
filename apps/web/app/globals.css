@@ -460,33 +460,8 @@ tbody.bg-white {
 [class*="bg-[#071a32]"],
 [class*="bg-[#0b1b32]"],
 [class*="bg-[#112036]"],
-[class*="bg-[#0d1c32]"],
-[class*="bg-[#07324a]"],
-[class*="bg-[#06283b]"] {
+[class*="bg-[#0d1c32]"] {
   background-color: var(--surface) !important;
-}
-
-section[class*="bg-[#07324a]"],
-section[class*="bg-ink"],
-section[class*="bg-deepblue"] {
-  color: #0b1724 !important;
-}
-
-section[class*="bg-[#07324a]"] .text-white,
-section[class*="bg-[#07324a]"] [class*="text-white"],
-section[class*="bg-ink"] .text-white,
-section[class*="bg-ink"] [class*="text-white"] {
-  color: #0b1724 !important;
-}
-
-section[class*="bg-[#07324a]"] [class*="text-white/"],
-section[class*="bg-ink"] [class*="text-white/"] {
-  color: #405366 !important;
-}
-
-section[class*="bg-[#07324a]"] img,
-section[class*="bg-[#07324a]"] video {
-  opacity: 0.16 !important;
 }
 
 [class*="text-cloud"] {
@@ -506,9 +481,6 @@ section[class*="bg-[#07324a]"] video {
   background-color: #0f8f6b !important;
 }
 
-section[class*="bg-[#07324a]"] .bg-deepblue.text-white,
-section[class*="bg-[#07324a]"] a.bg-deepblue,
-section[class*="bg-[#07324a]"] button.bg-deepblue,
 section[class*="bg-ink"] .bg-deepblue.text-white,
 section[class*="bg-ink"] a.bg-deepblue,
 section[class*="bg-ink"] button.bg-deepblue {
