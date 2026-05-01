@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { Navbar } from '../../components/layout/Navbar';
 import { Card } from '../../components/ui/Card';
@@ -8,6 +8,7 @@ import { getApiBaseUrl } from '../../lib/api-base-url';
 import { readAuthSession, readFreshAuthSession } from '../../lib/auth-session';
 
 const profileStorageKey = 'kendronics.customer.profile';
+const avatarStorageKey = 'kendronics.customer.avatar';
 
 type ProfileForm = {
   name: string;
@@ -48,6 +49,7 @@ export default function ProfilePage() {
   const [confirmation, setConfirmation] = useState<ConfirmationState | null>(null);
   const [confirmationInput, setConfirmationInput] = useState('');
   const [openSection, setOpenSection] = useState<'account' | 'contacts' | 'delete' | null>(null);
+  const [avatarDataUrl, setAvatarDataUrl] = useState('');
   const [verificationError, setVerificationError] = useState('');
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'sending' | 'verifying'>('idle');
 
@@ -67,6 +69,7 @@ export default function ProfilePage() {
       country: nextProfile.country,
     });
     setAccountId(sessionProfile.id || storedProfile.email || sessionProfile.email);
+    setAvatarDataUrl(window.localStorage.getItem(avatarStorageKey) ?? '');
   }, []);
 
   function updateAccountDraft<K extends keyof Omit<ProfileForm, 'email'>>(key: K, value: Omit<ProfileForm, 'email'>[K]) {
@@ -177,6 +180,32 @@ export default function ProfilePage() {
     setOpenSection((current) => (current === section ? null : section));
   }
 
+  function updateAvatar(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setVerificationError('Choisissez un fichier image pour votre avatar.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = typeof reader.result === 'string' ? reader.result : '';
+      if (!value) return;
+      window.localStorage.setItem(avatarStorageKey, value);
+      setAvatarDataUrl(value);
+      setVerificationError('');
+    };
+    reader.onerror = () => setVerificationError("Impossible de charger l'image choisie.");
+    reader.readAsDataURL(file);
+  }
+
+  function removeAvatar() {
+    window.localStorage.removeItem(avatarStorageKey);
+    setAvatarDataUrl('');
+  }
+
   const displayName = profile.name.trim() || emailName(profile.email) || 'Non renseigne';
   const displayEmail = profile.email.trim() || 'Connectez-vous pour afficher votre e-mail';
   const accountNumber = accountId ? formatAccountNumber(accountId) : 'Connexion requise';
@@ -201,7 +230,13 @@ export default function ProfilePage() {
       <section className="mx-auto grid max-w-5xl gap-4 px-4 pb-24 pt-28 sm:px-6 sm:pb-10 sm:pt-32 lg:px-8">
         <Card className="p-4 sm:p-6">
           <div className="grid gap-4 sm:flex sm:items-start sm:gap-6">
-            <KendronicsAvatar />
+            <CustomerAvatar
+              name={displayName}
+              email={profile.email}
+              avatarDataUrl={avatarDataUrl}
+              onAvatarChange={updateAvatar}
+              onAvatarRemove={removeAvatar}
+            />
             <div className="min-w-0 flex-1">
               <div className="grid gap-3 sm:grid-cols-3">
                 <InfoCell label="Numero de compte" value={accountNumber} />
@@ -360,35 +395,53 @@ function InfoCell({ label, value }: { label: string; value: string }) {
   );
 }
 
-function KendronicsAvatar() {
+function CustomerAvatar({
+  name,
+  email,
+  avatarDataUrl,
+  onAvatarChange,
+  onAvatarRemove,
+}: {
+  name: string;
+  email: string;
+  avatarDataUrl: string;
+  onAvatarChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onAvatarRemove: () => void;
+}) {
+  const initials = initialsFor(name, email);
+
   return (
-    <div className="mx-auto grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] ring-2 ring-white sm:mx-0 sm:h-24 sm:w-24" aria-hidden="true">
-      <svg viewBox="0 0 96 96" className="h-full w-full">
-        <defs>
-          <radialGradient id="avatarGlow" cx="34%" cy="28%" r="72%">
-            <stop offset="0%" stopColor="#ffd76a" />
-            <stop offset="38%" stopColor="#f59e0b" />
-            <stop offset="70%" stopColor="#0f8f6b" />
-            <stop offset="100%" stopColor="#0b1724" />
-          </radialGradient>
-          <linearGradient id="avatarTrace" x1="18" y1="12" x2="78" y2="86">
-            <stop offset="0%" stopColor="#fff4c4" />
-            <stop offset="100%" stopColor="#56e0b2" />
-          </linearGradient>
-        </defs>
-        <circle cx="48" cy="48" r="48" fill="url(#avatarGlow)" />
-        <circle cx="48" cy="48" r="39" fill="#0b1724" opacity="0.72" />
-        <path d="M18 30h15l8 9h14l8-9h15M18 66h14l9-10h14l9 10h14" fill="none" stroke="url(#avatarTrace)" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" opacity="0.9" />
-        <path d="M25 49h16M55 49h16M48 20v15M48 61v15" fill="none" stroke="#ffd76a" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
-        {[18, 78, 48, 25, 71].map((x, index) => (
-          <circle key={`${x}-${index}`} cx={x} cy={[30, 30, 20, 49, 49][index]} r="3.4" fill="#fff4c4" />
-        ))}
-        <circle cx="48" cy="48" r="22" fill="#f4f7fa" opacity="0.95" />
-        <path d="M37 63V33h7v12l13-12h9L51 47l16 16H57L44 50v13h-7Z" fill="#0f8f6b" />
-        <circle cx="73" cy="68" r="6" fill="#ffd76a" stroke="#0b1724" strokeWidth="3" />
-      </svg>
+    <div className="mx-auto grid justify-items-center gap-2 sm:mx-0">
+      <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-xl font-black text-white ring-2 ring-white sm:h-24 sm:w-24 sm:text-2xl" aria-label="Avatar client">
+        {avatarDataUrl ? (
+          <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" />
+        ) : (
+          <span>{initials}</span>
+        )}
+      </div>
+      <div className="grid gap-1 text-center sm:text-left">
+        <label className="cursor-pointer text-xs font-black text-deepblue">
+          Modifier
+          <input type="file" accept="image/*" className="sr-only" onChange={onAvatarChange} />
+        </label>
+        {avatarDataUrl ? (
+          <button type="button" onClick={onAvatarRemove} className="text-xs font-bold text-slate-500">
+            Retirer
+          </button>
+        ) : null}
+      </div>
     </div>
   );
+}
+
+function initialsFor(name: string, email: string) {
+  const source = name && name !== 'Non renseigne' ? name : emailName(email);
+  const parts = source
+    .trim()
+    .split(/[\s._-]+/)
+    .filter(Boolean);
+  const initials = parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : source.slice(0, 2);
+  return initials.toUpperCase() || 'KD';
 }
 
 function TextField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
