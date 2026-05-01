@@ -15,13 +15,13 @@ export type RegisterErrors = Partial<Record<keyof RegisterFormState | 'form', st
 export function validateRegisterForm(values: RegisterFormState): RegisterErrors {
   const errors: RegisterErrors = {};
 
-  if (!values.username.trim()) errors.username = 'Username is required.';
-  if (!values.email.trim()) errors.email = 'Email is required.';
-  if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) errors.email = 'Enter a valid email address.';
-  if (values.password.length < 10) errors.password = 'Password must be at least 10 characters.';
-  if (values.confirmPassword !== values.password) errors.confirmPassword = 'Passwords do not match.';
-  if (!values.country) errors.country = 'Select your country.';
-  if (!values.acceptedTerms) errors.acceptedTerms = 'Accept the terms and privacy policy to continue.';
+  if (!values.username.trim()) errors.username = "Le nom d'utilisateur est requis.";
+  if (!values.email.trim()) errors.email = "L'e-mail est requis.";
+  if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) errors.email = 'Entrez une adresse e-mail valide.';
+  if (values.password.length < 10) errors.password = 'Le mot de passe doit contenir au moins 10 caracteres.';
+  if (values.confirmPassword !== values.password) errors.confirmPassword = 'Les mots de passe ne correspondent pas.';
+  if (!values.country) errors.country = 'Selectionnez votre pays.';
+  if (!values.acceptedTerms) errors.acceptedTerms = 'Acceptez les conditions et la politique de confidentialite pour continuer.';
 
   return errors;
 }

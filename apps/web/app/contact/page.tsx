@@ -37,10 +37,10 @@ const initialValues: ContactFormState = {
 };
 
 const supportChannels = [
-  ['Professional email support', `Use ${officialContactEmail} for non-urgent questions, partnership outreach, and operational follow-up.`],
-  ['Support tickets', 'Structured tickets keep category, order ID, message, and file context attached to the support queue.'],
-  ['Dashboard notifications', 'Authenticated users can receive order and support updates through dashboard notification surfaces as the platform expands.'],
-  ['No WhatsApp as primary support', 'WhatsApp is not the primary support channel. Use email and tickets so requests remain traceable and professional.'],
+  ['Support e-mail professionnel', `Utilisez ${officialContactEmail} pour les questions non urgentes, les partenariats et le suivi operationnel.`],
+  ['Tickets support', 'Les tickets gardent la categorie, l ID commande, le message et le contexte fichier au meme endroit.'],
+  ['Notifications tableau de bord', 'Les utilisateurs connectes pourront recevoir les mises a jour de commande et de support dans leur espace.'],
+  ['WhatsApp non prioritaire', 'WhatsApp n est pas le canal principal. Les e-mails et tickets rendent les demandes plus tracables.'],
 ];
 
 export default function ContactPage() {
@@ -77,7 +77,7 @@ export default function ContactPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Support ticket request failed.');
+        throw new Error('La demande support a echoue.');
       }
 
       const ticket = (await response.json()) as SupportTicketResponse;
@@ -85,7 +85,7 @@ export default function ContactPage() {
       setValues(initialValues);
       setSubmitState('submitted');
     } catch {
-      setErrors({ form: `We could not submit the support ticket. Please email ${officialContactEmail}.` });
+      setErrors({ form: `Impossible d'envoyer le ticket support. Ecrivez a ${officialContactEmail}.` });
       setSubmitState('error');
     }
   }
@@ -107,21 +107,21 @@ export default function ContactPage() {
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_24rem] lg:px-8">
         <Card className="p-6 sm:p-8">
-          <p className="text-sm font-black uppercase tracking-[0.18em] text-signal">Contact form</p>
-          <h2 className="mt-2 text-3xl font-black tracking-tight text-ink">Open a professional support ticket.</h2>
+          <p className="text-sm font-black uppercase tracking-[0.18em] text-signal">Formulaire de contact</p>
+          <h2 className="mt-2 text-3xl font-black tracking-tight text-ink">Ouvrez un ticket support professionnel.</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            Attach order context when possible. Optional file attachments are recorded by filename here; production file upload storage can be connected through the upload service later.
+            Ajoutez le contexte commande quand c est possible. Les pieces jointes facultatives sont referencees par nom de fichier.
           </p>
 
           <form onSubmit={submitContact} className="mt-6 grid gap-4">
             <div className="grid gap-4 md:grid-cols-2">
-              <TextField label="Name" value={values.name} error={errors.name} onChange={(value) => update('name', value)} />
-              <TextField label="Email" type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
+              <TextField label="Nom" value={values.name} error={errors.name} onChange={(value) => update('name', value)} />
+              <TextField label="E-mail" type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">Category</span>
+                <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">Categorie</span>
                 <select
                   value={values.category}
                   onChange={(event) => update('category', event.target.value as ContactFormState['category'])}
@@ -165,7 +165,7 @@ export default function ContactPage() {
             {errors.form && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{errors.form}</div>}
             {submitState === 'submitted' && (
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
-                Support ticket created{ticketNumber ? `: ${ticketNumber}` : ''}. We will respond by email.
+                Ticket support cree{ticketNumber ? ` : ${ticketNumber}` : ''}. Nous repondrons par e-mail.
               </div>
             )}
 
@@ -174,22 +174,22 @@ export default function ContactPage() {
               disabled={submitState === 'submitting'}
               className="h-12 rounded-xl bg-signal px-5 text-sm font-black text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
-              {submitState === 'submitting' ? 'Submitting ticket...' : 'Submit support ticket'}
+              {submitState === 'submitting' ? 'Envoi du ticket...' : 'Envoyer le ticket support'}
             </button>
           </form>
         </Card>
 
         <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
-          <InfoPanel title="Support email" body={officialContactEmail} detail="Use email for professional support follow-up. Support tickets remain the best format for order-specific issues." />
+          <InfoPanel title="E-mail support" body={officialContactEmail} detail="Utilisez l'e-mail pour le suivi professionnel. Les tickets restent le meilleur format pour les sujets lies a une commande." />
           <InfoPanel title="Delai de reponse" body="Objectif de reponse pendant les horaires ouvrables" detail="Les questions de devis, upload, paiement et livraison sont triees par categorie et contexte de commande." />
-          <InfoPanel title="Business location" body="France-based platform" detail="Kendronics coordinates PCB ordering, payment, France logistics, Africa delivery, tracking, and support." />
+          <InfoPanel title="Base operationnelle" body="Plateforme basee en France" detail="Kendronics coordonne commande PCB, paiement, logistique France, livraison Afrique, suivi et support." />
           <Card glass className="p-5">
-            <h3 className="text-lg font-black text-ink">FAQ before contacting?</h3>
+            <h3 className="text-lg font-black text-ink">Consulter la FAQ avant de nous ecrire ?</h3>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               Fast answers for manufacturer role, Gerber files, pricing, payment, delivery, and tracking.
             </p>
             <Button href="/faq" className="mt-5 w-full">
-              View FAQ
+              Voir la FAQ
             </Button>
           </Card>
         </aside>
@@ -222,7 +222,7 @@ function ContactHero() {
             Contact
           </p>
           <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-            Professional support for quotes, files, payments, and delivery.
+            Support professionnel pour devis, fichiers, paiements et livraison.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
             Kendronics uses email, support tickets, and dashboard notifications for traceable support. WhatsApp is not the primary support channel.

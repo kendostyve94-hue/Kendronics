@@ -565,7 +565,7 @@ export default function QuotePage() {
                 <Switch label="Engraving" checked={config.engraving} onChange={(value) => update('engraving', value)} />
               </div>
             </QuoteRow>
-            <QuoteRow label="Destination" help="Country affects Africa delivery charge and estimated lead time.">
+            <QuoteRow label="Destination" help="Le pays influence les frais de livraison Afrique et le delai estime.">
               <div className="grid gap-3 md:grid-cols-3">
                 <SelectBox
                   value={config.destinationCountry}

@@ -74,7 +74,7 @@ export default function TrackingPage() {
 
   const destination = timeline
     ? countryNames[timeline.destinationCountryIso2] ?? timeline.destinationCountryIso2
-    : 'Destination country';
+    : 'Pays de destination';
 
   return (
     <main className="min-h-screen bg-cloud">
@@ -109,7 +109,7 @@ export default function TrackingPage() {
                 onChange={setOrderId}
               />
               <TrackingField
-                label="Email"
+                label="E-mail"
                 value={email}
                 type="email"
                 placeholder="you@example.com"
@@ -135,11 +135,10 @@ export default function TrackingPage() {
           <PublicTimeline timeline={timeline} destination={destination} />
         ) : (
           <Card className="p-8 text-center">
-            <p className="text-sm font-black uppercase tracking-[0.16em] text-signal">Ready when you are</p>
-            <h2 className="mt-2 text-2xl font-black text-ink">Enter your order details to start.</h2>
+            <p className="text-sm font-black uppercase tracking-[0.16em] text-signal">Pret quand vous l'etes</p>
+            <h2 className="mt-2 text-2xl font-black text-ink">Entrez les informations de commande pour commencer.</h2>
             <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-              Public tracking only returns logistics milestones, delivery estimates, destination, and carrier details
-              when they are available.
+              Le suivi public affiche uniquement les jalons logistiques, estimations de livraison, destination et transporteur disponibles.
             </p>
           </Card>
         )}
@@ -182,7 +181,7 @@ function TrackingField({
 
 function LookupMessage({ state }: { state: LookupState }) {
   if (state === 'loading') {
-    return <Alert tone="info" title="Loading" message="Checking the order and email match..." />;
+    return <Alert tone="info" title="Chargement" message="Verification de la correspondance entre commande et e-mail..." />;
   }
 
   if (state === 'not_found') {
@@ -190,7 +189,7 @@ function LookupMessage({ state }: { state: LookupState }) {
   }
 
   if (state === 'invalid_email') {
-    return <Alert tone="error" title="Invalid email" message="That email does not match the order owner." />;
+    return <Alert tone="error" title="E-mail invalide" message="Cet e-mail ne correspond pas au proprietaire de la commande." />;
   }
 
   if (state === 'error') {
@@ -305,15 +304,15 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
 
 function defaultTimelineDescription(status: PublicTrackingStatus): string {
   const descriptions: Record<PublicTrackingStatus, string> = {
-    paid: 'Payment is confirmed and fulfillment can begin.',
-    supplier_order_pending: 'Kendronics is preparing the production order.',
-    supplier_ordered: 'The production order has been placed with an approved partner.',
-    supplier_in_production: 'The boards are being produced. Supplier identifiers remain private.',
-    received_at_france_hub: 'The shipment has reached the France coordination hub.',
-    shipped_to_africa: 'The order has left the France hub for the destination region.',
-    customs_processing: 'The shipment is being processed by customs.',
-    out_for_delivery: 'The package is with the local delivery partner.',
-    delivered: 'The order has been delivered.',
+    paid: 'Le paiement est confirme et la preparation peut commencer.',
+    supplier_order_pending: 'Kendronics prepare la commande de production.',
+    supplier_ordered: 'La commande de production a ete transmise a un partenaire valide.',
+    supplier_in_production: 'Les cartes sont en cours de production. Les identifiants fournisseur restent prives.',
+    received_at_france_hub: 'Le colis est arrive au hub de coordination en France.',
+    shipped_to_africa: 'La commande a quitte le hub France vers la region de destination.',
+    customs_processing: 'Le colis est en traitement douanier.',
+    out_for_delivery: 'Le colis est avec le partenaire de livraison local.',
+    delivered: 'La commande a ete livree.',
   };
 
   return descriptions[status];

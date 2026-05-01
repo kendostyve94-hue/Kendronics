@@ -130,9 +130,9 @@ export default function RegisterPage() {
               Register in under a minute. Payment setup happens only when you place an order.
             </p>
             <div className="mt-8 grid gap-3 text-sm font-bold text-sky-100 sm:grid-cols-3">
-              <div className="glass rounded-2xl p-4">No card required</div>
-              <div className="glass rounded-2xl p-4">Secure account</div>
-              <div className="glass rounded-2xl p-4">All African countries</div>
+              <div className="glass rounded-2xl p-4">Aucune carte requise</div>
+              <div className="glass rounded-2xl p-4">Compte securise</div>
+              <div className="glass rounded-2xl p-4">Tous les pays africains</div>
             </div>
           </div>
 
@@ -143,7 +143,7 @@ export default function RegisterPage() {
             ) : (
               <form onSubmit={submit} className="space-y-3 sm:space-y-5" noValidate>
                 <div>
-                  <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Create your Account</h2>
+                  <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Creer votre compte</h2>
                   <p className="hidden mt-2 text-sm leading-6 text-slate-600 sm:block">
                     Use a professional email when possible. Your account is created immediately after signup.
                   </p>
@@ -152,16 +152,16 @@ export default function RegisterPage() {
                 {errors.form && <ErrorBox message={errors.form} />}
 
                 <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-                  <TextInput label="Username" value={values.username} error={errors.username} onChange={(value) => update('username', value)} />
-                  <TextInput label="Email" type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
-                  <PasswordInput label="Password" value={values.password} error={errors.password} onChange={(value) => update('password', value)} />
-                  <PasswordInput label="Confirm password" value={values.confirmPassword} error={errors.confirmPassword} onChange={(value) => update('confirmPassword', value)} />
+                  <TextInput label="Nom d'utilisateur" value={values.username} error={errors.username} onChange={(value) => update('username', value)} />
+                  <TextInput label="E-mail" type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
+                  <PasswordInput label="Mot de passe" value={values.password} error={errors.password} onChange={(value) => update('password', value)} />
+                  <PasswordInput label="Confirmer le mot de passe" value={values.confirmPassword} error={errors.confirmPassword} onChange={(value) => update('confirmPassword', value)} />
                   <SelectInput
-                    label="Country"
+                    label="Pays"
                     value={values.country}
                     error={errors.country}
                     onChange={(value) => update('country', value)}
-                    options={[{ value: '', label: 'Select country' }, ...africanCountries.map((country) => ({ value: country.iso2, label: country.name }))]}
+                    options={[{ value: '', label: 'Selectionner un pays' }, ...africanCountries.map((country) => ({ value: country.iso2, label: country.name }))]}
                   />
                 </div>
 
@@ -187,7 +187,7 @@ export default function RegisterPage() {
 
                 {selectedCountry && (
                   <div className="rounded-2xl border border-slate-200 bg-white p-3 text-xs text-slate-600 sm:p-4 sm:text-sm">
-                    Logistics zone: <span className="font-black text-deepblue">{selectedCountry.logisticsZone}</span>
+                    Zone logistique : <span className="font-black text-deepblue">{selectedCountry.logisticsZone}</span>
                   </div>
                 )}
 
@@ -199,8 +199,8 @@ export default function RegisterPage() {
                     className="mt-1 h-4 w-4 rounded border-slate-300 text-signal"
                   />
                   <span>
-                    I accept the <a href="/terms" className="font-black text-deepblue">terms</a> and{' '}
-                    <a href="/privacy" className="font-black text-deepblue">privacy policy</a>.
+                    J'accepte les <a href="/terms" className="font-black text-deepblue">conditions generales</a> et la{' '}
+                    <a href="/privacy" className="font-black text-deepblue">politique de confidentialite</a>.
                     {errors.acceptedTerms && <span className="mt-1 block text-xs font-bold text-red-600">{errors.acceptedTerms}</span>}
                   </span>
                 </label>
@@ -214,7 +214,7 @@ export default function RegisterPage() {
                 </button>
 
                 <p className="hidden text-center text-sm text-slate-600 sm:block">
-                  Already registered? <a href="/login" className="font-black text-deepblue">Log in</a>
+                  Deja inscrit ? <a href="/login" className="font-black text-deepblue">Se connecter</a>
                 </p>
               </form>
             )}
@@ -280,14 +280,14 @@ function MobileRegisterScreen({
           onChange={(value) => onUpdate('username', value)}
         />
         <MobileInput
-          placeholder="Email"
+          placeholder="E-mail"
           type="email"
           value={values.email}
           error={errors.email}
           onChange={(value) => onUpdate('email', value)}
         />
         <MobileInput
-          placeholder="Password"
+          placeholder="Mot de passe"
           type="password"
           value={values.password}
           error={errors.password}
@@ -514,9 +514,9 @@ function AuthFooter() {
   return (
     <footer className="mt-7 text-center text-xs leading-6 text-slate-500">
       <div className="flex items-center justify-center gap-3">
-        <a href="/terms">Terms &amp; Conditions</a>
+        <a href="/terms">Conditions generales</a>
         <span className="h-4 w-px bg-slate-300/70" />
-        <a href="/privacy">Privacy Policy</a>
+        <a href="/privacy">Politique de confidentialite</a>
       </div>
       <p className="mt-2">&copy; 2026 Kendronics. Tous droits reserves.</p>
     </footer>
@@ -533,10 +533,10 @@ function MobileAuthTabs({ active }: { active: 'login' | 'register' }) {
     <div className="mb-4 rounded-full border border-slate-200 bg-white p-1">
       <div className="grid grid-cols-2 gap-1">
         <a href="/login" className={tabClass('login')}>
-          Sign in
+          Connexion
         </a>
         <a href="/register" className={tabClass('register')}>
-          Create Account
+          Creer un compte
         </a>
       </div>
     </div>
@@ -636,13 +636,13 @@ function AccountCreatedState({ email }: { email: string }) {
       <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-emerald-50 text-2xl font-black text-emerald-700">
         ✓
       </div>
-      <h2 className="mt-5 text-2xl font-black tracking-tight text-ink">Account created</h2>
+      <h2 className="mt-5 text-2xl font-black tracking-tight text-ink">Compte cree</h2>
       <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">
-        We created your account for <span className="font-black text-deepblue">{email}</span>.
-        You can now log in and continue your order setup.
+        Nous avons cree votre compte pour <span className="font-black text-deepblue">{email}</span>.
+        Vous allez etre redirige vers l'accueil.
       </p>
       <Button href="/login" className="mt-6">
-        Continue to login
+        Continuer
       </Button>
     </div>
   );

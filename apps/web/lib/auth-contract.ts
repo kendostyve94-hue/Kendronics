@@ -33,7 +33,7 @@ export const authApiContract = {
     path: '/api/auth/login',
     request: 'LoginRequest',
     response: 'LoginResponse',
-    failureMessage: 'Invalid email or password.',
+    failureMessage: 'E-mail ou mot de passe invalide.',
   },
   refresh: {
     method: 'POST',

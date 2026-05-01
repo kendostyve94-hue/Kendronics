@@ -39,10 +39,10 @@ export function LegalDocumentPage({ document }: { document: LegalDocument }) {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Documents</p>
             <div className="mt-4 space-y-2 text-sm font-black">
               <a className="block rounded-xl border border-slate-200 px-3 py-3 text-slate-600 transition hover:border-sky-200 hover:text-deepblue" href="/terms">
-                Terms
+                Conditions
               </a>
               <a className="block rounded-xl border border-slate-200 px-3 py-3 text-slate-600 transition hover:border-sky-200 hover:text-deepblue" href="/privacy">
-                Privacy
+                Confidentialite
               </a>
               <a className="block rounded-xl border border-slate-200 px-3 py-3 text-slate-600 transition hover:border-sky-200 hover:text-deepblue" href="/refund-policy">
                 Refunds
@@ -73,7 +73,7 @@ export function LegalDocumentPage({ document }: { document: LegalDocument }) {
               <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Besoin d aide ?</p>
               <h2 className="mt-3 text-3xl font-black tracking-tight">Contact Kendronics support.</h2>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-sky-100">
-                Use support tickets for order issues and {officialContactEmail} for privacy requests.
+                Utilisez les tickets support pour les commandes et {officialContactEmail} pour les demandes de confidentialite.
               </p>
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0">

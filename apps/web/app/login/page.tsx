@@ -25,7 +25,7 @@ const initialLoginValues: LoginFormState = {
 };
 
 const neutralForgotPasswordMessage =
-  'If an account can receive password reset email, we will send instructions shortly.';
+  'Si ce compte peut recevoir un e-mail de reinitialisation, les instructions seront envoyees sous peu.';
 const apiBaseUrl = getApiBaseUrl();
 const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
 const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
@@ -307,7 +307,7 @@ function MobileLoginScreen({
         <form onSubmit={onForgotSubmit} className="mt-7 space-y-3" noValidate>
           {forgotErrors.form && <AlertBox tone={status === 'reset_sent' ? 'success' : 'error'} message={forgotErrors.form} />}
           <MobileInput
-            placeholder="Username or Email"
+            placeholder="Nom d'utilisateur ou e-mail"
             type="email"
             value={forgotValues.email}
             error={forgotErrors.email}
@@ -331,14 +331,14 @@ function MobileLoginScreen({
       <form onSubmit={onSubmit} className="mt-7 space-y-3" noValidate>
         {errors.form && <AlertBox tone="error" message={errors.form} />}
         <MobileInput
-          placeholder="Username or Email"
+          placeholder="Nom d'utilisateur ou e-mail"
           type="email"
           value={values.email}
           error={errors.email}
           onChange={(value) => onUpdate('email', value)}
         />
         <MobileInput
-          placeholder="Password"
+          placeholder="Mot de passe"
           type="password"
           value={values.password}
           error={errors.password}
@@ -484,9 +484,9 @@ function AuthFooter() {
   return (
     <footer className="mt-7 text-center text-xs leading-6 text-slate-500">
       <div className="flex items-center justify-center gap-3">
-        <a href="/terms">Terms &amp; Conditions</a>
+        <a href="/terms">Conditions generales</a>
         <span className="h-4 w-px bg-slate-300/70" />
-        <a href="/privacy">Privacy Policy</a>
+        <a href="/privacy">Politique de confidentialite</a>
       </div>
       <p className="mt-2">&copy; 2026 Kendronics. Tous droits reserves.</p>
     </footer>
@@ -503,10 +503,10 @@ function MobileAuthTabs({ active }: { active: 'login' | 'register' }) {
     <div className="mb-4 rounded-full border border-slate-200 bg-white p-1">
       <div className="grid grid-cols-2 gap-1">
         <a href="/login" className={tabClass('login')}>
-          Sign in
+          Connexion
         </a>
         <a href="/register" className={tabClass('register')}>
-          Create Account
+          Creer un compte
         </a>
       </div>
     </div>
@@ -531,16 +531,16 @@ function LoginForm({
   return (
     <form onSubmit={onSubmit} className="space-y-3 sm:space-y-5" noValidate>
       <div>
-        <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Log in</h2>
+        <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Connexion</h2>
         <p className="hidden mt-1 text-xs leading-5 text-slate-600 sm:mt-2 sm:block sm:text-sm sm:leading-6">
-          Use the email and password connected to your Kendronics account.
+          Utilisez l'e-mail et le mot de passe lies a votre compte Kendronics.
         </p>
       </div>
 
       {errors.form && <AlertBox tone="error" message={errors.form} />}
 
       <TextInput
-        label="Email"
+        label="E-mail"
         type="email"
         value={values.email}
         error={errors.email}
@@ -548,7 +548,7 @@ function LoginForm({
         onChange={(value) => onUpdate('email', value)}
       />
       <PasswordInput
-        label="Password"
+        label="Mot de passe"
         value={values.password}
         error={errors.password}
         autoComplete="current-password"
@@ -561,7 +561,7 @@ function LoginForm({
           onClick={onForgotPassword}
           className="text-left font-black text-deepblue transition hover:text-signal-dark"
         >
-          Forgot password?
+          Mot de passe oublie?
         </button>
         <a href="/register" className="hidden font-black text-deepblue transition hover:text-signal-dark sm:inline">
           Creer un compte
@@ -573,7 +573,7 @@ function LoginForm({
         disabled={status === 'submitting'}
         className="h-10 w-full rounded-xl bg-deepblue text-xs font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60 sm:h-12 sm:text-sm"
       >
-        {status === 'submitting' ? 'Signing in...' : 'Log in'}
+        {status === 'submitting' ? 'Connexion...' : 'Se connecter'}
       </button>
     </form>
   );
@@ -599,16 +599,16 @@ function ForgotPasswordForm({
   return (
     <form onSubmit={onSubmit} className="space-y-3 sm:space-y-5" noValidate>
       <div>
-        <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Reset password</h2>
+        <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Reinitialiser le mot de passe</h2>
         <p className="hidden mt-1 text-xs leading-5 text-slate-600 sm:mt-2 sm:block sm:text-sm sm:leading-6">
-          Enter your email and we will handle the request without revealing whether an account exists.
+          Entrez votre e-mail. La demande reste neutre et ne revele pas si un compte existe.
         </p>
       </div>
 
       {errors.form && <AlertBox tone={messageTone} message={errors.form} />}
 
       <TextInput
-        label="Email"
+        label="E-mail"
         type="email"
         value={values.email}
         error={errors.email}
@@ -621,7 +621,7 @@ function ForgotPasswordForm({
         disabled={status === 'submitting'}
         className="h-10 w-full rounded-xl bg-deepblue text-xs font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60 sm:h-12 sm:text-sm"
       >
-        {status === 'submitting' ? 'Sending request...' : 'Send reset instructions'}
+        {status === 'submitting' ? 'Envoi...' : 'Envoyer les instructions'}
       </button>
 
       <button
@@ -709,7 +709,7 @@ function AuthenticatedState() {
         href="/quote"
         className="mt-6 inline-flex h-12 items-center justify-center rounded-xl bg-deepblue px-6 text-sm font-black text-white transition hover:bg-deepblue-dark"
       >
-        Continue to quote
+        Continuer vers le devis
       </a>
     </div>
   );

@@ -15,9 +15,9 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function validateLoginForm(values: LoginFormState): LoginErrors {
   const errors: LoginErrors = {};
 
-  if (!values.email.trim()) errors.email = 'Email is required.';
-  if (values.email && !emailPattern.test(values.email)) errors.email = 'Enter a valid email address.';
-  if (!values.password) errors.password = 'Password is required.';
+  if (!values.email.trim()) errors.email = "L'e-mail est requis.";
+  if (values.email && !emailPattern.test(values.email)) errors.email = 'Entrez une adresse e-mail valide.';
+  if (!values.password) errors.password = 'Le mot de passe est requis.';
 
   return errors;
 }
@@ -25,8 +25,8 @@ export function validateLoginForm(values: LoginFormState): LoginErrors {
 export function validateForgotPasswordForm(values: ForgotPasswordFormState): ForgotPasswordErrors {
   const errors: ForgotPasswordErrors = {};
 
-  if (!values.email.trim()) errors.email = 'Email is required.';
-  if (values.email && !emailPattern.test(values.email)) errors.email = 'Enter a valid email address.';
+  if (!values.email.trim()) errors.email = "L'e-mail est requis.";
+  if (values.email && !emailPattern.test(values.email)) errors.email = 'Entrez une adresse e-mail valide.';
 
   return errors;
 }

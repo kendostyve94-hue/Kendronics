@@ -38,11 +38,11 @@ export interface SupportTicketResponse {
 
 export const contactCategoryLabels: Record<ContactCategory, string> = {
   quote_issue: 'Probleme de devis',
-  upload_issue: 'Upload issue',
-  payment_issue: 'Payment issue',
-  delivery_issue: 'Delivery issue',
-  technical_question: 'Technical question',
-  partnership: 'Partnership',
+  upload_issue: 'Probleme d upload',
+  payment_issue: 'Probleme de paiement',
+  delivery_issue: 'Probleme de livraison',
+  technical_question: 'Question technique',
+  partnership: 'Partenariat',
 };
 
 export const supportTicketApiContract = {
@@ -65,15 +65,15 @@ export function validateContactForm(values: ContactFormState): ContactFormErrors
   const errors: ContactFormErrors = {};
 
   if (values.name.trim().length < 2) {
-    errors.name = 'Enter your name.';
+    errors.name = 'Entrez votre nom.';
   }
 
   if (!/^\S+@\S+\.\S+$/.test(values.email.trim())) {
-    errors.email = 'Enter a valid email address.';
+    errors.email = 'Entrez une adresse e-mail valide.';
   }
 
   if (!contactCategories.includes(values.category)) {
-    errors.category = 'Choose a support category.';
+    errors.category = 'Choisissez une categorie support.';
   }
 
   if (values.orderId.trim() && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(values.orderId.trim())) {
