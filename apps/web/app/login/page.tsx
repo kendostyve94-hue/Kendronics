@@ -26,6 +26,8 @@ const initialLoginValues: LoginFormState = {
 const neutralForgotPasswordMessage =
   'If an account can receive password reset email, we will send instructions shortly.';
 const apiBaseUrl = getApiBaseUrl();
+const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
+const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'forgot_password'>('login');
@@ -34,7 +36,7 @@ export default function LoginPage() {
   const [loginErrors, setLoginErrors] = useState<LoginErrors>({});
   const [forgotErrors, setForgotErrors] = useState<ForgotPasswordErrors>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'authenticated' | 'reset_sent'>('idle');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,7 +64,7 @@ export default function LoginPage() {
       }
 
       const tokens = (await response.json()) as LoginResponse;
-      persistAuthSession(tokens);
+      persistAuthSession(tokens, { remember: rememberMe });
       setStatus('authenticated');
     } catch {
       setLoginErrors({ form: authApiContract.login.failureMessage });
@@ -140,6 +142,8 @@ export default function LoginPage() {
         forgotErrors={forgotErrors}
         status={status}
         rememberMe={rememberMe}
+        googleOAuthUrl={googleOAuthUrl}
+        appleOAuthUrl={appleOAuthUrl}
         onRememberMe={setRememberMe}
         onSubmit={submitLogin}
         onForgotSubmit={submitForgotPassword}
@@ -238,6 +242,8 @@ function MobileLoginScreen({
   forgotErrors,
   status,
   rememberMe,
+  googleOAuthUrl,
+  appleOAuthUrl,
   onRememberMe,
   onSubmit,
   onForgotSubmit,
@@ -253,6 +259,8 @@ function MobileLoginScreen({
   forgotErrors: ForgotPasswordErrors;
   status: 'idle' | 'submitting' | 'authenticated' | 'reset_sent';
   rememberMe: boolean;
+  googleOAuthUrl?: string;
+  appleOAuthUrl?: string;
   onRememberMe: (value: boolean) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onForgotSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -315,12 +323,12 @@ function MobileLoginScreen({
           onChange={(value) => onUpdate('password', value)}
         />
         <div className="flex items-center justify-between gap-3 text-sm leading-none">
-          <label className="flex items-center gap-3 text-[#8a8a8a]">
+          <label className="flex items-center gap-2 text-slate-600">
             <input
               type="checkbox"
               checked={rememberMe}
               onChange={(event) => onRememberMe(event.target.checked)}
-              className="h-5 w-5 rounded border-2 border-slate-300 bg-[#f1f5f9]"
+              className="h-5 w-5 rounded border-2 border-slate-300 bg-[#edf3f8]"
             />
             <span>Se souvenir de moi</span>
           </label>
@@ -335,10 +343,10 @@ function MobileLoginScreen({
           Nouveau compte? S'inscrire
         </a>
       </form>
-      <Divider label="OR" />
+      <Divider label="ou continuer avec" />
       <div className="space-y-3">
-        <SocialButton provider="google" label="Continuer avec Google" />
-        <SocialButton provider="apple" label="Continuer avec Apple" />
+        <SocialButton provider="google" label="Continuer avec Google" href={googleOAuthUrl} />
+        <SocialButton provider="apple" label="Continuer avec Apple" href={appleOAuthUrl} />
       </div>
       <AuthFooter />
     </section>
@@ -390,11 +398,30 @@ function Divider({ label }: { label: string }) {
   );
 }
 
-function SocialButton({ provider, label }: { provider: 'google' | 'apple'; label: string }) {
-  return (
-    <button type="button" className="flex h-11 w-full items-center justify-center gap-4 rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-600 ring-1 ring-white/70">
+function SocialButton({ provider, label, href }: { provider: 'google' | 'apple'; label: string; href?: string }) {
+  const content = (
+    <>
       {provider === 'google' ? <GoogleLogo /> : <AppleLogo />}
       <span>{label}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <a href={href} className="flex h-11 w-full items-center justify-center gap-4 rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-600 ring-1 ring-white/70">
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled
+      title="OAuth non configure: ajoutez l'URL fournisseur dans les variables d'environnement."
+      className="flex h-11 w-full cursor-not-allowed items-center justify-center gap-4 rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-400 opacity-70 ring-1 ring-white/70"
+    >
+      {content}
     </button>
   );
 }

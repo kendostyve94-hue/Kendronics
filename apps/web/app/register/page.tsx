@@ -24,6 +24,9 @@ const initialValues: RegisterFormState = {
 };
 const apiBaseUrl = getApiBaseUrl();
 const profileStorageKey = 'kendronics.customer.profile';
+const newsletterStorageKey = 'kendronics.newsletter.consent';
+const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
+const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
 
 export default function RegisterPage() {
   const [values, setValues] = useState<RegisterFormState>(initialValues);
@@ -38,13 +41,7 @@ export default function RegisterPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const submissionValues: RegisterFormState = {
-      ...values,
-      lastName: values.lastName.trim() || values.firstName.trim(),
-      confirmPassword: values.confirmPassword || values.password,
-      city: values.city.trim() || 'Not specified',
-    };
-    const nextErrors = validateRegisterForm(submissionValues);
+    const nextErrors = validateRegisterForm(values);
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
@@ -58,17 +55,17 @@ export default function RegisterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: submissionValues.email.trim().toLowerCase(),
-          password: submissionValues.password,
-          fullName: `${submissionValues.firstName.trim()} ${submissionValues.lastName.trim()}`,
-          companyName: submissionValues.company.trim() || undefined,
+          email: values.email.trim().toLowerCase(),
+          password: values.password,
+          fullName: `${values.firstName.trim()} ${values.lastName.trim()}`,
+          companyName: values.company.trim() || undefined,
           profile: {
-            firstName: submissionValues.firstName.trim(),
-            lastName: submissionValues.lastName.trim(),
-            country: submissionValues.country,
-            city: submissionValues.city.trim(),
-            phone: submissionValues.phone.trim() || undefined,
-            accountType: submissionValues.accountType,
+            firstName: values.firstName.trim(),
+            lastName: values.lastName.trim(),
+            country: values.country,
+            city: values.city.trim(),
+            phone: values.phone.trim() || undefined,
+            accountType: values.accountType,
           },
         }),
       });
@@ -80,11 +77,19 @@ export default function RegisterPage() {
       window.localStorage.setItem(
         profileStorageKey,
         JSON.stringify({
-          name: `${submissionValues.firstName.trim()} ${submissionValues.lastName.trim()}`.trim(),
-          email: submissionValues.email.trim().toLowerCase(),
-          phone: submissionValues.phone.trim(),
-          company: submissionValues.company.trim(),
-          country: selectedCountry?.name ?? submissionValues.country,
+          name: `${values.firstName.trim()} ${values.lastName.trim()}`.trim(),
+          email: values.email.trim().toLowerCase(),
+          phone: values.phone.trim(),
+          company: values.company.trim(),
+          country: selectedCountry?.name ?? values.country,
+        }),
+      );
+      window.localStorage.setItem(
+        newsletterStorageKey,
+        JSON.stringify({
+          email: values.email.trim().toLowerCase(),
+          subscribed: newsletter,
+          updatedAt: new Date().toISOString(),
         }),
       );
       setStatus('account_created');
@@ -109,6 +114,8 @@ export default function RegisterPage() {
         errors={errors}
         status={status}
         newsletter={newsletter}
+        googleOAuthUrl={googleOAuthUrl}
+        appleOAuthUrl={appleOAuthUrl}
         onNewsletter={setNewsletter}
         onSubmit={submit}
         onUpdate={update}
@@ -235,6 +242,8 @@ function MobileRegisterScreen({
   errors,
   status,
   newsletter,
+  googleOAuthUrl,
+  appleOAuthUrl,
   onNewsletter,
   onSubmit,
   onUpdate,
@@ -243,6 +252,8 @@ function MobileRegisterScreen({
   errors: RegisterErrors;
   status: 'idle' | 'submitting' | 'account_created';
   newsletter: boolean;
+  googleOAuthUrl?: string;
+  appleOAuthUrl?: string;
   onNewsletter: (value: boolean) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onUpdate: <K extends keyof RegisterFormState>(key: K, value: RegisterFormState[K]) => void;
@@ -275,10 +286,16 @@ function MobileRegisterScreen({
         {errors.form && <ErrorBox message={errors.form} />}
 
         <MobileInput
-          placeholder="Nom d'utilisateur"
+          placeholder="Prenom"
           value={values.firstName}
-          error={errors.firstName || errors.lastName}
+          error={errors.firstName}
           onChange={(value) => onUpdate('firstName', value)}
+        />
+        <MobileInput
+          placeholder="Nom"
+          value={values.lastName}
+          error={errors.lastName}
+          onChange={(value) => onUpdate('lastName', value)}
         />
         <MobileInput
           placeholder="Email"
@@ -291,19 +308,40 @@ function MobileRegisterScreen({
           placeholder="Password"
           type="password"
           value={values.password}
-          error={errors.password || errors.confirmPassword}
+          error={errors.password}
           hasIcon
-          onChange={(value) => {
-            onUpdate('password', value);
-            onUpdate('confirmPassword', value);
-          }}
+          onChange={(value) => onUpdate('password', value)}
+        />
+        <MobileInput
+          placeholder="Confirmer le mot de passe"
+          type="password"
+          value={values.confirmPassword}
+          error={errors.confirmPassword}
+          hasIcon
+          onChange={(value) => onUpdate('confirmPassword', value)}
         />
         <MobileSelect
-          placeholder="Country"
+          placeholder="Pays"
           value={values.country}
           error={errors.country}
           onChange={(value) => onUpdate('country', value)}
-          options={[{ value: '', label: 'Country' }, ...africanCountries.map((country) => ({ value: country.iso2, label: country.name }))]}
+          options={[{ value: '', label: 'Pays' }, ...africanCountries.map((country) => ({ value: country.iso2, label: country.name }))]}
+        />
+        <MobileInput
+          placeholder="Ville"
+          value={values.city}
+          error={errors.city}
+          onChange={(value) => onUpdate('city', value)}
+        />
+        <MobileInput
+          placeholder="Telephone optionnel"
+          value={values.phone}
+          onChange={(value) => onUpdate('phone', value)}
+        />
+        <MobileInput
+          placeholder="Entreprise optionnelle"
+          value={values.company}
+          onChange={(value) => onUpdate('company', value)}
         />
 
         <MobileCheck checked={values.acceptedTerms} onChange={(checked) => onUpdate('acceptedTerms', checked)}>
@@ -325,8 +363,8 @@ function MobileRegisterScreen({
 
       <Divider label="ou continuer avec" />
       <div className="grid grid-cols-2 gap-3">
-        <SocialButton provider="google" label="Google" />
-        <SocialButton provider="apple" label="Apple" />
+        <SocialButton provider="google" label="Google" href={googleOAuthUrl} />
+        <SocialButton provider="apple" label="Apple" href={appleOAuthUrl} />
       </div>
       <AuthFooter />
     </section>
@@ -447,11 +485,30 @@ function Divider({ label }: { label: string }) {
   );
 }
 
-function SocialButton({ provider, label }: { provider: 'google' | 'apple'; label: string }) {
-  return (
-    <button type="button" className="flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-600 ring-1 ring-white/70">
+function SocialButton({ provider, label, href }: { provider: 'google' | 'apple'; label: string; href?: string }) {
+  const content = (
+    <>
       {provider === 'google' ? <GoogleLogo /> : <AppleLogo />}
       <span>{label}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <a href={href} className="flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-600 ring-1 ring-white/70">
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled
+      title="OAuth non configure: ajoutez l'URL fournisseur dans les variables d'environnement."
+      className="flex h-11 w-full cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-400 opacity-70 ring-1 ring-white/70"
+    >
+      {content}
     </button>
   );
 }

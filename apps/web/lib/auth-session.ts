@@ -8,7 +8,7 @@ export interface StoredAuthSession extends AuthTokens {
   accessTokenExpiresAt: string;
 }
 
-export function persistAuthSession(tokens: AuthTokens) {
+export function persistAuthSession(tokens: AuthTokens, options: { remember?: boolean } = {}) {
   if (typeof window === 'undefined') return;
 
   const issuedAt = new Date();
@@ -18,19 +18,29 @@ export function persistAuthSession(tokens: AuthTokens) {
     accessTokenExpiresAt: new Date(issuedAt.getTime() + tokens.expiresIn * 1000).toISOString(),
   };
 
-  window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+  const serializedSession = JSON.stringify(session);
+  if (options.remember === false) {
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    window.sessionStorage.setItem(SESSION_STORAGE_KEY, serializedSession);
+    return;
+  }
+
+  window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+  window.localStorage.setItem(SESSION_STORAGE_KEY, serializedSession);
 }
 
 export function readAuthSession(): StoredAuthSession | null {
   if (typeof window === 'undefined') return null;
 
-  const rawSession = window.localStorage.getItem(SESSION_STORAGE_KEY);
+  const storage = window.localStorage.getItem(SESSION_STORAGE_KEY) ? window.localStorage : window.sessionStorage;
+  const rawSession = storage.getItem(SESSION_STORAGE_KEY);
   if (!rawSession) return null;
 
   try {
     return JSON.parse(rawSession) as StoredAuthSession;
   } catch {
     window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
     return null;
   }
 }
@@ -38,6 +48,7 @@ export function readAuthSession(): StoredAuthSession | null {
 export function clearAuthSession() {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(SESSION_STORAGE_KEY);
+  window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
 export async function readFreshAuthSession(): Promise<StoredAuthSession | null> {
