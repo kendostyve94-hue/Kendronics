@@ -368,20 +368,32 @@ function MobileInput({
   type?: string;
   hasIcon?: boolean;
 }) {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const inputType = hasIcon ? (isPasswordVisible ? 'text' : 'password') : type;
+
   return (
     <label className="block">
       <span className="relative block">
         <input
-          type={type}
+          type={inputType}
           value={value}
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
           onChange={(event) => onChange(event.target.value)}
-          className={`h-11 w-full rounded-xl border bg-[#edf3f8] px-4 pr-12 text-base font-bold text-ink outline-none ring-1 ring-white/70 placeholder:text-slate-400 focus:border-deepblue ${
+          className={`h-11 w-full rounded-xl border bg-[#edf3f8] px-4 ${hasIcon ? 'pr-20' : 'pr-12'} text-base font-bold text-ink outline-none ring-1 ring-white/70 placeholder:text-slate-400 focus:border-deepblue ${
             error ? 'border-red-300' : 'border-[#d9d9d9]'
           }`}
         />
-        {hasIcon && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-slate-400">/</span>}
+        {hasIcon && (
+          <button
+            type="button"
+            aria-label={isPasswordVisible ? 'Cacher le mot de passe' : 'Voir le mot de passe'}
+            onClick={() => setIsPasswordVisible((current) => !current)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-deepblue"
+          >
+            {isPasswordVisible ? 'Cacher' : 'Voir'}
+          </button>
+        )}
       </span>
       {error && <span className="mt-2 block text-sm font-medium text-red-600">{error}</span>}
     </label>
@@ -634,7 +646,21 @@ function TextInput({
 }
 
 function PasswordInput(props: Omit<Parameters<typeof TextInput>[0], 'type'>) {
-  return <TextInput {...props} type="password" />;
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  return (
+    <span className="relative block">
+      <TextInput {...props} type={isPasswordVisible ? 'text' : 'password'} />
+      <button
+        type="button"
+        aria-label={isPasswordVisible ? 'Cacher le mot de passe' : 'Voir le mot de passe'}
+        onClick={() => setIsPasswordVisible((current) => !current)}
+        className="absolute right-3 top-8 text-[11px] font-black text-deepblue sm:top-9"
+      >
+        {isPasswordVisible ? 'Cacher' : 'Voir'}
+      </button>
+    </span>
+  );
 }
 
 function AlertBox({ message, tone }: { message: string; tone: 'error' | 'success' }) {

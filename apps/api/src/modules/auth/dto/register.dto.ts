@@ -3,20 +3,10 @@ import { IsEmail, IsIn, IsObject, IsOptional, IsString, MinLength, ValidateNeste
 
 class RegisterProfileDto {
   @IsString()
-  firstName!: string;
-
-  @IsString()
-  lastName!: string;
+  username!: string;
 
   @IsString()
   country!: string;
-
-  @IsString()
-  city!: string;
-
-  @IsOptional()
-  @IsString()
-  phone?: string;
 
   @IsIn(['individual', 'student', 'startup', 'company'])
   accountType!: string;
@@ -32,10 +22,6 @@ export class RegisterDto {
 
   @IsString()
   fullName!: string;
-
-  @IsOptional()
-  @IsString()
-  companyName?: string;
 
   @IsOptional()
   @IsObject()

@@ -10,15 +10,11 @@ import { validateRegisterForm } from '../../lib/register-validation';
 import type { AccountType, RegisterErrors, RegisterFormState } from '../../lib/register-validation';
 
 const initialValues: RegisterFormState = {
-  firstName: '',
-  lastName: '',
+  username: '',
   email: '',
   password: '',
   confirmPassword: '',
   country: '',
-  city: '',
-  phone: '',
-  company: '',
   accountType: 'individual',
   acceptedTerms: false,
 };
@@ -57,14 +53,10 @@ export default function RegisterPage() {
         body: JSON.stringify({
           email: values.email.trim().toLowerCase(),
           password: values.password,
-          fullName: `${values.firstName.trim()} ${values.lastName.trim()}`,
-          companyName: values.company.trim() || undefined,
+          fullName: values.username.trim(),
           profile: {
-            firstName: values.firstName.trim(),
-            lastName: values.lastName.trim(),
+            username: values.username.trim(),
             country: values.country,
-            city: values.city.trim(),
-            phone: values.phone.trim() || undefined,
             accountType: values.accountType,
           },
         }),
@@ -77,10 +69,8 @@ export default function RegisterPage() {
       window.localStorage.setItem(
         profileStorageKey,
         JSON.stringify({
-          name: `${values.firstName.trim()} ${values.lastName.trim()}`.trim(),
+          name: values.username.trim(),
           email: values.email.trim().toLowerCase(),
-          phone: values.phone.trim(),
-          company: values.company.trim(),
           country: selectedCountry?.name ?? values.country,
         }),
       );
@@ -160,10 +150,8 @@ export default function RegisterPage() {
                 {errors.form && <ErrorBox message={errors.form} />}
 
                 <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-                  <TextInput label="First name" value={values.firstName} error={errors.firstName} onChange={(value) => update('firstName', value)} />
-                  <TextInput label="Last name" value={values.lastName} error={errors.lastName} onChange={(value) => update('lastName', value)} />
+                  <TextInput label="Username" value={values.username} error={errors.username} onChange={(value) => update('username', value)} />
                   <TextInput label="Email" type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
-                  <TextInput label="Phone optional" value={values.phone} onChange={(value) => update('phone', value)} />
                   <PasswordInput label="Password" value={values.password} error={errors.password} onChange={(value) => update('password', value)} />
                   <PasswordInput label="Confirm password" value={values.confirmPassword} error={errors.confirmPassword} onChange={(value) => update('confirmPassword', value)} />
                   <SelectInput
@@ -173,8 +161,6 @@ export default function RegisterPage() {
                     onChange={(value) => update('country', value)}
                     options={[{ value: '', label: 'Select country' }, ...africanCountries.map((country) => ({ value: country.iso2, label: country.name }))]}
                   />
-                  <TextInput label="City" value={values.city} error={errors.city} onChange={(value) => update('city', value)} />
-                  <TextInput label="Company optional" value={values.company} onChange={(value) => update('company', value)} className="sm:col-span-2" />
                 </div>
 
                 <div>
@@ -286,16 +272,10 @@ function MobileRegisterScreen({
         {errors.form && <ErrorBox message={errors.form} />}
 
         <MobileInput
-          placeholder="Prenom"
-          value={values.firstName}
-          error={errors.firstName}
-          onChange={(value) => onUpdate('firstName', value)}
-        />
-        <MobileInput
-          placeholder="Nom"
-          value={values.lastName}
-          error={errors.lastName}
-          onChange={(value) => onUpdate('lastName', value)}
+          placeholder="Nom d'utilisateur"
+          value={values.username}
+          error={errors.username}
+          onChange={(value) => onUpdate('username', value)}
         />
         <MobileInput
           placeholder="Email"
@@ -326,22 +306,6 @@ function MobileRegisterScreen({
           error={errors.country}
           onChange={(value) => onUpdate('country', value)}
           options={[{ value: '', label: 'Pays' }, ...africanCountries.map((country) => ({ value: country.iso2, label: country.name }))]}
-        />
-        <MobileInput
-          placeholder="Ville"
-          value={values.city}
-          error={errors.city}
-          onChange={(value) => onUpdate('city', value)}
-        />
-        <MobileInput
-          placeholder="Telephone optionnel"
-          value={values.phone}
-          onChange={(value) => onUpdate('phone', value)}
-        />
-        <MobileInput
-          placeholder="Entreprise optionnelle"
-          value={values.company}
-          onChange={(value) => onUpdate('company', value)}
         />
 
         <MobileCheck checked={values.acceptedTerms} onChange={(checked) => onUpdate('acceptedTerms', checked)}>
@@ -395,20 +359,32 @@ function MobileInput({
   type?: string;
   hasIcon?: boolean;
 }) {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const inputType = hasIcon ? (isPasswordVisible ? 'text' : 'password') : type;
+
   return (
     <label className="block">
       <span className="relative block">
         <input
-          type={type}
+          type={inputType}
           value={value}
           placeholder={placeholder}
           aria-invalid={Boolean(error)}
           onChange={(event) => onChange(event.target.value)}
-          className={`h-11 w-full rounded-xl border bg-[#edf3f8] px-4 pr-12 text-base font-bold text-ink outline-none ring-1 ring-white/70 placeholder:text-slate-400 focus:border-deepblue ${
+          className={`h-11 w-full rounded-xl border bg-[#edf3f8] px-4 ${hasIcon ? 'pr-20' : 'pr-12'} text-base font-bold text-ink outline-none ring-1 ring-white/70 placeholder:text-slate-400 focus:border-deepblue ${
             error ? 'border-red-300' : 'border-[#d9d9d9]'
           }`}
         />
-        {hasIcon && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xl text-slate-400">/</span>}
+        {hasIcon && (
+          <button
+            type="button"
+            aria-label={isPasswordVisible ? 'Cacher le mot de passe' : 'Voir le mot de passe'}
+            onClick={() => setIsPasswordVisible((current) => !current)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-deepblue"
+          >
+            {isPasswordVisible ? 'Cacher' : 'Voir'}
+          </button>
+        )}
       </span>
       {error && <span className="mt-2 block text-sm font-medium text-red-600">{error}</span>}
     </label>
@@ -597,7 +573,21 @@ function TextInput({
 }
 
 function PasswordInput(props: Omit<Parameters<typeof TextInput>[0], 'type'>) {
-  return <TextInput {...props} type="password" />;
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  return (
+    <span className="relative block">
+      <TextInput {...props} type={isPasswordVisible ? 'text' : 'password'} />
+      <button
+        type="button"
+        aria-label={isPasswordVisible ? 'Cacher le mot de passe' : 'Voir le mot de passe'}
+        onClick={() => setIsPasswordVisible((current) => !current)}
+        className="absolute right-3 top-8 text-[11px] font-black text-deepblue sm:top-9"
+      >
+        {isPasswordVisible ? 'Cacher' : 'Voir'}
+      </button>
+    </span>
+  );
 }
 
 function SelectInput({

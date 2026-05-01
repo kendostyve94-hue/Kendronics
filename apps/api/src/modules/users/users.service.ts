@@ -17,7 +17,6 @@ export class UsersService {
     return this.usersRepository.create({
       email,
       fullName: dto.fullName,
-      companyName: dto.companyName,
       passwordHash: await this.passwordService.hash(dto.password),
       roles: this.rolesForEmail(email),
     });
