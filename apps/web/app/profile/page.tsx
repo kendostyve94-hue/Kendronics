@@ -198,9 +198,9 @@ export default function ProfilePage() {
     <main className="min-h-screen bg-cloud">
       <Navbar />
 
-      <section className="mx-auto grid max-w-5xl gap-4 px-4 pb-8 pt-36 sm:px-6 sm:py-10 lg:px-8">
+      <section className="mx-auto grid max-w-5xl gap-4 px-4 pb-24 pt-28 sm:px-6 sm:pb-10 sm:pt-32 lg:px-8">
         <Card className="p-4 sm:p-6">
-          <div className="flex items-start gap-4 sm:gap-6">
+          <div className="grid gap-4 sm:flex sm:items-start sm:gap-6">
             <KendronicsAvatar />
             <div className="min-w-0 flex-1">
               <div className="grid gap-3 sm:grid-cols-3">
@@ -213,18 +213,18 @@ export default function ProfilePage() {
         </Card>
 
         <Card className="overflow-hidden p-0">
-          <a href="/privacy" className="flex min-h-14 items-center justify-between border-b border-line px-4 text-sm font-black text-ink sm:px-6">
+          <a href="/privacy" className="flex min-h-14 items-center justify-between gap-3 border-b border-line px-4 text-sm font-black text-ink sm:px-6">
             Politique de confidentialite
             <ChevronIcon />
           </a>
-          <a href="/terms" className="flex min-h-14 items-center justify-between border-b border-line px-4 text-sm font-black text-ink sm:px-6">
+          <a href="/terms" className="flex min-h-14 items-center justify-between gap-3 border-b border-line px-4 text-sm font-black text-ink sm:px-6">
             Conditions generales
             <ChevronIcon />
           </a>
           <div className="border-b border-line">
-            <button type="button" className="flex min-h-14 w-full items-center justify-between px-4 text-left text-sm font-black text-ink sm:px-6" aria-expanded={openSection === 'account'} onClick={() => toggleSection('account')}>
+            <button type="button" className="flex min-h-14 w-full items-center justify-between gap-3 px-4 text-left text-sm font-black text-ink sm:px-6" aria-expanded={openSection === 'account'} onClick={() => toggleSection('account')}>
               Modifier le compte
-              <span className="text-xl leading-none text-deepblue">+</span>
+              <span className="shrink-0 text-xl leading-none text-deepblue">{openSection === 'account' ? '-' : '+'}</span>
             </button>
             {openSection === 'account' ? (
             <div className="grid gap-4 border-t border-line bg-slate-50 p-4 sm:grid-cols-2 sm:p-6">
@@ -232,7 +232,7 @@ export default function ProfilePage() {
               <TextField label="Telephone" value={accountDraft.phone} onChange={(value) => updateAccountDraft('phone', value)} />
               <TextField label="Entreprise ou ecole" value={accountDraft.company} onChange={(value) => updateAccountDraft('company', value)} />
               <TextField label="Pays" value={accountDraft.country} onChange={(value) => updateAccountDraft('country', value)} />
-              <div className="flex items-end">
+              <div className="flex items-end sm:col-span-2">
                 <button
                   type="button"
                   onClick={() => void requestConfirmation('account')}
@@ -249,9 +249,9 @@ export default function ProfilePage() {
             ) : null}
           </div>
           <div className="border-b border-line">
-            <button type="button" className="flex min-h-14 w-full items-center justify-between px-4 text-left text-sm font-black text-ink sm:px-6" aria-expanded={openSection === 'contacts'} onClick={() => toggleSection('contacts')}>
+            <button type="button" className="flex min-h-14 w-full items-center justify-between gap-3 px-4 text-left text-sm font-black text-ink sm:px-6" aria-expanded={openSection === 'contacts'} onClick={() => toggleSection('contacts')}>
               Changer mes contacts
-              <span className="text-xl leading-none text-deepblue">+</span>
+              <span className="shrink-0 text-xl leading-none text-deepblue">{openSection === 'contacts' ? '-' : '+'}</span>
             </button>
             {openSection === 'contacts' ? (
             <div className="grid gap-4 border-t border-line bg-slate-50 p-4 sm:grid-cols-3 sm:p-6">
@@ -274,9 +274,9 @@ export default function ProfilePage() {
             ) : null}
           </div>
           <div>
-            <button type="button" className="flex min-h-14 w-full items-center justify-between px-4 text-left text-sm font-black text-ink sm:px-6" aria-expanded={openSection === 'delete'} onClick={() => toggleSection('delete')}>
+            <button type="button" className="flex min-h-14 w-full items-center justify-between gap-3 px-4 text-left text-sm font-black text-ink sm:px-6" aria-expanded={openSection === 'delete'} onClick={() => toggleSection('delete')}>
               Supprimer le compte
-              <span className="text-xl leading-none text-red-500">+</span>
+              <span className="shrink-0 text-xl leading-none text-red-500">{openSection === 'delete' ? '-' : '+'}</span>
             </button>
             {openSection === 'delete' ? (
             <div className="border-t border-line bg-slate-50 p-4 sm:p-6">
@@ -292,7 +292,7 @@ export default function ProfilePage() {
                   type="button"
                   disabled={!canConfirmDelete}
                   onClick={() => void requestConfirmation('delete')}
-                  className="h-11 rounded-sm bg-red-600 px-5 text-sm font-black text-white transition disabled:cursor-not-allowed disabled:bg-slate-300"
+                  className="h-11 w-full rounded-sm bg-red-600 px-5 text-sm font-black text-white transition disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto"
                 >
                   Confirmer
                 </button>
@@ -343,7 +343,7 @@ export default function ProfilePage() {
         </div>
       ) : null}
       {!confirmation && verificationError ? (
-        <p className="fixed bottom-24 left-4 right-4 z-[70] mx-auto max-w-sm rounded-sm bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+        <p className="fixed bottom-[calc(4.7rem+env(safe-area-inset-bottom)+0.75rem)] left-4 right-4 z-[70] mx-auto max-w-sm rounded-sm bg-red-50 px-4 py-3 text-sm font-bold text-red-700 sm:bottom-6">
           {verificationError}
         </p>
       ) : null}
@@ -353,16 +353,16 @@ export default function ProfilePage() {
 
 function InfoCell({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="min-w-0 rounded-sm border border-line bg-slate-50 p-3">
       <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{label}</p>
-      <p className="mt-1 break-words text-base font-black text-ink sm:text-lg">{value}</p>
+      <p className="mt-1 break-words text-sm font-black text-ink sm:text-base">{value}</p>
     </div>
   );
 }
 
 function KendronicsAvatar() {
   return (
-    <div className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] ring-2 ring-white sm:h-24 sm:w-24" aria-hidden="true">
+    <div className="mx-auto grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] ring-2 ring-white sm:mx-0 sm:h-24 sm:w-24" aria-hidden="true">
       <svg viewBox="0 0 96 96" className="h-full w-full">
         <defs>
           <radialGradient id="avatarGlow" cx="34%" cy="28%" r="72%">
