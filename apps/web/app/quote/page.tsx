@@ -125,7 +125,7 @@ type QuoteSaveState = {
   message?: string;
 };
 
-type QuotePanelId = 'upload' | 'base' | 'specs' | 'highSpec' | 'advanced';
+type QuotePanelId = 'base' | 'specs' | 'highSpec' | 'advanced';
 
 const apiBaseUrl = getApiBaseUrl();
 const customerOrdersStorageKey = 'kendronics.customer.orders';
@@ -135,7 +135,7 @@ export default function QuotePage() {
   const [saved, setSaved] = useState(false);
   const [gerberUpload, setGerberUpload] = useState<UploadState>({ status: 'idle' });
   const [quoteSave, setQuoteSave] = useState<QuoteSaveState>({ status: 'idle' });
-  const [openPanel, setOpenPanel] = useState<QuotePanelId>('upload');
+  const [openPanel, setOpenPanel] = useState<QuotePanelId>('base');
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === config.destinationCountry) ?? africanCountries[0],
@@ -380,8 +380,8 @@ export default function QuotePage() {
           <Panel
             title="Devis Express PCB"
             description="Une seule zone prend en charge Gerber, BOM et CPL."
-            isOpen={openPanel === 'upload'}
-            onToggle={() => setOpenPanel('upload')}
+            isOpen
+            onToggle={() => undefined}
           >
             <UnifiedUpload
               gerberFileName={config.gerberFileName}
@@ -617,7 +617,6 @@ export default function QuotePage() {
             selectedLiveShippingRateId={config.liveShippingRateId}
             onLiveShippingRateSelect={selectLiveShippingRate}
           />
-          <SupportCard />
         </div>
       </section>
 
@@ -913,27 +912,5 @@ function Switch({ label, checked, onChange }: { label: string; checked: boolean;
       <span>{label}</span>
       <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="h-4 w-4 accent-[#0f8f6b]" />
     </label>
-  );
-}
-
-function SupportCard() {
-  return (
-    <aside className="hidden rounded-sm border border-slate-200 bg-white p-5 lg:block">
-      <h2 className="text-lg font-black text-slate-950">Besoin d aide ?</h2>
-      <div className="mt-4 space-y-3 text-sm">
-        <a href="/contact" className="block rounded-sm border border-slate-200 p-3 font-bold text-[#0f8f6b] hover:border-[#0f8f6b]">
-          Chat en ligne &gt;
-          <span className="mt-1 block text-xs font-medium leading-5 text-slate-500">Reponse rapide pour les questions de devis.</span>
-        </a>
-        <a href="/contact" className="block rounded-sm border border-slate-200 p-3 font-bold text-[#0f8f6b] hover:border-[#0f8f6b]">
-          Nous ecrire &gt;
-          <span className="mt-1 block text-xs font-medium leading-5 text-slate-500">Contactez le support pour une revue fournisseur.</span>
-        </a>
-        <a href="/faq" className="block rounded-sm border border-slate-200 p-3 font-bold text-[#0f8f6b] hover:border-[#0f8f6b]">
-          Centre d aide &gt;
-          <span className="mt-1 block text-xs font-medium leading-5 text-slate-500">Trouvez des reponses rapidement.</span>
-        </a>
-      </div>
-    </aside>
   );
 }

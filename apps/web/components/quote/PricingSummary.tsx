@@ -138,11 +138,6 @@ export function PricingSummary({
           <div className="flex items-start justify-between gap-3">
             <div>
               <h3 className="text-base font-black text-slate-950 sm:text-lg">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif'}</h3>
-              <p className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">
-                {isSupplierPrice
-                  ? 'Prix retourne par le fournisseur configure, avec frais Kendronics.'
-                  : 'Base de calcul utilisee pendant l integration fournisseur. Le prix final est confirme apres validation.'}
-              </p>
             </div>
             <div className="text-right text-base font-black sm:text-lg">
               <span className="mr-1 text-slate-400 line-through sm:mr-2">${pricing.displayTotalBeforeAdjustment.toFixed(2)}</span>
