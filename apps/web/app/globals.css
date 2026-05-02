@@ -575,6 +575,10 @@ section {
 }
 
 @media (max-width: 639px) {
+  .quote-mobile-solid-white {
+    gap: 0 !important;
+  }
+
   .quote-mobile-solid-white,
   .quote-mobile-solid-white > div,
   .quote-mobile-solid-white .quote-field-surface,
