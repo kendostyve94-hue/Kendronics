@@ -362,20 +362,17 @@ export default function QuotePage() {
                 key={product.value}
                 type="button"
                 onClick={() => update('productType', product.value)}
-                className={`relative flex min-h-[4.75rem] items-start gap-2 rounded-sm border p-2.5 text-left transition sm:min-h-24 sm:gap-3 sm:p-4 ${
+                className={`flex min-h-[4.75rem] items-start gap-2 rounded-sm border p-2.5 text-left transition sm:min-h-24 sm:gap-3 sm:p-4 ${
                   config.productType === product.value
-                    ? 'border-[#0f8f6b] bg-[#eefbf6] ring-2 ring-[#0f8f6b]/20'
+                    ? 'border-[#0f8f6b] bg-[#eefbf6]'
                     : 'border-slate-200 bg-white hover:border-[#0f8f6b]/55'
                 }`}
               >
-                {config.productType === product.value ? (
-                  <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-[#0f8f6b] text-[11px] font-black text-white">✓</span>
-                ) : null}
                 <span className="hidden h-10 w-10 shrink-0 place-items-center rounded-sm bg-[#e8f7f2] text-xs font-black text-[#0f8f6b] sm:grid">
                   PCB
                 </span>
                 <span>
-                  <span className="block text-xs font-black text-slate-950 sm:text-sm">{product.title}</span>
+                  <span className="block text-xs font-bold text-slate-950 sm:text-sm">{product.title}</span>
                   <span className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{product.description}</span>
                 </span>
               </button>
@@ -661,7 +658,7 @@ function Panel({
         onClick={onToggle}
       >
         <span>
-          <span className="block text-sm font-black text-slate-950 sm:text-base">{title}</span>
+          <span className="block text-sm font-bold text-slate-950 sm:text-base">{title}</span>
           <span className="mt-0.5 hidden text-xs leading-5 text-slate-500 sm:block">{description}</span>
         </span>
         <span className={`text-xl font-black text-slate-800 transition ${isOpen ? 'rotate-180' : ''}`}>⌄</span>
@@ -693,7 +690,7 @@ function QuoteRow({
       }`}
     >
       <div>
-        <h3 className="text-sm font-black text-slate-900">{label}</h3>
+        <h3 className="text-sm font-semibold text-slate-900">{label}</h3>
         <p className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{help}</p>
       </div>
       <div>{children}</div>
@@ -727,8 +724,8 @@ function MobileSheetRow({
       <div className={`border-b border-slate-100 bg-white sm:hidden ${mobileWide ? 'col-span-2' : ''}`}>
         <button type="button" className="flex min-h-14 w-full items-center justify-between gap-3 px-1 py-2.5 text-left" onClick={() => onOpenSheet(sheetId)}>
           <span className="min-w-0">
-            <span className="block text-sm font-black text-slate-900">{label}</span>
-            <span className="mt-1 block truncate text-xs font-bold text-[#0f8f6b]">{summary}</span>
+            <span className="block text-sm font-semibold text-slate-900">{label}</span>
+            <span className="mt-1 block truncate text-xs font-medium text-[#0f8f6b]">{summary}</span>
           </span>
           <span className="text-lg font-black text-slate-400">+</span>
         </button>
@@ -777,8 +774,9 @@ function UnifiedUpload({
   onCpl: (name: string) => void;
 }) {
   return (
-    <div className="bg-[#eaf2fb] px-3 py-4 text-center sm:px-5 sm:py-8">
-      <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-[#0877ff] px-5 py-3 text-sm font-black text-white transition hover:bg-[#0068e8] sm:gap-3 sm:px-12 sm:py-4 sm:text-base">
+    <div className="bg-[#eaf2fb] px-2 py-3 text-center sm:px-4 sm:py-5">
+      <div className="mx-auto grid max-w-2xl gap-2 sm:grid-cols-3">
+      <label className="inline-flex cursor-pointer items-center justify-center rounded-sm border border-dashed border-slate-300 bg-white/70 px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-[#0877ff] sm:px-4 sm:py-3">
         <input
           type="file"
           accept=".zip,application/zip,application/x-zip-compressed"
@@ -790,18 +788,15 @@ function UnifiedUpload({
             if (file) onGerber(file);
           }}
         />
-        <span className="text-xl">⇧</span>
         <span>{gerberUpload.status === 'uploading' ? 'Upload en cours...' : gerberFileName ?? 'Ajouter Gerber'}</span>
       </label>
-      {gerberUpload.message ? (
-        <p className={`mt-5 text-sm font-bold ${gerberUpload.status === 'error' ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{gerberUpload.message}</p>
-      ) : null}
-      <p className="mt-3 text-xs text-slate-500 sm:mt-5 sm:text-sm">ZIP Gerber, Max 50 Mo, Voir exemple &gt;.</p>
-      <p className="mt-3 hidden text-sm text-slate-500 sm:block">Tous les televersements sont effectues en toute securite et dans le respect de la confidentialite</p>
-      <div className="mx-auto mt-3 grid max-w-2xl gap-2 sm:mt-5 sm:gap-3 sm:grid-cols-2">
         <CompactFile label="BOM" fileName={bomFileName} accept=".csv,.xlsx,.xls" onFile={onBom} />
         <CompactFile label="CPL" fileName={cplFileName} accept=".csv,.xlsx,.xls" onFile={onCpl} />
       </div>
+      {gerberUpload.message ? (
+        <p className={`mt-3 text-xs font-medium ${gerberUpload.status === 'error' ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{gerberUpload.message}</p>
+      ) : null}
+      <p className="mt-2 text-xs text-slate-500">Gerber ZIP max 50 Mo. BOM et CPL optionnels.</p>
     </div>
   );
 }
@@ -818,7 +813,7 @@ function CompactFile({
   onFile: (name: string) => void;
 }) {
   return (
-    <label className="cursor-pointer rounded-sm border border-dashed border-slate-300 bg-white/70 px-3 py-2.5 text-sm font-bold text-slate-700 transition hover:border-[#0877ff] sm:px-4 sm:py-3">
+    <label className="cursor-pointer rounded-sm border border-dashed border-slate-300 bg-white/70 px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-[#0877ff] sm:px-4 sm:py-3">
       <input
         type="file"
         accept={accept}

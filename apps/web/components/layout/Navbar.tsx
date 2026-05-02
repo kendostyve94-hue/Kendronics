@@ -144,8 +144,6 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
     if (!query) return [];
     return items.filter((item) => `${item.label} ${item.keywords}`.toLowerCase().includes(query)).slice(0, 6);
   }, [cartHref, searchQuery]);
-  const hideMobileDock = ['/login', '/register', '/profile', '/orders', '/admin'].some((path) => pathname.startsWith(path));
-
   return (
     <>
     {hideHeader ? null : <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
@@ -279,7 +277,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         ) : null}
       </div>
     </header>}
-    {hideMobileDock ? null : <MobileDock cartHref={cartHref} orderCount={orders.length} pathname={pathname} />}
+    <MobileDock cartHref={cartHref} orderCount={orders.length} pathname={pathname} />
     </>
   );
 }

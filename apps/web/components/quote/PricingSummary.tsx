@@ -240,20 +240,24 @@ export function PricingSummary({
         </div>
       ) : null}
 
-      <div className="rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 sm:p-5">
+      <div className="border-t border-slate-200 bg-white py-3 sm:rounded-sm sm:border sm:bg-[#f4f7fa] sm:p-5">
         <button type="button" onClick={() => setDeliveryOpen((open) => !open)} className="flex w-full items-center justify-between text-left">
-          <h2 className="text-sm font-black text-slate-950 sm:text-base">Estimation de la livraison</h2>
+          <h2 className="text-sm font-semibold text-slate-950 sm:text-base">Estimation de la livraison</h2>
           <span className={`text-lg font-black transition ${deliveryOpen ? 'rotate-180' : ''}`}>v</span>
         </button>
 
-        <div className="mt-3 space-y-2 text-xs sm:mt-4 sm:space-y-3 sm:text-sm">
-          <div className="flex items-center justify-between gap-4">
-            <span>{pricing.shippingCarrier}</span>
-            <span>{pricing.estimatedShippingTime}</span>
+        <div className="mt-2 grid grid-cols-3 gap-2 text-xs sm:mt-4 sm:text-sm">
+          <div>
+            <span className="block text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">Agence</span>
+            <span className="mt-0.5 block truncate text-slate-800">{pricing.shippingCarrier}</span>
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-slate-600">Poids <b className="rounded-full bg-slate-300 px-1 text-[10px] text-white">?</b></span>
-            <span>{pricing.deliveryWeightKg.toFixed(2)}kg</span>
+          <div>
+            <span className="block text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">Delai</span>
+            <span className="mt-0.5 block truncate text-slate-800">{pricing.estimatedShippingTime}</span>
+          </div>
+          <div className="text-right">
+            <span className="block text-[10px] font-medium uppercase tracking-[0.08em] text-slate-500">Poids</span>
+            <span className="mt-0.5 block text-slate-800">{pricing.deliveryWeightKg.toFixed(2)}kg</span>
           </div>
         </div>
 
@@ -276,7 +280,7 @@ export function PricingSummary({
             />
 
             <div>
-              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.12em] text-slate-500 sm:text-xs">Agences de livraison vers l'Afrique</p>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:text-xs">Agences de livraison vers l'Afrique</p>
               <div className="space-y-2">
                 <CarrierOption
                   label="DHL Express (DDP)"
@@ -306,7 +310,7 @@ export function PricingSummary({
             </div>
 
             <div className="rounded-sm border border-slate-200 bg-white p-3">
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Tarifs transporteurs live</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Tarifs transporteurs live</p>
               {ratesState === 'loading' ? <p className="mt-2 text-sm text-slate-600">Chargement des tarifs officiels...</p> : null}
               {ratesState === 'error' ? <p className="mt-2 text-sm text-red-700">Impossible de recuperer les tarifs live.</p> : null}
               {ratesState === 'ready' && rates.length === 0 ? (
@@ -452,8 +456,8 @@ function CarrierOption({
       }`}
     >
       <span className="flex items-center justify-between gap-3">
-        <span className="font-black">{label}</span>
-        <span className="font-black text-[#ff7a00]">${price.toFixed(2)}</span>
+        <span className="font-semibold">{label}</span>
+        <span className="font-semibold text-[#ff7a00]">${price.toFixed(2)}</span>
       </span>
       <span className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{description} - {time}</span>
     </button>
@@ -473,8 +477,8 @@ function LiveCarrierOption({ rate, active, onSelect }: { rate: ShippingRate; act
       } ${disabled ? 'cursor-not-allowed opacity-70' : ''}`}
     >
       <span className="flex items-center justify-between gap-3">
-        <span className="font-black">{rate.carrier} - {rate.service}</span>
-        <span className="font-black text-[#ff7a00]">
+        <span className="font-semibold">{rate.carrier} - {rate.service}</span>
+        <span className="font-semibold text-[#ff7a00]">
           {rate.amount == null ? 'Non disponible' : `${rate.amount.toFixed(2)} ${rate.currency}`}
         </span>
       </span>
