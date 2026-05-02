@@ -477,7 +477,9 @@ export default function QuotePage() {
                 <ColorPills value={config.solderMaskColor} onChange={(value) => update('solderMaskColor', value)} />
               </MobileSheetRow>
               <QuoteRow label="Serigraphie" help="References et libelles imprimes sur la carte.">
-                <Pills value={config.silkscreenColor} onChange={(value) => update('silkscreenColor', String(value))} options={['White', 'Black', 'Yellow']} />
+                <div className="quote-field-surface">
+                  <Pills value={config.silkscreenColor} onChange={(value) => update('silkscreenColor', String(value))} options={['White', 'Black', 'Yellow']} />
+                </div>
               </QuoteRow>
               <MobileSheetRow label="Finition de surface" help="HASL est economique; ENIG apporte planeite, duree de stockage et tolerances plus serrees." summary={config.surfaceFinish} sheetId="surfaceFinish" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
                 <Pills value={config.surfaceFinish} onChange={(value) => update('surfaceFinish', String(value))} options={['HASL lead-free', 'ENIG', 'OSP', 'Immersion silver']} />
