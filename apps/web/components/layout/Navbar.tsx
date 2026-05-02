@@ -144,6 +144,7 @@ export function Navbar() {
     if (!query) return [];
     return items.filter((item) => `${item.label} ${item.keywords}`.toLowerCase().includes(query)).slice(0, 6);
   }, [cartHref, searchQuery]);
+  const hideMobileDock = ['/login', '/register', '/profile', '/orders', '/admin'].some((path) => pathname.startsWith(path));
 
   return (
     <>
@@ -278,7 +279,7 @@ export function Navbar() {
         ) : null}
       </div>
     </header>
-    <MobileDock cartHref={cartHref} orderCount={orders.length} pathname={pathname} />
+    {hideMobileDock ? null : <MobileDock cartHref={cartHref} orderCount={orders.length} pathname={pathname} />}
     </>
   );
 }
