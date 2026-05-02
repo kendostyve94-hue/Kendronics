@@ -171,28 +171,38 @@ export function PricingSummary({
         </button>
       </div>
 
-      <div className="fixed inset-x-0 bottom-[4.9rem] z-[60] border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur lg:hidden">
-        <div className="mx-auto flex max-w-md items-center gap-3">
-          <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPriceDetailsOpen(true)} aria-label="Afficher le detail du prix">
-            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estime</p>
-            <p className="mt-0.5 text-lg font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
-          </button>
-          <button
-            type="button"
-            onClick={onSave}
-            disabled={!canSave}
-            className={`h-11 shrink-0 rounded-sm px-5 text-xs font-black uppercase text-white transition ${
-              canSave ? 'bg-[#0f8f6b] hover:bg-[#0b7558]' : 'cursor-not-allowed bg-slate-300 opacity-70'
-            }`}
-          >
-            {saveState === 'saving' ? 'Sauvegarde...' : 'Panier'}
-          </button>
-        </div>
-      </div>
-
       {priceDetailsOpen ? (
-        <div className="fixed inset-x-0 bottom-[9.7rem] top-0 z-[45] bg-slate-950/25 lg:hidden" role="dialog" aria-modal="true" aria-label="Details prix" onClick={() => setPriceDetailsOpen(false)}>
-          <div className="absolute inset-x-0 bottom-0 max-h-[58vh] overflow-y-auto rounded-t-2xl bg-[#f4f7fa] p-3" onClick={(event) => event.stopPropagation()}>
+        <div className="sheet-backdrop-in fixed inset-x-0 bottom-[4.9rem] top-0 z-[45] bg-slate-950/25 lg:hidden" onClick={() => setPriceDetailsOpen(false)} />
+      ) : null}
+
+      <div
+        className={`fixed inset-x-0 bottom-[4.9rem] z-[60] border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur lg:hidden ${
+          priceDetailsOpen ? 'sheet-panel-in rounded-t-2xl' : ''
+        }`}
+        role={priceDetailsOpen ? 'dialog' : undefined}
+        aria-modal={priceDetailsOpen ? 'true' : undefined}
+        aria-label={priceDetailsOpen ? 'Details prix' : undefined}
+      >
+        <div className="mx-auto max-w-md">
+          <div className="flex items-center gap-3">
+            <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Afficher le detail du prix" aria-expanded={priceDetailsOpen}>
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estime</p>
+              <p className="mt-0.5 text-lg font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
+            </button>
+            <button
+              type="button"
+              onClick={onSave}
+              disabled={!canSave}
+              className={`h-11 shrink-0 rounded-sm px-5 text-xs font-black uppercase text-white transition ${
+                canSave ? 'bg-[#0f8f6b] hover:bg-[#0b7558]' : 'cursor-not-allowed bg-slate-300 opacity-70'
+              }`}
+            >
+              {saveState === 'saving' ? 'Sauvegarde...' : 'Panier'}
+            </button>
+          </div>
+
+          {priceDetailsOpen ? (
+            <div className="mt-3 max-h-[54vh] overflow-y-auto border-t border-slate-200 pt-3">
             <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-slate-300" />
             <div className="mb-2 flex items-center justify-between gap-4">
               <div>
@@ -236,9 +246,10 @@ export function PricingSummary({
                 </ul>
               </div>
             ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      </div>
 
       <div className="border-t border-slate-200 bg-white py-3 sm:rounded-sm sm:border sm:bg-[#f4f7fa] sm:p-5">
         <button type="button" onClick={() => setDeliveryOpen((open) => !open)} className="flex w-full items-center justify-between text-left">
