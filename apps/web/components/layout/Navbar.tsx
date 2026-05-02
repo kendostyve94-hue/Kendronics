@@ -44,7 +44,7 @@ const searchItems = [
   { label: 'Compte', href: '/profile', keywords: 'compte profil utilisateur' },
 ];
 
-export function Navbar() {
+export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [openMobileSection, setOpenMobileSection] = useState<string | null>(null);
@@ -148,7 +148,7 @@ export function Navbar() {
 
   return (
     <>
-    <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+    {hideHeader ? null : <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="border-b border-slate-200 bg-[#e9eff5] px-3 py-1 sm:px-6 sm:py-2 lg:px-8">
         <div className="mx-auto flex max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px]">
           <a href="/" className="-ml-3 inline-flex min-w-0 items-center sm:ml-0" aria-label="Accueil Kendronics">
@@ -278,7 +278,7 @@ export function Navbar() {
           </nav>
         ) : null}
       </div>
-    </header>
+    </header>}
     {hideMobileDock ? null : <MobileDock cartHref={cartHref} orderCount={orders.length} pathname={pathname} />}
     </>
   );

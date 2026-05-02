@@ -171,7 +171,7 @@ export function PricingSummary({
         </button>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 pb-[calc(env(safe-area-inset-bottom)+0.65rem)] backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-[4.9rem] z-[60] border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-md items-center gap-3">
           <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPriceDetailsOpen(true)} aria-label="Afficher le detail du prix">
             <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estime</p>
@@ -191,45 +191,45 @@ export function PricingSummary({
       </div>
 
       {priceDetailsOpen ? (
-        <div className="fixed inset-0 z-[70] bg-slate-950/35 lg:hidden" role="dialog" aria-modal="true" aria-label="Details prix" onClick={() => setPriceDetailsOpen(false)}>
-          <div className="absolute inset-x-0 bottom-0 max-h-[86vh] overflow-y-auto rounded-t-2xl bg-[#f4f7fa] p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]" onClick={(event) => event.stopPropagation()}>
-            <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-slate-300" />
-            <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="fixed inset-x-0 bottom-[9.7rem] top-0 z-[45] bg-slate-950/25 lg:hidden" role="dialog" aria-modal="true" aria-label="Details prix" onClick={() => setPriceDetailsOpen(false)}>
+          <div className="absolute inset-x-0 bottom-0 max-h-[58vh] overflow-y-auto rounded-t-2xl bg-[#f4f7fa] p-3" onClick={(event) => event.stopPropagation()}>
+            <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-slate-300" />
+            <div className="mb-2 flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-base font-black text-slate-950">Details du prix</h2>
-                <p className="mt-1 text-xs leading-5 text-slate-500">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif avant validation finale.'}</p>
+                <h2 className="text-sm font-black text-slate-950">Details du prix</h2>
+                <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif avant validation.'}</p>
               </div>
-              <button type="button" className="grid h-9 w-9 place-items-center rounded-full bg-white text-lg font-black text-slate-700" onClick={() => setPriceDetailsOpen(false)} aria-label="Fermer">
+              <button type="button" className="grid h-8 w-8 place-items-center rounded-full bg-white text-base font-black text-slate-700" onClick={() => setPriceDetailsOpen(false)} aria-label="Fermer">
                 x
               </button>
             </div>
 
-            <div className="rounded-sm border border-slate-200 bg-white p-3">
-              <div className="space-y-3 border-b border-slate-200 pb-3 text-sm">
+            <div className="rounded-sm border border-slate-200 bg-white p-2.5">
+              <div className="space-y-2 border-b border-slate-200 pb-2 text-xs">
                 <FeeRow label="Recouvrement des vias" value={pricing.viaCoveringFee} />
                 <FeeRow label="Finition de surface" value={pricing.surfaceFinishFee} />
                 <FeeRow label="Livraison Afrique" value={pricing.franceToAfricaDelivery} highlight />
               </div>
 
-              <div className="border-b border-slate-200 py-3">
-                <h3 className="mb-2 text-sm font-black text-slate-950">Delais production</h3>
+              <div className="border-b border-slate-200 py-2">
+                <h3 className="mb-1 text-xs font-black text-slate-950">Delais production</h3>
                 <ProductionSpeedRow label="2 jours" value="standard" price={0} active={productionSpeed === 'standard'} onChange={onProductionSpeedChange} />
                 <ProductionSpeedRow label="24 heures" value="express_24h" price={pricing.productionSpeedFee || 7.5} active={productionSpeed === 'express_24h'} onChange={onProductionSpeedChange} />
               </div>
 
-              <div className="flex items-end justify-between gap-4 pt-3">
+              <div className="flex items-end justify-between gap-4 pt-2">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif'}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif'}</p>
                   <p className="mt-1 text-xs text-slate-500 line-through">${pricing.displayTotalBeforeAdjustment.toFixed(2)}</p>
                 </div>
-                <p className="text-2xl font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
+                <p className="text-xl font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
               </div>
             </div>
 
             {errors.length > 0 ? (
-              <div className="mt-3 rounded-sm border border-red-200 bg-red-50 p-3">
-                <p className="text-sm font-black text-red-700">Configuration a verifier</p>
-                <ul className="mt-2 space-y-2 text-xs leading-5 text-red-700">
+              <div className="mt-2 rounded-sm border border-red-200 bg-red-50 p-2.5">
+                <p className="text-xs font-black text-red-700">Configuration a verifier</p>
+                <ul className="mt-1 space-y-1 text-xs leading-4 text-red-700">
                   {errors.map((error) => (
                     <li key={error}>{error}</li>
                   ))}

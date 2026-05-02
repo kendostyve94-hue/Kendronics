@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Navbar } from '../../components/layout/Navbar';
 import { Footer } from '../../components/layout/Footer';
 import { PricingSummary } from '../../components/quote/PricingSummary';
 import { africanCountries } from '../../lib/african-countries';
@@ -339,7 +340,8 @@ export default function QuotePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f3f5f7] text-[#1f2933]">
+    <main className="min-h-screen bg-white text-[#1f2933]">
+      <Navbar hideHeader />
       <section className="border-b border-slate-200 bg-white pt-4 sm:pt-6">
         <div className="mx-auto max-w-[1280px] px-3 pb-3 sm:px-6 sm:pb-5 lg:px-8">
           <div className="flex flex-col gap-2 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -360,12 +362,15 @@ export default function QuotePage() {
                 key={product.value}
                 type="button"
                 onClick={() => update('productType', product.value)}
-                className={`flex min-h-[4.75rem] items-start gap-2 rounded-sm border bg-white p-2.5 text-left transition sm:min-h-24 sm:gap-3 sm:p-4 ${
+                className={`relative flex min-h-[4.75rem] items-start gap-2 rounded-sm border p-2.5 text-left transition sm:min-h-24 sm:gap-3 sm:p-4 ${
                   config.productType === product.value
-                    ? 'border-[#0f8f6b]'
-                    : 'border-slate-200 hover:border-[#0f8f6b]/55'
+                    ? 'border-[#0f8f6b] bg-[#eefbf6] ring-2 ring-[#0f8f6b]/20'
+                    : 'border-slate-200 bg-white hover:border-[#0f8f6b]/55'
                 }`}
               >
+                {config.productType === product.value ? (
+                  <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-[#0f8f6b] text-[11px] font-black text-white">✓</span>
+                ) : null}
                 <span className="hidden h-10 w-10 shrink-0 place-items-center rounded-sm bg-[#e8f7f2] text-xs font-black text-[#0f8f6b] sm:grid">
                   PCB
                 </span>
@@ -379,8 +384,8 @@ export default function QuotePage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-[1280px] gap-3 px-3 py-3 pb-24 sm:gap-5 sm:px-6 sm:py-5 sm:pb-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
-        <div className="space-y-3 sm:space-y-5">
+      <section className="mx-auto grid max-w-[1280px] gap-3 px-3 py-3 pb-40 sm:gap-5 sm:px-6 sm:py-5 sm:pb-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
+        <div className="space-y-2 sm:space-y-4">
           <Panel
             title="Devis Express PCB"
             description="Une seule zone prend en charge Gerber, BOM et CPL."
@@ -648,10 +653,10 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="group rounded-sm border border-slate-200 bg-white">
+    <section className="group border-b border-slate-200 bg-white sm:rounded-sm sm:border">
       <button
         type="button"
-        className="flex w-full cursor-pointer list-none items-center justify-between gap-3 bg-slate-100 px-3 py-2.5 text-left sm:gap-4 sm:px-4 sm:py-3"
+        className="flex w-full cursor-pointer list-none items-center justify-between gap-3 bg-white px-1 py-3 text-left sm:gap-4 sm:bg-slate-50 sm:px-4 sm:py-3"
         aria-expanded={isOpen}
         onClick={onToggle}
       >
@@ -667,7 +672,7 @@ function Panel({
 }
 
 function PanelGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-2 gap-2 p-2 sm:block sm:p-0">{children}</div>;
+  return <div className="grid grid-cols-1 gap-0 sm:block sm:p-0">{children}</div>;
 }
 
 function QuoteRow({
@@ -683,7 +688,7 @@ function QuoteRow({
 }) {
   return (
     <div
-      className={`grid gap-2 rounded-sm border border-slate-100 bg-white px-2.5 py-2.5 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:px-4 sm:py-3 sm:last:border-b-0 lg:grid-cols-[190px_1fr] ${
+      className={`grid gap-2 border-b border-slate-100 bg-white px-1 py-3 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:px-4 sm:last:border-b-0 lg:grid-cols-[190px_1fr] ${
         mobileWide ? 'col-span-2' : ''
       }`}
     >
@@ -719,8 +724,8 @@ function MobileSheetRow({
 
   return (
     <>
-      <div className={`rounded-sm border border-slate-100 bg-white sm:hidden ${mobileWide ? 'col-span-2' : ''}`}>
-        <button type="button" className="flex min-h-16 w-full items-center justify-between gap-3 px-3 py-2.5 text-left" onClick={() => onOpenSheet(sheetId)}>
+      <div className={`border-b border-slate-100 bg-white sm:hidden ${mobileWide ? 'col-span-2' : ''}`}>
+        <button type="button" className="flex min-h-14 w-full items-center justify-between gap-3 px-1 py-2.5 text-left" onClick={() => onOpenSheet(sheetId)}>
           <span className="min-w-0">
             <span className="block text-sm font-black text-slate-900">{label}</span>
             <span className="mt-1 block truncate text-xs font-bold text-[#0f8f6b]">{summary}</span>
@@ -838,7 +843,7 @@ function CardOptions({
   options: Array<[string, string]>;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-2 p-0 sm:gap-3 sm:p-5 md:grid-cols-2 xl:grid-cols-3">
       {options.map(([option, description]) => (
         <button
           key={option}
