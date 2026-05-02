@@ -490,7 +490,7 @@ export default function QuotePage() {
               <MobileSheetRow label="Cuivre externe" help="Epaisseur de cuivre sur les couches externes." summary={`${config.outerCopperWeight} / ${config.innerCopperWeight}`} sheetId="copper" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
                 <Pills value={config.outerCopperWeight} onChange={(value) => update('outerCopperWeight', String(value))} options={['1 oz', '2 oz', '3 oz']} />
               </MobileSheetRow>
-              <QuoteRow label="Cuivre interne" help="Epaisseur de cuivre sur les couches internes des cartes multicouches." className="quote-mobile-solid-white">
+              <QuoteRow label="Cuivre interne" help="Epaisseur de cuivre sur les couches internes des cartes multicouches." className="quote-mobile-solid-white quote-mobile-full-bleed">
                 <div className="quote-field-surface">
                   <Pills value={config.innerCopperWeight} onChange={(value) => update('innerCopperWeight', String(value))} options={['0.5 oz', '1 oz', '2 oz']} />
                 </div>
