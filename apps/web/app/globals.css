@@ -562,7 +562,16 @@ section {
 
 .quote-panel-body,
 .quote-param-row,
-.quote-sheet-total {
+.quote-sheet-total,
+.quote-field-surface {
+  background-color: #ffffff !important;
+}
+
+.quote-param-row input,
+.quote-param-row select,
+.quote-param-row button,
+.quote-field-surface input,
+.quote-field-surface select {
   background-color: #ffffff !important;
 }
 

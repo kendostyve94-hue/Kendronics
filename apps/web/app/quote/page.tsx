@@ -423,7 +423,7 @@ export default function QuotePage() {
                 <Pills value={config.layers} onChange={(value) => update('layers', Number(value))} options={[1, 2, 4, 6, 8, 10, 12, 14, 16]} />
               </MobileSheetRow>
               <QuoteRow label="Dimensions" help="Dimension of the single PCB or panel you upload." mobileWide>
-                <div className="grid grid-cols-[1fr_1fr_82px] gap-2 sm:gap-3">
+                <div className="quote-field-surface grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_4.25rem] items-end gap-1.5 sm:grid-cols-[1fr_1fr_82px] sm:gap-3">
                   <NumberBox label="Longueur" value={config.length} onChange={(value) => update('length', value)} />
                   <NumberBox label="Largeur" value={config.width} onChange={(value) => update('width', value)} />
                   <SelectBox value={config.unit} onChange={(value) => update('unit', value as QuoteConfig['unit'])} options={['mm', 'inch']} />
@@ -502,7 +502,7 @@ export default function QuotePage() {
           >
             <PanelGrid>
               <QuoteRow label="Taille trou via / diametre" help="Les petits vias peuvent augmenter le cout de precision." mobileWide>
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="quote-field-surface grid grid-cols-2 gap-2 sm:gap-3">
                   <SelectBox value={config.minimumViaHole} onChange={(value) => update('minimumViaHole', value)} options={['0.2mm', '0.25mm', '0.3mm', '0.4mm']} />
                   <SelectBox value={config.viaDiameter} onChange={(value) => update('viaDiameter', value)} options={['0.45mm', '0.5mm', '0.6mm', '0.8mm']} />
                 </div>
