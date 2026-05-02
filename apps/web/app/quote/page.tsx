@@ -476,7 +476,7 @@ export default function QuotePage() {
               <MobileSheetRow label="Couleur PCB" help="Le vert est generalement la couleur de masque la plus rapide et economique." summary={config.solderMaskColor} sheetId="solderMask" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
                 <ColorPills value={config.solderMaskColor} onChange={(value) => update('solderMaskColor', value)} />
               </MobileSheetRow>
-              <QuoteRow label="Serigraphie" help="References et libelles imprimes sur la carte.">
+              <QuoteRow label="Serigraphie" help="References et libelles imprimes sur la carte." className="quote-mobile-solid-white">
                 <div className="quote-field-surface">
                   <Pills value={config.silkscreenColor} onChange={(value) => update('silkscreenColor', String(value))} options={['White', 'Black', 'Yellow']} />
                 </div>
@@ -677,17 +677,19 @@ function PanelGrid({ children }: { children: React.ReactNode }) {
 function QuoteRow({
   label,
   help,
+  className = '',
   mobileWide = false,
   children,
 }: {
   label: string;
   help: string;
+  className?: string;
   mobileWide?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div
-      className={`quote-param-row grid gap-2 border-b border-slate-100 bg-white px-1 py-3 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:px-4 sm:last:border-b-0 lg:grid-cols-[190px_1fr] ${
+      className={`quote-param-row grid gap-2 border-b border-slate-100 bg-white px-1 py-3 sm:rounded-none sm:border-x-0 sm:border-t-0 sm:px-4 sm:last:border-b-0 lg:grid-cols-[190px_1fr] ${className} ${
         mobileWide ? 'col-span-2' : ''
       }`}
     >
