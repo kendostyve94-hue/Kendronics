@@ -576,8 +576,11 @@ section {
 
 @media (max-width: 639px) {
   .quote-mobile-solid-white,
-  .quote-mobile-solid-white > div {
+  .quote-mobile-solid-white > div,
+  .quote-mobile-solid-white .quote-field-surface,
+  .quote-mobile-solid-white .quote-field-surface > div {
     background-color: #ffffff !important;
+    background-image: none !important;
   }
 }
 
