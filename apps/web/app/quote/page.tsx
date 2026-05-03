@@ -115,6 +115,11 @@ type QuoteSaveState = {
   message?: string;
 };
 
+type UploadResponse = {
+  uploadId: string;
+  uploadUrl?: string;
+};
+
 type QuotePanelId = 'base' | 'specs' | 'highSpec' | 'advanced';
 type MobileSheetId =
   | 'baseMaterial'
@@ -232,16 +237,22 @@ export default function QuotePage() {
         throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Upload impossible pour le moment.');
       }
 
-      const presignedUpload = (await presignResponse.json()) as { uploadId: string; uploadUrl: string };
+      let uploadedFile = (await presignResponse.json()) as UploadResponse;
       let uploadResponse: Response;
       try {
-        uploadResponse = await fetch(presignedUpload.uploadUrl, {
+        if (!uploadedFile.uploadUrl) {
+          throw new Error('URL upload absente.');
+        }
+
+        uploadResponse = await fetch(uploadedFile.uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/zip' },
           body: file,
         });
       } catch {
-        throw new Error('Cloudflare R2 bloque encore l upload. Verifiez la politique CORS du bucket.');
+        setGerberUpload({ status: 'uploading', message: 'Upload direct bloque, relai securise via API...' });
+        uploadedFile = await uploadGerberThroughApi(file, session.accessToken);
+        uploadResponse = new Response(null, { status: 200 });
       }
 
       if (!uploadResponse.ok) {
@@ -249,13 +260,38 @@ export default function QuotePage() {
       }
 
       update('gerberFileName', file.name);
-      setGerberUpload({ status: 'uploaded', uploadId: presignedUpload.uploadId, message: 'Gerber ZIP televerse en stockage prive.' });
+      setGerberUpload({ status: 'uploaded', uploadId: uploadedFile.uploadId, message: 'Gerber ZIP televerse en stockage prive.' });
     } catch (error) {
       setGerberUpload({
         status: 'error',
         message: error instanceof Error ? error.message : 'Upload impossible pour le moment.',
       });
     }
+  }
+
+  async function uploadGerberThroughApi(file: File, accessToken: string): Promise<UploadResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    let response: Response;
+    try {
+      response = await fetch(`${apiBaseUrl}/api/uploads/direct`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+    } catch {
+      throw new Error("Impossible de contacter l'API Render pour relayer l'upload.");
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Upload impossible pour le moment.');
+    }
+
+    return response.json() as Promise<UploadResponse>;
   }
 
   async function saveQuote() {

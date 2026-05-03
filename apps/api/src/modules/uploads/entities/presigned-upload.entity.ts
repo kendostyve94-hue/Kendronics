@@ -3,5 +3,5 @@ export interface PresignedUpload {
   storageKey: string;
   uploadUrl: string;
   expiresAt: Date;
-  status: 'pending_scan';
+  status: 'pending_scan' | 'uploaded';
 }

@@ -24,6 +24,29 @@ export class UploadRepository {
     };
   }
 
+  async uploadFile(
+    userId: string,
+    sanitizedFilename: string,
+    dto: PresignUploadDto,
+    fileBuffer: Buffer,
+  ): Promise<PresignedUpload> {
+    const presignedUpload = await this.createPresignedUpload(userId, sanitizedFilename, dto);
+    const response = await fetch(presignedUpload.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/zip' },
+      body: new Uint8Array(fileBuffer),
+    });
+
+    if (!response.ok) {
+      throw new ServiceUnavailableException(`Private storage rejected the upload (${response.status}).`);
+    }
+
+    return {
+      ...presignedUpload,
+      status: 'uploaded',
+    };
+  }
+
   private createPresignedPutUrl(storageKey: string): string {
     const bucket = this.configValue('S3_BUCKET');
     const region = this.configValue('S3_REGION');

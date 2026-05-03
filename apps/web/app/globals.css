@@ -9,16 +9,16 @@
   --color-signal: #0f8f6b;
   --color-electric: #12a87c;
   --color-mint: #0f8f6b;
-  --color-cloud: #dfe6ed;
-  --color-line: #c5d0db;
-  --surface: #edf2f6;
-  --surface-muted: #e4ebf1;
-  --surface-raised: #f4f7fa;
-  --surface-tint: #d8e2ea;
+  --color-cloud: #f3f8fc;
+  --color-line: #b8c9d9;
+  --surface: #f8fbfe;
+  --surface-muted: #eef6fb;
+  --surface-raised: #ffffff;
+  --surface-tint: #e8f7f1;
   --neumo-radius: 0.5rem;
   --brand-gradient: linear-gradient(90deg, #0f8f6b, #12a87c);
-  --glass-light: rgba(244, 247, 250, 0.82);
-  --glass-dark: rgba(237, 242, 246, 0.88);
+  --glass-light: rgba(255, 255, 255, 0.92);
+  --glass-dark: rgba(248, 251, 254, 0.92);
 }
 
 * {
@@ -32,7 +32,7 @@ html {
 body {
   margin: 0;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #dfe6ed;
+  background: #f6fbff;
   color: #0b1724;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -154,8 +154,8 @@ summary:active,
 input,
 select,
 textarea {
-  background: #edf3f8 !important;
-  border-color: rgba(142, 158, 174, 0.34) !important;
+  background: #ffffff !important;
+  border-color: rgba(82, 108, 134, 0.36) !important;
 }
 
 [class*="border-t"],
@@ -166,16 +166,16 @@ textarea {
 
 @media (max-width: 767px) {
   :root {
-    --surface: #e9eff5;
-    --surface-muted: #dfe7ef;
-    --surface-raised: #f1f5f9;
-    --surface-tint: #d7e1ea;
-    --color-cloud: #e9eff5;
-    --color-line: rgba(128, 146, 164, 0.32);
+    --surface: #f8fbfe;
+    --surface-muted: #eef6fb;
+    --surface-raised: #ffffff;
+    --surface-tint: #e8f7f1;
+    --color-cloud: #f3f8fc;
+    --color-line: #b8c9d9;
   }
 
   body {
-    background: #e9eff5;
+    background: #f6fbff;
   }
 
   .label-caps {
@@ -229,12 +229,12 @@ canvas {
 }
 
 .glass {
-  border: 1px solid rgba(117, 134, 150, 0.32);
+  border: 1px solid rgba(80, 103, 126, 0.26);
   background: var(--glass-dark);
 }
 
 .glass-light {
-  border: 1px solid rgba(117, 134, 150, 0.3);
+  border: 1px solid rgba(80, 103, 126, 0.24);
   background: var(--glass-light);
 }
 
@@ -271,19 +271,19 @@ canvas {
 .bg-ink,
 main.bg-ink,
 section.bg-ink {
-  background-color: var(--surface-raised) !important;
+  background-color: #082033 !important;
 }
 
 .bg-ink.text-white,
 main.bg-ink.text-white,
 section.bg-ink.text-white {
-  color: #0f172a !important;
+  color: #ffffff !important;
 }
 
 .bg-ink .text-slate-200,
 .bg-ink .text-sky-100,
 .bg-ink .text-white\/80 {
-  color: #64748b !important;
+  color: #d6e7f3 !important;
 }
 
 .bg-ink .bg-gradient-to-r.text-white,
@@ -296,13 +296,13 @@ a.bg-deepblue.text-white {
 
 section.bg-ink {
   min-height: auto !important;
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
   padding-top: 8rem !important;
 }
 
 section.bg-ink > img,
 section.bg-ink > .absolute {
-  display: none !important;
+  display: block !important;
 }
 
 section.bg-ink [class*="min-h-"] {
@@ -320,21 +320,21 @@ section.bg-ink [class*="pt-36"] {
 }
 
 section.bg-ink .inline-flex {
-  border-color: #91d8c3 !important;
-  background-color: #d9f2ea !important;
-  color: #0f8f6b !important;
+  border-color: rgba(255, 255, 255, 0.26) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  color: #dffbf1 !important;
   border-radius: 0.125rem !important;
 }
 
 section.bg-ink h1 {
   max-width: 860px;
-  color: #0f172a !important;
+  color: #ffffff !important;
   font-size: clamp(2rem, 4vw, 3rem) !important;
   line-height: 1.08 !important;
 }
 
 section.bg-ink p {
-  color: #64748b !important;
+  color: #d6e7f3 !important;
 }
 
 /* Legacy page compatibility: existing pages keep their structure while inheriting the light Kendronics system. */
@@ -344,19 +344,19 @@ section.bg-ink p {
 }
 
 .bg-white {
-  background-color: var(--surface) !important;
+  background-color: #ffffff !important;
 }
 
 .bg-slate-50 {
-  background-color: var(--surface-muted) !important;
+  background-color: #eef6fb !important;
 }
 
 .bg-sky-50 {
-  background-color: #d9f2ea !important;
+  background-color: #e7f7ff !important;
 }
 
 .bg-emerald-50 {
-  background-color: #d9f2ea !important;
+  background-color: #e8f7f1 !important;
 }
 
 .bg-red-50 {
@@ -374,7 +374,7 @@ section.bg-ink p {
 .border-emerald-200,
 .border-red-200,
 .border-amber-200 {
-  border-color: var(--color-line) !important;
+  border-color: #b8c9d9 !important;
 }
 
 .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
@@ -389,7 +389,7 @@ section.bg-ink p {
 .text-slate-600,
 .text-slate-500,
 .text-slate-400 {
-  color: #405366 !important;
+  color: #33485d !important;
 }
 
 .text-deepblue,
@@ -436,7 +436,7 @@ input[class*="bg-white"],
 select[class*="bg-white"],
 textarea[class*="bg-white"] {
   border-color: var(--color-line) !important;
-  background-color: var(--surface-raised) !important;
+  background-color: #ffffff !important;
   color: #0b1724 !important;
 }
 
@@ -447,12 +447,12 @@ textarea::placeholder {
 
 table thead.bg-slate-50,
 thead.bg-slate-50 {
-  background-color: var(--surface-muted) !important;
+  background-color: #eef6fb !important;
 }
 
 table tbody.bg-white,
 tbody.bg-white {
-  background-color: var(--surface) !important;
+  background-color: #ffffff !important;
 }
 
 [class*="bg-[#041329]"],
@@ -461,7 +461,28 @@ tbody.bg-white {
 [class*="bg-[#0b1b32]"],
 [class*="bg-[#112036]"],
 [class*="bg-[#0d1c32]"] {
-  background-color: var(--surface) !important;
+  background-color: #082033 !important;
+}
+
+[class*="bg-[#e9eff5]"],
+[class*="bg-[#edf3f8]"],
+[class*="bg-[#e5edf4]"],
+[class*="bg-[#f1f5f9]"],
+[class*="bg-[#f4f7fa]"],
+[class*="bg-[#f3f5f7]"] {
+  background-color: #ffffff !important;
+}
+
+section[class*="bg-cloud"],
+main[class*="bg-cloud"],
+[class*="bg-[#eaf2fb]"] {
+  background-color: #eef6fb !important;
+}
+
+header [class*="border-slate"],
+nav [class*="border-slate"],
+[class*="border-line"] {
+  border-color: #b8c9d9 !important;
 }
 
 [class*="text-cloud"] {
@@ -522,7 +543,7 @@ section {
 .bg-white\/80,
 .bg-white\/86,
 .bg-white\/95 {
-  background-color: rgba(237, 242, 246, 0.86) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .hover\:bg-white:hover {
