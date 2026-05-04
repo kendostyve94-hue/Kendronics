@@ -29,11 +29,6 @@ const aboutItems = [
   { label: 'Cookies', href: '/cookie-policy' },
 ];
 
-const mobileActionItems = [
-  { label: 'Connexion', href: '/login' },
-  { label: 'Creer mon compte', href: '/register' },
-];
-
 const searchItems = [
   { label: 'Accueil', href: '/', keywords: 'home accueil kendronics' },
   { label: 'Devis PCB', href: '/quote', keywords: 'devis commande pcb pcba gerber prix' },
@@ -156,14 +151,14 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   return (
     <>
     {hideHeader ? null : <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="border-b border-slate-200 bg-[#e9eff5] px-3 py-1 sm:px-6 sm:py-2 lg:bg-white lg:px-5 lg:py-0">
+      <div className="border-b border-slate-200 bg-white px-3 py-0 sm:px-6 lg:px-5">
         <div className="mx-auto flex max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px] lg:max-w-none">
           <div className="flex min-w-0 items-center gap-7">
             <a href="/" className="-ml-3 inline-flex min-w-0 items-center sm:ml-0 lg:-ml-1" aria-label="Accueil Kendronics">
               <img
                 src="/images/kendronics-logo.png"
                 alt="Kendronics"
-                className="h-[4.5rem] w-auto max-w-[20.5rem] object-contain sm:h-16 sm:max-w-[16rem] lg:h-12 lg:max-w-[12.5rem]"
+                className="h-12 w-auto max-w-[12.5rem] object-contain"
               />
             </a>
 
@@ -191,7 +186,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-[#edf3f8] text-[#0f8f6b] transition hover:text-[#0b7558]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-slate-200 bg-white text-slate-900 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]"
               aria-label="Rechercher"
               aria-expanded={isSearchOpen}
               onClick={() => {
@@ -202,9 +197,18 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             >
               <SearchIcon />
             </button>
+            {isSignedIn ? (
+              <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[#0f8f6b] bg-[#e8f7f1] text-xs font-black text-[#0f8f6b]" aria-label="Ouvrir la page compte">
+                {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : <span>K</span>}
+              </a>
+            ) : (
+              <a href="/login" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-[#0877ff] px-3 text-sm font-normal text-white transition hover:border-[#0068e8] hover:bg-[#0068e8]">
+                Connexion
+              </a>
+            )}
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-[#edf3f8] text-[#0f8f6b] transition hover:text-[#0b7558]"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-slate-200 bg-white text-[#0f8f6b] transition hover:border-[#0f8f6b] hover:text-[#0b7558]"
               aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation"
@@ -265,30 +269,11 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         ) : null}
 
         {isMenuOpen ? (
-          <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6.5rem)] max-w-[21.5rem] overflow-y-auto border-t border-slate-200 pt-2 sm:max-w-[1180px] lg:hidden">
+          <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-5.5rem)] max-w-[21.5rem] overflow-y-auto border-t border-slate-200 pt-2 sm:max-w-[1180px] lg:hidden">
             <div className="grid gap-2">
               <MobileSection title="Produit" items={productItems} isOpen={openMobileSection === 'Produit'} onToggle={() => setOpenMobileSection((current) => (current === 'Produit' ? null : 'Produit'))} onNavigate={() => setIsMenuOpen(false)} />
               <MobileSection title="Support" items={supportItems} isOpen={openMobileSection === 'Support'} onToggle={() => setOpenMobileSection((current) => (current === 'Support' ? null : 'Support'))} onNavigate={() => setIsMenuOpen(false)} />
               <MobileSection title="A propos" items={aboutItems} isOpen={openMobileSection === 'A propos'} onToggle={() => setOpenMobileSection((current) => (current === 'A propos' ? null : 'A propos'))} onNavigate={() => setIsMenuOpen(false)} />
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
-              {mobileActionItems.map((item) => (
-                <a
-                  key={`${item.label}-${item.href}`}
-                  href={item.href}
-                  className={`flex min-h-10 items-center justify-center rounded-full border px-3 text-center text-xs font-semibold transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] ${
-                    item.label === 'Commande' || item.label === 'Suivi'
-                      ? 'border-[#0f8f6b] bg-[#edf3f8] text-[#0f8f6b]'
-                      : item.label === 'Connexion' || item.label === 'Creer mon compte'
-                        ? 'border-[#0f8f6b] bg-[#0f8f6b] text-white'
-                        : 'border-slate-200 bg-[#edf3f8] text-slate-700'
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.label}
-                </a>
-              ))}
             </div>
           </nav>
         ) : null}
