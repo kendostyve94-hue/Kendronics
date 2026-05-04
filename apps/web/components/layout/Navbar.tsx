@@ -154,25 +154,33 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   return (
     <>
     {hideHeader ? null : <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="border-b border-slate-200 bg-[#e9eff5] px-3 py-1 sm:px-6 sm:py-2 lg:px-8">
-        <div className="mx-auto flex max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px]">
-          <a href="/" className="-ml-3 inline-flex min-w-0 items-center sm:ml-0" aria-label="Accueil Kendronics">
-            <img
-              src="/images/kendronics-logo.png"
-              alt="Kendronics"
-              className="h-[4.5rem] w-auto max-w-[20.5rem] object-contain sm:h-16 sm:max-w-[16rem] lg:h-[5.5rem] lg:max-w-[20rem]"
-            />
-          </a>
-
-          <nav className="hidden max-w-[650px] items-center justify-end gap-3 text-sm font-bold text-slate-700 lg:flex">
-            <Dropdown label="Produit" items={productItems} />
-            <Dropdown label="Support" items={supportItems} />
-            <Dropdown label="A propos" items={aboutItems} />
-            <a href="/tracking" className="transition hover:text-[#0f8f6b]">
-              Suivi
+      <div className="border-b border-slate-200 bg-[#e9eff5] px-3 py-1 sm:px-6 sm:py-2 lg:bg-white lg:px-5 lg:py-0">
+        <div className="mx-auto flex max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px] lg:max-w-none">
+          <div className="flex min-w-0 items-center gap-7">
+            <a href="/" className="-ml-3 inline-flex min-w-0 items-center sm:ml-0 lg:-ml-1" aria-label="Accueil Kendronics">
+              <img
+                src="/images/kendronics-logo.png"
+                alt="Kendronics"
+                className="h-[4.5rem] w-auto max-w-[20.5rem] object-contain sm:h-16 sm:max-w-[16rem] lg:h-12 lg:max-w-[12.5rem]"
+              />
             </a>
+
+            <nav className="hidden items-center gap-8 text-[17px] font-normal text-slate-900 lg:flex">
+              <Dropdown label="Produit" items={productItems} />
+              <Dropdown label="Support" items={supportItems} />
+              <Dropdown label="A propos" items={aboutItems} />
+              <a href="/tracking" className="transition hover:text-[#0f8f6b]">
+                Suivi
+              </a>
+            </nav>
+          </div>
+
+          <nav className="hidden items-center justify-end gap-5 text-[15px] font-normal text-slate-800 lg:flex">
+            <button type="button" className="text-slate-900 transition hover:text-[#0f8f6b]" aria-label="Rechercher">
+              <SearchIcon />
+            </button>
             <CartLink href={cartHref} count={orders.length} />
-            <a href="/quote" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-white px-5 font-bold text-[#0877ff] transition hover:border-[#0068e8] hover:bg-[#eef6ff] hover:text-[#0068e8]">
+            <a href="/quote" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-white px-5 font-normal text-[#0877ff] transition hover:border-[#0068e8] hover:bg-[#eef6ff] hover:text-[#0068e8]">
               Commande
             </a>
             <LoginMenu isSignedIn={isSignedIn} avatarDataUrl={avatarDataUrl} />
@@ -379,13 +387,13 @@ function MobileSection({
 function Dropdown({ label, items }: { label: string; items: Array<{ label: string; href: string }> }) {
   return (
     <div className="group relative">
-      <button type="button" className="inline-flex h-10 items-center gap-1 text-slate-700 transition hover:text-[#0f8f6b]" aria-haspopup="true">
+      <button type="button" className="inline-flex h-14 items-center gap-1 text-slate-900 transition hover:text-[#0f8f6b]" aria-haspopup="true">
         {label}
         <span className="text-[10px]">v</span>
       </button>
       <div className="invisible absolute right-0 top-full min-w-44 translate-y-2 border border-slate-200 bg-[#edf3f8] p-1.5 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
         {items.map((item) => (
-          <a key={item.href} href={item.href} className="block px-3 py-1.5 text-xs font-bold text-slate-800 transition hover:bg-[#f1f5f9] hover:text-[#0f8f6b]">
+          <a key={item.href} href={item.href} className="block px-3 py-1.5 text-sm font-normal text-slate-800 transition hover:bg-[#f1f5f9] hover:text-[#0f8f6b]">
             {item.label}
           </a>
         ))}
@@ -398,7 +406,7 @@ function LoginMenu({ isSignedIn, avatarDataUrl }: { isSignedIn: boolean; avatarD
   if (isSignedIn) {
     return (
       <div className="flex items-center gap-2">
-        <a href="/profile" className="inline-flex h-9 items-center rounded-sm border border-[#0f8f6b] bg-[#0f8f6b] px-5 font-bold text-white transition hover:border-[#0b7558] hover:bg-[#0b7558]">
+        <a href="/profile" className="inline-flex h-9 items-center rounded-sm border border-[#0f8f6b] bg-[#0f8f6b] px-5 font-normal text-white transition hover:border-[#0b7558] hover:bg-[#0b7558]">
           Connecté
         </a>
         <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[#0f8f6b] bg-[#e8f7f1] text-xs font-black text-[#0f8f6b]" aria-label="Ouvrir la page compte">
@@ -410,7 +418,7 @@ function LoginMenu({ isSignedIn, avatarDataUrl }: { isSignedIn: boolean; avatarD
 
   return (
     <div className="group relative">
-      <a href="/login" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-[#0877ff] px-5 font-bold text-white transition hover:border-[#0068e8] hover:bg-[#0068e8]">
+      <a href="/login" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-[#0877ff] px-5 font-normal text-white transition hover:border-[#0068e8] hover:bg-[#0068e8]">
         Connexion
       </a>
       <div className="invisible absolute right-0 top-full min-w-60 translate-y-2 border border-slate-200 bg-[#edf3f8] p-4 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
