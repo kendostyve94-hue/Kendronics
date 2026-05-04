@@ -654,22 +654,18 @@ section {
 .home-hero-slide,
 .home-hero-copy,
 .home-hero-dot {
-  animation: home-hero-skip 10s ease-in-out infinite;
-}
-
-.home-hero-slide-delayed {
-  animation-delay: 5s;
   opacity: 0;
+  animation: home-hero-skip 15s ease-in-out infinite;
 }
 
 @keyframes home-hero-skip {
   0%,
-  44% {
+  29% {
     opacity: 1;
   }
 
-  50%,
-  94% {
+  34%,
+  95% {
     opacity: 0;
   }
 

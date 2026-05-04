@@ -196,6 +196,7 @@ export default function ProfilePage() {
       window.localStorage.setItem(avatarStorageKey, value);
       setAvatarDataUrl(value);
       setVerificationError('');
+      window.dispatchEvent(new Event('kendronics:avatar-updated'));
     };
     reader.onerror = () => setVerificationError("Impossible de charger l'image choisie.");
     reader.readAsDataURL(file);
@@ -204,6 +205,7 @@ export default function ProfilePage() {
   function removeAvatar() {
     window.localStorage.removeItem(avatarStorageKey);
     setAvatarDataUrl('');
+    window.dispatchEvent(new Event('kendronics:avatar-updated'));
   }
 
   const displayName = profile.name.trim() || emailName(profile.email) || 'Non renseigne';

@@ -6,8 +6,16 @@ import { Button } from '../components/ui/Button';
 
 const heroImage = '/images/home-hero-pcb-assembly.jpeg';
 const heroVideo = '/videos/home-hero-production.mov';
+const heroPcbVariantsImage = '/images/hero-pcb-color-variants.png';
 
 const heroSlides = [
+  {
+    eyebrow: 'PCB personnalises et assemblage',
+    title: 'Faites fabriquer vos cartes electroniques avec la finition qui correspond au projet.',
+    body: 'Kendronics centralise vos Gerber, BOM et CPL pour preparer un devis PCB/PCBA clair, avec choix de finition, controle des fichiers et suivi jusqu a la livraison.',
+    media: heroPcbVariantsImage,
+    type: 'image',
+  },
   {
     eyebrow: 'PCB, PCBA et logistique Afrique',
     title: 'Commandez vos PCB plus simplement, du fichier Gerber a la livraison.',
@@ -115,7 +123,7 @@ function Hero() {
     <section className="relative min-h-[30rem] overflow-hidden bg-[#07324a] pt-24 text-white sm:min-h-[40rem] sm:pt-28">
       <div className="absolute inset-0">
         {heroSlides.map((slide, index) => (
-          <div key={slide.title} className={`home-hero-slide absolute inset-0 ${index === 1 ? 'home-hero-slide-delayed' : ''}`}>
+          <div key={slide.title} className="home-hero-slide absolute inset-0" style={{ animationDelay: `${index * 5}s` }}>
             {slide.type === 'video' ? (
               <video className="h-full w-full object-cover opacity-70" autoPlay muted loop playsInline preload="metadata">
                 <source src={slide.media} type="video/quicktime" />
@@ -131,7 +139,7 @@ function Hero() {
       <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-7 pt-7 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[640px] lg:grid-cols-[1fr_25rem] lg:items-center lg:px-8">
         <div className="relative min-h-[20rem] lg:min-h-0 lg:pr-4">
           {heroSlides.map((slide, index) => (
-            <div key={slide.title} className={`home-hero-copy absolute inset-0 flex flex-col justify-center ${index === 1 ? 'home-hero-slide-delayed' : ''}`}>
+            <div key={slide.title} className="home-hero-copy absolute inset-0 flex flex-col justify-center" style={{ animationDelay: `${index * 5}s` }}>
               <p className="label-caps text-[#ffd22e]">{slide.eyebrow}</p>
               <h1 className="mt-3 max-w-3xl text-[1.72rem] font-black leading-tight tracking-tight text-white sm:mt-4 sm:text-5xl lg:text-6xl">
                 {slide.title}
@@ -146,8 +154,9 @@ function Hero() {
             </div>
           ))}
           <div className="absolute bottom-0 left-0 flex gap-2 sm:hidden" aria-hidden="true">
-            <span className="home-hero-dot h-1.5 w-6 bg-white" />
-            <span className="home-hero-dot home-hero-slide-delayed h-1.5 w-6 bg-white" />
+            {heroSlides.map((slide, index) => (
+              <span key={slide.title} className="home-hero-dot h-1.5 w-6 bg-white" style={{ animationDelay: `${index * 5}s` }} />
+            ))}
           </div>
         </div>
 

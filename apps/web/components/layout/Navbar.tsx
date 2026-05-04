@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { readAuthSession } from '../../lib/auth-session';
 const ORDER_STORAGE_KEY = 'kendronics.customer.orders';
+const AVATAR_STORAGE_KEY = 'kendronics.customer.avatar';
 const apiBaseUrl = getApiBaseUrl();
 
 const productItems = [
@@ -51,6 +52,8 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isVisible, setIsVisible] = useState(true);
   const [orders, setOrders] = useState<string[]>([]);
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [avatarDataUrl, setAvatarDataUrl] = useState('');
   const headerRef = useRef<HTMLElement | null>(null);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
@@ -86,6 +89,8 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         setOrders([]);
       }
 
+      setIsSignedIn(Boolean(readAuthSession()));
+      setAvatarDataUrl(window.localStorage.getItem(AVATAR_STORAGE_KEY) ?? '');
     }
 
     refreshClientState();
@@ -112,9 +117,11 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
     void refreshServerOrders();
     window.addEventListener('storage', refreshClientState);
     window.addEventListener('kendronics:orders-updated', refreshClientState);
+    window.addEventListener('kendronics:avatar-updated', refreshClientState);
     return () => {
       window.removeEventListener('storage', refreshClientState);
       window.removeEventListener('kendronics:orders-updated', refreshClientState);
+      window.removeEventListener('kendronics:avatar-updated', refreshClientState);
     };
   }, []);
 
@@ -165,10 +172,10 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
               Suivi
             </a>
             <CartLink href={cartHref} count={orders.length} />
-            <a href="/quote" className="inline-flex h-9 items-center rounded-full border border-[#0f8f6b] bg-[#edf3f8] px-5 font-bold text-[#0f8f6b] transition hover:border-[#0b7558] hover:text-[#0b7558]">
+            <a href="/quote" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-white px-5 font-bold text-[#0877ff] transition hover:border-[#0068e8] hover:bg-[#eef6ff] hover:text-[#0068e8]">
               Commande
             </a>
-            <LoginMenu />
+            <LoginMenu isSignedIn={isSignedIn} avatarDataUrl={avatarDataUrl} />
           </nav>
 
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
@@ -387,15 +394,28 @@ function Dropdown({ label, items }: { label: string; items: Array<{ label: strin
   );
 }
 
-function LoginMenu() {
+function LoginMenu({ isSignedIn, avatarDataUrl }: { isSignedIn: boolean; avatarDataUrl: string }) {
+  if (isSignedIn) {
+    return (
+      <div className="flex items-center gap-2">
+        <a href="/profile" className="inline-flex h-9 items-center rounded-sm border border-[#0f8f6b] bg-[#0f8f6b] px-5 font-bold text-white transition hover:border-[#0b7558] hover:bg-[#0b7558]">
+          Connecté
+        </a>
+        <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[#0f8f6b] bg-[#e8f7f1] text-xs font-black text-[#0f8f6b]" aria-label="Ouvrir la page compte">
+          {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : <span>K</span>}
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div className="group relative">
-      <a href="/login" className="inline-flex h-9 items-center rounded-full bg-[#0f8f6b] px-5 font-bold text-white transition hover:bg-[#0b7558]">
+      <a href="/login" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-[#0877ff] px-5 font-bold text-white transition hover:border-[#0068e8] hover:bg-[#0068e8]">
         Connexion
       </a>
       <div className="invisible absolute right-0 top-full min-w-60 translate-y-2 border border-slate-200 bg-[#edf3f8] p-4 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
         <span className="absolute -top-2 right-8 h-4 w-4 rotate-45 border-l border-t border-slate-200 bg-[#edf3f8]" />
-        <a href="/login" className="flex h-10 items-center justify-center rounded-full bg-[#0f8f6b] text-sm font-semibold text-white hover:bg-[#0b7558]">
+        <a href="/login" className="flex h-10 items-center justify-center rounded-sm bg-[#0877ff] text-sm font-semibold text-white hover:bg-[#0068e8]">
           Connexion
         </a>
         <p className="mt-3 text-sm text-slate-600">
