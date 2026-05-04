@@ -377,7 +377,7 @@ export default function QuotePage() {
 
   return (
     <main className="min-h-screen bg-white text-[#1f2933]">
-      <Navbar hideHeader />
+      <Navbar />
       <section className="border-b border-slate-200 bg-white pt-4 sm:pt-6">
         <div className="mx-auto max-w-[1280px] px-3 pb-3 sm:px-6 sm:pb-5 lg:px-8">
           <div className="flex flex-col gap-2 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
