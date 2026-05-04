@@ -116,10 +116,12 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
 
     void refreshServerOrders();
     window.addEventListener('storage', refreshClientState);
+    window.addEventListener('kendronics:auth-updated', refreshClientState);
     window.addEventListener('kendronics:orders-updated', refreshClientState);
     window.addEventListener('kendronics:avatar-updated', refreshClientState);
     return () => {
       window.removeEventListener('storage', refreshClientState);
+      window.removeEventListener('kendronics:auth-updated', refreshClientState);
       window.removeEventListener('kendronics:orders-updated', refreshClientState);
       window.removeEventListener('kendronics:avatar-updated', refreshClientState);
     };

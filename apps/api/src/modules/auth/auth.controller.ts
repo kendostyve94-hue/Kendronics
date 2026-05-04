@@ -39,6 +39,11 @@ export class AuthController {
     return this.authService.refresh(dto);
   }
 
+  @Post('logout')
+  logout(@Body() dto: RefreshTokenDto) {
+    return this.authService.logout(dto);
+  }
+
   @Get('oauth/google/start')
   @Redirect()
   startGoogleOAuth() {

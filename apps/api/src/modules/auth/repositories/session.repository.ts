@@ -40,6 +40,16 @@ export class SessionRepository {
     });
   }
 
+  async revokeByRefreshToken(refreshToken: string): Promise<void> {
+    await this.prisma.session.updateMany({
+      where: {
+        refreshTokenHash: this.authTokenService.hashToken(refreshToken),
+        revokedAt: null,
+      },
+      data: { revokedAt: new Date() },
+    });
+  }
+
   private toSession(session: {
     id: string;
     userId: string;

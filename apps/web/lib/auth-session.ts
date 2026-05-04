@@ -49,6 +49,7 @@ export function clearAuthSession() {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(SESSION_STORAGE_KEY);
   window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+  window.dispatchEvent(new Event('kendronics:auth-updated'));
 }
 
 export async function readFreshAuthSession(): Promise<StoredAuthSession | null> {

@@ -52,6 +52,11 @@ export class AuthService {
     return this.issueTokens(session.userId, session.email);
   }
 
+  async logout(dto: RefreshTokenDto): Promise<{ ok: true }> {
+    await this.sessionRepository.revokeByRefreshToken(dto.refreshToken);
+    return { ok: true };
+  }
+
   private async issueTokens(userId: string, email: string): Promise<AuthTokens> {
     const user = await this.usersService.findById(userId);
     if (!user) {

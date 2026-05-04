@@ -18,6 +18,12 @@ export interface RefreshSessionRequest {
 
 export type RefreshSessionResponse = AuthTokens;
 
+export type LogoutRequest = RefreshSessionRequest;
+
+export interface LogoutResponse {
+  ok: true;
+}
+
 export interface ForgotPasswordRequest {
   email: string;
 }
@@ -40,6 +46,12 @@ export const authApiContract = {
     path: '/api/auth/refresh',
     request: 'RefreshSessionRequest',
     response: 'RefreshSessionResponse',
+  },
+  logout: {
+    method: 'POST',
+    path: '/api/auth/logout',
+    request: 'LogoutRequest',
+    response: 'LogoutResponse',
   },
   forgotPassword: {
     method: 'POST',

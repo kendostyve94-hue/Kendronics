@@ -5,7 +5,7 @@ import { Footer } from '../../components/layout/Footer';
 import { Navbar } from '../../components/layout/Navbar';
 import { Card } from '../../components/ui/Card';
 import { getApiBaseUrl } from '../../lib/api-base-url';
-import { readAuthSession, readFreshAuthSession } from '../../lib/auth-session';
+import { clearAuthSession, readAuthSession, readFreshAuthSession } from '../../lib/auth-session';
 
 const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
@@ -52,6 +52,7 @@ export default function ProfilePage() {
   const [avatarDataUrl, setAvatarDataUrl] = useState('');
   const [verificationError, setVerificationError] = useState('');
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'sending' | 'verifying'>('idle');
+  const [logoutStatus, setLogoutStatus] = useState<'idle' | 'signing_out'>('idle');
 
   useEffect(() => {
     const storedProfile = readStoredProfile();
@@ -208,6 +209,28 @@ export default function ProfilePage() {
     window.dispatchEvent(new Event('kendronics:avatar-updated'));
   }
 
+  async function logout() {
+    if (logoutStatus === 'signing_out') return;
+
+    setLogoutStatus('signing_out');
+    const session = readAuthSession();
+
+    try {
+      if (session?.refreshToken) {
+        await fetch(`${apiBaseUrl}/api/auth/logout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: session.refreshToken }),
+        }).catch(() => null);
+      }
+    } finally {
+      clearAuthSession();
+      window.localStorage.removeItem('kendronics.customer.orders');
+      window.dispatchEvent(new Event('kendronics:orders-updated'));
+      window.location.assign('/login');
+    }
+  }
+
   const displayName = profile.name.trim() || emailName(profile.email) || 'Non renseigne';
   const displayEmail = profile.email.trim() || 'Connectez-vous pour afficher votre e-mail';
   const accountNumber = accountId ? formatAccountNumber(accountId) : 'Connexion requise';
@@ -340,10 +363,10 @@ export default function ProfilePage() {
         </Card>
 
         <Card className="p-0">
-          <a href="/login" className="flex min-h-14 items-center gap-3 px-4 text-sm font-black text-ink sm:px-6">
+          <button type="button" onClick={() => void logout()} disabled={logoutStatus === 'signing_out'} className="flex min-h-14 w-full items-center gap-3 px-4 text-left text-sm font-black text-ink transition hover:text-deepblue disabled:cursor-wait disabled:text-slate-500 sm:px-6">
             <PowerIcon />
-            Se deconnecter
-          </a>
+            {logoutStatus === 'signing_out' ? 'Deconnexion...' : 'Se deconnecter'}
+          </button>
         </Card>
       </section>
 
