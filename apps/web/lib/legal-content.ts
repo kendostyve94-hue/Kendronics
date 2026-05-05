@@ -15,82 +15,47 @@ export interface LegalDocument {
 }
 
 export const termsDocument: LegalDocument = {
-  title: 'Terms and Conditions',
-  eyebrow: 'Legal',
+  title: 'CADRE LEGAL',
+  eyebrow: 'Cadre légal',
   description:
-    'Terms for using Kendronics as a PCB ordering, payment, logistics, tracking, and support platform.',
+    'Documents de référence pour utiliser Kendronics, commander des PCB, gérer les fichiers, le paiement, la confidentialité et les cookies.',
   lastUpdated: 'April 25, 2026',
   reviewNote:
     'Kendronics may update these terms as operations, partners, payment methods, and logistics flows evolve.',
   sections: [
     {
-      title: '1. Platform role',
+      title: 'Conditions Générales de Vente',
       body: [
         'Kendronics is an intermediary platform. Kendronics helps customers configure PCB-related orders, upload files, request quotes, facilitate payment, coordinate logistics, track orders, and manage support.',
         'Kendronics is not a PCB manufacturer and does not represent itself as the factory producing customer boards. Manufacturing is performed by external manufacturing partners.',
       ],
     },
     {
-      title: '2. External manufacturing partners',
+      title: 'Conditions Générales d’Utilisation',
       body: [
         'External manufacturing partners are responsible for producing PCBs, PCBA work, SMT stencils, and related manufacturing services according to accepted production files and confirmed specifications.',
         'Manufacturing availability, lead time, material options, advanced features, testing, assembly, and final production acceptance may depend on partner review.',
       ],
     },
     {
-      title: '3. Customer file responsibility',
+      title: 'Politique de Confidentialité',
       body: [
         'Customers are responsible for the correctness, completeness, revision control, and production-readiness of uploaded Gerber, BOM, CPL, drill, outline, and related files.',
         'Kendronics may provide file review assistance, but review assistance does not transfer design responsibility from the customer to Kendronics or to a manufacturing partner.',
       ],
     },
     {
-      title: '4. Quotes and pricing',
+      title: 'Politique de Cookies',
       body: [
         'Quotes may include partner manufacturing cost, partner handling, China to France logistics where applicable, France processing and logistics, France to Africa delivery, payment processing, Kendronics service fee, and customs or delivery risk buffer where applicable.',
         'Pricing may change based on country, quantity, dimensions, material, surface finish, copper weight, assembly needs, file review, partner availability, carrier availability, customs assumptions, or other order-specific factors.',
       ],
     },
     {
-      title: '5. Payment',
+      title: 'Mentions légales',
       body: [
         'Payments may be processed through Stripe, Mobile Money providers, or other supported payment providers. Kendronics does not require customers to send card details by email or support ticket.',
         'An order may not proceed to partner fulfillment until payment is confirmed or otherwise approved by Kendronics.',
-      ],
-    },
-    {
-      title: '6. Refunds and cancellations',
-      body: [
-        'Refund eligibility depends on order status, payment status, partner manufacturing progress, file issues, logistics progress, and costs already committed.',
-        'Once manufacturing has been ordered or production has started, refunds may be limited or unavailable except where required by applicable law or confirmed by case-by-case review.',
-      ],
-    },
-    {
-      title: '7. Delivery, customs, and delays',
-      body: [
-        'Delivery estimates are not guarantees. Manufacturing lead time, inbound logistics, France processing, carrier routing, customs, documentation, duties, destination country conditions, and local delivery operations may affect timing.',
-        'Customers may be responsible for customs duties, taxes, import requirements, local compliance obligations, or additional destination-specific charges unless expressly included in the confirmed quote.',
-      ],
-    },
-    {
-      title: '8. Tracking and support',
-      body: [
-        'Tracking information is customer-safe and may include status, timeline, estimated delivery, destination country, and carrier or tracking number when available.',
-        'Support is provided through professional email support, support tickets, and dashboard notifications where available. WhatsApp is not the primary support channel.',
-      ],
-    },
-    {
-      title: '9. Limitation of liability',
-      body: [
-        'To the maximum extent permitted by law, Kendronics is not liable for indirect, incidental, special, consequential, punitive, or lost-profit damages arising from use of the platform, manufacturing outcomes, delays, customs issues, carrier issues, or customer file errors.',
-        'Kendronics liability, where legally permitted, may be limited to amounts paid to Kendronics for the affected order or service.',
-      ],
-    },
-    {
-      title: '10. Dispute process',
-      body: [
-        'Customers should first contact Kendronics support with the relevant ticket number, order ID, payment reference, files, and a clear description of the issue.',
-        'Kendronics will review disputes case by case, including order status, partner manufacturing status, payment records, delivery records, customer files, and support history. If the issue is not resolved informally, the applicable legal process and jurisdiction will be handled according to the terms in force for the order.',
       ],
     },
   ],

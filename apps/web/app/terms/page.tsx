@@ -3,8 +3,8 @@ import { LegalDocumentPage } from '../../components/legal/LegalDocumentPage';
 import { termsDocument } from '../../lib/legal-content';
 
 export const metadata: Metadata = {
-  title: 'Conditions generales | Kendronics',
-  description: 'Conditions d utilisation de Kendronics pour commande PCB, paiement, logistique, suivi et support.',
+  title: 'Cadre légal | Kendronics',
+  description: 'Cadre légal Kendronics pour commande PCB, paiement, logistique, suivi, confidentialité et support.',
 };
 
 export default function TermsPage() {
