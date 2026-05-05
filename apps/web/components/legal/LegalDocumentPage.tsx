@@ -31,9 +31,11 @@ export function LegalDocumentPage({ document }: { document: LegalDocument }) {
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-14 sm:px-6 lg:grid-cols-[18rem_1fr] lg:px-8">
         <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
           <Card glass className="p-5">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Last updated</p>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Dernière mise à jour</p>
             <p className="mt-2 text-lg font-black text-ink">{document.lastUpdated}</p>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{document.reviewNote}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Pour toute question liée à ces documents, contactez le support Kendronics.
+            </p>
           </Card>
           <Card className="p-5">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Documents</p>
@@ -42,10 +44,10 @@ export function LegalDocumentPage({ document }: { document: LegalDocument }) {
                 Conditions
               </a>
               <a className="block rounded-xl border border-slate-200 px-3 py-3 text-slate-600 transition hover:border-sky-200 hover:text-deepblue" href="/privacy">
-                Confidentialite
+                Confidentialité
               </a>
               <a className="block rounded-xl border border-slate-200 px-3 py-3 text-slate-600 transition hover:border-sky-200 hover:text-deepblue" href="/refund-policy">
-                Refunds
+                Remboursements
               </a>
               <a className="block rounded-xl border border-slate-200 px-3 py-3 text-slate-600 transition hover:border-sky-200 hover:text-deepblue" href="/cookie-policy">
                 Cookies
@@ -70,10 +72,10 @@ export function LegalDocumentPage({ document }: { document: LegalDocument }) {
 
           <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Besoin d aide ?</p>
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Besoin d’aide ?</p>
               <h2 className="mt-3 text-3xl font-black tracking-tight">Contact Kendronics support.</h2>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-sky-100">
-                Utilisez les tickets support pour les commandes et {officialContactEmail} pour les demandes de confidentialite.
+                Utilisez les tickets support pour les commandes et {officialContactEmail} pour les demandes de confidentialité.
               </p>
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0">

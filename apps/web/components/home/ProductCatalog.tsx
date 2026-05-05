@@ -5,31 +5,31 @@ import { Button } from '../ui/Button';
 
 const productCards = [
   {
-    title: 'PCB standard',
-    tag: 'FR-4',
-    details: ['1 a 12 couches', 'HASL ou ENIG', 'Prototype et petites series'],
-    price: 'Devis instantane',
-    time: 'Production rapide',
+    title: 'PCB prototype',
+    tag: 'FR-4 standard',
+    details: ['1 à 6 couches', 'HASL sans plomb ou ENIG', 'Idéal pour validation technique'],
+    price: 'Estimation immédiate',
+    time: 'Dossier vérifié avant lancement',
     href: '/quote',
     image: '/images/product-pcb-standard-transparent.png',
-    cta: 'Configurer un PCB',
+    cta: 'Configurer le prototype',
   },
   {
-    title: 'PCB petit lot',
-    tag: 'Pilotage',
-    details: ['Quantites faibles ou moyennes', 'Recommande pour tests terrain', 'Logistique Afrique incluse'],
-    price: 'Prix transparent',
-    time: 'Suivi client',
+    title: 'Petite série',
+    tag: 'Pilote terrain',
+    details: ['10 à 500 pièces', 'Même configuration reproductible', 'Livraison Afrique planifiée'],
+    price: 'Prix consolidé',
+    time: 'Suivi jusqu’à réception',
     href: '/services#pcb-petit-lot',
     image: '/images/product-pcb-small-batch.png',
-    cta: 'Voir le pilotage',
+    cta: 'Préparer la série',
   },
   {
-    title: 'PCB avance',
-    tag: 'Review',
-    details: ['Impedance controlee', 'Materiaux speciaux', 'Options haute precision'],
-    price: 'Revue technique',
-    time: 'Validation support',
+    title: 'PCB avancé',
+    tag: 'Revue technique',
+    details: ['Impédance contrôlée', 'Matériaux spéciaux sur étude', 'Options HDI et haute précision'],
+    price: 'Validation fournisseur',
+    time: 'Retour technique avant paiement',
     href: '/services#pcb-avance',
     image: '/images/product-pcb-advanced.png',
     cta: 'Demander une revue',
@@ -37,19 +37,19 @@ const productCards = [
   {
     title: 'Assemblage PCBA',
     tag: 'BOM / CPL',
-    details: ['BOM et CPL requis', 'Sourcing composants', 'Preparation production'],
-    price: 'Sur demande',
-    time: 'Controle fichiers',
+    details: ['BOM et CPL requis', 'Sourcing composants coordonné', 'Préparation production documentée'],
+    price: 'Chiffrage sur dossier',
+    time: 'Contrôle des fichiers',
     href: '/quote',
     image: '/images/product-pcba-assembly.png',
-    cta: 'Preparer un PCBA',
+    cta: 'Préparer un PCBA',
   },
   {
     title: 'Stencil SMT',
     tag: 'CMS',
-    details: ['Stencil prototype', 'Stencil production', 'Planification avec PCB'],
-    price: 'Ajout simple',
-    time: 'Avec commande',
+    details: ['Prototype ou production', 'Épaisseur adaptée au montage', 'Planification avec le PCB'],
+    price: 'Ajout au devis',
+    time: 'Groupé avec la commande',
     href: '/services#stencil',
     image: '/images/product-stencil-smt.png',
     cta: 'Voir les stencils',
@@ -57,9 +57,9 @@ const productCards = [
   {
     title: 'Assistance Gerber',
     tag: 'Support',
-    details: ['Verification ZIP', 'Conseils DFM', 'Aide debutant'],
-    price: 'Support guide',
-    time: 'Avant paiement',
+    details: ['Vérification du ZIP', 'Conseils DFM', 'Aide à l’export KiCad / EasyEDA'],
+    price: 'Support avant commande',
+    time: 'Avant mise en fabrication',
     href: '/guide-technique',
     image: '/images/hero-pcb-color-variants-transparent.png',
     cta: 'Ouvrir le guide',
@@ -67,7 +67,7 @@ const productCards = [
 ];
 
 type ProductCard = (typeof productCards)[number];
-const defaultProductIndex = productCards.findIndex((card) => card.title === 'PCB avance');
+const defaultProductIndex = productCards.findIndex((card) => card.title === 'PCB avancé');
 
 export function ProductCatalog() {
   const [activeIndex, setActiveIndex] = useState(defaultProductIndex);
@@ -78,10 +78,10 @@ export function ProductCatalog() {
       <div className="mx-auto max-w-[1440px]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <p className="label-caps text-deepblue">Solutions electroniques</p>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-ink sm:text-3xl lg:text-4xl">Un catalogue clair pour passer au devis.</h2>
+            <p className="label-caps text-deepblue">Fabrication électronique</p>
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-ink sm:text-3xl lg:text-4xl">Choisissez le bon parcours avant de lancer un devis.</h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-              Retrouvez les formats les plus demandes, avec les informations essentielles visibles au premier coup d oeil.
+              PCB prototype, petite série, assemblage ou stencil : chaque offre précise les fichiers attendus, le niveau de validation et la suite opérationnelle.
             </p>
           </div>
           <Button href="/services" variant="secondary" className="hidden sm:inline-flex lg:h-12 lg:px-7">Tout explorer</Button>
@@ -137,7 +137,7 @@ export function ProductCatalog() {
                 {activeCard.cta}
               </a>
               <a href="/quote" className="inline-flex h-11 items-center justify-center rounded-sm border border-line bg-white px-5 text-sm font-normal text-ink transition hover:border-deepblue hover:text-deepblue">
-                Demande un devis
+                Demander un devis
               </a>
             </div>
           </article>

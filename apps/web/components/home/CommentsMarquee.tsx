@@ -55,7 +55,7 @@ export function CommentsMarquee() {
                 <h3 className="text-sm font-black text-ink">{comment.name}</h3>
                 <p className="mt-1 text-xs font-bold text-slate-500">{comment.role}</p>
               </div>
-              <div className="whitespace-nowrap text-sm text-[#c8951d]" aria-label={`${comment.rating} etoiles`}>
+              <div className="whitespace-nowrap text-sm text-[#c8951d]" aria-label={`${comment.rating} étoiles`}>
                 {'★'.repeat(comment.rating)}
               </div>
             </div>

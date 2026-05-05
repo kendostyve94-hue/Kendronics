@@ -21,7 +21,7 @@ export const termsDocument: LegalDocument = {
     'Terms for using Kendronics as a PCB ordering, payment, logistics, tracking, and support platform.',
   lastUpdated: 'April 25, 2026',
   reviewNote:
-    'This document is a product-ready draft for legal review and should be validated by qualified counsel before launch.',
+    'Kendronics may update these terms as operations, partners, payment methods, and logistics flows evolve.',
   sections: [
     {
       title: '1. Platform role',
@@ -90,7 +90,7 @@ export const termsDocument: LegalDocument = {
       title: '10. Dispute process',
       body: [
         'Customers should first contact Kendronics support with the relevant ticket number, order ID, payment reference, files, and a clear description of the issue.',
-        'Kendronics will review disputes case by case, including order status, partner manufacturing status, payment records, delivery records, customer files, and support history. If the issue is not resolved informally, the applicable legal process and jurisdiction should be confirmed in the final legally reviewed terms.',
+        'Kendronics will review disputes case by case, including order status, partner manufacturing status, payment records, delivery records, customer files, and support history. If the issue is not resolved informally, the applicable legal process and jurisdiction will be handled according to the terms in force for the order.',
       ],
     },
   ],
@@ -103,13 +103,13 @@ export const privacyDocument: LegalDocument = {
     'How Kendronics collects, uses, stores, shares, and protects account, order, upload, payment, tracking, and support data.',
   lastUpdated: 'April 25, 2026',
   reviewNote:
-    'This GDPR-aware structure is ready for legal review. Final controller details, retention periods, processors, and jurisdiction-specific rights should be confirmed before launch.',
+    'Kendronics may update this policy when data flows, processors, retention rules, or legal requirements change.',
   sections: [
     {
       title: '1. Who we are',
       body: [
         'Kendronics is a France-based PCB ordering, payment, logistics, tracking, and support platform for customers ordering through external manufacturing partners.',
-        `Privacy requests may be sent to ${officialContactEmail}. Final company registration details and any Data Protection Officer contact should be added before publication.`,
+        `Privacy requests may be sent to ${officialContactEmail}. Kendronics may also provide additional company or data protection contacts where required.`,
       ],
     },
     {
@@ -158,14 +158,14 @@ export const privacyDocument: LegalDocument = {
       title: '8. International transfers',
       body: [
         'Because Kendronics coordinates international manufacturing and logistics, data may be processed in or transferred to countries outside the European Economic Area where partners, providers, or infrastructure are located.',
-        'Appropriate safeguards and processor agreements should be confirmed during legal review where GDPR transfer rules apply.',
+        'Kendronics applies appropriate safeguards and processor arrangements where transfer rules require them.',
       ],
     },
     {
       title: '9. Data retention',
       body: [
         'We keep data only as long as needed for service delivery, customer support, legal compliance, accounting, security, dispute handling, and legitimate operational records.',
-        'Specific retention periods for account data, uploaded files, order records, support tickets, payment references, analytics data, and backups should be defined before launch.',
+        'Retention periods may vary by data category, including account data, uploaded files, order records, support tickets, payment references, analytics data, and backups.',
       ],
     },
     {
@@ -185,7 +185,7 @@ export const refundDocument: LegalDocument = {
     'How Kendronics reviews refund requests for quote, payment, manufacturing, file, delivery, and support issues.',
   lastUpdated: 'April 25, 2026',
   reviewNote:
-    'This refund policy is a draft for legal and operations review. Final refund windows, consumer rights language, and payment-provider rules should be validated before launch.',
+    'Kendronics may update this refund policy as payment providers, order flows, and logistics operations evolve.',
   sections: [
     {
       title: '1. Refund eligibility',
@@ -246,7 +246,7 @@ export const cookieDocument: LegalDocument = {
     'How Kendronics may use cookies and similar technologies for security, authentication, preferences, analytics, and performance.',
   lastUpdated: 'April 25, 2026',
   reviewNote:
-    'This cookie policy is a draft. Final cookie names, vendors, expiry periods, and consent tooling should be added after implementation audit.',
+    'Kendronics may update this cookie policy when cookies, vendors, retention periods, or consent tooling change.',
   sections: [
     {
       title: '1. What cookies are',
@@ -294,7 +294,7 @@ export const cookieDocument: LegalDocument = {
       title: '7. Updates',
       body: [
         'Kendronics may update this Cookie Policy when cookies, analytics tools, payment providers, support tools, or legal requirements change.',
-        'A detailed cookie table with cookie name, provider, purpose, category, and retention period should be added after the final production cookie audit.',
+        'Kendronics may provide more detailed cookie information, including cookie name, provider, purpose, category, and retention period, when applicable.',
       ],
     },
   ],

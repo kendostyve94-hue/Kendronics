@@ -1,4 +1,3 @@
-import { CommentsMarquee } from '../components/home/CommentsMarquee';
 import { HeroQuickQuote } from '../components/home/HeroQuickQuote';
 import { ProductCatalog } from '../components/home/ProductCatalog';
 import { Footer } from '../components/layout/Footer';
@@ -10,25 +9,25 @@ const heroControllerBoardImage = '/images/hero-controller-board-transparent.png'
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
 const heroSlides = [
   {
-    eyebrow: 'PCB personnalises et assemblage',
-    title: 'Faites fabriquer vos cartes electroniques avec la finition qui correspond au projet.',
-    body: 'Kendronics centralise vos Gerber, BOM et CPL pour preparer un devis PCB/PCBA clair, avec choix de finition, controle des fichiers et suivi jusqu a la livraison.',
+    eyebrow: 'PCB personnalisés et assemblage',
+    title: 'Passez d’un dossier Gerber à une commande PCB suivie.',
+    body: 'Kendronics vous aide à configurer vos PCB, vérifier les fichiers essentiels et coordonner fabrication, paiement et livraison vers l’Afrique.',
     media: heroPcbVariantsImage,
     type: 'image',
     imageClassName: 'object-contain object-right opacity-100 lg:translate-x-0',
   },
   {
-    eyebrow: 'Carte controleur et assemblage',
-    title: 'Preparez vos cartes equipees avec les connecteurs, composants et options attendus.',
-    body: 'Du PCB nu a l assemblage PCBA, Kendronics organise la lecture BOM/CPL, la verification des interfaces et la coordination de fabrication pour livrer une carte prete a integrer.',
+    eyebrow: 'PCBA et composants',
+    title: 'Préparez vos cartes assemblées sans perdre le contrôle du dossier.',
+    body: 'BOM, CPL, composants critiques, options de montage : le parcours garde les informations techniques attachées au devis et au suivi client.',
     media: heroControllerBoardImage,
     type: 'image',
     imageClassName: 'object-contain object-right opacity-100 lg:translate-x-0',
   },
   {
     eyebrow: 'Cartes complexes et industrialisation',
-    title: 'Faites produire des cartes avancees sans perdre la maitrise technique.',
-    body: 'Pour les prototypes multicouches, cartes processeur et projets avec interfaces nombreuses, Kendronics structure les fichiers, les options de fabrication et le suivi avant lancement.',
+    title: 'Faites examiner les options avancées avant de lancer la fabrication.',
+    body: 'Multicouche, impédance contrôlée, matériaux spéciaux ou contraintes de livraison : les demandes sensibles passent par une revue avant confirmation.',
     media: heroStackedPcbImage,
     type: 'image',
     imageClassName: 'object-contain object-right opacity-100 lg:translate-x-0',
@@ -37,22 +36,29 @@ const heroSlides = [
 
 const workflowSteps = [
   ['01', 'Uploader les fichiers', 'Ajoutez Gerber ZIP, BOM et CPL si assemblage.'],
-  ['02', 'Configurer le PCB', 'Choisissez couches, dimensions, quantite, finition et livraison.'],
-  ['03', 'Reviser le devis', 'Visualisez fabrication, logistique, paiement et frais de service.'],
+  ['02', 'Configurer le PCB', 'Choisissez couches, dimensions, quantité, finition et livraison.'],
+  ['03', 'Réviser le devis', 'Visualisez fabrication, logistique, paiement et frais de service.'],
   ['04', 'Commander et suivre', 'Payez puis suivez les jalons dans la page Suivi.'],
 ];
 
 const capabilityRows = [
-  ['Materiaux', 'FR-4, aluminium, cuivre core, flex, Rogers/PTFE selon revue.'],
+  ['Matériaux', 'FR-4, aluminium, cuivre core, flex, Rogers/PTFE selon revue.'],
   ['Finitions', 'HASL lead-free, ENIG, OSP, immersion silver.'],
   ['Tests', 'Flying probe, AOI, full electrical test selon configuration.'],
-  ['Logistique', 'Coordination France, transport Afrique, suivi client.'],
+  ['Logistique', 'Coordination France, transport vers l’Afrique et suivi client.'],
 ];
 
 const resourceItems = [
-  ['Guide technique', 'Gerber, KiCad, EasyEDA, erreurs courantes et bases debutant.', '/guide-technique'],
-  ['Capacites', 'Materiaux, finitions, via, cuivre, assemblage et options avancees.', '/capabilities'],
-  ['Comment ca marche', 'Le parcours complet entre fichiers, devis, paiement, production et livraison.', '/how-it-works'],
+  ['Guide technique', 'Gerber, KiCad, EasyEDA, erreurs courantes et bases pour préparer un dossier propre.', '/guide-technique'],
+  ['Capacités', 'Matériaux, finitions, vias, cuivre, assemblage et options avancées.', '/capabilities'],
+  ['Comment ça marche', 'Le parcours complet entre fichiers, devis, paiement, production et livraison.', '/how-it-works'],
+];
+
+const operationalProofs = [
+  ['Dossier de fabrication', 'Gerber ZIP, BOM et CPL restent attachés au devis pour éviter les échanges dispersés.'],
+  ['Cadre fournisseur', 'Les options sensibles sont signalées avant paiement pour limiter les mauvaises surprises techniques.'],
+  ['Suivi client', 'Chaque commande conserve ses jalons visibles : paiement, production, transit et réception.'],
+  ['Logistique Afrique', 'Le parcours intègre le pays de destination dès le devis pour cadrer transport et support.'],
 ];
 
 export default function HomePage() {
@@ -63,13 +69,37 @@ export default function HomePage() {
       <MobileQuickAccess />
       <ProductCatalog />
       <SmartOrdering />
-      <section className="hidden bg-white lg:block">
-        <CommentsMarquee />
-      </section>
+      <OperationalProofs />
       <TrustBlock />
       <Resources />
       <Footer />
     </main>
+  );
+}
+
+function OperationalProofs() {
+  return (
+    <section className="bg-white px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <div className="mx-auto max-w-[1180px]">
+        <div className="mb-5 flex flex-col gap-3 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="label-caps text-deepblue">Preuves opérationnelles</p>
+            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Ce que le client garde sous contrôle.</h2>
+          </div>
+          <Button href="/how-it-works" variant="secondary" className="sm:h-12">
+            Voir le parcours
+          </Button>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          {operationalProofs.map(([title, body]) => (
+            <article key={title} className="border border-line bg-slate-50 p-4">
+              <h3 className="text-sm font-black text-ink">{title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -108,7 +138,7 @@ function Hero() {
         </div>
 
         <div className="relative mt-[10.25rem] grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:items-center sm:gap-3">
-          <Button href="/quote" className="h-11 whitespace-nowrap px-2 text-xs !font-normal sm:h-12 sm:px-7 sm:text-sm">Demande un devis</Button>
+          <Button href="/quote" className="h-11 whitespace-nowrap px-2 text-xs !font-normal sm:h-12 sm:px-7 sm:text-sm">Demander un devis</Button>
           <Button href="/services" variant="secondary" className="h-11 whitespace-nowrap px-2 text-xs !font-normal sm:h-12 sm:px-7 sm:text-sm">Voir les services</Button>
           <HeroQuickQuote />
         </div>
@@ -134,7 +164,7 @@ function MobileQuickAccess() {
   return (
     <section className="bg-white px-4 py-4 sm:px-6 lg:hidden">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-black text-ink">Acces rapide</h2>
+        <h2 className="text-sm font-black text-ink">Accès rapide</h2>
         <a href="/quote" className="text-xs font-black text-deepblue">Devis</a>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -156,13 +186,13 @@ function SmartOrdering() {
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
           <div>
             <p className="label-caps text-deepblue">Commande intelligente</p>
-            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Un parcours lisible de l upload au suivi.</h2>
+            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              L organisation reprend une logique simple : fichier, configuration, verification, paiement, puis suivi client.
+              Le devis conserve le contexte technique : fichiers, configuration, vérification, paiement, jalons de fabrication et livraison.
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:gap-3">
               <Button href="/quote">Commencer</Button>
-              <Button href="/how-it-works" variant="secondary">Comment ca marche</Button>
+              <Button href="/how-it-works" variant="secondary">Comment ça marche</Button>
             </div>
           </div>
 
@@ -186,8 +216,8 @@ function TrustBlock() {
     <section className="bg-white px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
       <div className="mx-auto grid max-w-[21.5rem] gap-5 sm:max-w-[1180px] sm:gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
         <div className="min-w-0">
-          <p className="label-caps text-deepblue">Capacites et preuves</p>
-          <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Une plateforme de coordination, pas une promesse floue.</h2>
+          <p className="label-caps text-deepblue">Capacités et cadre de service</p>
+          <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Des options techniques visibles avant validation.</h2>
           <div className="mt-5 grid gap-2.5 sm:mt-6 sm:gap-3">
             {capabilityRows.map(([title, body]) => (
               <div key={title} className="border border-line bg-slate-50 p-3 sm:p-4">
@@ -201,18 +231,15 @@ function TrustBlock() {
         <div className="min-w-0">
           <div className="border border-line bg-white p-4 sm:p-6">
             <p className="label-caps text-deepblue">Pourquoi Kendronics</p>
-            <h3 className="mt-3 text-xl font-black leading-tight text-ink sm:text-2xl">Un seul endroit pour devis, paiement, support et livraison.</h3>
+            <h3 className="mt-3 text-xl font-black leading-tight text-ink sm:text-2xl">Un seul dossier pour le devis, le paiement, le support et la livraison.</h3>
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              Kendronics sert de couche operationnelle entre vos fichiers, les partenaires de fabrication, la logistique et le support client.
+              Kendronics sert de couche opérationnelle entre vos fichiers, les partenaires de fabrication, la logistique et le support client.
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:gap-3">
               {['Prix lisible', 'Support Gerber', 'Suivi commande', 'Livraison Afrique'].map((item) => (
                 <div key={item} className="flex min-h-12 items-center border border-line bg-slate-50 p-2.5 text-[13px] font-black leading-5 text-ink sm:min-h-14 sm:p-3 sm:text-sm">{item}</div>
               ))}
             </div>
-          </div>
-          <div className="lg:hidden">
-            <CommentsMarquee />
           </div>
         </div>
       </div>
@@ -226,7 +253,7 @@ function Resources() {
       <div className="mx-auto max-w-[1180px]">
         <div className="mb-8">
           <p className="label-caps text-deepblue">Guides et solutions</p>
-          <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Les reponses utiles avant de commander.</h2>
+          <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Les réponses utiles avant de commander.</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {resourceItems.map(([title, body, href]) => (

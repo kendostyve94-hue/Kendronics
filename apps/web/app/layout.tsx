@@ -5,7 +5,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Kendronics Devis PCB en ligne',
   description:
-    'Plateforme de commande PCB, paiement, coordination et logistique pour les ingenieurs, etudiants et startups en Afrique.',
+    'Plateforme de commande PCB, paiement, coordination et logistique pour les ingénieurs, étudiants et startups en Afrique.',
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

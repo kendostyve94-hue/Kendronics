@@ -186,7 +186,7 @@ export function PricingSummary({
         <div className="mx-auto max-w-md">
           <div className="flex items-center gap-3">
             <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Afficher le detail du prix" aria-expanded={priceDetailsOpen}>
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estime</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estimé</p>
               <p className="mt-0.5 text-lg font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
             </button>
             <button
@@ -322,11 +322,11 @@ export function PricingSummary({
 
             <div className="rounded-sm border border-slate-200 bg-white p-3">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Tarifs transporteurs live</p>
-              {ratesState === 'loading' ? <p className="mt-2 text-sm text-slate-600">Chargement des tarifs officiels...</p> : null}
-              {ratesState === 'error' ? <p className="mt-2 text-sm text-red-700">Impossible de recuperer les tarifs live.</p> : null}
+              {ratesState === 'loading' ? <p className="mt-2 text-sm text-slate-600">Chargement des tarifs transporteurs...</p> : null}
+              {ratesState === 'error' ? <p className="mt-2 text-sm text-red-700">Tarifs transporteurs indisponibles pour cette configuration.</p> : null}
               {ratesState === 'ready' && rates.length === 0 ? (
                 <p className="mt-2 text-sm leading-5 text-slate-600">
-                  Aucune API transporteur n'est configuree. Ajoutez les identifiants DHL/FedEx cote serveur pour afficher des prix officiels toujours a jour.
+                  Les tarifs transporteurs seront confirmés avec le devis final selon le pays, le poids et le mode d’expédition.
                 </p>
               ) : null}
               {rates.map((rate) => (
@@ -354,7 +354,7 @@ export function PricingSummary({
         <p className="mt-3 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500 sm:mt-4">
           {isSupplierPrice
             ? pricing.transparencyNote
-            : 'Le montant affiche sert de previsualisation pendant la configuration. Kendronics travaille a connecter les tarifs fournisseur en temps reel avant validation commerciale finale.'}
+            : 'Ce montant estime la fabrication, la logistique et les frais de service à partir des paramètres sélectionnés. Une vérification peut être nécessaire avant confirmation finale.'}
         </p>
       </div>
     </aside>

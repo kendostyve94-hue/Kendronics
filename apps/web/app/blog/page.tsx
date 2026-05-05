@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Blog Kendronics | Guides PCB pour les builders africains',
     description:
-      'Learn PCB design, Gerber export, ordering, logistics, and manufacturing basics for African hardware projects.',
+      'Guides PCB, export Gerber, commande, logistique et bases de fabrication pour les projets hardware africains.',
     type: 'website',
   },
 };
@@ -48,29 +48,29 @@ export default function BlogPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-deepblue via-deepblue/[0.9] to-ink/[0.72]" />
             <div className="relative">
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Newsletter CTA</p>
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Ressources PCB</p>
               <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-                Get practical PCB ordering and logistics guides.
+                Recevez les prochains guides de fabrication.
               </h2>
               <p className="mt-4 max-w-3xl text-sm leading-7 text-sky-100 sm:text-base">
-                A future newsletter can send design checklists, Gerber export notes, startup lessons, and Africa delivery explainers.
+                Inscrivez-vous pour recevoir les notes Gerber, checklists de commande et conseils logistiques publiés par Kendronics.
               </p>
               <form className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
                 <input
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="vous@example.com"
                   className="h-12 rounded-xl border border-white/[0.18] bg-white px-4 text-sm font-bold text-ink outline-none focus:ring-4 focus:ring-sky-200"
                 />
                 <button type="button" className="h-12 rounded-xl bg-white px-6 text-sm font-black text-deepblue transition hover:bg-sky-50">
-                  Join list
+                  S’inscrire
                 </button>
               </form>
             </div>
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-signal">SEO metadata strategy</p>
-            <h3 className="mt-2 text-xl font-black text-ink">Education-first topic clusters</h3>
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-signal">Thèmes utiles</p>
+            <h3 className="mt-2 text-xl font-black text-ink">Guides pour préparer une commande propre</h3>
             <div className="mt-4 flex flex-wrap gap-2">
               {categoryStrategy.map((category) => (
                 <span key={category} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-600">
@@ -101,15 +101,15 @@ function BlogHero() {
             Blog
           </p>
           <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-            PCB education for African hardware builders.
+            Guides PCB pour les builders hardware africains.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
-            Practical guides for PCB design, Gerber export, KiCad, EasyEDA, ordering, logistics, and electronics manufacturing basics.
+            Des ressources pratiques pour préparer les fichiers Gerber, comprendre les options de fabrication et organiser une livraison suivie.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Button href="/quote">Demander un devis</Button>
             <Button href="#articles" variant="secondary">
-              Browse guides
+              Voir les guides
             </Button>
           </div>
         </div>
