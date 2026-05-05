@@ -4,9 +4,9 @@ import { Footer } from '../components/layout/Footer';
 import { Navbar } from '../components/layout/Navbar';
 import { Button } from '../components/ui/Button';
 
-const heroVideo = '/videos/home-hero-production.mov';
-const heroPcbVariantsImage = '/images/hero-pcb-color-variants.png';
-const heroControllerBoardImage = '/images/hero-controller-board.png';
+const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
+const heroControllerBoardImage = '/images/hero-controller-board-transparent.png';
+const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
 const productPcbAdvancedImage = '/images/product-pcb-advanced.png';
 const productPcbaAssemblyImage = '/images/product-pcba-assembly.png';
 
@@ -17,8 +17,7 @@ const heroSlides = [
     body: 'Kendronics centralise vos Gerber, BOM et CPL pour preparer un devis PCB/PCBA clair, avec choix de finition, controle des fichiers et suivi jusqu a la livraison.',
     media: heroPcbVariantsImage,
     type: 'image',
-    imageClassName: 'object-contain object-right opacity-95 lg:w-[67%] lg:translate-x-5',
-    overlayClassName: 'bg-gradient-to-r from-[#06283b] via-[#06283b]/88 to-[#06283b]/8',
+    imageClassName: 'object-contain object-right opacity-100 lg:w-[51%] lg:-translate-x-10',
   },
   {
     eyebrow: 'Carte controleur et assemblage',
@@ -26,16 +25,15 @@ const heroSlides = [
     body: 'Du PCB nu a l assemblage PCBA, Kendronics organise la lecture BOM/CPL, la verification des interfaces et la coordination de fabrication pour livrer une carte prete a integrer.',
     media: heroControllerBoardImage,
     type: 'image',
-    imageClassName: 'object-contain object-right opacity-100 lg:w-[66%] lg:translate-x-4',
-    overlayClassName: 'bg-gradient-to-r from-[#06283b] via-[#06283b]/82 to-[#06283b]/5',
+    imageClassName: 'object-contain object-right opacity-100 lg:w-[50%] lg:-translate-x-12',
   },
   {
-    eyebrow: 'Production, controle et coordination',
-    title: 'Passez du prototype au suivi de fabrication avec un parcours clair.',
-    body: 'Ajoutez vos fichiers, comparez les options, validez le paiement et gardez une vue simple sur chaque etape de la commande.',
-    media: heroVideo,
-    type: 'video',
-    overlayClassName: 'bg-[#06283b]/68',
+    eyebrow: 'Cartes complexes et industrialisation',
+    title: 'Faites produire des cartes avancees sans perdre la maitrise technique.',
+    body: 'Pour les prototypes multicouches, cartes processeur et projets avec interfaces nombreuses, Kendronics structure les fichiers, les options de fabrication et le suivi avant lancement.',
+    media: heroStackedPcbImage,
+    type: 'image',
+    imageClassName: 'object-contain object-right opacity-100 lg:w-[49%] lg:-translate-x-12',
   },
 ];
 
@@ -129,7 +127,9 @@ export default function HomePage() {
 
 function Hero() {
   return (
-    <section className="relative min-h-[30rem] overflow-hidden bg-[#07324a] pt-24 text-white sm:min-h-[40rem] sm:pt-28 lg:min-h-[29rem] lg:pt-20">
+    <section className="relative min-h-[30rem] overflow-hidden bg-[#dcecf8] pt-24 text-ink sm:min-h-[40rem] sm:pt-28 lg:min-h-[29rem] lg:pt-20">
+      <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#dbeefa] to-[#c7dced]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#eef7ff]/82 to-[#eef7ff]/14" />
       <div className="absolute inset-0">
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className="home-hero-slide absolute inset-0" style={{ animationDelay: `${index * 5}s` }}>
@@ -140,36 +140,36 @@ function Hero() {
             ) : (
               <img src={slide.media} alt="" className={`ml-auto h-full w-full ${slide.imageClassName ?? 'object-cover opacity-70'}`} />
             )}
-            <div className={`absolute inset-0 ${slide.overlayClassName}`} />
           </div>
         ))}
       </div>
 
-      <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-7 pt-7 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[430px] lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:items-center lg:px-8">
-        <div className="relative min-h-[20rem] lg:min-h-0 lg:pr-2">
+      <div className="relative mx-auto flex max-w-[1180px] flex-col justify-center px-4 pb-7 pt-7 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[430px] lg:px-8">
+        <div className="relative min-h-[20rem] max-w-[42rem] lg:min-h-[17rem]">
           {heroSlides.map((slide, index) => (
             <div key={slide.title} className="home-hero-copy absolute inset-0 flex flex-col justify-center" style={{ animationDelay: `${index * 5}s` }}>
-              <p className="label-caps text-[#ffd22e]">{slide.eyebrow}</p>
-              <h1 className="mt-3 max-w-2xl text-[1.72rem] font-black leading-tight tracking-tight text-white sm:mt-4 sm:text-5xl lg:text-[3.25rem]">
+              <p className="label-caps text-[#0f8f6b]">{slide.eyebrow}</p>
+              <h1 className="mt-3 max-w-2xl text-[1.72rem] font-black leading-tight tracking-tight text-ink sm:mt-4 sm:text-5xl lg:text-[3.2rem]">
                 {slide.title}
               </h1>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-white/88 sm:mt-5 sm:text-base sm:leading-7">
+              <p className="mt-4 max-w-xl text-sm leading-6 text-slate-600 sm:mt-5 sm:text-base sm:leading-7">
                 {slide.body}
               </p>
-              <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:gap-3">
-                <Button href="/quote" className="h-11 whitespace-nowrap px-2 text-xs sm:h-12 sm:px-7 sm:text-sm">Demande un devis</Button>
-                <Button href="/services" variant="secondary" className="h-11 whitespace-nowrap px-2 text-xs sm:h-12 sm:px-7 sm:text-sm">Voir les services</Button>
-              </div>
             </div>
           ))}
-          <div className="absolute bottom-0 left-0 flex gap-2 sm:hidden" aria-hidden="true">
-            {heroSlides.map((slide, index) => (
-              <span key={slide.title} className="home-hero-dot h-1.5 w-6 bg-white" style={{ animationDelay: `${index * 5}s` }} />
-            ))}
-          </div>
         </div>
 
-        <HeroQuickQuote />
+        <div className="relative mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:items-center sm:gap-3">
+          <Button href="/quote" className="h-11 whitespace-nowrap px-2 text-xs !font-normal sm:h-12 sm:px-7 sm:text-sm">Demande un devis</Button>
+          <Button href="/services" variant="secondary" className="h-11 whitespace-nowrap px-2 text-xs !font-normal sm:h-12 sm:px-7 sm:text-sm">Voir les services</Button>
+          <HeroQuickQuote />
+        </div>
+
+        <div className="relative mt-5 flex gap-2 sm:hidden" aria-hidden="true">
+          {heroSlides.map((slide, index) => (
+            <span key={slide.title} className="home-hero-dot h-1.5 w-6 bg-ink" style={{ animationDelay: `${index * 5}s` }} />
+          ))}
+        </div>
       </div>
     </section>
   );

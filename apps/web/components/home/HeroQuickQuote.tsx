@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { africanCountries } from '../../lib/african-countries';
 import { calculatePCBQuote } from '../../lib/pricing';
 import type { QuoteConfig } from '../../lib/quote-types';
 
@@ -71,53 +70,23 @@ const baseConfig: QuoteConfig = {
 export function HeroQuickQuote() {
   const [config, setConfig] = useState<QuoteConfig>(baseConfig);
   const pricing = useMemo(() => calculatePCBQuote(config), [config]);
-  const selectedCountry = africanCountries.find((country) => country.iso2 === config.destinationCountry) ?? africanCountries[0];
 
   function update<K extends keyof QuoteConfig>(key: K, value: QuoteConfig[K]) {
     setConfig((current) => ({ ...current, [key]: value }));
   }
 
   return (
-    <aside className="hidden border border-white/25 bg-white/88 p-3.5 text-ink backdrop-blur-sm lg:block">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-deepblue">Devis rapide</p>
-          <h2 className="mt-1 text-lg font-black">Calcul instantane</h2>
-        </div>
-        <span className="rounded-full bg-[#0f8f6b] px-2.5 py-1 text-[10px] font-black text-white">Actif</span>
+    <aside className="hidden h-12 items-center overflow-hidden border border-white/70 bg-white/90 text-ink backdrop-blur-sm lg:flex">
+      <SelectField label="Couches" value={config.layers} onChange={(value) => update('layers', Number(value))} options={[1, 2, 4, 6, 8, 10, 12]} />
+      <NumberField label="Longueur" value={config.length} onChange={(value) => update('length', value)} />
+      <NumberField label="Largeur" value={config.width} onChange={(value) => update('width', value)} />
+      <NumberField label="Qte" value={config.quantity} min={1} onChange={(value) => update('quantity', value)} />
+      <div className="flex h-full min-w-[8.5rem] items-center justify-center border-l border-line px-3 text-sm text-[#ff7a00]">
+        {formatMoney(pricing.finalTotal)}
       </div>
-
-      <div className="mt-3 space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <NumberField label="Longueur mm" value={config.length} onChange={(value) => update('length', value)} />
-          <NumberField label="Largeur mm" value={config.width} onChange={(value) => update('width', value)} />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <SelectField label="Couches" value={config.layers} onChange={(value) => update('layers', Number(value))} options={[1, 2, 4, 6, 8, 10, 12]} />
-          <NumberField label="Quantite" value={config.quantity} min={1} onChange={(value) => update('quantity', value)} />
-        </div>
-        <SelectField
-          label="Destination"
-          value={config.destinationCountry}
-          onChange={(value) => update('destinationCountry', value)}
-          options={africanCountries.slice(0, 12).map((country) => [country.iso2, country.name])}
-        />
-      </div>
-
-      <div className="mt-3 border-t border-line pt-3">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total calcule</p>
-            <p className="mt-1 text-2xl font-black text-[#ff7a00]">{formatMoney(pricing.finalTotal)}</p>
-          </div>
-          <a href="/quote" className="inline-flex h-9 items-center rounded-full bg-deepblue px-4 text-xs font-black text-white">
-            Finaliser
-          </a>
-        </div>
-        <p className="mt-2 text-[11px] leading-4 text-slate-500">
-          {selectedCountry.name} - {pricing.estimatedLeadTime}. Le devis complet ajoute upload Gerber et options avancees.
-        </p>
-      </div>
+      <a href="/quote" className="inline-flex h-full items-center justify-center bg-deepblue px-6 text-sm font-normal text-white transition duration-300 hover:bg-[#0b7558]">
+        Finaliser
+      </a>
     </aside>
   );
 }
@@ -134,14 +103,14 @@ function NumberField({
   onChange: (value: number) => void;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">{label}</span>
+    <label className="flex h-full w-[5.9rem] items-center gap-1 border-l border-line px-2 first:border-l-0">
+      <span className="sr-only">{label}</span>
       <input
         type="number"
         min={min}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-8 w-full border border-line bg-white px-2.5 text-xs font-black text-ink outline-none focus:border-[#0f8f6b]"
+        className="h-full w-full border-0 bg-transparent px-0 text-sm font-normal text-ink outline-none"
       />
     </label>
   );
@@ -159,12 +128,12 @@ function SelectField({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">{label}</span>
+    <label className="flex h-full w-[7.5rem] items-center gap-1 px-3">
+      <span className="sr-only">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-8 w-full border border-line bg-white px-2.5 text-xs font-black text-ink outline-none focus:border-[#0f8f6b]"
+        className="h-full w-full border-0 bg-transparent px-0 text-sm font-normal text-ink outline-none"
       >
         {options.map((option) => {
           const optionValue = Array.isArray(option) ? option[0] : option;
