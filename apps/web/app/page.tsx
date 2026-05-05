@@ -4,9 +4,9 @@ import { Footer } from '../components/layout/Footer';
 import { Navbar } from '../components/layout/Navbar';
 import { Button } from '../components/ui/Button';
 
-const heroImage = '/images/home-hero-pcb-assembly.jpeg';
 const heroVideo = '/videos/home-hero-production.mov';
 const heroPcbVariantsImage = '/images/hero-pcb-color-variants.png';
+const heroControllerBoardImage = '/images/hero-controller-board.png';
 
 const heroSlides = [
   {
@@ -15,13 +15,17 @@ const heroSlides = [
     body: 'Kendronics centralise vos Gerber, BOM et CPL pour preparer un devis PCB/PCBA clair, avec choix de finition, controle des fichiers et suivi jusqu a la livraison.',
     media: heroPcbVariantsImage,
     type: 'image',
+    imageClassName: 'object-cover opacity-70',
+    overlayClassName: 'bg-[#06283b]/68',
   },
   {
-    eyebrow: 'PCB, PCBA et logistique Afrique',
-    title: 'Commandez vos PCB plus simplement, du fichier Gerber a la livraison.',
-    body: 'Kendronics coordonne devis, verification fichiers, paiement, production externe et suivi client pour les equipes hardware africaines.',
-    media: heroImage,
+    eyebrow: 'Carte controleur et assemblage',
+    title: 'Preparez vos cartes equipees avec les connecteurs, composants et options attendus.',
+    body: 'Du PCB nu a l assemblage PCBA, Kendronics organise la lecture BOM/CPL, la verification des interfaces et la coordination de fabrication pour livrer une carte prete a integrer.',
+    media: heroControllerBoardImage,
     type: 'image',
+    imageClassName: 'object-contain object-center opacity-95',
+    overlayClassName: 'bg-gradient-to-r from-[#06283b]/88 via-[#06283b]/70 to-[#06283b]/18',
   },
   {
     eyebrow: 'Production, controle et coordination',
@@ -29,6 +33,7 @@ const heroSlides = [
     body: 'Ajoutez vos fichiers, comparez les options, validez le paiement et gardez une vue simple sur chaque etape de la commande.',
     media: heroVideo,
     type: 'video',
+    overlayClassName: 'bg-[#06283b]/68',
   },
 ];
 
@@ -120,7 +125,7 @@ export default function HomePage() {
 
 function Hero() {
   return (
-    <section className="relative min-h-[30rem] overflow-hidden bg-[#07324a] pt-24 text-white sm:min-h-[40rem] sm:pt-28">
+    <section className="relative min-h-[30rem] overflow-hidden bg-[#07324a] pt-24 text-white sm:min-h-[40rem] sm:pt-28 lg:mx-auto lg:mt-4 lg:max-w-[1180px] lg:min-h-[36rem] lg:pt-20 xl:max-w-[1220px]">
       <div className="absolute inset-0">
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className="home-hero-slide absolute inset-0" style={{ animationDelay: `${index * 5}s` }}>
@@ -129,14 +134,14 @@ function Hero() {
                 <source src={slide.media} type="video/quicktime" />
               </video>
             ) : (
-              <img src={slide.media} alt="" className="h-full w-full object-cover opacity-70" />
+              <img src={slide.media} alt="" className={`h-full w-full ${slide.imageClassName ?? 'object-cover opacity-70'}`} />
             )}
-            <div className="absolute inset-0 bg-[#06283b]/68" />
+            <div className={`absolute inset-0 ${slide.overlayClassName}`} />
           </div>
         ))}
       </div>
 
-      <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-7 pt-7 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[640px] lg:grid-cols-[1fr_25rem] lg:items-center lg:px-8">
+      <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-7 pt-7 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[560px] lg:grid-cols-[1fr_25rem] lg:items-center lg:px-8">
         <div className="relative min-h-[20rem] lg:min-h-0 lg:pr-4">
           {heroSlides.map((slide, index) => (
             <div key={slide.title} className="home-hero-copy absolute inset-0 flex flex-col justify-center" style={{ animationDelay: `${index * 5}s` }}>
