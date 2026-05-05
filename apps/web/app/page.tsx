@@ -7,6 +7,8 @@ import { Button } from '../components/ui/Button';
 const heroVideo = '/videos/home-hero-production.mov';
 const heroPcbVariantsImage = '/images/hero-pcb-color-variants.png';
 const heroControllerBoardImage = '/images/hero-controller-board.png';
+const productPcbAdvancedImage = '/images/product-pcb-advanced.png';
+const productPcbaAssemblyImage = '/images/product-pcba-assembly.png';
 
 const heroSlides = [
   {
@@ -15,8 +17,8 @@ const heroSlides = [
     body: 'Kendronics centralise vos Gerber, BOM et CPL pour preparer un devis PCB/PCBA clair, avec choix de finition, controle des fichiers et suivi jusqu a la livraison.',
     media: heroPcbVariantsImage,
     type: 'image',
-    imageClassName: 'object-cover opacity-70',
-    overlayClassName: 'bg-[#06283b]/68',
+    imageClassName: 'object-contain object-right opacity-95 lg:w-[67%] lg:translate-x-5',
+    overlayClassName: 'bg-gradient-to-r from-[#06283b] via-[#06283b]/88 to-[#06283b]/8',
   },
   {
     eyebrow: 'Carte controleur et assemblage',
@@ -24,8 +26,8 @@ const heroSlides = [
     body: 'Du PCB nu a l assemblage PCBA, Kendronics organise la lecture BOM/CPL, la verification des interfaces et la coordination de fabrication pour livrer une carte prete a integrer.',
     media: heroControllerBoardImage,
     type: 'image',
-    imageClassName: 'object-contain object-center opacity-95',
-    overlayClassName: 'bg-gradient-to-r from-[#06283b]/88 via-[#06283b]/70 to-[#06283b]/18',
+    imageClassName: 'object-contain object-right opacity-100 lg:w-[66%] lg:translate-x-4',
+    overlayClassName: 'bg-gradient-to-r from-[#06283b] via-[#06283b]/82 to-[#06283b]/5',
   },
   {
     eyebrow: 'Production, controle et coordination',
@@ -61,6 +63,7 @@ const productCards = [
     price: 'Revue technique',
     time: 'Validation support',
     href: '/services#pcb-avance',
+    image: productPcbAdvancedImage,
   },
   {
     title: 'Assemblage PCBA',
@@ -69,6 +72,7 @@ const productCards = [
     price: 'Sur demande',
     time: 'Controle fichiers',
     href: '/quote',
+    image: productPcbaAssemblyImage,
   },
   {
     title: 'Stencil SMT',
@@ -125,31 +129,31 @@ export default function HomePage() {
 
 function Hero() {
   return (
-    <section className="relative min-h-[30rem] overflow-hidden bg-[#07324a] pt-24 text-white sm:min-h-[40rem] sm:pt-28 lg:mx-auto lg:mt-4 lg:max-w-[1180px] lg:min-h-[36rem] lg:pt-20 xl:max-w-[1220px]">
+    <section className="relative min-h-[30rem] overflow-hidden bg-[#07324a] pt-24 text-white sm:min-h-[40rem] sm:pt-28 lg:min-h-[29rem] lg:pt-20">
       <div className="absolute inset-0">
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className="home-hero-slide absolute inset-0" style={{ animationDelay: `${index * 5}s` }}>
             {slide.type === 'video' ? (
-              <video className="h-full w-full object-cover opacity-70" autoPlay muted loop playsInline preload="metadata">
+              <video className="ml-auto h-full w-full object-cover object-right opacity-70 lg:w-[66%]" autoPlay muted loop playsInline preload="metadata">
                 <source src={slide.media} type="video/quicktime" />
               </video>
             ) : (
-              <img src={slide.media} alt="" className={`h-full w-full ${slide.imageClassName ?? 'object-cover opacity-70'}`} />
+              <img src={slide.media} alt="" className={`ml-auto h-full w-full ${slide.imageClassName ?? 'object-cover opacity-70'}`} />
             )}
             <div className={`absolute inset-0 ${slide.overlayClassName}`} />
           </div>
         ))}
       </div>
 
-      <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-7 pt-7 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[560px] lg:grid-cols-[1fr_25rem] lg:items-center lg:px-8">
-        <div className="relative min-h-[20rem] lg:min-h-0 lg:pr-4">
+      <div className="relative mx-auto grid max-w-[1180px] gap-5 px-4 pb-7 pt-7 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[430px] lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:items-center lg:px-8">
+        <div className="relative min-h-[20rem] lg:min-h-0 lg:pr-2">
           {heroSlides.map((slide, index) => (
             <div key={slide.title} className="home-hero-copy absolute inset-0 flex flex-col justify-center" style={{ animationDelay: `${index * 5}s` }}>
               <p className="label-caps text-[#ffd22e]">{slide.eyebrow}</p>
-              <h1 className="mt-3 max-w-3xl text-[1.72rem] font-black leading-tight tracking-tight text-white sm:mt-4 sm:text-5xl lg:text-6xl">
+              <h1 className="mt-3 max-w-2xl text-[1.72rem] font-black leading-tight tracking-tight text-white sm:mt-4 sm:text-5xl lg:text-[3.25rem]">
                 {slide.title}
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/88 sm:mt-5 sm:text-base sm:leading-7">
+              <p className="mt-4 max-w-xl text-sm leading-6 text-white/88 sm:mt-5 sm:text-base sm:leading-7">
                 {slide.body}
               </p>
               <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:gap-3">
@@ -211,28 +215,34 @@ function ProductCatalog() {
 
         <div className="mt-6 flex gap-3 overflow-x-auto pb-2 md:mt-8 md:grid md:gap-4 md:overflow-visible md:pb-0 md:grid-cols-2 xl:grid-cols-3">
           {productCards.map((card) => (
-            <article key={card.title} className="group min-w-[17.5rem] border border-line bg-white p-4 transition hover:-translate-y-1 md:min-w-0 md:p-5">
-              <div className="flex items-start justify-between gap-4">
+            <article key={card.title} className={`group relative min-w-[17.5rem] overflow-hidden border border-line bg-white p-4 transition hover:-translate-y-1 md:min-w-0 md:p-5 ${card.image ? 'min-h-[19rem] text-white' : ''}`}>
+              {card.image ? (
+                <>
+                  <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#061521]/92 via-[#061521]/58 to-[#061521]/12" />
+                </>
+              ) : null}
+              <div className="relative flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.14em] text-deepblue">{card.tag}</p>
-                  <h3 className="mt-2 text-lg font-black text-ink md:text-xl">{card.title}</h3>
+                  <p className={`text-xs font-black uppercase tracking-[0.14em] ${card.image ? 'text-[#ffd22e]' : 'text-deepblue'}`}>{card.tag}</p>
+                  <h3 className={`mt-2 text-lg font-black md:text-xl ${card.image ? 'text-white' : 'text-ink'}`}>{card.title}</h3>
                 </div>
-                <span className="grid h-10 w-10 place-items-center border border-line bg-slate-50 text-xs font-black text-slate-500">PCB</span>
+                <span className={`grid h-10 w-10 place-items-center border text-xs font-black ${card.image ? 'border-white/30 bg-white/15 text-white' : 'border-line bg-slate-50 text-slate-500'}`}>PCB</span>
               </div>
-              <ul className="mt-4 space-y-2 text-sm leading-6 text-slate-600 md:mt-5">
+              <ul className={`relative mt-4 space-y-2 text-sm leading-6 md:mt-5 ${card.image ? 'text-white/86' : 'text-slate-600'}`}>
                 {card.details.map((detail) => (
                   <li key={detail} className="flex gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-deepblue" />
+                    <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${card.image ? 'bg-[#ffd22e]' : 'bg-deepblue'}`} />
                     <span>{detail}</span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-6 flex items-center justify-between border-t border-line pt-4">
+              <div className={`relative mt-6 flex items-center justify-between border-t pt-4 ${card.image ? 'border-white/25' : 'border-line'}`}>
                 <div>
-                  <p className="text-sm font-black text-ink">{card.price}</p>
-                  <p className="mt-1 text-xs text-slate-500">{card.time}</p>
+                  <p className={`text-sm font-black ${card.image ? 'text-white' : 'text-ink'}`}>{card.price}</p>
+                  <p className={`mt-1 text-xs ${card.image ? 'text-white/72' : 'text-slate-500'}`}>{card.time}</p>
                 </div>
-                <a href={card.href} className="text-sm font-black text-deepblue hover:text-signal">Ouvrir</a>
+                <a href={card.href} className={`text-sm font-black ${card.image ? 'text-[#ffd22e]' : 'text-deepblue hover:text-signal'}`}>Ouvrir</a>
               </div>
             </article>
           ))}

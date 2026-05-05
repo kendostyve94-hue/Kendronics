@@ -78,21 +78,21 @@ export function HeroQuickQuote() {
   }
 
   return (
-    <aside className="hidden border border-white/25 bg-white/95 p-5 text-ink lg:block">
-      <div className="flex items-start justify-between gap-4">
+    <aside className="hidden border border-white/25 bg-white/88 p-3.5 text-ink backdrop-blur-sm lg:block">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.14em] text-deepblue">Devis rapide</p>
-          <h2 className="mt-1 text-xl font-black">Calcul instantane</h2>
+          <h2 className="mt-1 text-lg font-black">Calcul instantane</h2>
         </div>
-        <span className="rounded-full bg-[#0f8f6b] px-3 py-1 text-xs font-black text-white">Actif</span>
+        <span className="rounded-full bg-[#0f8f6b] px-2.5 py-1 text-[10px] font-black text-white">Actif</span>
       </div>
 
-      <div className="mt-5 space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+      <div className="mt-3 space-y-2">
+        <div className="grid grid-cols-2 gap-2">
           <NumberField label="Longueur mm" value={config.length} onChange={(value) => update('length', value)} />
           <NumberField label="Largeur mm" value={config.width} onChange={(value) => update('width', value)} />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <SelectField label="Couches" value={config.layers} onChange={(value) => update('layers', Number(value))} options={[1, 2, 4, 6, 8, 10, 12]} />
           <NumberField label="Quantite" value={config.quantity} min={1} onChange={(value) => update('quantity', value)} />
         </div>
@@ -104,17 +104,17 @@ export function HeroQuickQuote() {
         />
       </div>
 
-      <div className="mt-5 border-t border-line pt-4">
-        <div className="flex items-end justify-between gap-4">
+      <div className="mt-3 border-t border-line pt-3">
+        <div className="flex items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total calcule</p>
-            <p className="mt-1 text-3xl font-black text-[#ff7a00]">{formatMoney(pricing.finalTotal)}</p>
+            <p className="mt-1 text-2xl font-black text-[#ff7a00]">{formatMoney(pricing.finalTotal)}</p>
           </div>
-          <a href="/quote" className="inline-flex h-10 items-center rounded-full bg-deepblue px-5 text-sm font-black text-white">
+          <a href="/quote" className="inline-flex h-9 items-center rounded-full bg-deepblue px-4 text-xs font-black text-white">
             Finaliser
           </a>
         </div>
-        <p className="mt-3 text-xs leading-5 text-slate-500">
+        <p className="mt-2 text-[11px] leading-4 text-slate-500">
           {selectedCountry.name} - {pricing.estimatedLeadTime}. Le devis complet ajoute upload Gerber et options avancees.
         </p>
       </div>
@@ -135,13 +135,13 @@ function NumberField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{label}</span>
+      <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">{label}</span>
       <input
         type="number"
         min={min}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-10 w-full border border-line bg-white px-3 text-sm font-black text-ink outline-none focus:border-[#0f8f6b]"
+        className="h-8 w-full border border-line bg-white px-2.5 text-xs font-black text-ink outline-none focus:border-[#0f8f6b]"
       />
     </label>
   );
@@ -160,11 +160,11 @@ function SelectField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{label}</span>
+      <span className="mb-1 block text-[9px] font-black uppercase tracking-[0.1em] text-slate-500">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full border border-line bg-white px-3 text-sm font-black text-ink outline-none focus:border-[#0f8f6b]"
+        className="h-8 w-full border border-line bg-white px-2.5 text-xs font-black text-ink outline-none focus:border-[#0f8f6b]"
       >
         {options.map((option) => {
           const optionValue = Array.isArray(option) ? option[0] : option;
