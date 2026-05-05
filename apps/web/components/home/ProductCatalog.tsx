@@ -107,8 +107,8 @@ export function ProductCatalog() {
           })}
         </div>
 
-        <div className="grid overflow-hidden border-b border-line bg-[#eef7ff] md:grid-cols-[1.15fr_0.85fr] md:items-stretch lg:min-h-[31rem] xl:grid-cols-[1.35fr_0.65fr]">
-          <div className="relative min-h-[13.5rem] overflow-hidden bg-[#eef7ff] md:min-h-[25rem] lg:min-h-[29rem]">
+        <div className="grid overflow-hidden border-b border-line bg-white md:grid-cols-[1.15fr_0.85fr] md:items-stretch lg:min-h-[31rem] xl:grid-cols-[1.35fr_0.65fr]">
+          <div className="relative min-h-[13.5rem] overflow-hidden bg-white md:min-h-[25rem] lg:min-h-[29rem]">
             <img
               key={activeCard.image}
               src={activeCard.image}
@@ -120,7 +120,7 @@ export function ProductCatalog() {
           <article className="bg-white p-4 md:p-7 lg:max-w-[26rem] lg:self-center">
             <p className="label-caps text-deepblue">{activeCard.tag}</p>
             <h3 className="mt-2 text-xl font-black text-ink md:mt-3 md:text-2xl lg:text-3xl">{activeCard.title}</h3>
-            <ul className="mt-3 space-y-2 bg-slate-50 p-3 text-sm leading-6 text-slate-600 md:mt-5 md:space-y-3 md:p-4">
+            <ul className="mt-3 space-y-2 border border-line bg-white p-3 text-sm leading-6 text-slate-600 md:mt-5 md:space-y-3 md:p-4">
               {activeCard.details.map((detail) => (
                 <li key={detail} className="flex gap-2">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-deepblue" />
