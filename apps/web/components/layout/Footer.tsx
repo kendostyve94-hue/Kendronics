@@ -2,7 +2,6 @@
 
 import { FormEvent, useState } from 'react';
 import { supportTicketApiContract } from '../../lib/contact-contract';
-import { officialContactEmail } from '../../lib/official-contact';
 
 const groups = [
   {
@@ -40,58 +39,54 @@ const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : '');
 
 export function Footer() {
+  const [reviewName, setReviewName] = useState('');
+  const [reviewEmail, setReviewEmail] = useState('');
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
-  const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'submitted'>('idle');
+  const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'submitted' | 'error'>('idle');
+  const [ticketNumber, setTicketNumber] = useState('');
 
-  const canSubmit = comment.trim().length > 0 && rating > 0 && submitState !== 'submitting';
+  const canSubmit =
+    reviewName.trim().length >= 2 &&
+    /^\S+@\S+\.\S+$/.test(reviewEmail.trim()) &&
+    comment.trim().length >= 10 &&
+    rating > 0 &&
+    submitState !== 'submitting';
 
   async function submitComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!canSubmit) return;
 
-    const savedComment = {
-      id: `local-${Date.now()}`,
-      name: 'Visiteur Kendronics',
-      role: 'Commentaire public',
-      rating,
-      body: comment.trim(),
-      createdAt: new Date().toISOString(),
-    };
-
     setSubmitState('submitting');
-
-    try {
-      const current = JSON.parse(window.localStorage.getItem('kendronics_public_comments') ?? '[]');
-      window.localStorage.setItem('kendronics_public_comments', JSON.stringify([savedComment, ...current].slice(0, 20)));
-      window.dispatchEvent(new Event('kendronics:comment-submitted'));
-    } catch {
-      // Local preview is optional; the confirmation should still feel complete for the visitor.
-    }
+    setTicketNumber('');
 
     try {
       const response = await fetch(`${apiBaseUrl}${supportTicketApiContract.publicContact.path}`, {
         method: supportTicketApiContract.publicContact.method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: 'Commentaire site',
-          email: officialContactEmail,
+          name: reviewName.trim(),
+          email: reviewEmail.trim(),
           category: 'technical_question',
-          message: `Commentaire public (${rating}/5 etoiles)\n\n${comment.trim()}`,
+          message: `Demande de publication d'avis client (${rating}/5 etoiles)\n\n${comment.trim()}`,
         }),
       });
 
       if (!response.ok) {
         throw new Error('Comment submission failed.');
       }
-    } catch {
-      // The public comment is already saved locally; support delivery can fail in local/dev environments.
-    }
 
-    setComment('');
-    setRating(0);
-    setSubmitState('submitted');
+      const ticket = (await response.json()) as { ticketNumber?: string };
+      setTicketNumber(ticket.ticketNumber ?? '');
+      setReviewName('');
+      setReviewEmail('');
+      setComment('');
+      setRating(0);
+      setSubmitState('submitted');
+    } catch {
+      setSubmitState('error');
+    }
   }
 
   return (
@@ -130,11 +125,34 @@ export function Footer() {
         </div>
 
         <div>
-          <h3 className="text-sm font-black text-white">Laisser un commentaire</h3>
+          <h3 className="text-sm font-black text-white">Publier un avis client</h3>
           <p className="mt-3 text-sm leading-6 text-slate-300">
-            Partagez votre experience et aidez d'autres ingenieurs a choisir une solution fiable.
+            Envoyez un retour verifie. L equipe Kendronics le relit avant publication dans la bande d avis.
           </p>
           <form onSubmit={submitComment} className="mt-4 space-y-2.5">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+              <input
+                aria-label="Nom"
+                value={reviewName}
+                onChange={(event) => {
+                  setReviewName(event.target.value);
+                  if (submitState !== 'submitting') setSubmitState('idle');
+                }}
+                placeholder="Votre nom"
+                className="h-10 rounded-sm border border-[#33465b] bg-[#0f1b2a] px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-signal"
+              />
+              <input
+                aria-label="E-mail"
+                type="email"
+                value={reviewEmail}
+                onChange={(event) => {
+                  setReviewEmail(event.target.value);
+                  if (submitState !== 'submitting') setSubmitState('idle');
+                }}
+                placeholder="Votre e-mail"
+                className="h-10 rounded-sm border border-[#33465b] bg-[#0f1b2a] px-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-signal"
+              />
+            </div>
             <div className="flex gap-1" aria-label="Note du commentaire">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -158,7 +176,7 @@ export function Footer() {
                 setComment(event.target.value);
                 if (submitState !== 'submitting') setSubmitState('idle');
               }}
-              placeholder="Ecrivez votre commentaire..."
+              placeholder="Votre retour apres commande ou accompagnement..."
               rows={3}
               className="w-full resize-none rounded-sm border border-[#33465b] bg-[#0f1b2a] px-4 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 focus:border-signal"
             />
@@ -167,9 +185,16 @@ export function Footer() {
               type="submit"
               disabled={!canSubmit}
             >
-              Envoyer
+              {submitState === 'submitting' ? 'Envoi...' : 'Envoyer pour validation'}
             </button>
-            {submitState === 'submitted' ? <p className="text-xs font-bold text-slate-300">Commentaire envoye. Merci pour votre retour.</p> : null}
+            {submitState === 'submitted' ? (
+              <p className="text-xs font-bold text-slate-300">
+                Avis recu{ticketNumber ? ` (${ticketNumber})` : ''}. Publication apres validation.
+              </p>
+            ) : null}
+            {submitState === 'error' ? (
+              <p className="text-xs font-bold text-red-200">Envoi impossible pour le moment. Utilisez la page Contact si le probleme continue.</p>
+            ) : null}
           </form>
         </div>
       </div>

@@ -118,6 +118,9 @@ export default function HomePage() {
       <MobileQuickAccess />
       <ProductCatalog />
       <SmartOrdering />
+      <section className="hidden bg-white lg:block">
+        <CommentsMarquee />
+      </section>
       <TrustBlock />
       <Resources />
       <Footer />
@@ -314,7 +317,9 @@ function TrustBlock() {
               ))}
             </div>
           </div>
-          <CommentsMarquee />
+          <div className="lg:hidden">
+            <CommentsMarquee />
+          </div>
         </div>
       </div>
     </section>
