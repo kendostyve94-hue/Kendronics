@@ -67,10 +67,11 @@ const productCards = [
 ];
 
 type ProductCard = (typeof productCards)[number];
+const defaultProductIndex = productCards.findIndex((card) => card.title === 'PCB avance');
 
 export function ProductCatalog() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const activeCard = productCards[activeIndex] ?? productCards[0];
+  const [activeIndex, setActiveIndex] = useState(defaultProductIndex);
+  const activeCard = productCards[activeIndex] ?? productCards[defaultProductIndex] ?? productCards[0];
 
   return (
     <section className="bg-white px-4 py-8 sm:px-6 sm:py-14 lg:px-8">
@@ -106,20 +107,20 @@ export function ProductCatalog() {
           })}
         </div>
 
-        <div className="grid gap-6 overflow-hidden border-b border-line bg-[#f8fbfe] py-7 md:grid-cols-[1.15fr_0.85fr] md:items-center lg:min-h-[31rem] lg:gap-10 lg:px-8 xl:grid-cols-[1.35fr_0.65fr]">
-          <div className="relative min-h-[18rem] overflow-hidden md:min-h-[25rem] lg:min-h-[29rem]">
+        <div className="grid overflow-hidden border-b border-line bg-[#eef7ff] md:grid-cols-[1.15fr_0.85fr] md:items-stretch lg:min-h-[31rem] xl:grid-cols-[1.35fr_0.65fr]">
+          <div className="relative min-h-[13.5rem] overflow-hidden bg-[#eef7ff] md:min-h-[25rem] lg:min-h-[29rem]">
             <img
               key={activeCard.image}
               src={activeCard.image}
               alt=""
-              className="absolute inset-0 h-full w-full object-contain object-center"
+              className="absolute inset-0 h-full w-full object-contain object-center p-3 md:p-6 lg:p-8"
             />
           </div>
 
-          <article className="bg-white p-5 md:p-7 lg:max-w-[26rem]">
+          <article className="bg-white p-4 md:p-7 lg:max-w-[26rem] lg:self-center">
             <p className="label-caps text-deepblue">{activeCard.tag}</p>
-            <h3 className="mt-3 text-2xl font-black text-ink lg:text-3xl">{activeCard.title}</h3>
-            <ul className="mt-5 space-y-3 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+            <h3 className="mt-2 text-xl font-black text-ink md:mt-3 md:text-2xl lg:text-3xl">{activeCard.title}</h3>
+            <ul className="mt-3 space-y-2 bg-slate-50 p-3 text-sm leading-6 text-slate-600 md:mt-5 md:space-y-3 md:p-4">
               {activeCard.details.map((detail) => (
                 <li key={detail} className="flex gap-2">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-deepblue" />
@@ -127,15 +128,15 @@ export function ProductCatalog() {
                 </li>
               ))}
             </ul>
-            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-600">
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-600 md:mt-6">
               <p><span className="font-black text-ink">{activeCard.price}</span></p>
               <p>{activeCard.time}</p>
             </div>
-            <div className="mt-6 grid gap-3">
-              <a href={activeCard.href} className="inline-flex h-11 items-center justify-center bg-deepblue px-5 text-sm font-normal text-white transition hover:bg-[#0b7558]">
+            <div className="mt-4 grid gap-3 md:mt-6">
+              <a href={activeCard.href} className="inline-flex h-11 items-center justify-center rounded-sm bg-deepblue px-5 text-sm font-normal text-white transition hover:bg-[#0b7558]">
                 {activeCard.cta}
               </a>
-              <a href="/quote" className="inline-flex h-11 items-center justify-center border border-line bg-white px-5 text-sm font-normal text-ink transition hover:border-deepblue hover:text-deepblue">
+              <a href="/quote" className="inline-flex h-11 items-center justify-center rounded-sm border border-line bg-white px-5 text-sm font-normal text-ink transition hover:border-deepblue hover:text-deepblue">
                 Demande un devis
               </a>
             </div>
