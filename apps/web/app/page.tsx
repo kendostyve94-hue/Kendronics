@@ -1,5 +1,6 @@
 import { CommentsMarquee } from '../components/home/CommentsMarquee';
 import { HeroQuickQuote } from '../components/home/HeroQuickQuote';
+import { ProductCatalog } from '../components/home/ProductCatalog';
 import { Footer } from '../components/layout/Footer';
 import { Navbar } from '../components/layout/Navbar';
 import { Button } from '../components/ui/Button';
@@ -7,12 +8,6 @@ import { Button } from '../components/ui/Button';
 const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
 const heroControllerBoardImage = '/images/hero-controller-board-transparent.png';
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
-const productPcbStandardImage = '/images/product-pcb-standard-transparent.png';
-const productPcbSmallBatchImage = '/images/product-pcb-small-batch.png';
-const productPcbAdvancedImage = '/images/product-pcb-advanced.png';
-const productPcbaAssemblyImage = '/images/product-pcba-assembly.png';
-const productStencilSmtImage = '/images/product-stencil-smt.png';
-
 const heroSlides = [
   {
     eyebrow: 'PCB personnalises et assemblage',
@@ -37,62 +32,6 @@ const heroSlides = [
     media: heroStackedPcbImage,
     type: 'image',
     imageClassName: 'object-contain object-right opacity-100 lg:translate-x-0',
-  },
-];
-
-const productCards = [
-  {
-    title: 'PCB standard',
-    tag: 'FR-4',
-    details: ['1 a 12 couches', 'HASL ou ENIG', 'Prototype et petites series'],
-    price: 'Devis instantane',
-    time: 'Production rapide',
-    href: '/quote',
-    image: productPcbStandardImage,
-  },
-  {
-    title: 'PCB petit lot',
-    tag: 'Pilotage',
-    details: ['Quantites faibles ou moyennes', 'Recommande pour tests terrain', 'Logistique Afrique incluse'],
-    price: 'Prix transparent',
-    time: 'Suivi client',
-    href: '/services#pcb-petit-lot',
-    image: productPcbSmallBatchImage,
-  },
-  {
-    title: 'PCB avance',
-    tag: 'Review',
-    details: ['Impedance controlee', 'Materiaux speciaux', 'Options haute precision'],
-    price: 'Revue technique',
-    time: 'Validation support',
-    href: '/services#pcb-avance',
-    image: productPcbAdvancedImage,
-  },
-  {
-    title: 'Assemblage PCBA',
-    tag: 'BOM / CPL',
-    details: ['BOM et CPL requis', 'Sourcing composants', 'Preparation production'],
-    price: 'Sur demande',
-    time: 'Controle fichiers',
-    href: '/quote',
-    image: productPcbaAssemblyImage,
-  },
-  {
-    title: 'Stencil SMT',
-    tag: 'CMS',
-    details: ['Stencil prototype', 'Stencil production', 'Planification avec PCB'],
-    price: 'Ajout simple',
-    time: 'Avec commande',
-    href: '/services#stencil',
-    image: productStencilSmtImage,
-  },
-  {
-    title: 'Assistance Gerber',
-    tag: 'Support',
-    details: ['Verification ZIP', 'Conseils DFM', 'Aide debutant'],
-    price: 'Support guide',
-    time: 'Avant paiement',
-    href: '/guide-technique',
   },
 ];
 
@@ -207,92 +146,6 @@ function MobileQuickAccess() {
         ))}
       </div>
     </section>
-  );
-}
-
-function ProductCatalog() {
-  const [featuredCard, ...secondaryCards] = productCards;
-
-  return (
-    <section className="bg-white px-4 py-8 sm:px-6 sm:py-14 lg:px-8">
-      <div className="mx-auto max-w-[1440px]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="label-caps text-deepblue">Solutions electroniques</p>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-ink sm:text-3xl lg:text-4xl">Un catalogue clair pour passer au devis.</h2>
-            <p className="mt-3 hidden max-w-2xl text-sm leading-7 text-slate-600 lg:block">
-              Retrouvez les formats les plus demandes, avec les informations essentielles visibles au premier coup d oeil.
-            </p>
-          </div>
-          <Button href="/services" variant="secondary" className="hidden sm:inline-flex lg:h-12 lg:px-7">Tout explorer</Button>
-        </div>
-
-        <div className="mt-6 flex gap-3 overflow-x-auto pb-2 md:mt-8 md:grid md:gap-4 md:overflow-visible md:pb-0 md:grid-cols-2 xl:hidden">
-          {productCards.map((card) => (
-            <ProductCard key={card.title} card={card} />
-          ))}
-        </div>
-
-        <div className="mt-10 hidden grid-cols-[1.05fr_1.95fr] gap-5 xl:grid">
-          <ProductCard card={featuredCard} featured />
-          <div className="grid grid-cols-2 gap-5 2xl:grid-cols-3">
-            {secondaryCards.map((card) => (
-              <ProductCard key={card.title} card={card} />
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ProductCard({
-  card,
-  featured = false,
-}: {
-  card: (typeof productCards)[number];
-  featured?: boolean;
-}) {
-  return (
-    <article
-      className={`group relative flex min-w-[17.5rem] flex-col overflow-hidden border border-line bg-white transition hover:-translate-y-1 md:min-w-0 ${
-        featured ? 'min-h-[31rem] p-7' : `p-4 md:p-5 ${card.image ? 'min-h-[19rem] text-white xl:min-h-[23rem]' : 'xl:min-h-[23rem]'}`
-      } ${card.image || featured ? 'text-white' : ''}`}
-    >
-      {card.image ? (
-        <>
-          <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#061521]/94 via-[#061521]/62 to-[#061521]/14" />
-        </>
-      ) : featured ? (
-        <div className="absolute inset-0 bg-gradient-to-br from-[#082033] via-[#0f8f6b] to-[#0b1724]" />
-      ) : null}
-
-      <div className="relative flex items-start justify-between gap-4">
-        <div>
-          <p className={`text-xs font-black uppercase tracking-[0.14em] ${card.image || featured ? 'text-[#ffd22e]' : 'text-deepblue'}`}>{card.tag}</p>
-          <h3 className={`mt-2 font-black ${featured ? 'text-3xl leading-tight text-white' : `text-lg md:text-xl ${card.image ? 'text-white' : 'text-ink'}`}`}>{card.title}</h3>
-        </div>
-        <span className={`grid h-10 w-10 place-items-center border text-xs font-black ${card.image || featured ? 'border-white/30 bg-white/15 text-white' : 'border-line bg-slate-50 text-slate-500'}`}>PCB</span>
-      </div>
-
-      <ul className={`relative mt-5 space-y-2 text-sm leading-6 ${featured ? 'text-white/88' : card.image ? 'text-white/86' : 'text-slate-600'}`}>
-        {card.details.map((detail) => (
-          <li key={detail} className="flex gap-2">
-            <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${card.image || featured ? 'bg-[#ffd22e]' : 'bg-deepblue'}`} />
-            <span>{detail}</span>
-          </li>
-        ))}
-      </ul>
-
-      <div className={`relative mt-auto flex items-center justify-between border-t pt-4 ${card.image || featured ? 'border-white/25' : 'border-line'}`}>
-        <div>
-          <p className={`text-sm font-black ${card.image || featured ? 'text-white' : 'text-ink'}`}>{card.price}</p>
-          <p className={`mt-1 text-xs ${card.image || featured ? 'text-white/72' : 'text-slate-500'}`}>{card.time}</p>
-        </div>
-        <a href={card.href} className={`text-sm font-black ${card.image || featured ? 'text-[#ffd22e]' : 'text-deepblue hover:text-signal'}`}>Ouvrir</a>
-      </div>
-    </article>
   );
 }
 
