@@ -122,16 +122,16 @@ export default function RegisterPage() {
 
         <div className="relative mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="hidden max-w-xl sm:block">
-            <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-100">Creez votre compte Kendronics</p>
+            <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-100">Créez votre compte Kendronics</p>
             <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
-              Commencez a demander des devis PCB pour une livraison en Afrique.
+              Commencez à demander des devis PCB pour une livraison en Afrique.
             </h1>
             <p className="mt-5 text-lg leading-8 text-slate-200">
-              Register in under a minute. Payment setup happens only when you place an order.
+              Créez votre compte en moins d’une minute. Le paiement intervient seulement au moment de commander.
             </p>
             <div className="mt-8 grid gap-3 text-sm font-bold text-sky-100 sm:grid-cols-3">
               <div className="glass rounded-2xl p-4">Aucune carte requise</div>
-              <div className="glass rounded-2xl p-4">Compte securise</div>
+              <div className="glass rounded-2xl p-4">Compte sécurisé</div>
               <div className="glass rounded-2xl p-4">Tous les pays africains</div>
             </div>
           </div>
@@ -143,9 +143,9 @@ export default function RegisterPage() {
             ) : (
               <form onSubmit={submit} className="space-y-3 sm:space-y-5" noValidate>
                 <div>
-                  <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Creer votre compte</h2>
+                  <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">Créer votre compte</h2>
                   <p className="hidden mt-2 text-sm leading-6 text-slate-600 sm:block">
-                    Use a professional email when possible. Your account is created immediately after signup.
+                    Utilisez si possible une adresse professionnelle. Le compte est créé immédiatement après inscription.
                   </p>
                 </div>
 
@@ -161,12 +161,12 @@ export default function RegisterPage() {
                     value={values.country}
                     error={errors.country}
                     onChange={(value) => update('country', value)}
-                    options={[{ value: '', label: 'Selectionner un pays' }, ...africanCountries.map((country) => ({ value: country.iso2, label: country.name }))]}
+                    options={[{ value: '', label: 'Sélectionner un pays' }, ...africanCountries.map((country) => ({ value: country.iso2, label: country.name }))]}
                   />
                 </div>
 
                 <div>
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500 sm:mb-3 sm:text-xs sm:tracking-[0.16em]">Account type</p>
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500 sm:mb-3 sm:text-xs sm:tracking-[0.16em]">Type de compte</p>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
                     {(['individual', 'student', 'startup', 'company'] satisfies AccountType[]).map((type) => (
                       <button
@@ -199,8 +199,8 @@ export default function RegisterPage() {
                     className="mt-1 h-4 w-4 rounded border-slate-300 text-signal"
                   />
                   <span>
-                    J'accepte les <a href="/terms" className="font-black text-deepblue">conditions generales</a> et la{' '}
-                    <a href="/privacy" className="font-black text-deepblue">politique de confidentialite</a>.
+                    J’accepte les <a href="/terms" className="font-black text-deepblue">conditions générales</a> et la{' '}
+                    <a href="/privacy" className="font-black text-deepblue">politique de confidentialité</a>.
                     {errors.acceptedTerms && <span className="mt-1 block text-xs font-bold text-red-600">{errors.acceptedTerms}</span>}
                   </span>
                 </label>
@@ -210,11 +210,11 @@ export default function RegisterPage() {
                   disabled={status === 'submitting'}
                   className="h-10 w-full rounded-xl bg-deepblue text-xs font-black text-white transition hover:bg-deepblue-dark disabled:cursor-not-allowed disabled:opacity-60 sm:h-12 sm:text-sm"
                 >
-                  {status === 'submitting' ? 'Creation du compte...' : 'Creer un compte'}
+                  {status === 'submitting' ? 'Création du compte...' : 'Créer un compte'}
                 </button>
 
                 <p className="hidden text-center text-sm text-slate-600 sm:block">
-                  Deja inscrit ? <a href="/login" className="font-black text-deepblue">Se connecter</a>
+                  Déjà inscrit ? <a href="/login" className="font-black text-deepblue">Se connecter</a>
                 </p>
               </form>
             )}
@@ -256,7 +256,7 @@ function MobileRegisterScreen({
 
   return (
     <section className="auth-neumo mx-auto max-w-md px-4 pb-8 pt-28 sm:px-0 sm:pt-32">
-      <h1 className="text-[30px] font-black leading-tight tracking-normal text-ink">Creer votre compte</h1>
+      <h1 className="text-[30px] font-black leading-tight tracking-normal text-ink">Créer votre compte</h1>
       <form onSubmit={onSubmit} className="mt-7 space-y-3" noValidate>
         <div className="grid grid-cols-2 gap-3">
           <AccountChoice
@@ -311,19 +311,19 @@ function MobileRegisterScreen({
         />
 
         <MobileCheck checked={values.acceptedTerms} onChange={(checked) => onUpdate('acceptedTerms', checked)}>
-          J'accepte les <a href="/terms" className="font-bold text-slate-600 underline">conditions d'utilisation</a> et la{' '}
-          <a href="/privacy" className="font-bold text-deepblue underline">politique de confidentialite</a>
+          J’accepte les <a href="/terms" className="font-bold text-slate-600 underline">conditions d’utilisation</a> et la{' '}
+          <a href="/privacy" className="font-bold text-deepblue underline">politique de confidentialité</a>
           {errors.acceptedTerms && <span className="mt-1 block text-sm font-medium text-red-600">{errors.acceptedTerms}</span>}
         </MobileCheck>
         <MobileCheck checked={newsletter} onChange={onNewsletter}>
-          Recevoir les nouveautes Kendronics. <a href="/privacy" className="font-bold text-slate-600 underline">Voir la politique newsletter</a>
+          Recevoir les nouveautés Kendronics. <a href="/privacy" className="font-bold text-slate-600 underline">Voir la politique newsletter</a>
         </MobileCheck>
 
         <button type="submit" disabled={status === 'submitting'} className="h-11 w-full rounded-xl bg-deepblue text-base font-black text-white ring-1 ring-white/60 disabled:opacity-60">
-          {status === 'submitting' ? 'Creation...' : 'Creer le compte'}
+          {status === 'submitting' ? 'Création...' : 'Créer le compte'}
         </button>
         <a href="/login" className="flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-600 ring-1 ring-white/70">
-          Deja un compte? Se connecter
+          Déjà un compte ? Se connecter
         </a>
       </form>
 
@@ -483,7 +483,7 @@ function SocialButton({ provider, label, href }: { provider: 'google' | 'apple';
     <button
       type="button"
       disabled
-      title="OAuth non configure: ajoutez l'URL fournisseur dans les variables d'environnement."
+      title="Connexion sociale non configurée : ajoutez l’URL fournisseur dans les variables d’environnement."
       className="flex h-11 w-full cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-400 opacity-70 ring-1 ring-white/70"
     >
       {content}
@@ -516,7 +516,7 @@ function AuthFooter() {
       <div className="flex items-center justify-center gap-3">
         <a href="/terms">Conditions generales</a>
         <span className="h-4 w-px bg-slate-300/70" />
-        <a href="/privacy">Politique de confidentialite</a>
+        <a href="/privacy">Politique de confidentialité</a>
       </div>
       <p className="mt-2">&copy; 2026 Kendronics. Tous droits reserves.</p>
     </footer>
@@ -536,7 +536,7 @@ function MobileAuthTabs({ active }: { active: 'login' | 'register' }) {
           Connexion
         </a>
         <a href="/register" className={tabClass('register')}>
-          Creer un compte
+          Créer un compte
         </a>
       </div>
     </div>

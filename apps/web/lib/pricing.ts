@@ -63,7 +63,7 @@ export class FutureSupplierApiProvider implements SupplierPricingProvider {
     });
 
     if (!response.ok) {
-      throw new Error('Supplier pricing API unavailable');
+      throw new Error('API de prix fournisseur indisponible');
     }
 
     const data = await response.json();
@@ -365,7 +365,7 @@ function getLeadTimeDays(config: QuoteConfig, logisticsZone: string): number {
 
 function boardTypeFor(format: QuoteConfig['deliveryFormat']): string {
   if (format === 'customer_panel') return 'Panel PCB as design';
-  if (format === 'panel_by_partner') return 'Panel PCB by Supplier';
+  if (format === 'panel_by_partner') return 'Panneau PCB fournisseur';
   return 'Single PCB';
 }
 

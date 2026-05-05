@@ -115,7 +115,7 @@ export function PricingSummary({
     <aside className="space-y-3">
       <div className="hidden rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 sm:p-5 lg:block">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-black text-slate-950 sm:text-base">Details des frais</h2>
+          <h2 className="text-sm font-black text-slate-950 sm:text-base">Détails des frais</h2>
           <span className="text-lg font-black text-slate-950">^</span>
         </div>
 
@@ -127,7 +127,7 @@ export function PricingSummary({
 
         <div className="border-b border-slate-200 py-3 sm:py-4">
           <div className="mb-2 flex items-center gap-2 sm:mb-3">
-            <h3 className="text-sm font-black text-slate-950">PCB Delais prod</h3>
+            <h3 className="text-sm font-black text-slate-950">Délais production PCB</h3>
             <span className="grid h-4 w-4 place-items-center rounded-full bg-slate-300 text-[10px] font-black text-white">?</span>
           </div>
           <ProductionSpeedRow label="2 jours" value="standard" price={0} active={productionSpeed === 'standard'} onChange={onProductionSpeedChange} />
@@ -148,7 +148,7 @@ export function PricingSummary({
 
         {errors.length > 0 ? (
           <div className="rounded-sm border border-red-200 bg-red-50 p-3">
-            <p className="text-sm font-black text-red-700">Configuration a verifier</p>
+            <p className="text-sm font-black text-red-700">Configuration à vérifier</p>
             <ul className="mt-2 space-y-2 text-xs leading-5 text-red-700">
               {errors.map((error) => (
                 <li key={error}>{error}</li>
@@ -181,11 +181,11 @@ export function PricingSummary({
         }`}
         role={priceDetailsOpen ? 'dialog' : undefined}
         aria-modal={priceDetailsOpen ? 'true' : undefined}
-        aria-label={priceDetailsOpen ? 'Details prix' : undefined}
+        aria-label={priceDetailsOpen ? 'Détails prix' : undefined}
       >
         <div className="mx-auto max-w-md">
           <div className="flex items-center gap-3">
-            <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Afficher le detail du prix" aria-expanded={priceDetailsOpen}>
+            <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Afficher le détail du prix" aria-expanded={priceDetailsOpen}>
               <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estimé</p>
               <p className="mt-0.5 text-lg font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
             </button>
@@ -206,7 +206,7 @@ export function PricingSummary({
             <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-slate-300" />
             <div className="mb-2 flex items-center justify-between gap-4">
               <div>
-                <h2 className="text-sm font-black text-slate-950">Details du prix</h2>
+                <h2 className="text-sm font-black text-slate-950">Détails du prix</h2>
                 <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif avant validation.'}</p>
               </div>
               <button type="button" className="grid h-8 w-8 place-items-center rounded-full bg-white text-base font-black text-slate-700" onClick={() => setPriceDetailsOpen(false)} aria-label="Fermer">
@@ -222,7 +222,7 @@ export function PricingSummary({
               </div>
 
               <div className="border-b border-slate-200 py-2">
-                <h3 className="mb-1 text-xs font-black text-slate-950">Delais production</h3>
+                <h3 className="mb-1 text-xs font-black text-slate-950">Délais production</h3>
                 <ProductionSpeedRow label="2 jours" value="standard" price={0} active={productionSpeed === 'standard'} onChange={onProductionSpeedChange} />
                 <ProductionSpeedRow label="24 heures" value="express_24h" price={pricing.productionSpeedFee || 7.5} active={productionSpeed === 'express_24h'} onChange={onProductionSpeedChange} />
               </div>
@@ -238,7 +238,7 @@ export function PricingSummary({
 
             {errors.length > 0 ? (
               <div className="mt-2 rounded-sm border border-red-200 bg-red-50 p-2.5">
-                <p className="text-xs font-black text-red-700">Configuration a verifier</p>
+                <p className="text-xs font-black text-red-700">Configuration à vérifier</p>
                 <ul className="mt-1 space-y-1 text-xs leading-4 text-red-700">
                   {errors.map((error) => (
                     <li key={error}>{error}</li>

@@ -62,7 +62,7 @@ export default function TrackingPage() {
       }
 
       if (!response.ok) {
-        throw new Error('Tracking lookup failed.');
+        throw new Error('Recherche de suivi impossible.');
       }
 
       setTimeline(await response.json());
@@ -307,7 +307,7 @@ function defaultTimelineDescription(status: PublicTrackingStatus): string {
     paid: 'Le paiement est confirme et la preparation peut commencer.',
     supplier_order_pending: 'Kendronics prepare la commande de production.',
     supplier_ordered: 'La commande de production a ete transmise a un partenaire valide.',
-    supplier_in_production: 'Les cartes sont en cours de production. Les identifiants fournisseur restent prives.',
+    supplier_in_production: 'Les cartes sont en cours de production. Les identifiants fournisseur restent privés.',
     received_at_france_hub: 'Le colis est arrive au hub de coordination en France.',
     shipped_to_africa: 'La commande a quitte le hub France vers la region de destination.',
     customs_processing: 'Le colis est en traitement douanier.',

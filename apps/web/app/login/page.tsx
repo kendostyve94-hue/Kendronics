@@ -222,7 +222,7 @@ export default function LoginPage() {
                 Pick up exactly where your PCB workflow left off.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-sky-100">
-                La connexion debloque les demandes de prix authentifiees, l historique protege et la session utilisee par les espaces Kendronics.
+                La connexion débloque les demandes de prix authentifiées, l’historique protégé et la session utilisée par les espaces Kendronics.
               </p>
             </div>
           </div>
@@ -453,7 +453,7 @@ function SocialButton({ provider, label, href }: { provider: 'google' | 'apple';
     <button
       type="button"
       disabled
-      title="OAuth non configure: ajoutez l'URL fournisseur dans les variables d'environnement."
+      title="Connexion sociale non configurée : ajoutez l’URL fournisseur dans les variables d’environnement."
       className="flex h-11 w-full cursor-not-allowed items-center justify-center gap-4 rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-400 opacity-70 ring-1 ring-white/70"
     >
       {content}
@@ -486,7 +486,7 @@ function AuthFooter() {
       <div className="flex items-center justify-center gap-3">
         <a href="/terms">Conditions generales</a>
         <span className="h-4 w-px bg-slate-300/70" />
-        <a href="/privacy">Politique de confidentialite</a>
+        <a href="/privacy">Politique de confidentialité</a>
       </div>
       <p className="mt-2">&copy; 2026 Kendronics. Tous droits reserves.</p>
     </footer>
@@ -506,7 +506,7 @@ function MobileAuthTabs({ active }: { active: 'login' | 'register' }) {
           Connexion
         </a>
         <a href="/register" className={tabClass('register')}>
-          Creer un compte
+          Créer un compte
         </a>
       </div>
     </div>
@@ -564,7 +564,7 @@ function LoginForm({
           Mot de passe oublie?
         </button>
         <a href="/register" className="hidden font-black text-deepblue transition hover:text-signal-dark sm:inline">
-          Creer un compte
+          Créer un compte
         </a>
       </div>
 

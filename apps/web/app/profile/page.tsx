@@ -264,7 +264,7 @@ export default function ProfilePage() {
             />
             <div className="min-w-0 flex-1">
               <div className="grid gap-3 sm:grid-cols-3">
-                <InfoCell label="Numero de compte" value={accountNumber} />
+                <InfoCell label="Numéro de compte" value={accountNumber} />
                 <InfoCell label="Nom d'utilisateur" value={displayName} />
                 <InfoCell label="E-mail" value={displayEmail} />
               </div>
@@ -274,7 +274,7 @@ export default function ProfilePage() {
 
         <Card className="overflow-hidden p-0">
           <a href="/privacy" className="flex min-h-14 items-center justify-between gap-3 border-b border-line px-4 text-sm font-black text-ink sm:px-6">
-            Politique de confidentialite
+            Politique de confidentialité
             <ChevronIcon />
           </a>
           <a href="/terms" className="flex min-h-14 items-center justify-between gap-3 border-b border-line px-4 text-sm font-black text-ink sm:px-6">
