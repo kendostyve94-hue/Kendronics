@@ -138,7 +138,7 @@ function Hero() {
                 <source src={slide.media} type="video/quicktime" />
               </video>
             ) : (
-              <img src={slide.media} alt="" className={`mx-auto h-full w-full !object-center sm:ml-auto sm:!object-right ${slide.imageClassName ?? 'object-cover opacity-70'}`} />
+              <img src={slide.media} alt="" className={`mx-auto h-full w-full max-sm:!object-center sm:ml-auto ${slide.imageClassName ?? 'object-cover opacity-70'}`} />
             )}
           </div>
         ))}
