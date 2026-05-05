@@ -7,8 +7,11 @@ import { Button } from '../components/ui/Button';
 const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
 const heroControllerBoardImage = '/images/hero-controller-board-transparent.png';
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
+const productPcbStandardImage = '/images/product-pcb-standard-transparent.png';
+const productPcbSmallBatchImage = '/images/product-pcb-small-batch.png';
 const productPcbAdvancedImage = '/images/product-pcb-advanced.png';
 const productPcbaAssemblyImage = '/images/product-pcba-assembly.png';
+const productStencilSmtImage = '/images/product-stencil-smt.png';
 
 const heroSlides = [
   {
@@ -45,6 +48,7 @@ const productCards = [
     price: 'Devis instantane',
     time: 'Production rapide',
     href: '/quote',
+    image: productPcbStandardImage,
   },
   {
     title: 'PCB petit lot',
@@ -53,6 +57,7 @@ const productCards = [
     price: 'Prix transparent',
     time: 'Suivi client',
     href: '/services#pcb-petit-lot',
+    image: productPcbSmallBatchImage,
   },
   {
     title: 'PCB avance',
@@ -79,6 +84,7 @@ const productCards = [
     price: 'Ajout simple',
     time: 'Avec commande',
     href: '/services#stencil',
+    image: productStencilSmtImage,
   },
   {
     title: 'Assistance Gerber',
