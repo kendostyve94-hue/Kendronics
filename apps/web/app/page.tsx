@@ -17,7 +17,7 @@ const heroSlides = [
     body: 'Kendronics centralise vos Gerber, BOM et CPL pour preparer un devis PCB/PCBA clair, avec choix de finition, controle des fichiers et suivi jusqu a la livraison.',
     media: heroPcbVariantsImage,
     type: 'image',
-    imageClassName: 'object-contain object-right opacity-100 lg:w-[51%] lg:-translate-x-10',
+    imageClassName: 'sm:object-contain sm:object-right lg:w-[51%] lg:-translate-x-10',
   },
   {
     eyebrow: 'Carte controleur et assemblage',
@@ -25,7 +25,7 @@ const heroSlides = [
     body: 'Du PCB nu a l assemblage PCBA, Kendronics organise la lecture BOM/CPL, la verification des interfaces et la coordination de fabrication pour livrer une carte prete a integrer.',
     media: heroControllerBoardImage,
     type: 'image',
-    imageClassName: 'object-contain object-right opacity-100 lg:w-[50%] lg:-translate-x-12',
+    imageClassName: 'sm:object-contain sm:object-right lg:w-[50%] lg:-translate-x-12',
   },
   {
     eyebrow: 'Cartes complexes et industrialisation',
@@ -33,7 +33,7 @@ const heroSlides = [
     body: 'Pour les prototypes multicouches, cartes processeur et projets avec interfaces nombreuses, Kendronics structure les fichiers, les options de fabrication et le suivi avant lancement.',
     media: heroStackedPcbImage,
     type: 'image',
-    imageClassName: 'object-contain object-right opacity-100 lg:w-[49%] lg:-translate-x-12',
+    imageClassName: 'sm:object-contain sm:object-right lg:w-[49%] lg:-translate-x-12',
   },
 ];
 
@@ -127,10 +127,10 @@ export default function HomePage() {
 
 function Hero() {
   return (
-    <section className="relative min-h-[30rem] overflow-hidden bg-[#dcecf8] pt-24 text-ink sm:min-h-[40rem] sm:pt-28 lg:min-h-[29rem] lg:pt-20">
+    <section className="relative min-h-[27.5rem] overflow-hidden bg-[#dcecf8] pt-20 text-ink sm:min-h-[40rem] sm:pt-28 lg:min-h-[29rem] lg:pt-20">
       <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#dbeefa] to-[#c7dced]" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#eef7ff]/82 to-[#eef7ff]/14" />
-      <div className="absolute inset-0">
+      <div className="absolute inset-x-0 bottom-7 top-[18rem] sm:inset-0">
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className="home-hero-slide absolute inset-0" style={{ animationDelay: `${index * 5}s` }}>
             {slide.type === 'video' ? (
@@ -138,34 +138,34 @@ function Hero() {
                 <source src={slide.media} type="video/quicktime" />
               </video>
             ) : (
-              <img src={slide.media} alt="" className={`ml-auto h-full w-full ${slide.imageClassName ?? 'object-cover opacity-70'}`} />
+              <img src={slide.media} alt="" className={`mx-auto h-full w-full object-contain object-center opacity-100 sm:ml-auto ${slide.imageClassName ?? 'object-cover opacity-70'}`} />
             )}
           </div>
         ))}
       </div>
 
-      <div className="relative mx-auto flex max-w-[1180px] flex-col justify-center px-4 pb-7 pt-7 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[430px] lg:px-8">
-        <div className="relative min-h-[20rem] max-w-[42rem] lg:min-h-[17rem]">
+      <div className="relative mx-auto flex max-w-[1180px] flex-col justify-start px-4 pb-5 pt-5 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[430px] lg:justify-center lg:px-8">
+        <div className="relative min-h-[13rem] max-w-[42rem] sm:min-h-[20rem] lg:min-h-[17rem]">
           {heroSlides.map((slide, index) => (
-            <div key={slide.title} className="home-hero-copy absolute inset-0 flex flex-col justify-center" style={{ animationDelay: `${index * 5}s` }}>
+            <div key={slide.title} className="home-hero-copy absolute inset-0 flex flex-col justify-start sm:justify-center" style={{ animationDelay: `${index * 5}s` }}>
               <p className="label-caps text-[#0f8f6b]">{slide.eyebrow}</p>
-              <h1 className="mt-3 max-w-2xl text-[1.72rem] font-black leading-tight tracking-tight text-ink sm:mt-4 sm:text-5xl lg:text-[3.2rem]">
+              <h1 className="mt-2 max-w-2xl text-[1.45rem] font-black leading-tight tracking-tight text-ink sm:mt-4 sm:text-5xl lg:text-[3.2rem]">
                 {slide.title}
               </h1>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-slate-600 sm:mt-5 sm:text-base sm:leading-7">
+              <p className="mt-3 max-w-xl text-xs leading-5 text-slate-600 sm:mt-5 sm:text-base sm:leading-7">
                 {slide.body}
               </p>
             </div>
           ))}
         </div>
 
-        <div className="relative mt-5 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:items-center sm:gap-3">
+        <div className="relative mt-1 grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:items-center sm:gap-3">
           <Button href="/quote" className="h-11 whitespace-nowrap px-2 text-xs !font-normal sm:h-12 sm:px-7 sm:text-sm">Demande un devis</Button>
           <Button href="/services" variant="secondary" className="h-11 whitespace-nowrap px-2 text-xs !font-normal sm:h-12 sm:px-7 sm:text-sm">Voir les services</Button>
           <HeroQuickQuote />
         </div>
 
-        <div className="relative mt-5 flex gap-2 sm:hidden" aria-hidden="true">
+        <div className="relative mt-[8.25rem] flex gap-2 sm:hidden" aria-hidden="true">
           {heroSlides.map((slide, index) => (
             <span key={slide.title} className="home-hero-dot h-1.5 w-6 bg-ink" style={{ animationDelay: `${index * 5}s` }} />
           ))}
