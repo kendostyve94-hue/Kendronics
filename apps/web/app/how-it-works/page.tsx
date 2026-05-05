@@ -9,94 +9,94 @@ const heroImage =
 
 const timelineSteps = [
   {
-    title: 'Design your PCB',
-    body: 'Create the board in KiCad, EasyEDA, Altium, Eagle, or another EDA tool that can export production Gerbers.',
+    title: 'Concevoir le PCB',
+    body: 'Préparez la carte dans KiCad, EasyEDA, Altium, Eagle ou un autre outil capable d’exporter des Gerbers de production.',
   },
   {
-    title: 'Export Gerber ZIP',
-    body: 'Package copper layers, solder mask, silkscreen, drill files, outline data, and other manufacturing outputs into one ZIP file.',
+    title: 'Exporter le ZIP Gerber',
+    body: 'Regroupez couches cuivre, masque de soudure, sérigraphie, perçages, contour et autres fichiers de fabrication dans un seul ZIP.',
   },
   {
-    title: 'Upload to Kendronics',
-    body: 'Submit the Gerber ZIP through the quote flow so Kendronics can attach the files to your customer request.',
+    title: 'Téléverser sur Kendronics',
+    body: 'Ajoutez le ZIP Gerber dans le parcours de devis afin que les fichiers restent attachés à votre demande client.',
   },
   {
-    title: 'Configure PCB specs',
-    body: 'Choose layers, dimensions, quantity, material, thickness, solder mask, surface finish, assembly needs, and destination country.',
+    title: 'Configurer les spécifications',
+    body: 'Choisissez couches, dimensions, quantité, matériau, épaisseur, masque, finition, assemblage et pays de destination.',
   },
   {
-    title: 'Get a real-time quote',
-    body: 'Review a customer-facing quote that combines board configuration, logistics assumptions, payment handling, and destination context.',
+    title: 'Obtenir une estimation',
+    body: 'Consultez un devis client qui combine configuration de carte, hypothèses logistiques, paiement et destination.',
   },
   {
-    title: 'Pay securely',
-    body: 'Pay by Stripe card checkout where available, with Mobile Money-ready architecture for supported payment flows.',
+    title: 'Payer de façon sécurisée',
+    body: 'Payez par carte via Stripe quand disponible, avec une architecture prévue pour les parcours Mobile Money pris en charge.',
   },
   {
-    title: 'Kendronics coordinates the order',
-    body: 'Kendronics places the order with a trusted external manufacturing partner. Kendronics is the intermediary and logistics platform, not the factory.',
+    title: 'Coordination Kendronics',
+    body: 'Kendronics coordonne la demande avec un partenaire de fabrication externe. Kendronics reste l’intermédiaire et la plateforme logistique, pas l’usine.',
   },
   {
-    title: 'Partner manufactures the PCB',
-    body: 'The external partner produces the boards according to the submitted files and selected manufacturing options.',
+    title: 'Fabrication partenaire',
+    body: 'Le partenaire externe produit les cartes selon les fichiers transmis et les options de fabrication sélectionnées.',
   },
   {
-    title: 'France logistics processing',
-    body: 'The order is received, checked, and processed through the France coordination flow before onward shipment.',
+    title: 'Traitement logistique France',
+    body: 'La commande est reçue, contrôlée et préparée dans le flux de coordination France avant l’expédition suivante.',
   },
   {
-    title: 'Route to Africa',
-    body: 'The shipment is routed toward the selected African destination with country-aware delivery and customs milestones.',
+    title: 'Acheminement vers l’Afrique',
+    body: 'L’expédition est orientée vers le pays africain sélectionné avec jalons de livraison et de douane adaptés.',
   },
   {
-    title: 'Track the order',
-    body: 'Customers follow public-safe tracking updates, timeline milestones, carrier details, and estimated delivery when available.',
+    title: 'Suivre la commande',
+    body: 'Les clients suivent les mises à jour publiques, les jalons, le transporteur et l’estimation de livraison quand elle est disponible.',
   },
 ];
 
 const gerberGuide = [
-  ['Board outline', 'Include the mechanical outline so the manufacturing partner can identify final dimensions and cut paths.'],
-  ['Copper layers', 'Export every required copper layer, from top and bottom copper to internal layers on multilayer boards.'],
-  ['Solder mask and silkscreen', 'Include mask and legend layers so production markings and exposed copper areas are clear.'],
-  ['Drill files', 'Add plated and non-plated drill data so holes, vias, and mounting points are interpreted correctly.'],
-  ['Single ZIP package', 'Upload one compressed Gerber ZIP, named clearly enough to match your project or revision.'],
-  ['Assembly extras', 'For PCBA requests, prepare BOM and CPL files so support can review assembly readiness separately.'],
+  ['Contour de carte', 'Ajoutez le contour mécanique pour identifier les dimensions finales et les chemins de découpe.'],
+  ['Couches cuivre', 'Exportez toutes les couches cuivre nécessaires, y compris les couches internes pour les cartes multicouches.'],
+  ['Masque et sérigraphie', 'Incluez les couches de masque et de légende pour clarifier les marquages et zones de cuivre exposées.'],
+  ['Fichiers de perçage', 'Ajoutez les perçages métallisés et non métallisés pour trous, vias et points de montage.'],
+  ['ZIP unique', 'Téléversez un seul ZIP Gerber, nommé clairement avec le projet ou la révision.'],
+  ['Fichiers assemblage', 'Pour les demandes PCBA, préparez BOM et CPL afin de vérifier l’assemblage séparément.'],
 ];
 
 const paymentPoints = [
-  ['Stripe card checkout', 'Card payments are handled through Stripe checkout flows where available. Kendronics does not ask customers to send card details through support messages.'],
-  ['Mobile Money-ready path', 'The platform architecture includes Mobile Money-oriented payment handling for markets and providers where it is enabled.'],
-  ['Quote before payment', 'Customers configure the order and review the quote before moving into payment, so the request context stays attached to fulfillment.'],
+  ['Paiement carte Stripe', 'Les paiements carte passent par Stripe quand disponible. Kendronics ne demande pas d’envoyer des données carte par support.'],
+  ['Parcours Mobile Money prêt', 'L’architecture prévoit des flux orientés Mobile Money pour les marchés et prestataires compatibles.'],
+  ['Devis avant paiement', 'Le client configure la commande et relit le devis avant paiement afin de garder le contexte attaché au suivi.'],
 ];
 
 const deliveryPoints = [
-  ['External production', 'Manufacturing is performed by trusted external PCB partners, not by Kendronics-owned factories.'],
-  ['France coordination', 'Kendronics uses a France-based coordination layer for order processing, logistics handling, and shipment preparation.'],
-  ['African destination routing', 'Delivery planning accounts for the selected destination country, carrier availability, customs milestones, and tracking updates.'],
+  ['Production externe', 'La fabrication est réalisée par des partenaires PCB externes, pas par des usines détenues par Kendronics.'],
+  ['Coordination France', 'Kendronics utilise une couche de coordination en France pour traitement, logistique et préparation d’expédition.'],
+  ['Destination Afrique', 'La livraison tient compte du pays sélectionné, des transporteurs disponibles, de la douane et du suivi.'],
 ];
 
 const faqs = [
   [
-    'Is Kendronics a PCB manufacturer?',
-    'No. Kendronics is an ordering, payment, coordination, logistics, tracking, and support platform that works with external manufacturing partners.',
+    'Kendronics est-il un fabricant PCB ?',
+    'Non. Kendronics est une plateforme de commande, paiement, coordination, logistique, suivi et support qui travaille avec des partenaires externes.',
   ],
   [
-    'Can I use KiCad or EasyEDA files directly?',
-    'The quote flow expects production exports, usually a Gerber ZIP. Native design files can be useful for support context, but Gerbers are the manufacturing handoff.',
+    'Puis-je envoyer directement des fichiers KiCad ou EasyEDA ?',
+    'Le devis attend surtout des exports de production, généralement un ZIP Gerber. Les fichiers natifs peuvent aider au support, mais les Gerbers servent de base fabrication.',
   ],
   [
-    'What happens if my Gerber ZIP has an issue?',
-    'Use Gerber review assistance or support tickets. The goal is to resolve file questions before they create production or delivery delays.',
+    'Que se passe-t-il si mon ZIP Gerber pose problème ?',
+    'Utilisez l’assistance Gerber ou les tickets support. L’objectif est de résoudre les questions fichier avant qu’elles ne créent des retards.',
   ],
   [
-    'Will public tracking show supplier details?',
-    'No. Public tracking is customer-safe and avoids sensitive supplier, admin, and pricing data.',
+    'Le suivi public affiche-t-il les détails fournisseur ?',
+    'Non. Le suivi public reste adapté au client et évite les données sensibles fournisseur, admin ou prix.',
   ],
 ];
 
 const componentPlan = [
   ['Parcours client', '#timeline'],
-  ['Preparation Gerber', '#gerber-file-guide'],
+  ['Préparation Gerber', '#gerber-file-guide'],
   ['Paiement', '#payment-explanation'],
   ['Livraison', '#delivery-explanation'],
   ['Questions utiles', '#faq-preview'],
@@ -111,8 +111,8 @@ export default function HowItWorksPage() {
       <Section
         id="journey"
         eyebrow="Parcours commande"
-        title="From design files to tracked delivery."
-        description="The Kendronics workflow keeps the customer journey clear while separating customer-facing coordination from external manufacturing operations."
+        title="Du fichier de conception à la livraison suivie."
+        description="Le parcours Kendronics garde la demande lisible tout en séparant la coordination client des opérations de fabrication externes."
       >
         <div className="grid gap-4 lg:grid-cols-[18rem_1fr]">
           <Card glass className="p-6 lg:sticky lg:top-28 lg:self-start">
@@ -137,9 +137,9 @@ export default function HowItWorksPage() {
 
       <Section
         id="gerber-file-guide"
-        eyebrow="Preparation Gerber"
-        title="Prepare a clean ZIP before requesting a quote."
-        description="A complete Gerber package helps Kendronics coordinate the request more smoothly with external manufacturing partners."
+        eyebrow="Préparation Gerber"
+        title="Préparez un ZIP propre avant de demander un devis."
+        description="Un dossier Gerber complet aide Kendronics à coordonner la demande plus efficacement avec les partenaires de fabrication."
       >
         <div className="grid gap-5 lg:grid-cols-[1fr_25rem]">
           <div className="grid gap-4 md:grid-cols-2">
@@ -160,10 +160,10 @@ export default function HowItWorksPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent" />
             </div>
             <div className="p-6">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">File readiness</p>
-              <h3 className="mt-2 text-xl font-black text-ink">Gerbers are the production handoff.</h3>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Fichiers prêts</p>
+              <h3 className="mt-2 text-xl font-black text-ink">Les Gerbers sont la base de fabrication.</h3>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Your EDA tool remains your design environment. Kendronics uses exported production files to quote, review, coordinate, and track the order request.
+                Votre outil EDA reste votre environnement de conception. Kendronics utilise les exports de production pour chiffrer, vérifier, coordonner et suivre la demande.
               </p>
             </div>
           </Card>
@@ -173,8 +173,8 @@ export default function HowItWorksPage() {
       <Section
         id="payment-explanation"
         eyebrow="Paiement"
-        title="Pay after quote review, before partner fulfillment."
-        description="Payment is part of the customer-facing workflow. It helps keep the quote, order, logistics, and tracking records connected."
+        title="Payez après relecture du devis, avant lancement partenaire."
+        description="Le paiement fait partie du parcours client et garde devis, commande, logistique et suivi dans le même dossier."
       >
         <div className="grid gap-5 md:grid-cols-3">
           {paymentPoints.map(([title, body]) => (
@@ -186,8 +186,8 @@ export default function HowItWorksPage() {
       <Section
         id="delivery-explanation"
         eyebrow="Livraison"
-        title="External manufacturing, France logistics, African delivery."
-        description="Kendronics coordinates the path between partner production and customer delivery. It does not present itself as the factory producing the boards."
+        title="Fabrication externe, logistique France, livraison Afrique."
+        description="Kendronics coordonne le chemin entre production partenaire et livraison client sans se présenter comme l’usine qui fabrique les cartes."
       >
         <div className="grid gap-5 md:grid-cols-3">
           {deliveryPoints.map(([title, body]) => (
@@ -199,8 +199,8 @@ export default function HowItWorksPage() {
       <Section
         id="faq-preview"
         eyebrow="Questions utiles"
-        title="Common questions before ordering."
-        description="These answers set expectations before a customer uploads files or pays for a PCB order."
+        title="Questions fréquentes avant commande."
+        description="Ces réponses cadrent les attentes avant l’upload de fichiers ou le paiement d’une commande PCB."
       >
         <div className="grid gap-4 md:grid-cols-2">
           {faqs.map(([question, answer]) => (
@@ -221,12 +221,12 @@ export default function HowItWorksPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-deepblue via-deepblue/[0.9] to-ink/[0.7]" />
           <div className="relative">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Pret a commencer ?</p>
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Prêt à commencer ?</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-              Upload Gerbers, configure specs, and get a quote.
+              Téléversez les Gerbers, configurez les specs et obtenez un devis.
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-sky-100 sm:text-base">
-              Kendronics will keep the customer-facing order record connected across quote, payment, partner coordination, France logistics, Africa delivery, tracking, and support.
+              Kendronics conserve le dossier client connecté entre devis, paiement, coordination partenaire, logistique France, livraison Afrique, suivi et support.
             </p>
           </div>
           <div className="relative mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col">
@@ -256,15 +256,15 @@ function HowItWorksHero() {
             Parcours Kendronics
           </p>
           <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-            A clear path from PCB design to tracked African delivery.
+            Un parcours clair de la conception PCB à la livraison suivie en Afrique.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
-            Kendronics is an intermediary and logistics platform. Customers upload production files, receive a quote, pay securely, and track orders that are manufactured by external PCB partners.
+            Kendronics est une plateforme intermédiaire et logistique. Les clients téléversent leurs fichiers de production, reçoivent un devis, paient de façon sécurisée et suivent des commandes fabriquées par des partenaires PCB externes.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Button href="/quote">Commencer le devis</Button>
             <Button href="#journey" variant="secondary">
-              Voir les etapes
+              Voir les étapes
             </Button>
           </div>
         </div>
@@ -278,9 +278,9 @@ function HowItWorksHero() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ink/[0.72] via-transparent to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/[0.18] bg-white/[0.12] p-4 backdrop-blur-xl">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-100">Journey</p>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-100">Parcours</p>
               <div className="mt-3 grid grid-cols-3 gap-2 text-center text-sm font-black">
-                {['Design', 'Pay', 'Track'].map((item) => (
+                {['Fichier', 'Paiement', 'Suivi'].map((item) => (
                   <span key={item} className="rounded-xl bg-white/12 px-3 py-3">
                     {item}
                   </span>

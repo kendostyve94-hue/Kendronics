@@ -4,11 +4,11 @@ import { useMemo, useState } from 'react';
 import { Button } from '../ui/Button';
 
 const destinations = [
-  { code: 'SN', label: 'Senegal', zoneFee: 22 },
+  { code: 'SN', label: 'Sénégal', zoneFee: 22 },
   { code: 'NG', label: 'Nigeria', zoneFee: 27 },
   { code: 'KE', label: 'Kenya', zoneFee: 29 },
-  { code: 'ZA', label: 'South Africa', zoneFee: 31 },
-  { code: 'MA', label: 'Morocco', zoneFee: 19 },
+  { code: 'ZA', label: 'Afrique du Sud', zoneFee: 31 },
+  { code: 'MA', label: 'Maroc', zoneFee: 19 },
 ];
 
 export function QuotePreview() {
@@ -30,32 +30,32 @@ export function QuotePreview() {
   }, [countryCode, layers, length, quantity, width]);
 
   return (
-    <section className="glass-light relative z-10 mx-auto max-w-6xl rounded-2xl p-4 sm:p-6" aria-label="Apercu devis">
+    <section className="glass-light relative z-10 mx-auto max-w-6xl rounded-2xl p-4 sm:p-6" aria-label="Aperçu devis">
       <div className="mb-5 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-signal">Configuration devis</p>
-          <h2 className="mt-1 text-2xl font-black tracking-tight text-ink">Configure the essentials in seconds.</h2>
+          <h2 className="mt-1 text-2xl font-black tracking-tight text-ink">Configurez l’essentiel en quelques secondes.</h2>
         </div>
-        <p className="max-w-sm text-sm leading-6 text-slate-600">Interactive layout ready for the production pricing API.</p>
+        <p className="max-w-sm text-sm leading-6 text-slate-600">Une estimation rapide pour comprendre l’impact des specs et de la destination.</p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <label className="space-y-2">
-            <span className="text-xs font-black uppercase tracking-wide text-slate-500">Layers</span>
+            <span className="text-xs font-black uppercase tracking-wide text-slate-500">Couches</span>
             <select
               value={layers}
               onChange={(event) => setLayers(Number(event.target.value))}
               className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
             >
-              <option value={2}>2 layers</option>
-              <option value={4}>4 layers</option>
-              <option value={6}>6 layers</option>
+              <option value={2}>2 couches</option>
+              <option value={4}>4 couches</option>
+              <option value={6}>6 couches</option>
             </select>
           </label>
-          <NumberField label="Length mm" value={length} onChange={setLength} />
-          <NumberField label="Width mm" value={width} onChange={setWidth} />
-          <NumberField label="Quantity" value={quantity} onChange={setQuantity} />
+          <NumberField label="Longueur mm" value={length} onChange={setLength} />
+          <NumberField label="Largeur mm" value={width} onChange={setWidth} />
+          <NumberField label="Quantité" value={quantity} onChange={setQuantity} />
           <label className="space-y-2">
             <span className="text-xs font-black uppercase tracking-wide text-slate-500">Destination</span>
             <select
@@ -74,7 +74,7 @@ export function QuotePreview() {
 
         <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:min-w-64">
           <div>
-            <p className="text-xs font-black uppercase tracking-wide text-slate-500">Total configure</p>
+            <p className="text-xs font-black uppercase tracking-wide text-slate-500">Total configuré</p>
             <p className="mt-1 text-3xl font-black tracking-tight text-deepblue">€{price.toFixed(2)}</p>
           </div>
           <Button href="/quote" className="h-11 px-4">

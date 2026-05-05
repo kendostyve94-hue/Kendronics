@@ -8,76 +8,76 @@ const heroImage =
   'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2400&q=85';
 
 const formulaParts = [
-  ['Partner manufacturing cost', 'The base board or assembly cost quoted by the external manufacturing partner for the selected specs.'],
-  ['Partner handling', 'Handling, preparation, packing, or partner-side operational costs attached to production.'],
-  ['China to France logistics', 'Inbound movement from partner production location toward the France coordination flow when applicable.'],
-  ['France processing/logistics', 'Receiving, processing, coordination, documentation, and routing work handled through the France logistics layer.'],
-  ['France to Africa delivery', 'Outbound delivery to the selected African destination country, carrier, and delivery zone.'],
-  ['Payment processing', 'Payment provider fees and checkout handling for card or supported Mobile Money-oriented flows.'],
-  ['Kendronics service fee', 'The platform fee for quote flow, coordination, support, tracking, and operational handling.'],
-  ['Customs/delivery risk buffer', 'An optional buffer when destination, customs, carrier, or delivery uncertainty makes risk planning necessary.'],
+  ['Coût de fabrication partenaire', 'Coût de carte ou d’assemblage indiqué par le partenaire externe pour les specs sélectionnées.'],
+  ['Traitement partenaire', 'Préparation, emballage ou coûts opérationnels côté partenaire attachés à la production.'],
+  ['Logistique Chine vers France', 'Acheminement depuis le lieu de production partenaire vers le flux de coordination France quand applicable.'],
+  ['Traitement France', 'Réception, coordination, documentation et routage dans la couche logistique France.'],
+  ['Livraison France vers Afrique', 'Livraison vers le pays africain sélectionné, avec transporteur et zone de destination.'],
+  ['Frais de paiement', 'Frais prestataire et traitement checkout pour carte ou flux Mobile Money compatibles.'],
+  ['Frais de service Kendronics', 'Frais plateforme pour devis, coordination, support, suivi et traitement opérationnel.'],
+  ['Marge de risque douane/livraison', 'Tampon optionnel quand destination, douane, transporteur ou incertitude de livraison le justifient.'],
 ];
 
 const priceDrivers = [
-  ['Country', 'Delivery lanes, customs complexity, carrier availability, and last-mile handling differ by destination.'],
-  ['Quantity', 'Small runs can carry higher per-board setup and logistics share; larger runs may distribute fixed costs differently.'],
-  ['Dimensions', 'Board area affects material use, panelization, manufacturing cost, weight, and shipping volume.'],
-  ['Material', 'FR4, Flex, Aluminum, Rogers, PTFE, and other materials have different partner availability and cost profiles.'],
-  ['Options', 'Layers, finish, copper weight, solder mask, testing, PCBA, stencils, and advanced features change partner review and cost.'],
+  ['Pays', 'Les routes, la douane, les transporteurs et le dernier kilomètre varient selon la destination.'],
+  ['Quantité', 'Les petits lots portent plus de frais fixes par carte ; les volumes les répartissent autrement.'],
+  ['Dimensions', 'La surface influence matériau, panelisation, coût de fabrication, poids et volume d’expédition.'],
+  ['Matériau', 'FR4, flex, aluminium, Rogers, PTFE et autres matériaux ont des disponibilités et coûts différents.'],
+  ['Options', 'Couches, finition, cuivre, masque, tests, PCBA, stencils et fonctions avancées modifient revue et coût.'],
 ];
 
 const breakdownRows = [
-  ['Manufacturing', 'Partner manufacturing cost, material, layers, dimensions, finish, copper weight, testing, PCBA, stencil needs.'],
-  ['Partner operations', 'Partner handling, packaging, production-side preparation, and quote-specific review effort.'],
-  ['International logistics', 'China to France logistics when applicable, freight handling, consolidation, and shipment preparation.'],
-  ['France operations', 'France processing, logistics coordination, documentation, inspection flow, and outbound routing.'],
-  ['Africa delivery', 'Country-aware delivery planning, carrier selection, customs milestones, and last-mile considerations.'],
-  ['Payment and platform', 'Payment processing, Kendronics service fee, support, tracking, and operational coordination.'],
-  ['Risk buffer', 'Customs or delivery uncertainty buffer if the lane, destination, or shipment profile requires it.'],
+  ['Fabrication', 'Coût partenaire, matériau, couches, dimensions, finition, cuivre, tests, PCBA ou stencil.'],
+  ['Opérations partenaire', 'Traitement, emballage, préparation production et revue spécifique au devis.'],
+  ['Logistique internationale', 'Flux Chine vers France quand applicable, fret, consolidation et préparation d’expédition.'],
+  ['Opérations France', 'Traitement France, coordination logistique, documentation, contrôle et routage sortant.'],
+  ['Livraison Afrique', 'Planification pays, transporteur, jalons douane et considérations dernier kilomètre.'],
+  ['Paiement et plateforme', 'Traitement paiement, frais Kendronics, support, suivi et coordination opérationnelle.'],
+  ['Marge de risque', 'Tampon douane ou livraison si la route, destination ou expédition le nécessite.'],
 ];
 
 const scenarios = [
   {
-    title: 'Prototype board for a student lab',
-    context: 'Small quantity, standard FR4, common thickness, simple finish, no assembly.',
-    why: 'The price is usually driven by minimum production economics, board size, chosen destination country, and shipping share.',
+    title: 'Prototype pour laboratoire étudiant',
+    context: 'Petite quantité, FR4 standard, épaisseur courante, finition simple, sans assemblage.',
+    why: 'Le prix dépend souvent du minimum de production, de la taille, du pays de destination et de la part transport.',
   },
   {
-    title: 'Small-batch hardware startup run',
-    context: 'Higher quantity, repeatable specs, delivery needed for pilot testing in an African market.',
-    why: 'Quantity may improve per-board economics, while logistics, payment, and destination-country delivery still affect the total.',
+    title: 'Petite série startup hardware',
+    context: 'Quantité plus élevée, specs reproductibles, livraison nécessaire pour test pilote sur un marché africain.',
+    why: 'La quantité peut améliorer le coût par carte, tandis que logistique, paiement et destination influencent encore le total.',
   },
   {
-    title: 'Advanced PCB or PCBA request',
-    context: 'More layers, premium material, ENIG, heavier copper, assembly review, or stencil needs.',
-    why: 'Special options can require partner review, component checks, extra handling, longer lead time, and different logistics assumptions.',
+    title: 'Demande PCB avancé ou PCBA',
+    context: 'Plus de couches, matériau premium, ENIG, cuivre épais, revue assemblage ou besoin stencil.',
+    why: 'Les options spéciales peuvent exiger revue partenaire, contrôle composants, traitement supplémentaire, délai plus long et hypothèses logistiques différentes.',
   },
 ];
 
 const faqs = [
   [
-    'Why not publish fixed prices?',
-    'PCB pricing changes with files, board dimensions, quantity, material, layers, finish, destination country, logistics lane, payment method, and partner availability. Fixed prices would be misleading.',
+    'Pourquoi ne pas publier des prix fixes ?',
+    'Le prix PCB change avec fichiers, dimensions, quantité, matériau, couches, finition, pays, logistique, paiement et disponibilité partenaire. Des prix fixes seraient trompeurs.',
   ],
   [
-    'Are scenario descriptions final quotes?',
-    'No. Scenario descriptions explain cost drivers. A customer quote is generated from the configurator and then confirmed through supplier and file validation.',
+    'Les scénarios sont-ils des devis finaux ?',
+    'Non. Les scénarios expliquent les facteurs de coût. Le devis client vient du configurateur puis peut être confirmé après revue fournisseur et fichier.',
   ],
   [
-    'Why does destination country matter?',
-    'France to Africa delivery, customs handling, carrier availability, and delivery risk can vary significantly by destination country.',
+    'Pourquoi le pays de destination compte ?',
+    'La livraison France vers Afrique, la douane, les transporteurs et le risque de livraison varient fortement selon le pays.',
   ],
   [
-    'Does Kendronics add a service fee?',
-    'Yes. The Kendronics service fee supports quote flow, coordination, support, tracking, payment facilitation, and logistics handling.',
+    'Kendronics ajoute-t-il des frais de service ?',
+    'Oui. Les frais de service couvrent devis, coordination, support, suivi, facilitation paiement et traitement logistique.',
   ],
   [
-    'What is the risk buffer?',
-    'When applicable, it helps account for customs or delivery uncertainty on lanes where shipment cost or delivery complexity can vary.',
+    'Qu’est-ce que la marge de risque ?',
+    'Quand elle s’applique, elle couvre l’incertitude douane ou livraison sur les routes où coût et complexité peuvent varier.',
   ],
   [
-    'Can advanced requests change after review?',
-    'Yes. Advanced PCB, PCBA, material, finish, or logistics requests may need partner review before final price and lead time are confirmed.',
+    'Une demande avancée peut-elle changer après revue ?',
+    'Oui. PCB avancé, PCBA, matériau, finition ou logistique peuvent nécessiter une revue partenaire avant prix et délai finaux.',
   ],
 ];
 
@@ -90,25 +90,25 @@ export default function PricingPage() {
       <Section
         id="pricing-formula"
         eyebrow="Structure du prix"
-        title="Transparent dynamic pricing for real PCB order contexts."
-        description="Kendronics structures pricing around partner manufacturing, handling, logistics, payment, platform service, and destination-specific delivery assumptions."
+        title="Un prix dynamique basé sur le vrai contexte de commande PCB."
+        description="Kendronics structure le prix autour de la fabrication partenaire, du traitement, de la logistique, du paiement, du service plateforme et de la destination."
       >
         <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
           <Card className="p-6">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Calcul</p>
             <h2 className="mt-3 text-2xl font-black tracking-tight text-ink">
-              Total quote = manufacturing + handling + logistics + payment + service + applicable risk buffer
+              Total devis = fabrication + traitement + logistique + paiement + service + marge de risque applicable
             </h2>
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              The configurator is the best way to see the current result because the quote depends on your destination,
-              quantity, dimensions, material, finish, and selected options.
+              Le configurateur reste le meilleur moyen d’obtenir une estimation actuelle, car le devis dépend de la destination,
+              de la quantité, des dimensions, du matériau, de la finition et des options sélectionnées.
             </p>
           </Card>
           <Card glass className="p-6">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Etape recommandee</p>
-            <h3 className="mt-2 text-xl font-black text-ink">Configurer une demande complete.</h3>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Étape recommandée</p>
+            <h3 className="mt-2 text-xl font-black text-ink">Configurer une demande complète.</h3>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              It reflects the selected order profile instead of forcing every customer into a generic price table.
+              Le devis reflète le profil sélectionné au lieu de forcer tous les clients dans une grille générique.
             </p>
             <Button href="/quote" className="mt-5 w-full">
               Demander un devis
@@ -125,17 +125,17 @@ export default function PricingPage() {
 
       <Section
         id="cost-breakdown"
-        eyebrow="Detail des couts"
-        title="What the quote is trying to account for."
-        description="The total is a composed operational price, not only a bare board production number."
+        eyebrow="Détail des coûts"
+        title="Ce que le devis cherche à couvrir."
+        description="Le total est un prix opérationnel composé, pas seulement un coût de production de carte nue."
       >
-        <PricingTable headers={['Cost area', 'What it can include']} rows={breakdownRows} />
+        <PricingTable headers={['Zone de coût', 'Ce que cela peut inclure']} rows={breakdownRows} />
       </Section>
 
       <Section
-        eyebrow="Why pricing changes"
-        title="Country, quantity, dimensions, material, and options all matter."
-        description="Two boards that look similar in a screenshot can price very differently once real dimensions, stackup, destination, and handling assumptions are included."
+        eyebrow="Pourquoi le prix change"
+        title="Pays, quantité, dimensions, matériau et options comptent tous."
+        description="Deux cartes visuellement proches peuvent coûter très différemment une fois dimensions, empilage, destination et traitement inclus."
       >
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
           {priceDrivers.map(([title, body]) => (
@@ -150,8 +150,8 @@ export default function PricingPage() {
       <Section
         id="order-scenarios"
         eyebrow="Cas de commande"
-        title="Common scenarios that explain cost drivers."
-        description="These examples show why different orders price differently. Final customer pricing is tied to the configured request and supplier validation."
+        title="Scénarios courants qui expliquent les coûts."
+        description="Ces exemples montrent pourquoi les commandes diffèrent. Le prix final reste lié à la demande configurée et à la validation fournisseur."
       >
         <div className="grid gap-5 md:grid-cols-3">
           {scenarios.map((scenario) => (
@@ -177,8 +177,8 @@ export default function PricingPage() {
       <Section
         id="faq"
         eyebrow="Questions"
-        title="Pricing questions customers ask before quoting."
-        description="The short version: use the configurator for the customer quote, then rely on supplier and file validation before final production."
+        title="Questions de prix avant devis."
+        description="En bref : utilisez le configurateur pour le devis client, puis la validation fournisseur et fichier avant production finale."
       >
         <div className="grid gap-4 md:grid-cols-2">
           {faqs.map(([question, answer]) => (
@@ -199,12 +199,12 @@ export default function PricingPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-r from-deepblue via-deepblue/[0.9] to-ink/[0.72]" />
           <div className="relative">
-            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Devis structure</p>
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Devis structuré</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-              The configurator is the source of truth for your order.
+              Le configurateur est la référence pour votre demande.
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-sky-100 sm:text-base">
-              Upload files, choose specs, select an African destination, and let the quote flow calculate the current request from the selected production and delivery context.
+              Téléversez les fichiers, choisissez les specs, sélectionnez une destination africaine et laissez le devis calculer le contexte production et livraison.
             </p>
           </div>
           <div className="relative mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col">
@@ -234,11 +234,11 @@ function PricingHero() {
             Logique de prix
           </p>
           <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-            Dynamic quotes built around your real PCB and delivery path.
+            Des devis dynamiques basés sur votre PCB et votre chemin de livraison.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
-            Kendronics does not publish static PCB price tables. The quote changes with manufacturing partner cost,
-            logistics, destination country, payment processing, service fee, and selected board options.
+            Kendronics ne publie pas de grille PCB statique. Le devis évolue avec le coût partenaire,
+            la logistique, le pays de destination, le paiement, les frais de service et les options sélectionnées.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Button href="/quote">Configurer un devis</Button>
@@ -257,9 +257,9 @@ function PricingHero() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ink/[0.72] via-transparent to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/[0.18] bg-white/[0.12] p-4 backdrop-blur-xl">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-100">Quote inputs</p>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-100">Entrées devis</p>
               <div className="mt-3 grid grid-cols-3 gap-2 text-center text-sm font-black">
-                {['Specs', 'Country', 'Options'].map((item) => (
+                {['Specs', 'Pays', 'Options'].map((item) => (
                   <span key={item} className="rounded-xl bg-white/12 px-3 py-3">
                     {item}
                   </span>

@@ -32,7 +32,7 @@ export function BlogIndex({ articles }: { articles: BlogArticle[] }) {
               <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent" />
             </div>
             <div className="p-6 sm:p-8 lg:p-10">
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-signal">Featured article</p>
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-signal">Article sélectionné</p>
               <h2 className="mt-3 text-3xl font-black tracking-tight text-ink sm:text-4xl">
                 {featuredArticle.title}
               </h2>
@@ -49,7 +49,7 @@ export function BlogIndex({ articles }: { articles: BlogArticle[] }) {
                 </span>
               </div>
               <Button href="/quote" className="mt-7">
-                Demander un devis apres lecture
+                Demander un devis après lecture
               </Button>
             </div>
           </div>
@@ -60,17 +60,17 @@ export function BlogIndex({ articles }: { articles: BlogArticle[] }) {
         <Card glass className="p-5 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-signal">Categories</p>
-              <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">Filter education by topic.</h2>
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-signal">Catégories</p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight text-ink">Filtrer les guides par sujet.</h2>
             </div>
             <p className="text-sm font-bold text-slate-600">
-              {filteredArticles.length} {filteredArticles.length === 1 ? 'article' : 'articles'} shown
+              {filteredArticles.length} {filteredArticles.length === 1 ? 'article affiché' : 'articles affichés'}
             </p>
           </div>
 
           <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
             <CategoryButton
-              label="All"
+              label="Tout"
               active={activeCategory === allCategoryId}
               onClick={() => setActiveCategory(allCategoryId)}
             />
@@ -132,7 +132,7 @@ function ArticleCard({ article }: { article: BlogArticle }) {
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
           <span className="text-xs font-black text-slate-500">{article.readTime}</span>
           <a href={`/blog/${article.slug}`} className="text-sm font-black text-deepblue transition hover:text-signal">
-            Read guide
+            Lire le guide
           </a>
         </div>
       </div>

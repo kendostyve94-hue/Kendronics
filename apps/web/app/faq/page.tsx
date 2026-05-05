@@ -24,133 +24,133 @@ const heroImage =
 const faqCategories: FaqCategory[] = [
   {
     id: 'platform-role',
-    title: 'Platform role',
-    description: 'How Kendronics fits between customers, manufacturing partners, payment, logistics, and support.',
+    title: 'Rôle de la plateforme',
+    description: 'Comment Kendronics relie clients, partenaires de fabrication, paiement, logistique et support.',
     items: [
       {
-        question: 'Is Kendronics a manufacturer?',
+        question: 'Kendronics est-il un fabricant ?',
         answer:
-          'No. Kendronics is an intermediary platform for PCB ordering, payment facilitation, logistics coordination, tracking, and support. The boards are manufactured by external manufacturing partners.',
+          'Non. Kendronics est une plateforme intermédiaire pour commande PCB, paiement, coordination logistique, suivi et support. Les cartes sont fabriquées par des partenaires externes.',
       },
       {
-        question: 'Who manufactures the PCBs?',
+        question: 'Qui fabrique les PCB ?',
         answer:
-          'PCBs are manufactured by trusted external PCB manufacturing partners. Kendronics coordinates the customer-facing request, partner order flow, logistics, payment context, and support experience.',
+          'Les PCB sont fabriqués par des partenaires externes. Kendronics coordonne la demande client, le flux partenaire, la logistique, le paiement et le support.',
       },
       {
-        question: 'Why use Kendronics instead of ordering directly?',
+        question: 'Pourquoi passer par Kendronics plutôt que commander directement ?',
         answer:
-          'Kendronics gives African customers a clearer operational layer: quote configuration, payment flow, partner coordination, France logistics, Africa delivery planning, customer-safe tracking, and structured support tickets in one place.',
+          'Kendronics donne aux clients africains une couche opérationnelle claire : configuration devis, paiement, coordination partenaire, logistique France, livraison Afrique, suivi client et tickets support au même endroit.',
       },
     ],
   },
   {
     id: 'pcb-files',
-    title: 'PCB files',
-    description: 'What customers need to upload before a quote or manufacturing request can move forward.',
+    title: 'Fichiers PCB',
+    description: 'Ce que le client doit téléverser avant de faire avancer un devis ou une demande de fabrication.',
     items: [
       {
-        question: 'What is a Gerber file?',
+        question: 'Qu’est-ce qu’un fichier Gerber ?',
         answer:
-          'A Gerber file is a production output from your PCB design tool. It describes copper layers, solder mask, silkscreen, board outline, and related manufacturing information used by PCB production partners.',
+          'Un fichier Gerber est un export de production issu de votre outil PCB. Il décrit couches cuivre, masque, sérigraphie, contour et informations utilisées par les partenaires de fabrication.',
       },
       {
-        question: 'What files do I need?',
+        question: 'Quels fichiers faut-il préparer ?',
         answer:
-          'For bare PCB orders, prepare a Gerber ZIP with copper, mask, silkscreen, outline, and drill files. For PCBA requests, you may also need a BOM and CPL file for assembly review.',
+          'Pour un PCB nu, préparez un ZIP Gerber avec cuivre, masque, sérigraphie, contour et perçages. Pour une demande PCBA, BOM et CPL peuvent aussi être nécessaires.',
       },
       {
-        question: 'What happens if my files are wrong?',
+        question: 'Que se passe-t-il si mes fichiers sont incorrects ?',
         answer:
-          'If files are incomplete or unclear, the order may need review before it can proceed. Kendronics support can help identify file issues, but corrected production files must come from the customer or design team.',
+          'Si les fichiers sont incomplets ou ambigus, la commande peut nécessiter une revue. Le support peut aider à identifier les problèmes, mais les fichiers corrigés doivent venir du client ou de son équipe design.',
       },
     ],
   },
   {
     id: 'pricing',
-    title: 'Pricing',
-    description: 'How dynamic pricing works and why fixed public price tables can mislead.',
+    title: 'Prix',
+    description: 'Comment fonctionne le prix dynamique et pourquoi les grilles fixes peuvent induire en erreur.',
     items: [
       {
-        question: 'How is price calculated?',
+        question: 'Comment le prix est-il calculé ?',
         answer:
-          'Pricing combines partner manufacturing cost, partner handling, China to France logistics when applicable, France processing, France to Africa delivery, payment processing, Kendronics service fee, and any applicable customs or delivery risk buffer.',
+          'Le prix combine fabrication partenaire, traitement partenaire, logistique Chine vers France quand applicable, traitement France, livraison Afrique, frais de paiement, service Kendronics et marge de risque éventuelle.',
       },
       {
-        question: 'Why does delivery country affect price?',
+        question: 'Pourquoi le pays de livraison influence-t-il le prix ?',
         answer:
-          'Delivery country affects carrier availability, customs complexity, routing, delivery time, and last-mile handling. The same PCB can have a different total quote depending on destination.',
+          'Le pays influence transporteurs, douane, routage, délai et dernier kilomètre. Le même PCB peut donc avoir un total différent selon la destination.',
       },
       {
-        question: 'Are prices final?',
+        question: 'Les prix sont-ils définitifs ?',
         answer:
-          'Configurator prices are intended to reflect the selected scenario, but advanced materials, PCBA, unusual files, or logistics changes may require partner review before final confirmation.',
+          'Les prix du configurateur reflètent le scénario choisi, mais matériaux avancés, PCBA, fichiers inhabituels ou changements logistiques peuvent demander revue partenaire avant confirmation finale.',
       },
     ],
   },
   {
     id: 'payment',
-    title: 'Payment',
-    description: 'How customers pay and how payment-related issues are handled.',
+    title: 'Paiement',
+    description: 'Comment les clients paient et comment les questions de paiement sont traitées.',
     items: [
       {
-        question: 'How do card payments work?',
+        question: 'Comment fonctionnent les paiements carte ?',
         answer:
-          'Card payments are handled through Stripe checkout flows where available. Kendronics does not ask customers to send card details through email or support tickets.',
+          'Les paiements carte passent par Stripe Checkout quand disponible. Kendronics ne demande pas d’envoyer des informations carte par e-mail ou ticket support.',
       },
       {
-        question: 'Does Kendronics support Mobile Money?',
+        question: 'Kendronics prend-il en charge Mobile Money ?',
         answer:
-          'The platform includes Mobile Money-ready payment architecture. Availability depends on supported providers, markets, and the active payment setup for the order flow.',
+          'La plateforme inclut une architecture prête pour Mobile Money. La disponibilité dépend des prestataires, marchés et réglages actifs du parcours de commande.',
       },
       {
-        question: 'How do refunds work?',
+        question: 'Comment fonctionnent les remboursements ?',
         answer:
-          'Refund handling depends on order state, payment status, partner fulfillment progress, and applicable costs already committed. Support should review refund requests through the order context.',
+          'Le remboursement dépend de l’état de commande, du paiement, de l’avancement partenaire et des coûts déjà engagés. Le support analyse la demande dans le contexte de la commande.',
       },
     ],
   },
   {
     id: 'delivery',
-    title: 'Delivery',
-    description: 'What customers should know about African delivery, timing, customs, and tracking.',
+    title: 'Livraison',
+    description: 'Ce que les clients doivent savoir sur livraison Afrique, délais, douane et suivi.',
     items: [
       {
-        question: 'Which African countries are supported?',
+        question: 'Quels pays africains sont pris en charge ?',
         answer:
-          'Kendronics is designed for Africa-focused delivery coordination. Supported countries depend on current logistics coverage, carrier availability, customs constraints, and quote configuration.',
+          'Kendronics est conçu pour coordonner des livraisons orientées Afrique. Les pays pris en charge dépendent de la couverture logistique, des transporteurs, de la douane et du devis.',
       },
       {
-        question: 'How long does delivery take?',
+        question: 'Combien de temps prend la livraison ?',
         answer:
-          'Delivery time depends on manufacturing lead time, inbound logistics, France processing, destination country, customs handling, carrier routing, and local delivery conditions.',
+          'Le délai dépend de la fabrication, de la logistique entrante, du traitement France, du pays de destination, de la douane, du transporteur et des conditions locales.',
       },
       {
-        question: 'Can customs cause delays?',
+        question: 'La douane peut-elle créer des retards ?',
         answer:
-          'Yes. Customs checks, documentation, duties, carrier workflows, and local delivery conditions can create delays. When applicable, the quote may include a customs or delivery risk buffer.',
+          'Oui. Contrôles, documents, droits, processus transporteur et conditions locales peuvent créer des retards. Quand applicable, le devis peut inclure une marge de risque.',
       },
       {
-        question: 'How does tracking work?',
+        question: 'Comment fonctionne le suivi ?',
         answer:
-          'Public tracking shows customer-safe status, timeline, estimated delivery, destination country, and carrier or tracking number when available. It does not expose supplier, admin, or sensitive pricing data.',
+          'Le suivi public affiche statut, timeline, estimation, pays et transporteur quand disponibles. Il n’expose pas les données fournisseur, admin ou prix sensibles.',
       },
     ],
   },
   {
     id: 'support',
     title: 'Support',
-    description: 'How customers get help before, during, and after an order.',
+    description: 'Comment obtenir de l’aide avant, pendant et après une commande.',
     items: [
       {
-        question: 'How do I contact support?',
+        question: 'Comment contacter le support ?',
         answer:
-          'Use the support flow or order context where available. Clear order IDs, file details, destination country, and payment status help support respond faster.',
+          'Utilisez le parcours support ou le contexte commande quand disponible. Numéro de commande, fichiers, pays et paiement aident à répondre plus vite.',
       },
       {
-        question: 'How do I open a ticket?',
+        question: 'Comment ouvrir un ticket ?',
         answer:
-          'Open a support ticket from the relevant customer flow or order page when available. Tickets keep the question attached to the order, files, tracking state, and customer-safe context.',
+          'Ouvrez un ticket depuis le parcours client ou la page commande quand disponible. Le ticket garde la question attachée à la commande, aux fichiers et au suivi.',
       },
     ],
   },
@@ -199,7 +199,7 @@ export default function FaqPage() {
               />
             </label>
             <div className="text-sm font-bold text-slate-600">
-              {resultCount} {resultCount === 1 ? 'reponse' : 'reponses'} affichees
+              {resultCount} {resultCount === 1 ? 'réponse' : 'réponses'} affichées
             </div>
           </div>
 
@@ -237,8 +237,8 @@ export default function FaqPage() {
 
           {resultCount === 0 && (
             <Card className="p-8 text-center">
-              <p className="text-sm font-black uppercase tracking-[0.16em] text-signal">Aucun resultat</p>
-              <h2 className="mt-2 text-2xl font-black text-ink">Essayez un autre mot cle.</h2>
+              <p className="text-sm font-black uppercase tracking-[0.16em] text-signal">Aucun résultat</p>
+              <h2 className="mt-2 text-2xl font-black text-ink">Essayez un autre mot clé.</h2>
               <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-600">
                 Recherchez par sujet, par exemple Gerber, paiement, douane, fabrication, suivi, livraison ou remboursement.
               </p>
@@ -261,7 +261,7 @@ export default function FaqPage() {
               Commencez par un devis ou consultez le parcours complet.
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-sky-100 sm:text-base">
-              Le configurateur et le suivi gardent les informations client separees des donnees partenaire, admin et fournisseur.
+              Le configurateur et le suivi gardent les informations client séparées des données partenaire, admin et fournisseur.
             </p>
           </div>
           <div className="relative mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col">
@@ -291,10 +291,10 @@ function FaqHero() {
             FAQ
           </p>
           <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-            Clear answers for PCB ordering, payment, delivery, and support.
+            Des réponses claires pour commander, payer, livrer et suivre vos PCB.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
-            Kendronics is an intermediary platform, not a PCB manufacturer. These answers explain how customers work with Kendronics and external manufacturing partners.
+            Kendronics est une plateforme intermédiaire, pas un fabricant PCB. Ces réponses expliquent comment les clients travaillent avec Kendronics et les partenaires externes.
           </p>
         </div>
       </div>
