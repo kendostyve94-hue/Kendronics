@@ -1,3 +1,5 @@
+import { officialContactEmail } from '../../lib/official-contact';
+
 const groups = [
   {
     title: 'PRODUIT',
@@ -44,24 +46,44 @@ const groups = [
 export function Footer() {
   return (
     <footer id="support" className="border-t border-[#243447] bg-[#132234]">
-      <div className="mx-auto grid max-w-[1120px] gap-6 px-4 py-8 sm:grid-cols-2 sm:px-5 lg:grid-cols-4 lg:px-6">
-        {groups.map((group) => (
-          <div key={group.title}>
-            <h3 className="text-sm font-black tracking-[0.12em] text-white">{group.title}</h3>
-            <ul className="mt-3 space-y-2 text-sm leading-5 text-slate-300">
-              {group.links.map(([label, href]) => (
-                <li key={label}>
-                  <a href={href} className="transition hover:text-white">
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
+      <div className="mx-auto grid max-w-[1120px] gap-7 px-4 py-8 sm:px-5 lg:grid-cols-[1fr_2.6fr] lg:px-6">
+        <div>
+          <h2 className="text-lg font-black text-white">Kendronics</h2>
+          <p className="mt-2 max-w-xs text-sm leading-6 text-slate-300">
+            Plateforme de devis, paiement, coordination et suivi pour commandes PCB et PCBA vers l’Afrique.
+          </p>
+          <div className="mt-4 grid gap-2 text-sm font-black text-slate-300">
+            <a href={`mailto:${officialContactEmail}`} className="transition hover:text-white">
+              {officialContactEmail}
+            </a>
+            <a href="/contact" className="inline-flex w-fit rounded-sm border border-[#33465b] px-3 py-1.5 transition hover:border-signal/60 hover:text-white">
+              Ouvrir un ticket support
+            </a>
           </div>
-        ))}
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          {groups.map((group) => (
+            <div key={group.title}>
+              <h3 className="text-sm font-black tracking-[0.12em] text-white">{group.title}</h3>
+              <ul className="mt-3 space-y-2 text-sm leading-5 text-slate-300">
+                {group.links.map(([label, href]) => (
+                  <li key={label}>
+                    <a href={href} className="transition hover:text-white">
+                      {label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
       <div className="border-t border-[#243447] px-4 py-3 text-xs text-slate-400 sm:px-5 lg:px-6">
-        <div className="mx-auto max-w-[1120px]">&copy; 2024 Kendronics Industrial. Tous droits réservés.</div>
+        <div className="mx-auto flex max-w-[1120px] flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <span>&copy; 2024 Kendronics Industrial. Tous droits réservés.</span>
+          <span>Plateforme intermédiaire. Fabrication assurée par des partenaires externes.</span>
+        </div>
       </div>
     </footer>
   );
