@@ -73,7 +73,7 @@ export function LegalDocumentPage({ document }: { document: LegalDocument }) {
           <div className="relative overflow-hidden rounded-3xl bg-deepblue p-8 text-white sm:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">Besoin d’aide ?</p>
-              <h2 className="mt-3 text-3xl font-black tracking-tight">Contact Kendronics support.</h2>
+              <h2 className="mt-3 text-3xl font-black tracking-tight">Contacter le support Kendronics.</h2>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-sky-100">
                 Utilisez les tickets support pour les commandes et {officialContactEmail} pour les demandes de confidentialité.
               </p>

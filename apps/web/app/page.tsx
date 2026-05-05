@@ -3,6 +3,7 @@ import { ProductCatalog } from '../components/home/ProductCatalog';
 import { Footer } from '../components/layout/Footer';
 import { Navbar } from '../components/layout/Navbar';
 import { Button } from '../components/ui/Button';
+import { officialContactEmail } from '../lib/official-contact';
 
 const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
 const heroControllerBoardImage = '/images/hero-controller-board-transparent.png';
@@ -61,6 +62,15 @@ const operationalProofs = [
   ['Logistique Afrique', 'Le parcours intègre le pays de destination dès le devis pour cadrer transport et support.'],
 ];
 
+const trustAssurances = [
+  ['Rôle transparent', 'Kendronics n’est pas une usine PCB : la plateforme coordonne le devis, le paiement, le suivi et le support avec des partenaires externes.', '/terms'],
+  ['Fichiers protégés', 'Les fichiers de production sont associés au dossier client et utilisés pour le devis, la revue, la coordination et le support.', '/privacy'],
+  ['Paiement encadré', 'Les paiements carte passent par Stripe Checkout quand disponible. Kendronics ne demande jamais les données carte par e-mail.', '/pricing'],
+  ['Remboursement cadré', 'Les demandes sont étudiées selon l’état de paiement, la revue fichier, la production engagée et la logistique déjà lancée.', '/refund-policy'],
+  ['Support vérifiable', `Les demandes passent par tickets ou par ${officialContactEmail}, avec contexte commande et historique de suivi.`, '/contact'],
+  ['Livraison réaliste', 'Les délais dépendent de la fabrication, du pays, de la douane, du transporteur et des conditions locales.', '/how-it-works'],
+];
+
 export default function HomePage() {
   return (
     <main className="overflow-hidden bg-white text-ink">
@@ -70,10 +80,36 @@ export default function HomePage() {
       <ProductCatalog />
       <SmartOrdering />
       <OperationalProofs />
+      <TrustAssurance />
       <TrustBlock />
       <Resources />
       <Footer />
     </main>
+  );
+}
+
+function TrustAssurance() {
+  return (
+    <section className="bg-cloud px-4 py-8 sm:px-6 sm:py-14 lg:px-8">
+      <div className="mx-auto max-w-[1180px]">
+        <div className="mb-6 max-w-3xl">
+          <p className="label-caps text-deepblue">Confiance et sécurité</p>
+          <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Ce que Kendronics promet clairement, et ce qu’il ne promet pas.</h2>
+          <p className="mt-3 text-sm leading-7 text-slate-600">
+            La confiance vient d’un cadre lisible : rôle exact de la plateforme, fichiers protégés, paiement encadré, support traçable et limites réalistes sur production et livraison.
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {trustAssurances.map(([title, body, href]) => (
+            <a key={title} href={href} className="block border border-line bg-white p-4 transition hover:border-deepblue">
+              <h3 className="text-sm font-black text-ink">{title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
+              <span className="mt-4 inline-flex text-xs font-black uppercase tracking-[0.12em] text-deepblue">Lire le cadre</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
