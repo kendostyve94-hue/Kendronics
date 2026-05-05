@@ -17,7 +17,7 @@ const heroSlides = [
     body: 'Kendronics centralise vos Gerber, BOM et CPL pour preparer un devis PCB/PCBA clair, avec choix de finition, controle des fichiers et suivi jusqu a la livraison.',
     media: heroPcbVariantsImage,
     type: 'image',
-    imageClassName: 'object-contain object-right opacity-100 lg:w-[51%] lg:-translate-x-10',
+    imageClassName: 'object-contain object-right opacity-100 lg:translate-x-0',
   },
   {
     eyebrow: 'Carte controleur et assemblage',
@@ -25,7 +25,7 @@ const heroSlides = [
     body: 'Du PCB nu a l assemblage PCBA, Kendronics organise la lecture BOM/CPL, la verification des interfaces et la coordination de fabrication pour livrer une carte prete a integrer.',
     media: heroControllerBoardImage,
     type: 'image',
-    imageClassName: 'object-contain object-right opacity-100 lg:w-[50%] lg:-translate-x-12',
+    imageClassName: 'object-contain object-right opacity-100 lg:translate-x-0',
   },
   {
     eyebrow: 'Cartes complexes et industrialisation',
@@ -33,7 +33,7 @@ const heroSlides = [
     body: 'Pour les prototypes multicouches, cartes processeur et projets avec interfaces nombreuses, Kendronics structure les fichiers, les options de fabrication et le suivi avant lancement.',
     media: heroStackedPcbImage,
     type: 'image',
-    imageClassName: 'object-contain object-right opacity-100 lg:w-[49%] lg:-translate-x-12',
+    imageClassName: 'object-contain object-right opacity-100 lg:translate-x-0',
   },
 ];
 
@@ -130,7 +130,7 @@ function Hero() {
     <section className="relative min-h-[31.5rem] overflow-hidden bg-[#dcecf8] pt-20 text-ink sm:min-h-[40rem] sm:pt-28 lg:min-h-[29rem] lg:pt-20">
       <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#dbeefa] to-[#c7dced]" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#eef7ff]/82 to-[#eef7ff]/14" />
-      <div className="absolute inset-x-0 bottom-[5.75rem] top-[17rem] sm:inset-0">
+      <div className="absolute inset-x-0 bottom-[5.75rem] top-[17rem] overflow-hidden sm:inset-0 lg:left-[48%] lg:right-0 lg:top-0 lg:bottom-0">
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className="home-hero-slide absolute inset-0" style={{ animationDelay: `${index * 5}s` }}>
             {slide.type === 'video' ? (
