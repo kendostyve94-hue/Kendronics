@@ -9,16 +9,19 @@ const AVATAR_STORAGE_KEY = 'kendronics.customer.avatar';
 const apiBaseUrl = getApiBaseUrl();
 
 const productItems = [
-  { label: 'PCB standard', href: '/services#pcb-standard' },
-  { label: 'PCB petit lot', href: '/services#pcb-petit-lot' },
+  { label: 'PCB prototype', href: '/services#pcb-standard' },
+  { label: 'Petites series', href: '/services#pcb-petit-lot' },
   { label: 'PCB avance', href: '/services#pcb-avance' },
-  { label: 'Assistance technique', href: '/services#assistance-technique' },
+  { label: 'Assistance Gerber', href: '/services#assistance-technique' },
+  { label: 'Comment ca marche', href: '/how-it-works' },
 ];
 
 const supportItems = [
-  { label: 'Capacite', href: '/capabilities' },
-  { label: 'Comment ca marche', href: '/how-it-works' },
+  { label: 'Centre aide', href: '/centre-aide' },
+  { label: 'FAQ', href: '/faq' },
   { label: 'Guide technique', href: '/guide-technique' },
+  { label: 'Suivi commande', href: '/tracking' },
+  { label: 'Contact', href: '/contact' },
 ];
 
 const aboutItems = [
