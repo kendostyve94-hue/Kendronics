@@ -7,8 +7,10 @@ import {
 } from '../orders/dto/admin-order-update.dto';
 import { OrdersService } from '../orders/orders.service';
 import { UpsertPricingRuleDto } from '../pricing/dto/upsert-pricing-rule.dto';
+import { RecordSupplierRealPriceDto } from '../pricing/dto/record-supplier-real-price.dto';
 import { PricingIntelligenceRepository } from '../pricing/repositories/pricing-intelligence.repository';
 import { PricingRuleRepository } from '../pricing/repositories/pricing-rule.repository';
+import { SmartBufferService } from '../pricing/smart-buffer.service';
 import { SupportService } from '../support/support.service';
 import { CreateTrackingEventDto } from '../tracking/dto/create-tracking-event.dto';
 import { TrackingService } from '../tracking/tracking.service';
@@ -20,6 +22,7 @@ export class AdminService {
     private readonly ordersService: OrdersService,
     private readonly pricingRules: PricingRuleRepository,
     private readonly pricingIntelligence: PricingIntelligenceRepository,
+    private readonly smartBuffer: SmartBufferService,
     private readonly trackingService: TrackingService,
     private readonly auditRepository: AdminAuditRepository,
     private readonly supportService: SupportService,
@@ -45,6 +48,27 @@ export class AdminService {
     const order = await this.ordersService.updateSupplierReferenceFromAdmin(orderId, dto);
     await this.auditRepository.record(admin.id, 'admin.orders.supplier_reference.update', 'order', orderId);
     return order;
+  }
+
+  async recordSupplierRealPrice(admin: AuthenticatedUser, orderId: string, dto: RecordSupplierRealPriceDto) {
+    const order = await this.ordersService.findByIdForInternal(orderId);
+    if (dto.supplierOrderId) {
+      await this.ordersService.updateSupplierReferenceFromAdmin(orderId, {
+        externalManufacturingPartner: order.externalManufacturingPartner ?? 'External supplier',
+        externalSupplierOrderId: dto.supplierOrderId,
+      });
+    }
+
+    await this.smartBuffer.recordRealSupplierPrice(order.quoteId, dto.realSupplierPrice);
+    await this.auditRepository.record(admin.id, 'admin.pricing.supplier_real_price.record', 'quote', order.quoteId);
+
+    return {
+      orderId,
+      quoteId: order.quoteId,
+      realSupplierPrice: dto.realSupplierPrice,
+      supplierOrderId: dto.supplierOrderId,
+      note: dto.note,
+    };
   }
 
   async updateShipment(admin: AuthenticatedUser, orderId: string, dto: UpdateShipmentDto) {

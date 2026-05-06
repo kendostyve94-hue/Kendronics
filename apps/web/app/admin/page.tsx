@@ -21,6 +21,7 @@ import type {
   AdminPricingRule,
   AdminPricingSnapshot,
   AdminSupportTicket,
+  RecordSupplierRealPriceRequest,
   UpdateAdminOrderStatusRequest,
   UpdateShipmentRequest,
 } from '../../lib/admin-contract';
@@ -141,6 +142,22 @@ export default function AdminPage() {
     await mutateAdmin(
       adminApiContract.supplierReference.path.replace(':orderId', selectedOrderId),
       adminApiContract.supplierReference.method,
+      payload,
+    );
+  }
+
+  async function submitSupplierRealPrice(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const payload: RecordSupplierRealPriceRequest = {
+      realSupplierPrice: Number(form.get('realSupplierPrice') || 0),
+      supplierOrderId: String(form.get('supplierOrderId') || ''),
+      note: String(form.get('note') || ''),
+    };
+
+    await mutateAdmin(
+      adminApiContract.supplierRealPrice.path.replace(':orderId', selectedOrderId),
+      adminApiContract.supplierRealPrice.method,
       payload,
     );
   }
@@ -267,6 +284,7 @@ export default function AdminPage() {
                 order={selectedOrder}
                 onSubmitStatus={submitStatus}
                 onSubmitSupplier={submitSupplier}
+                onSubmitSupplierRealPrice={submitSupplierRealPrice}
                 onSubmitShipment={submitShipment}
               />
             )}
@@ -338,11 +356,13 @@ function AdminOrderActions({
   order,
   onSubmitStatus,
   onSubmitSupplier,
+  onSubmitSupplierRealPrice,
   onSubmitShipment,
 }: {
   order: AdminOrderRow;
   onSubmitStatus: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitSupplier: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitSupplierRealPrice: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitShipment: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
@@ -351,6 +371,7 @@ function AdminOrderActions({
         <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Selected order</p>
         <h2 className="mt-2 text-xl font-black text-ink">{order.orderNumber}</h2>
         <p className="mt-1 text-sm text-slate-600">{order.id}</p>
+        <p className="mt-1 text-xs font-bold text-slate-500">Quote {order.quoteId}</p>
       </Card>
 
       <AdminForm title="Update status" onSubmit={onSubmitStatus}>
@@ -364,6 +385,13 @@ function AdminOrderActions({
         <input name="externalManufacturingPartner" placeholder="External partner name" className={fieldClassName} />
         <input name="externalSupplierOrderId" placeholder="Supplier order ID" className={fieldClassName} />
         <p className="text-xs font-bold text-slate-500">Admin-only. These values are never shown on customer order detail pages.</p>
+      </AdminForm>
+
+      <AdminForm title="Supplier real price" onSubmit={onSubmitSupplierRealPrice}>
+        <input name="realSupplierPrice" type="number" min="0.01" step="0.01" placeholder="Real supplier PCB price" className={fieldClassName} />
+        <input name="supplierOrderId" placeholder="Supplier order ID optional" defaultValue={order.externalSupplierOrderId} className={fieldClassName} />
+        <input name="note" placeholder="Internal note optional" className={fieldClassName} />
+        <p className="text-xs font-bold text-slate-500">Updates the Smart Buffer bucket for this quote. This cost is admin-only.</p>
       </AdminForm>
 
       <AdminForm title="Shipment" onSubmit={onSubmitShipment}>

@@ -9,11 +9,14 @@ export type AdminOrderStatus =
 export interface AdminOrderRow {
   id: string;
   orderNumber: string;
+  quoteId: string;
   status: AdminOrderStatus;
   paymentStatus?: PaymentStatus;
   destinationCountryIso2: string;
   totalPrice?: number;
   currency?: 'EUR' | 'USD';
+  externalManufacturingPartner?: string;
+  externalSupplierOrderId?: string;
   carrierName?: string;
   trackingNumber?: string;
   estimatedDeliveryAt?: string;
@@ -122,6 +125,12 @@ export interface AddSupplierReferenceRequest {
   externalSupplierOrderId: string;
 }
 
+export interface RecordSupplierRealPriceRequest {
+  realSupplierPrice: number;
+  supplierOrderId?: string;
+  note?: string;
+}
+
 export interface UpdateShipmentRequest {
   carrierName?: string;
   trackingNumber?: string;
@@ -145,6 +154,12 @@ export const adminApiContract = {
     path: '/api/admin/orders/:orderId/supplier-reference',
     request: 'AddSupplierReferenceRequest',
     sensitivity: 'Admin-only supplier data. Never render on customer order pages.',
+  },
+  supplierRealPrice: {
+    method: 'POST',
+    path: '/api/admin/orders/:orderId/supplier-real-price',
+    request: 'RecordSupplierRealPriceRequest',
+    sensitivity: 'Admin-only supplier cost data. Never render on customer pages.',
   },
   shipment: {
     method: 'PATCH',
