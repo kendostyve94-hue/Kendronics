@@ -24,18 +24,19 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        'api-key': apiKey,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(this.toPcbWayPayload(toSupplierPcbPayload(dto))),
+      body: JSON.stringify(this.toQuotePayload(dto)),
     });
 
-    const data = await response.json().catch(() => null);
-    if (!response.ok || !data || data.Status === 'error') {
+    const data = (await response.json().catch(() => null)) as PcbWayQuoteResponse | null;
+    if (!response.ok || !data || this.isErrorResponse(data)) {
       throw new ServiceUnavailableException(data?.ErrorText ?? 'PCBWay live quote failed.');
     }
 
-    const manufacturingPrice = Number(data.priceList?.[0]?.Price ?? data.Price ?? 0);
+    const priceItem = this.selectPriceItem(data.priceList ?? [], dto);
+    const manufacturingPrice = Number(priceItem?.Price ?? data.Price ?? 0);
     const shippingPrice = Number(data.Shipping?.ShipCost ?? 0);
     if (!Number.isFinite(manufacturingPrice) || manufacturingPrice <= 0) {
       throw new ServiceUnavailableException('PCBWay live quote did not include a valid manufacturing price.');
@@ -43,45 +44,196 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
 
     return {
       supplier: this.name,
-      supplierQuoteId: data.QuoteId ?? data.quoteId,
+      supplierQuoteId: firstString(data.QuoteId, data.quoteId),
       manufacturingPrice: round(manufacturingPrice),
       shippingPrice: round(Number.isFinite(shippingPrice) ? shippingPrice : 0),
       currency: 'EUR',
-      leadTimeDays: Number(data.priceList?.[0]?.BuildDays ?? data.BuildDays) || undefined,
-      rawResponse: data,
+      leadTimeDays: Number(priceItem?.BuildDays ?? data.BuildDays) || undefined,
+      rawResponse: data as Record<string, unknown>,
     };
   }
 
+  toQuotePayload(dto: CreateQuoteDto): Record<string, unknown> {
+    return this.toPcbWayPayload(toSupplierPcbPayload(dto));
+  }
+
   private toPcbWayPayload(payload: ReturnType<typeof toSupplierPcbPayload>): Record<string, unknown> {
+    const surfaceFinish = this.surfaceFinish(payload.surfaceFinish);
+    const finishedCopper = this.finishedCopper(payload.outerCopperWeight);
+    const layers = this.supportedLayers(payload.layers);
+    const material = this.material(payload.material);
+
     return {
-      country: payload.destinationCountryIso2,
-      countryCode: payload.destinationCountryIso2,
-      shipType: payload.shippingMode,
-      boardType: payload.boardType === 'panel_as_designed' ? 'Panel PCB as design' : payload.boardType === 'panel_by_supplier' ? 'Panel PCB by Supplier' : 'Single PCB',
-      designInPanel: payload.differentDesigns,
-      length: payload.lengthMm,
-      width: payload.widthMm,
-      qty: payload.quantity,
-      layers: payload.layers,
-      material: payload.material,
-      thickness: payload.thicknessMm,
-      solderMask: payload.solderMaskColor,
-      silkscreen: payload.silkscreenColor,
-      surfaceFinish: payload.surfaceFinish,
-      viaCovering: payload.viaCovering,
-      productionSpeed: payload.productionSpeed,
-      outerCopperWeight: payload.outerCopperWeight,
-      innerCopperWeight: payload.innerCopperWeight,
-      minHoleSize: payload.minimumHoleSizeMm,
-      goldFingers: yesNo(payload.options.goldFingers),
-      castellatedHoles: yesNo(payload.options.castellatedHoles),
-      edgePlating: yesNo(payload.options.edgePlating),
-      blindBuriedVias: yesNo(payload.options.blindBuriedVias),
-      viaInPad: yesNo(payload.options.viaInPad),
-      carbonMask: yesNo(payload.options.carbonMask),
-      countersink: yesNo(payload.options.countersink),
-      pressFitHoles: yesNo(payload.options.pressFitHoles),
+      Country: this.countryName(payload.destinationCountryIso2),
+      CountryCode: payload.destinationCountryIso2.toUpperCase(),
+      ShipType: this.shipType(payload.shippingMode),
+      Postalcode: '',
+      City: '',
+      BoardType: this.boardType(payload.boardType),
+      XoutAllowance: payload.boardType === 'single_pcb' ? null : 'Yes',
+      EdgeRails: payload.boardType === 'panel_by_supplier' ? 'Yes' : null,
+      RouteProcess: '--',
+      PinBanNum: 0,
+      DesignInPanel: clampInt(payload.differentDesigns, 1, 6),
+      Length: round(payload.lengthMm),
+      Width: round(payload.widthMm),
+      Qty: this.supportedQuantity(payload.quantity),
+      Layers: layers,
+      CopperLayer: layers === 1 ? 'Top layer' : '--',
+      CopperSolderMask: layers === 1 ? 'Both sides' : '--',
+      CopperSilkscreen: layers === 1 ? 'Both sides' : '--',
+      Material: material,
+      FR4Tg: this.fr4Tg(layers, material),
+      TCE: '1.0',
+      Rogers: material === 'Rogers' ? 'Rogers4003C' : null,
+      Thickness: this.supportedThickness(payload.thicknessMm),
+      MinTrackSpacing: '6/6mil',
+      MinHoleSize: this.supportedHoleSize(payload.minimumHoleSizeMm),
+      SolderMask: this.solderMask(payload.solderMaskColor),
+      Silkscreen: this.silkscreen(payload.silkscreenColor),
+      SilkSides: 0,
+      Goldfingers: yesNo(payload.options.goldFingers),
+      GoldFingersBevelling: 'No',
+      GoldPlatingType: surfaceFinish,
+      GoldThickness: surfaceFinish === 'Immersion gold' ? '1' : null,
+      SurfaceFinish: surfaceFinish,
+      ViaProcess: this.viaProcess(payload.viaCovering),
+      FinishedCopper: finishedCopper,
+      RemoveProductNo: 'No',
+      InsideThickness: layers >= 4 ? this.innerCopper(payload.innerCopperWeight) : null,
+      Note: this.note(payload),
+      DateCode: 'None',
+      PeelableSoldermask: 'None',
+      Buriedblind: payload.options.blindBuriedVias ? 'Yes' : '',
+      Viafilled: payload.options.viaInPad ? 'Yes' : '',
+      HoleCopperThickness: 'None',
+      ULMaker: 'None',
+      PaperBetweenPCBs: '',
+      AddSerialNumbers: 'None',
+      PackageBox: 'No',
+      SidePlating: yesNoOrNull(payload.options.edgePlating),
+      CarbonMask: yesNoOrNull(payload.options.carbonMask),
+      Countersink: yesNoOrNull(payload.options.countersink),
+      Pressfitholes: yesNoOrNull(payload.options.pressFitHoles),
+      ImpedanceControl: yesNoOrNull(payload.options.impedanceControl),
+      ViaPadOrViaResin: yesNoOrNull(payload.options.viaInPad),
+      PlatedHalfHole: yesNoOrNull(payload.options.castellatedHoles),
+      AcceptHASLUp: surfaceFinish.toLowerCase().includes('hasl') ? 'Yes' : null,
+      returnPriceMatirx: false,
     };
+  }
+
+  private selectPriceItem(items: PcbWayPriceItem[], dto: CreateQuoteDto): PcbWayPriceItem | undefined {
+    if (items.length === 0) return undefined;
+    if (dto.configSnapshot?.productionSpeed === 'rush') return items.find((item) => item.Express) ?? items[0];
+    return items.find((item) => item.Standard) ?? items[0];
+  }
+
+  private isErrorResponse(data: PcbWayQuoteResponse): boolean {
+    const status = String(data.Status ?? '').toLowerCase();
+    return status === 'error' || data.Code === 0;
+  }
+
+  private countryName(countryCode: string): string {
+    const code = countryCode.toUpperCase();
+    return PCBWAY_COUNTRIES[code] ?? code;
+  }
+
+  private shipType(shippingMode: string): number {
+    if (shippingMode === 'express') return 1;
+    if (shippingMode === 'standard') return 2;
+    return 0;
+  }
+
+  private boardType(boardType: string): string {
+    if (boardType === 'panel_as_designed') return 'Panel PCB as design';
+    if (boardType === 'panel_by_supplier') return 'Panel PCB by Supplier';
+    return 'Single PCB';
+  }
+
+  private material(value: string): string {
+    const lower = value.toLowerCase();
+    if (lower.includes('aluminum')) return 'Aluminum board';
+    if (lower.includes('rogers')) return 'Rogers';
+    if (lower.includes('hdi')) return 'HDI';
+    if (lower.includes('copper')) return 'Copper';
+    return 'FR-4';
+  }
+
+  private supportedLayers(value: number): number {
+    const supported = [1, 2, 4, 6, 8, 10, 12, 14];
+    return supported.reduce((closest, layer) => (Math.abs(layer - value) < Math.abs(closest - value) ? layer : closest), 2);
+  }
+
+  private supportedQuantity(value: number): number {
+    const supported = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 125, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 900, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 9000, 10000];
+    return supported.find((quantity) => quantity >= value) ?? 10000;
+  }
+
+  private fr4Tg(layers: number, material: string): string {
+    if (material !== 'FR-4') return 'TG150';
+    return layers >= 4 ? 'TG150' : 'TG130';
+  }
+
+  private supportedThickness(value: number): number {
+    const supported = [0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.2, 1.6, 2.0, 2.4, 2.6, 2.8, 3.0, 3.2];
+    return supported.reduce((closest, thickness) => (Math.abs(thickness - value) < Math.abs(closest - value) ? thickness : closest), 1.6);
+  }
+
+  private supportedHoleSize(value: number): number {
+    const supported = [0.15, 0.2, 0.25, 0.3, 0.8, 1.0];
+    return supported.reduce((closest, size) => (Math.abs(size - value) < Math.abs(closest - value) ? size : closest), 0.3);
+  }
+
+  private solderMask(value: string): string {
+    const normalized = value.trim();
+    const allowed = ['Green', 'Red', 'Yellow', 'Blue', 'White', 'Black', 'Purple', 'Matt black', 'Matt green', 'None'];
+    return allowed.find((item) => item.toLowerCase() === normalized.toLowerCase()) ?? 'Green';
+  }
+
+  private silkscreen(value: string): string {
+    const normalized = value.trim();
+    const allowed = ['White', 'Black', 'Yellow', 'None'];
+    return allowed.find((item) => item.toLowerCase() === normalized.toLowerCase()) ?? 'White';
+  }
+
+  private surfaceFinish(value: string): string {
+    const lower = value.toLowerCase();
+    if (lower.includes('enig') || lower.includes('immersion gold')) return 'Immersion gold';
+    if (lower.includes('osp')) return 'OSP';
+    if (lower.includes('hard')) return 'Hard Gold';
+    if (lower.includes('silver')) return 'Immersion Silver';
+    if (lower.includes('tin')) return 'Immersion Tin';
+    if (lower.includes('lead-free') || lower.includes('lead free')) return 'HASL lead free';
+    if (lower.includes('none')) return 'None';
+    return 'HASL with lead';
+  }
+
+  private viaProcess(value: string): string {
+    const lower = value.toLowerCase();
+    if (lower.includes('plug')) return 'Plugged vias';
+    if (lower.includes('not') || lower.includes('open')) return 'Vias not covered';
+    return 'Tenting vias';
+  }
+
+  private finishedCopper(value: string): string {
+    const numberValue = parseFloat(value);
+    const copper = Number.isFinite(numberValue) ? Math.max(0, Math.min(13, Math.round(numberValue))) : 1;
+    return `${copper} oz Cu`;
+  }
+
+  private innerCopper(value: string): string {
+    const numberValue = parseFloat(value);
+    if (!Number.isFinite(numberValue)) return '1';
+    return String(Math.max(1, Math.min(6, Math.round(numberValue))));
+  }
+
+  private note(payload: ReturnType<typeof toSupplierPcbPayload>): string {
+    const notes: string[] = [];
+    if (payload.gerberAnalysis?.complexity) notes.push(`Gerber complexity: ${payload.gerberAnalysis.complexity}`);
+    if (payload.gerberAnalysis?.holesCount) notes.push(`Drill holes detected: ${payload.gerberAnalysis.holesCount}`);
+    if (payload.gerberAnalysis?.hasSlots) notes.push('Slots detected in drill files.');
+    return notes.join(' ');
   }
 
   private configValue(key: string): string | undefined {
@@ -90,8 +242,65 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
   }
 }
 
+interface PcbWayPriceItem {
+  BuildDays?: number;
+  BuildText?: string;
+  Express?: boolean;
+  Price?: number;
+  Standard?: boolean;
+}
+
+interface PcbWayQuoteResponse extends Record<string, unknown> {
+  priceList?: PcbWayPriceItem[];
+  Shipping?: {
+    ShipCost?: number;
+    ShipDays?: string;
+    Weight?: number;
+    IsRas?: boolean;
+  };
+  Status?: string;
+  ErrorText?: string;
+  Code?: number;
+  Price?: number;
+  BuildDays?: number;
+  QuoteId?: string;
+  quoteId?: string;
+}
+
+const PCBWAY_COUNTRIES: Record<string, string> = {
+  BJ: 'BENIN',
+  BF: 'BURKINA FASO',
+  CM: 'CAMEROON',
+  CI: 'COTE D IVOIRE',
+  FR: 'FRANCE',
+  GA: 'GABON',
+  GN: 'GUINEA',
+  ML: 'MALI',
+  NE: 'NIGER',
+  SN: 'SENEGAL',
+  TG: 'TOGO',
+  TD: 'CHAD',
+  US: 'UNITED STATES OF AMERICA',
+};
+
 function yesNo(value: boolean): 'Yes' | 'No' {
   return value ? 'Yes' : 'No';
+}
+
+function yesNoOrNull(value: boolean): 'Yes' | 'No' | null {
+  return value ? 'Yes' : null;
+}
+
+function clampInt(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+function firstString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value;
+    if (typeof value === 'number') return String(value);
+  }
+  return undefined;
 }
 
 function round(value: number): number {

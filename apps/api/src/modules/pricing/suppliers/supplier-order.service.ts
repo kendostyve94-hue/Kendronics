@@ -4,6 +4,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { PrepareSupplierOrderDto } from '../dto/prepare-supplier-order.dto';
 import { SmartBufferService } from '../smart-buffer.service';
 import { toSupplierPcbPayload } from './supplier-pricing.provider';
+import { PcbWayPricingProvider } from './pcbway-pricing.provider';
 
 type SupplierOrderMode = 'prepare' | 'create';
 
@@ -19,6 +20,7 @@ export class SupplierOrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly smartBuffer: SmartBufferService,
+    private readonly pcbWayPricing: PcbWayPricingProvider,
   ) {}
 
   async prepareOrder(orderId: string, dto: PrepareSupplierOrderDto) {
@@ -183,11 +185,8 @@ export class SupplierOrderService {
 
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(packageData),
+      headers: this.supplierOrderHeaders(supplier, apiKey),
+      body: JSON.stringify(this.supplierOrderPayload(supplier, packageData)),
     });
     const data = (await response.json().catch(() => null)) as Record<string, unknown> | null;
     if (!response.ok || !data || this.isErrorResponse(data)) {
@@ -200,6 +199,58 @@ export class SupplierOrderService {
       status: this.firstString(data, ['status', 'orderStatus']),
       rawResponse: data,
     };
+  }
+
+  private supplierOrderHeaders(supplier: string, apiKey: string): Record<string, string> {
+    if (supplier.toLowerCase() === 'pcbway') {
+      return {
+        'api-key': apiKey,
+        'Content-Type': 'application/json',
+      };
+    }
+
+    return {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    };
+  }
+
+  private supplierOrderPayload(supplier: string, packageData: Record<string, unknown>): Record<string, unknown> {
+    if (supplier.toLowerCase() !== 'pcbway') {
+      return packageData;
+    }
+
+    const pcb = this.objectRecord(packageData.pcb);
+    const customer = this.objectRecord(packageData.customer);
+    const gerber = this.objectRecord(packageData.gerber);
+    const quoteDto = {
+      productType: String(pcb.productType ?? 'standard_pcb'),
+      gerberFileId: String(pcb.gerberFileId ?? ''),
+      layers: this.numberValue(pcb.layers, 2),
+      lengthMm: this.numberValue(pcb.lengthMm, 100),
+      widthMm: this.numberValue(pcb.widthMm, 100),
+      quantity: this.numberValue(pcb.quantity, 5),
+      destinationCountryIso2: String(pcb.destinationCountryIso2 ?? 'SN'),
+      shippingMode: String(pcb.shippingMode ?? 'standard'),
+      configSnapshot: this.objectRecord(pcb.configSnapshot),
+    };
+    const quotePayload = this.pcbWayPricing.toQuotePayload(quoteDto);
+
+    return {
+      ...quotePayload,
+      PcbFileName: String(gerber.originalFilename ?? ''),
+      PcbFileUrl: String(gerber.storageKey ?? ''),
+      BuildDays: this.buildDays(pcb.configSnapshot),
+      BuyerEmail: String(customer.email ?? ''),
+      OrderRemark: `Kendronics order ${String(packageData.orderNumber ?? '')}`.trim(),
+      KendronicsOrderId: String(packageData.orderId ?? ''),
+      KendronicsQuoteId: String(packageData.quoteId ?? ''),
+    };
+  }
+
+  private buildDays(configSnapshot: unknown): number {
+    const config = this.objectRecord(configSnapshot);
+    return config.productionSpeed === 'rush' ? 1 : 2;
   }
 
   private isLiveCreateConfigured(supplier: string): boolean {
@@ -253,6 +304,15 @@ export class SupplierOrderService {
 
   private objectValue(value: Prisma.JsonValue | null): Record<string, unknown> {
     return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  }
+
+  private objectRecord(value: unknown): Record<string, unknown> {
+    return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+  }
+
+  private numberValue(value: unknown, fallback: number): number {
+    const numberValue = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : Number.NaN;
+    return Number.isFinite(numberValue) ? numberValue : fallback;
   }
 
   private decimalToNumber(value: Prisma.Decimal): number {
