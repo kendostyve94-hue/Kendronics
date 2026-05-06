@@ -21,7 +21,7 @@ services:
       - key: ADMIN_EMAILS
         sync: false
       - key: FRONTEND_ORIGIN
-        value: https://kendronics.vercel.app
+        value: https://kendronics.com,https://www.kendronics.com,https://kendronics.vercel.app
       - key: OFFICIAL_CONTACT_EMAIL
         value: contact.kendronics@gmail.com
       - key: GOOGLE_OAUTH_CLIENT_ID

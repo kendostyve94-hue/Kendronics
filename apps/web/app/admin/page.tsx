@@ -5,6 +5,7 @@ import { AdminShell } from '../../components/admin/AdminShell';
 import { AdminStatusBadge, PaymentBadge } from '../../components/admin/AdminBadge';
 import { Card } from '../../components/ui/Card';
 import { readAuthSession } from '../../lib/auth-session';
+import { getApiBaseUrl } from '../../lib/api-base-url';
 import {
   adminApiContract,
   adminOrderStatuses,
@@ -28,7 +29,7 @@ import type { PaymentStatus } from '../../lib/order-detail-contract';
 type AdminLoadState = 'checking' | 'authorized' | 'forbidden' | 'error';
 type AdminTab = 'orders' | 'pricing' | 'support' | 'audit';
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+const apiBaseUrl = getApiBaseUrl();
 
 export default function AdminPage() {
   const [loadState, setLoadState] = useState<AdminLoadState>('checking');
