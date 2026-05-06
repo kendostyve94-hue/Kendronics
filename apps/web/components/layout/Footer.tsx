@@ -33,14 +33,6 @@ const footerGroups = [
   },
 ];
 
-const paymentLogos = [
-  { name: 'Visa', src: 'https://cdn.simpleicons.org/visa/1A1F71' },
-  { name: 'Mastercard', src: 'https://cdn.simpleicons.org/mastercard/EB001B' },
-  { name: 'Stripe', src: 'https://cdn.simpleicons.org/stripe/635BFF' },
-  { name: 'American Express', src: 'https://cdn.simpleicons.org/americanexpress/2E77BC' },
-  { name: 'Discover', src: 'https://cdn.simpleicons.org/discover/FF6000' },
-];
-
 const deliveryLogos = [
   {
     name: 'DHL Express',
@@ -128,14 +120,51 @@ function PaymentLogoStrip() {
   return (
     <div>
       <h3 className="text-sm font-medium text-slate-300">Moyens de paiement</h3>
-      <div className="mt-2 inline-flex min-h-9 flex-wrap items-center gap-3 rounded-sm border border-[#5d6670] bg-white px-3 py-1.5">
-        {paymentLogos.map((logo) => (
-          <span key={logo.name} className="inline-flex h-6 min-w-9 items-center justify-center">
-            <img src={logo.src} alt={logo.name} className="max-h-5 max-w-16 object-contain" />
-          </span>
-        ))}
+      <div className="mt-2 inline-flex flex-wrap items-center gap-2 rounded-sm border border-[#5d6670] bg-white px-2 py-1.5">
+        <VisaMark />
+        <MastercardMark />
+        <StripeMark />
+        <DiscoverMark />
       </div>
     </div>
+  );
+}
+
+function VisaMark() {
+  return (
+    <span aria-label="Visa" className="relative inline-flex h-8 w-14 items-center justify-center overflow-hidden rounded-[2px] border border-[#0b4f92] bg-white">
+      <span className="absolute left-1 right-1 top-1 h-1.5 bg-[#0b5a9d]" />
+      <span className="absolute bottom-1 left-1 right-1 h-1.5 bg-[#f6a21a]" />
+      <span className="text-[15px] font-black italic leading-none text-[#0b4f92]">VISA</span>
+    </span>
+  );
+}
+
+function MastercardMark() {
+  return (
+    <span aria-label="Mastercard" className="relative inline-flex h-8 w-14 items-center justify-center overflow-hidden rounded-[4px] bg-[#111111]">
+      <span className="h-5 w-5 rounded-full bg-[#eb001b]" />
+      <span className="-ml-2 h-5 w-5 rounded-full bg-[#f79e1b] opacity-95" />
+    </span>
+  );
+}
+
+function StripeMark() {
+  return (
+    <span aria-label="Stripe" className="inline-flex h-8 w-8 items-center justify-center rounded-[5px] bg-[#635bff]">
+      <span className="text-2xl font-black leading-none text-white">S</span>
+    </span>
+  );
+}
+
+function DiscoverMark() {
+  return (
+    <span aria-label="Discover" className="relative inline-flex h-8 w-[4.6rem] items-center overflow-hidden rounded-[4px] border border-[#f36f21] bg-white px-1">
+      <span className="absolute -right-3 top-0 h-full w-8 rounded-l-full bg-gradient-to-b from-[#f36f21] to-[#f9a01b]" />
+      <span className="relative text-[12px] font-black tracking-[-0.06em] text-[#231f20]">
+        DISC<span className="inline-block h-3 w-3 rounded-full bg-gradient-to-r from-[#e7351c] to-[#f9a01b] align-[-1px]" />VER
+      </span>
+    </span>
   );
 }
 
