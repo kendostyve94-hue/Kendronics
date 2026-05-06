@@ -49,6 +49,69 @@ export interface AdminAuditLog {
   createdAt: string;
 }
 
+export interface AdminPricingIntelligence {
+  metrics: {
+    snapshotCount: number;
+    bucketCount: number;
+    flaggedBucketCount: number;
+    averageBuffer: number;
+    totals: {
+      supplierEstimatedPrice: number;
+      pcbClientPrice: number;
+      shippingPrice: number;
+      totalClientPrice: number;
+    };
+  };
+  snapshots: AdminPricingSnapshot[];
+  buckets: AdminBufferBucket[];
+}
+
+export interface AdminPricingSnapshot {
+  id: string;
+  quoteId: string;
+  supplier: string;
+  supplierEstimatedPrice: number;
+  supplierRealPrice?: number;
+  bufferUsed: number;
+  serviceFee: number;
+  pcbClientPrice: number;
+  shippingPrice: number;
+  totalClientPrice: number;
+  bucketKey: string;
+  riskScore: number;
+  confidence: string;
+  formulaVersion: string;
+  reasons: unknown;
+  inputSnapshot: Record<string, unknown>;
+  createdAt: string;
+  quote?: {
+    id: string;
+    productType: string;
+    layers: number;
+    quantity: number;
+    destinationCountryIso2: string;
+    createdAt: string;
+  };
+}
+
+export interface AdminBufferBucket {
+  id: string;
+  bucketKey: string;
+  layersRange: string;
+  priceRange: string;
+  finish: string;
+  complexity: string;
+  quantityRange: string;
+  currentBuffer: number;
+  averageErrorRate: number;
+  sampleCount: number;
+  confidence: string;
+  riskFlag: boolean;
+  lastErrorRate?: number;
+  lastAdjustedAt?: string;
+  updatedAt: string;
+}
+
 export interface UpdateAdminOrderStatusRequest {
   status: AdminOrderStatus;
   note?: string;
@@ -92,6 +155,11 @@ export const adminApiContract = {
     method: 'GET',
     path: '/api/admin/pricing-rules',
     response: 'AdminPricingRule[] | PricingRuleSet',
+  },
+  pricingIntelligence: {
+    method: 'GET',
+    path: '/api/admin/pricing-intelligence',
+    response: 'AdminPricingIntelligence',
   },
   upsertPricingRule: {
     method: 'POST',

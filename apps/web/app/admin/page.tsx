@@ -13,9 +13,12 @@ import {
 import type {
   AddSupplierReferenceRequest,
   AdminAuditLog,
+  AdminBufferBucket,
   AdminOrderRow,
   AdminOrderStatus,
+  AdminPricingIntelligence,
   AdminPricingRule,
+  AdminPricingSnapshot,
   AdminSupportTicket,
   UpdateAdminOrderStatusRequest,
   UpdateShipmentRequest,
@@ -32,6 +35,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<AdminTab>('orders');
   const [orders, setOrders] = useState<AdminOrderRow[]>([]);
   const [pricingRules, setPricingRules] = useState<AdminPricingRule[]>([]);
+  const [pricingIntelligence, setPricingIntelligence] = useState<AdminPricingIntelligence | null>(null);
   const [supportTickets, setSupportTickets] = useState<AdminSupportTicket[]>([]);
   const [auditLogs, setAuditLogs] = useState<AdminAuditLog[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState('');
@@ -52,9 +56,10 @@ export default function AdminPage() {
       }
 
       try {
-        const [ordersResult, pricingResult, supportResult, auditResult] = await Promise.all([
+        const [ordersResult, pricingResult, intelligenceResult, supportResult, auditResult] = await Promise.all([
           adminRequest<AdminOrderRow[]>(adminApiContract.orders.path, session),
           adminRequest<unknown>(adminApiContract.pricingRules.path, session),
+          adminRequest<AdminPricingIntelligence>(adminApiContract.pricingIntelligence.path, session),
           adminRequest<AdminSupportTicket[]>(adminApiContract.supportTickets.path, session),
           adminRequest<AdminAuditLog[]>(adminApiContract.auditLogs.path, session),
         ]);
@@ -65,6 +70,7 @@ export default function AdminPage() {
         setOrders(normalizedOrders);
         setSelectedOrderId(normalizedOrders[0]?.id ?? '');
         setPricingRules(normalizePricingRules(pricingResult));
+        setPricingIntelligence(intelligenceResult);
         setSupportTickets(supportResult);
         setAuditLogs(auditResult);
         setLoadState('authorized');
@@ -266,7 +272,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {tab === 'pricing' && <PricingRulesPanel rules={pricingRules} onSubmit={submitPricingRule} />}
+        {tab === 'pricing' && <PricingPanel rules={pricingRules} intelligence={pricingIntelligence} onSubmit={submitPricingRule} />}
         {tab === 'support' && <SupportTicketsPanel tickets={supportTickets} />}
         {tab === 'audit' && <AuditLogPanel logs={auditLogs} />}
       </div>
@@ -366,6 +372,109 @@ function AdminOrderActions({
       </AdminForm>
     </div>
   );
+}
+
+function PricingPanel({
+  rules,
+  intelligence,
+  onSubmit,
+}: {
+  rules: AdminPricingRule[];
+  intelligence: AdminPricingIntelligence | null;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <div className="space-y-6">
+      {intelligence ? <PricingIntelligencePanel intelligence={intelligence} /> : null}
+      <PricingRulesPanel rules={rules} onSubmit={onSubmit} />
+    </div>
+  );
+}
+
+function PricingIntelligencePanel({ intelligence }: { intelligence: AdminPricingIntelligence }) {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Metric label="Snapshots" value={String(intelligence.metrics.snapshotCount)} />
+        <Metric label="Buckets" value={String(intelligence.metrics.bucketCount)} />
+        <Metric label="Risk buckets" value={String(intelligence.metrics.flaggedBucketCount)} />
+        <Metric label="Avg buffer" value={`x${intelligence.metrics.averageBuffer.toFixed(2)}`} />
+      </div>
+
+      <Card className="overflow-hidden">
+        <div className="border-b border-slate-100 p-5">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Pricing intelligence</p>
+          <h2 className="mt-2 text-2xl font-black text-ink">Recent smart buffer decisions</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
+            <thead className="bg-slate-50 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+              <tr>
+                <th className="px-5 py-4">Quote</th>
+                <th className="px-5 py-4">Supplier</th>
+                <th className="px-5 py-4">Supplier price</th>
+                <th className="px-5 py-4">Buffer</th>
+                <th className="px-5 py-4">Service</th>
+                <th className="px-5 py-4">PCB client</th>
+                <th className="px-5 py-4">Total</th>
+                <th className="px-5 py-4">Confidence</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {intelligence.snapshots.map((snapshot) => (
+                <PricingSnapshotRow key={snapshot.id} snapshot={snapshot} />
+              ))}
+              {intelligence.snapshots.length === 0 ? (
+                <tr>
+                  <td className="px-5 py-8 text-center text-sm font-bold text-slate-500" colSpan={8}>No pricing snapshots yet.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card className="overflow-hidden">
+        <div className="border-b border-slate-100 p-5">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Buffer buckets</p>
+          <h2 className="mt-2 text-2xl font-black text-ink">Learning state</h2>
+        </div>
+        <SimpleTable
+          headers={['Bucket', 'Buffer', 'Samples', 'Avg error', 'Confidence', 'Risk']}
+          rows={intelligence.buckets.map((bucket) => bucketRow(bucket))}
+        />
+      </Card>
+    </div>
+  );
+}
+
+function PricingSnapshotRow({ snapshot }: { snapshot: AdminPricingSnapshot }) {
+  return (
+    <tr>
+      <td className="px-5 py-4">
+        <p className="font-black text-deepblue">{snapshot.quoteId.slice(0, 8)}</p>
+        <p className="mt-1 text-xs text-slate-500">{snapshot.quote?.layers ?? '-'} layers / {snapshot.quote?.quantity ?? '-'} pcs</p>
+      </td>
+      <td className="px-5 py-4 font-bold text-slate-700">{snapshot.supplier}</td>
+      <td className="px-5 py-4 text-slate-600">{formatCurrency(snapshot.supplierEstimatedPrice)}</td>
+      <td className="px-5 py-4 font-black text-slate-800">x{snapshot.bufferUsed.toFixed(2)}</td>
+      <td className="px-5 py-4 text-slate-600">{formatCurrency(snapshot.serviceFee)}</td>
+      <td className="px-5 py-4 text-slate-600">{formatCurrency(snapshot.pcbClientPrice)}</td>
+      <td className="px-5 py-4 font-black text-[#ff7a00]">{formatCurrency(snapshot.totalClientPrice)}</td>
+      <td className="px-5 py-4 text-slate-600">{snapshot.confidence}</td>
+    </tr>
+  );
+}
+
+function bucketRow(bucket: AdminBufferBucket): string[] {
+  return [
+    bucket.bucketKey,
+    `x${bucket.currentBuffer.toFixed(2)}`,
+    String(bucket.sampleCount),
+    `${(bucket.averageErrorRate * 100).toFixed(1)}%`,
+    bucket.confidence,
+    bucket.riskFlag ? 'Flagged' : 'OK',
+  ];
 }
 
 function PricingRulesPanel({ rules, onSubmit }: { rules: AdminPricingRule[]; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
@@ -542,6 +651,10 @@ function uniqueValues(values: string[]): string[] {
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(value));
+}
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
 }
 
 const fieldClassName =

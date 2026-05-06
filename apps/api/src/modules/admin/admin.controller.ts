@@ -66,6 +66,11 @@ export class AdminController {
     return this.adminService.listPricingRules(admin);
   }
 
+  @Get('pricing-intelligence')
+  pricingIntelligence(@CurrentUser() admin: AuthenticatedUser) {
+    return this.adminService.getPricingIntelligence(admin);
+  }
+
   @Post('pricing-rules')
   createPricingRule(@CurrentUser() admin: AuthenticatedUser, @Body() dto: UpsertPricingRuleDto) {
     return this.adminService.createPricingRule(admin, dto);

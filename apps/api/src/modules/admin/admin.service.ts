@@ -7,6 +7,7 @@ import {
 } from '../orders/dto/admin-order-update.dto';
 import { OrdersService } from '../orders/orders.service';
 import { UpsertPricingRuleDto } from '../pricing/dto/upsert-pricing-rule.dto';
+import { PricingIntelligenceRepository } from '../pricing/repositories/pricing-intelligence.repository';
 import { PricingRuleRepository } from '../pricing/repositories/pricing-rule.repository';
 import { SupportService } from '../support/support.service';
 import { CreateTrackingEventDto } from '../tracking/dto/create-tracking-event.dto';
@@ -18,6 +19,7 @@ export class AdminService {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly pricingRules: PricingRuleRepository,
+    private readonly pricingIntelligence: PricingIntelligenceRepository,
     private readonly trackingService: TrackingService,
     private readonly auditRepository: AdminAuditRepository,
     private readonly supportService: SupportService,
@@ -60,6 +62,11 @@ export class AdminService {
   async listPricingRules(admin: AuthenticatedUser) {
     await this.auditRepository.record(admin.id, 'admin.pricing_rules.list', 'pricing_rule');
     return this.pricingRules.getActiveRules();
+  }
+
+  async getPricingIntelligence(admin: AuthenticatedUser) {
+    await this.auditRepository.record(admin.id, 'admin.pricing_intelligence.view', 'pricing_snapshot');
+    return this.pricingIntelligence.getDashboard();
   }
 
   async createPricingRule(admin: AuthenticatedUser, dto: UpsertPricingRuleDto) {
