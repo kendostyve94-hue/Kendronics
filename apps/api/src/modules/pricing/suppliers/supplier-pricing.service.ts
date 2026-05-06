@@ -29,6 +29,74 @@ export class SupplierPricingService {
     return this.getLocalQuote(dto);
   }
 
+  async testSupplierConnection(supplier = this.preferredSupplier()) {
+    const normalizedSupplier = supplier.trim().toLowerCase();
+    const provider = normalizedSupplier === 'pcbway' ? this.pcbway : this.jlcpcb;
+    const expectedEnv =
+      normalizedSupplier === 'pcbway'
+        ? ['PCBWAY_API_KEY', 'PCBWAY_QUOTE_ENDPOINT']
+        : ['JLCPCB_API_KEY', 'JLCPCB_QUOTE_ENDPOINT'];
+
+    if (!provider.isConfigured()) {
+      return {
+        supplier: provider.name,
+        configured: false,
+        ok: false,
+        expectedEnv,
+        message: `${provider.name} quote API is not configured.`,
+      };
+    }
+
+    try {
+      const quote = await provider.getPcbQuote({
+        productType: 'standard_pcb',
+        gerberFileId: crypto.randomUUID(),
+        layers: 2,
+        lengthMm: 100,
+        widthMm: 100,
+        quantity: 5,
+        destinationCountryIso2: 'SN',
+        shippingMode: 'standard',
+        configSnapshot: {
+          baseMaterial: 'FR4',
+          thickness: '1.6mm',
+          solderMaskColor: 'Green',
+          silkscreenColor: 'White',
+          surfaceFinish: 'HASL lead-free',
+          viaCovering: 'Tented',
+          deliveryFormat: 'single_pcb',
+          differentDesigns: 1,
+          outerCopperWeight: '1 oz',
+          innerCopperWeight: '0.5 oz',
+          minimumViaHole: '0.3mm',
+        },
+      });
+
+      return {
+        supplier: provider.name,
+        configured: true,
+        ok: true,
+        expectedEnv,
+        quote: {
+          supplierQuoteId: quote.supplierQuoteId,
+          manufacturingPrice: quote.manufacturingPrice,
+          shippingPrice: quote.shippingPrice,
+          currency: quote.currency,
+          leadTimeDays: quote.leadTimeDays,
+        },
+        message: `${provider.name} quote API responded successfully.`,
+      };
+    } catch (error) {
+      return {
+        supplier: provider.name,
+        configured: true,
+        ok: false,
+        expectedEnv,
+        message: error instanceof Error ? error.message : `${provider.name} quote API test failed.`,
+      };
+    }
+  }
+
   private async getLocalQuote(dto: CreateQuoteDto): Promise<SupplierQuote> {
     const rules = await this.pricingRules.getActiveRules();
     const layerMultiplier = rules.layerMultipliers[dto.layers];

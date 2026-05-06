@@ -19,11 +19,13 @@ import type {
   AdminOrderStatus,
   AdminPricingIntelligence,
   AdminPricingRule,
+  AdminSupplierConnectionTest,
   AdminSupplierOrderPackage,
   AdminPricingSnapshot,
   AdminSupportTicket,
   PrepareSupplierOrderRequest,
   RecordSupplierRealPriceRequest,
+  TestSupplierConnectionRequest,
   UpdateAdminOrderStatusRequest,
   UpdateShipmentRequest,
 } from '../../lib/admin-contract';
@@ -48,6 +50,7 @@ export default function AdminPage() {
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [message, setMessage] = useState('');
   const [supplierOrderPackage, setSupplierOrderPackage] = useState<AdminSupplierOrderPackage | null>(null);
+  const [supplierConnectionTest, setSupplierConnectionTest] = useState<AdminSupplierConnectionTest | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -224,6 +227,29 @@ export default function AdminPage() {
     await mutateAdmin(adminApiContract.upsertPricingRule.path, adminApiContract.upsertPricingRule.method, payload);
   }
 
+  async function submitSupplierConnectionTest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const session = readAuthSession();
+    if (!session) {
+      setLoadState('forbidden');
+      return;
+    }
+
+    const form = new FormData(event.currentTarget);
+    const payload: TestSupplierConnectionRequest = {
+      supplier: String(form.get('supplier') || 'pcbway') as TestSupplierConnectionRequest['supplier'],
+    };
+
+    setMessage('');
+    const result = await adminRequest<AdminSupplierConnectionTest>(
+      adminApiContract.supplierConnectionTest.path,
+      session,
+      { method: adminApiContract.supplierConnectionTest.method, body: payload },
+    );
+    setSupplierConnectionTest(result);
+    setMessage(result.ok ? `${result.supplier} connection test passed.` : `${result.supplier} connection test failed.`);
+  }
+
   if (loadState === 'checking') {
     return (
       <AdminShell>
@@ -325,7 +351,15 @@ export default function AdminPage() {
           </div>
         )}
 
-        {tab === 'pricing' && <PricingPanel rules={pricingRules} intelligence={pricingIntelligence} onSubmit={submitPricingRule} />}
+        {tab === 'pricing' && (
+          <PricingPanel
+            rules={pricingRules}
+            intelligence={pricingIntelligence}
+            supplierConnectionTest={supplierConnectionTest}
+            onSubmit={submitPricingRule}
+            onSubmitSupplierConnectionTest={submitSupplierConnectionTest}
+          />
+        )}
         {tab === 'support' && <SupportTicketsPanel tickets={supportTickets} />}
         {tab === 'audit' && <AuditLogPanel logs={auditLogs} />}
       </div>
@@ -491,17 +525,60 @@ function InfoLine({ label, value }: { label: string; value: string }) {
 function PricingPanel({
   rules,
   intelligence,
+  supplierConnectionTest,
   onSubmit,
+  onSubmitSupplierConnectionTest,
 }: {
   rules: AdminPricingRule[];
   intelligence: AdminPricingIntelligence | null;
+  supplierConnectionTest: AdminSupplierConnectionTest | null;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitSupplierConnectionTest: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
     <div className="space-y-6">
+      <SupplierConnectionPanel result={supplierConnectionTest} onSubmit={onSubmitSupplierConnectionTest} />
       {intelligence ? <PricingIntelligencePanel intelligence={intelligence} /> : null}
       <PricingRulesPanel rules={rules} onSubmit={onSubmit} />
     </div>
+  );
+}
+
+function SupplierConnectionPanel({
+  result,
+  onSubmit,
+}: {
+  result: AdminSupplierConnectionTest | null;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <Card className="p-5">
+      <div className="grid gap-4 lg:grid-cols-[1fr_18rem] lg:items-end">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Supplier API</p>
+          <h2 className="mt-2 text-2xl font-black text-ink">Live connection test</h2>
+        </div>
+        <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <select name="supplier" defaultValue="pcbway" className={fieldClassName}>
+            <option value="pcbway">PCBWay</option>
+            <option value="jlcpcb">JLCPCB</option>
+          </select>
+          <button type="submit" className="h-11 rounded-xl bg-deepblue px-5 text-sm font-black text-white transition hover:bg-deepblue-dark">Test</button>
+        </form>
+      </div>
+      {result ? (
+        <div className={`mt-4 rounded-xl border p-4 text-sm font-bold ${result.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
+          <p>{result.message}</p>
+          <p className="mt-2 text-xs">Expected env: {result.expectedEnv.join(', ')}</p>
+          {result.quote ? (
+            <p className="mt-2 text-xs">
+              Test quote: {formatCurrency(result.quote.manufacturingPrice)} PCB, {formatCurrency(result.quote.shippingPrice)} shipping
+              {result.quote.leadTimeDays ? `, ${result.quote.leadTimeDays} days` : ''}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </Card>
   );
 }
 

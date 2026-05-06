@@ -13,6 +13,7 @@ import {
 import { UpsertPricingRuleDto } from '../pricing/dto/upsert-pricing-rule.dto';
 import { PrepareSupplierOrderDto } from '../pricing/dto/prepare-supplier-order.dto';
 import { RecordSupplierRealPriceDto } from '../pricing/dto/record-supplier-real-price.dto';
+import { TestSupplierConnectionDto } from '../pricing/dto/test-supplier-connection.dto';
 import { CreateTrackingEventDto } from '../tracking/dto/create-tracking-event.dto';
 import { AdminService } from './admin.service';
 
@@ -89,6 +90,11 @@ export class AdminController {
   @Get('pricing-intelligence')
   pricingIntelligence(@CurrentUser() admin: AuthenticatedUser) {
     return this.adminService.getPricingIntelligence(admin);
+  }
+
+  @Post('supplier-connection-test')
+  testSupplierConnection(@CurrentUser() admin: AuthenticatedUser, @Body() dto: TestSupplierConnectionDto) {
+    return this.adminService.testSupplierConnection(admin, dto);
   }
 
   @Post('pricing-rules')

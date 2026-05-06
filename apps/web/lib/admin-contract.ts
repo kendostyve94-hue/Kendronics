@@ -69,6 +69,25 @@ export interface AdminPricingIntelligence {
   buckets: AdminBufferBucket[];
 }
 
+export interface AdminSupplierConnectionTest {
+  supplier: string;
+  configured: boolean;
+  ok: boolean;
+  expectedEnv: string[];
+  message: string;
+  quote?: {
+    supplierQuoteId?: string;
+    manufacturingPrice: number;
+    shippingPrice: number;
+    currency: 'EUR' | 'USD';
+    leadTimeDays?: number;
+  };
+}
+
+export interface TestSupplierConnectionRequest {
+  supplier?: 'pcbway' | 'jlcpcb';
+}
+
 export interface AdminPricingSnapshot {
   id: string;
   quoteId: string;
@@ -255,6 +274,12 @@ export const adminApiContract = {
     method: 'GET',
     path: '/api/admin/pricing-intelligence',
     response: 'AdminPricingIntelligence',
+  },
+  supplierConnectionTest: {
+    method: 'POST',
+    path: '/api/admin/supplier-connection-test',
+    request: 'TestSupplierConnectionRequest',
+    response: 'AdminSupplierConnectionTest',
   },
   upsertPricingRule: {
     method: 'POST',

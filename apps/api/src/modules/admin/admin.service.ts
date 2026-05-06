@@ -9,10 +9,12 @@ import { OrdersService } from '../orders/orders.service';
 import { UpsertPricingRuleDto } from '../pricing/dto/upsert-pricing-rule.dto';
 import { PrepareSupplierOrderDto } from '../pricing/dto/prepare-supplier-order.dto';
 import { RecordSupplierRealPriceDto } from '../pricing/dto/record-supplier-real-price.dto';
+import { TestSupplierConnectionDto } from '../pricing/dto/test-supplier-connection.dto';
 import { PricingIntelligenceRepository } from '../pricing/repositories/pricing-intelligence.repository';
 import { PricingRuleRepository } from '../pricing/repositories/pricing-rule.repository';
 import { SmartBufferService } from '../pricing/smart-buffer.service';
 import { SupplierOrderService } from '../pricing/suppliers/supplier-order.service';
+import { SupplierPricingService } from '../pricing/suppliers/supplier-pricing.service';
 import { SupportService } from '../support/support.service';
 import { CreateTrackingEventDto } from '../tracking/dto/create-tracking-event.dto';
 import { TrackingService } from '../tracking/tracking.service';
@@ -26,6 +28,7 @@ export class AdminService {
     private readonly pricingIntelligence: PricingIntelligenceRepository,
     private readonly smartBuffer: SmartBufferService,
     private readonly supplierOrderService: SupplierOrderService,
+    private readonly supplierPricingService: SupplierPricingService,
     private readonly trackingService: TrackingService,
     private readonly auditRepository: AdminAuditRepository,
     private readonly supportService: SupportService,
@@ -105,6 +108,12 @@ export class AdminService {
   async getPricingIntelligence(admin: AuthenticatedUser) {
     await this.auditRepository.record(admin.id, 'admin.pricing_intelligence.view', 'pricing_snapshot');
     return this.pricingIntelligence.getDashboard();
+  }
+
+  async testSupplierConnection(admin: AuthenticatedUser, dto: TestSupplierConnectionDto) {
+    const result = await this.supplierPricingService.testSupplierConnection(dto.supplier ?? 'pcbway');
+    await this.auditRepository.record(admin.id, 'admin.supplier_connection.test', 'supplier', result.supplier);
+    return result;
   }
 
   async createPricingRule(admin: AuthenticatedUser, dto: UpsertPricingRuleDto) {
