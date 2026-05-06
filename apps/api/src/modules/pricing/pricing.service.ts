@@ -4,12 +4,20 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { PricingBreakdown, Quote } from './entities/quote.entity';
 import { PricingRuleRepository } from './repositories/pricing-rule.repository';
+import { SmartBufferResult, SmartBufferService } from './smart-buffer.service';
+
+interface SupplierEstimate {
+  supplier: string;
+  manufacturingPrice: number;
+  shippingPrice: number;
+}
 
 @Injectable()
 export class PricingService {
   constructor(
     private readonly pricingRules: PricingRuleRepository,
     private readonly prisma: PrismaService,
+    private readonly smartBuffer: SmartBufferService,
   ) {}
 
   async createQuote(userId: string, dto: CreateQuoteDto): Promise<Quote> {
@@ -17,9 +25,15 @@ export class PricingService {
       throw new BadRequestException('PCB assembly requires BOM and CPL files.');
     }
 
-    const supplierBreakdown = await this.getLiveSupplierBreakdown(dto);
-    if (supplierBreakdown) {
-      return this.persistQuote(userId, dto, supplierBreakdown);
+    const supplierEstimate = await this.getLiveSupplierEstimate(dto);
+    if (supplierEstimate) {
+      const smartPrice = await this.smartBuffer.priceQuote({
+        dto,
+        supplier: supplierEstimate.supplier,
+        supplierEstimatedPrice: supplierEstimate.manufacturingPrice,
+        shippingPrice: this.customerShippingPrice(dto, supplierEstimate.shippingPrice),
+      });
+      return this.persistQuote(userId, dto, this.toSmartBufferBreakdown(smartPrice), smartPrice);
     }
 
     if (this.isLiveSupplierPricingRequired()) {
@@ -36,35 +50,21 @@ export class PricingService {
 
     const areaCm2 = (dto.lengthMm * dto.widthMm) / 100;
     const manufacturing = areaCm2 * dto.quantity * rules.areaRate * layerMultiplier;
-    const logistics = rules.zoneBaseDeliveryFee;
-    const serviceFee = Math.max(rules.minimumServiceFee, manufacturing * rules.marginRate);
-    const subtotalBeforePayment =
-      manufacturing +
-      rules.partnerHandlingFee +
-      rules.chinaToFranceFee +
-      rules.franceProcessingFee +
-      logistics +
-      serviceFee;
-    const paymentFee = subtotalBeforePayment * rules.paymentFeeRate + rules.paymentFixedFee;
-    const finalTotal = subtotalBeforePayment + paymentFee;
-
-    const breakdown: PricingBreakdown = {
-      partnerManufacturingCost: round(manufacturing),
-      partnerHandlingCost: rules.partnerHandlingFee,
-      ChinaToFranceLogistics: rules.chinaToFranceFee,
-      FranceProcessingFee: rules.franceProcessingFee,
-      FranceToAfricaDelivery: round(logistics),
-      customsRiskBuffer: 0,
-      paymentProcessingFee: round(paymentFee),
-      KendronicsServiceFee: round(serviceFee),
-      totalBeforeTax: round(finalTotal),
-      taxesIfApplicable: 0,
-      finalTotal: round(finalTotal),
-    };
-    return this.persistQuote(userId, dto, breakdown);
+    const smartPrice = await this.smartBuffer.priceQuote({
+      dto,
+      supplier: 'local_calibrated_supplier_estimate',
+      supplierEstimatedPrice: manufacturing,
+      shippingPrice: this.customerShippingPrice(dto, rules.zoneBaseDeliveryFee),
+    });
+    return this.persistQuote(userId, dto, this.toSmartBufferBreakdown(smartPrice), smartPrice);
   }
 
-  private async persistQuote(userId: string, dto: CreateQuoteDto, breakdown: PricingBreakdown): Promise<Quote> {
+  private async persistQuote(
+    userId: string,
+    dto: CreateQuoteDto,
+    breakdown: PricingBreakdown,
+    smartPrice?: SmartBufferResult,
+  ): Promise<Quote> {
     const validUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
     const quote = await this.prisma.quote.create({
       data: {
@@ -86,6 +86,9 @@ export class PricingService {
         breakdown: breakdown as unknown as Prisma.InputJsonObject,
       },
     });
+    if (smartPrice) {
+      await this.smartBuffer.createSnapshot(quote.id, smartPrice);
+    }
 
     return {
       ...quote,
@@ -98,7 +101,32 @@ export class PricingService {
     };
   }
 
-  private async getLiveSupplierBreakdown(dto: CreateQuoteDto): Promise<PricingBreakdown | null> {
+  private toSmartBufferBreakdown(result: SmartBufferResult): PricingBreakdown {
+    const bufferAmount = result.pcbClientPrice - result.supplierEstimatedPrice - result.serviceFee;
+    return {
+      partnerManufacturingCost: round(result.supplierEstimatedPrice),
+      partnerHandlingCost: 0,
+      ChinaToFranceLogistics: 0,
+      FranceProcessingFee: 0,
+      FranceToAfricaDelivery: round(result.shippingPrice),
+      customsRiskBuffer: round(bufferAmount),
+      paymentProcessingFee: 0,
+      KendronicsServiceFee: round(result.serviceFee),
+      totalBeforeTax: round(result.totalClientPrice),
+      taxesIfApplicable: 0,
+      finalTotal: round(result.totalClientPrice),
+      supplier: result.supplier,
+      supplierEstimatedPrice: round(result.supplierEstimatedPrice),
+      smartBufferMultiplier: result.bufferUsed,
+      smartBufferRiskScore: result.riskScore,
+      smartBufferConfidence: result.confidence,
+      smartBufferBucketKey: result.bucketKey,
+      smartBufferFormulaVersion: result.formulaVersion,
+      smartBufferReasons: result.reasons,
+    };
+  }
+
+  private async getLiveSupplierEstimate(dto: CreateQuoteDto): Promise<SupplierEstimate | null> {
     const apiKey = this.configValue('PCBWAY_API_KEY');
     if (!apiKey || !dto.configSnapshot) return null;
 
@@ -123,24 +151,10 @@ export class PricingService {
       throw new ServiceUnavailableException('PCBWay live quote did not include a valid manufacturing price.');
     }
 
-    const subtotal = manufacturingPrice + Math.max(0, shippingPrice);
-    const franceProcessingFee = 7.5;
-    const kendronicsServiceFee = Math.max(10, subtotal * 0.145);
-    const paymentProcessingFee = (subtotal + franceProcessingFee + kendronicsServiceFee) * 0.029 + 0.3;
-    const finalTotal = subtotal + franceProcessingFee + kendronicsServiceFee + paymentProcessingFee;
-
     return {
-      partnerManufacturingCost: round(manufacturingPrice),
-      partnerHandlingCost: 0,
-      ChinaToFranceLogistics: round(shippingPrice),
-      FranceProcessingFee: franceProcessingFee,
-      FranceToAfricaDelivery: 0,
-      customsRiskBuffer: 0,
-      paymentProcessingFee: round(paymentProcessingFee),
-      KendronicsServiceFee: round(kendronicsServiceFee),
-      totalBeforeTax: round(finalTotal),
-      taxesIfApplicable: 0,
-      finalTotal: round(finalTotal),
+      supplier: 'pcbway',
+      manufacturingPrice: round(manufacturingPrice),
+      shippingPrice: round(shippingPrice),
     };
   }
 
@@ -193,6 +207,10 @@ export class PricingService {
 
   private numberConfig(value: unknown, fallback: number): number {
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+  }
+
+  private customerShippingPrice(dto: CreateQuoteDto, fallback: number): number {
+    return this.numberConfig(dto.configSnapshot?.liveShippingAmount, fallback);
   }
 
   private yesNo(value: unknown): 'Yes' | 'No' {

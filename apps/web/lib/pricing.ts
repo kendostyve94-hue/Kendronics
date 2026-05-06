@@ -175,10 +175,16 @@ function calculateLocalCalibratedQuote(config: QuoteConfig): PricingBreakdown {
       ? config.liveShippingAmount
       : localFranceToAfricaDelivery;
   const productionSpeedFee = getProductionSpeedFee(config);
-  const subtotal = partnerManufacturingCost + partnerHandlingCost + chinaToFranceLogistics + franceProcessingFee + franceToAfricaDelivery + productionSpeedFee;
-  const kendronicsServiceFee = Math.max(10, subtotal * 0.145);
-  const paymentProcessingFee = (subtotal + kendronicsServiceFee) * 0.029 + 0.3;
-  const finalTotal = subtotal + kendronicsServiceFee + paymentProcessingFee;
+  const supplierEstimatedPrice =
+    partnerManufacturingCost +
+    partnerHandlingCost +
+    chinaToFranceLogistics +
+    franceProcessingFee +
+    productionSpeedFee;
+  const smartBufferMultiplier = calculateSmartBuffer(config, supplierEstimatedPrice);
+  const kendronicsServiceFee = getVisibleServiceFee(supplierEstimatedPrice);
+  const paymentProcessingFee = 0;
+  const finalTotal = supplierEstimatedPrice * smartBufferMultiplier + kendronicsServiceFee + franceToAfricaDelivery;
   const leadTimeDays = getLeadTimeDays(config, country.logisticsZone);
   const displayTotalBeforeAdjustment = finalTotal + Math.max(2, finalTotal * 0.08);
 
@@ -190,6 +196,10 @@ function calculateLocalCalibratedQuote(config: QuoteConfig): PricingBreakdown {
     franceToAfricaDelivery: round(franceToAfricaDelivery),
     paymentProcessingFee: round(paymentProcessingFee),
     kendronicsServiceFee: round(kendronicsServiceFee),
+    smartBufferMultiplier: roundRatio(smartBufferMultiplier),
+    smartBufferRiskScore: roundRatio((smartBufferMultiplier - 1) / 0.7),
+    smartBufferConfidence: 'low',
+    smartBufferBucketKey: getSmartBufferBucketKey(config, supplierEstimatedPrice),
     viaCoveringFee: round(viaCoveringFee),
     surfaceFinishFee: round(surfaceFinishFee),
     productionSpeedFee: round(productionSpeedFee),
@@ -212,6 +222,61 @@ function getShippingCarrierLabel(config: QuoteConfig): string {
   if (config.shippingMode === 'express') return 'DHL Express (DDP)';
   if (config.shippingMode === 'economy') return 'Economy Consolidated (DDP)';
   return 'Standard Express (DDP)';
+}
+
+function calculateSmartBuffer(config: QuoteConfig, supplierPrice: number): number {
+  let buffer = 1.1;
+
+  if (supplierPrice < 10) buffer += 0.25;
+  else if (supplierPrice < 30) buffer += 0.15;
+  else if (supplierPrice < 100) buffer += 0.08;
+  else buffer += 0.04;
+
+  if (config.layers >= 6) buffer += 0.15;
+  else if (config.layers >= 4) buffer += 0.08;
+
+  if (config.surfaceFinish === 'ENIG') buffer += 0.06;
+  if (config.blindBuriedVias || config.viaInPad) buffer += 0.08;
+  if (config.castellatedHoles || config.edgePlating) buffer += 0.05;
+
+  const complexity = getSmartBufferComplexity(config);
+  if (complexity === 'high') buffer += 0.1;
+  else if (complexity === 'medium') buffer += 0.05;
+
+  return clamp(buffer, 1.08, 1.7);
+}
+
+function getVisibleServiceFee(supplierPrice: number): number {
+  if (supplierPrice < 10) return 3;
+  if (supplierPrice < 50) return 4;
+  return 5;
+}
+
+function getSmartBufferBucketKey(config: QuoteConfig, supplierPrice: number): string {
+  const layersRange = config.layers <= 2 ? '1-2' : config.layers <= 4 ? '3-4' : config.layers <= 6 ? '5-6' : '7+';
+  const priceRange = supplierPrice < 10 ? '0-10' : supplierPrice < 30 ? '10-30' : supplierPrice < 100 ? '30-100' : '100+';
+  const finish = config.surfaceFinish === 'ENIG' ? 'enig' : 'standard';
+  const quantityRange = config.quantity <= 10 ? '1-10' : config.quantity <= 50 ? '11-50' : config.quantity <= 250 ? '51-250' : '251+';
+  return `layers:${layersRange}|price:${priceRange}|finish:${finish}|complexity:${getSmartBufferComplexity(config)}|qty:${quantityRange}`;
+}
+
+function getSmartBufferComplexity(config: QuoteConfig): 'low' | 'medium' | 'high' {
+  const specialCount = countTrue([
+    config.impedanceControl,
+    config.goldFingers,
+    config.castellatedHoles,
+    config.edgePlating,
+    config.blindBuriedVias,
+    config.viaInPad,
+    config.peelableMask,
+    config.carbonInk,
+    config.countersink,
+    config.pressFitHoles,
+  ]);
+
+  if (config.layers >= 6 || specialCount >= 3 || config.productType === 'pcb_assembly') return 'high';
+  if (config.layers >= 4 || specialCount >= 1 || config.surfaceFinish === 'ENIG') return 'medium';
+  return 'low';
 }
 
 function normalizeDimensions(config: QuoteConfig) {
@@ -383,4 +448,12 @@ function countTrue(values: boolean[]): number {
 
 function round(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function roundRatio(value: number): number {
+  return Math.round(value * 10000) / 10000;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
 }

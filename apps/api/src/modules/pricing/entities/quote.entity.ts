@@ -10,6 +10,14 @@ export interface PricingBreakdown {
   totalBeforeTax: number;
   taxesIfApplicable: number;
   finalTotal: number;
+  supplier?: string;
+  supplierEstimatedPrice?: number;
+  smartBufferMultiplier?: number;
+  smartBufferRiskScore?: number;
+  smartBufferConfidence?: 'low' | 'medium' | 'high';
+  smartBufferBucketKey?: string;
+  smartBufferFormulaVersion?: string;
+  smartBufferReasons?: Array<{ code: string; label: string; adjustment: number }>;
 }
 
 export interface Quote {

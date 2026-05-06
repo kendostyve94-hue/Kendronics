@@ -45,9 +45,82 @@ model Quote {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders Order[]
+  pricingSnapshot PricingSnapshot?
 
   @@index([userId])
   @@index([validUntil])
+}
+
+model PricingSnapshot {
+  id                     String   @id @default(uuid())
+  quoteId                String   @unique
+  supplier               String   @default("jlcpcb")
+  supplierEstimatedPrice Decimal  @db.Decimal(12, 2)
+  supplierRealPrice      Decimal? @db.Decimal(12, 2)
+  bufferUsed             Decimal  @db.Decimal(6, 4)
+  serviceFee             Decimal  @db.Decimal(12, 2)
+  pcbClientPrice         Decimal  @db.Decimal(12, 2)
+  shippingPrice          Decimal  @default(0) @db.Decimal(12, 2)
+  totalClientPrice       Decimal  @db.Decimal(12, 2)
+  currency               String   @default("EUR")
+  bucketKey              String
+  riskScore              Decimal  @db.Decimal(6, 4)
+  confidence             String
+  formulaVersion         String   @default("smart-buffer-v1")
+  reasons                Json
+  inputSnapshot          Json
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  adjustments BufferAdjustment[]
+
+  @@index([bucketKey])
+  @@index([supplier])
+}
+
+model BufferBucket {
+  id               String   @id @default(uuid())
+  bucketKey        String   @unique
+  layersRange      String
+  priceRange       String
+  finish           String
+  complexity       String
+  quantityRange    String
+  currentBuffer    Decimal  @db.Decimal(6, 4)
+  minBuffer        Decimal  @default(1.0800) @db.Decimal(6, 4)
+  maxBuffer        Decimal  @default(1.7000) @db.Decimal(6, 4)
+  averageErrorRate Decimal  @default(0) @db.Decimal(8, 6)
+  sampleCount      Int      @default(0)
+  confidence       String   @default("low")
+  riskFlag         Boolean  @default(false)
+  lastErrorRate    Decimal? @db.Decimal(8, 6)
+  lastAdjustedAt   DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  adjustments BufferAdjustment[]
+}
+
+model BufferAdjustment {
+  id                String   @id @default(uuid())
+  bucketId          String
+  pricingSnapshotId String?
+  quoteId           String?
+  previousBuffer    Decimal  @db.Decimal(6, 4)
+  nextBuffer        Decimal  @db.Decimal(6, 4)
+  errorRate         Decimal  @db.Decimal(8, 6)
+  direction         String
+  reason            String
+  metadata          Json?
+  createdAt         DateTime @default(now())
+
+  bucket BufferBucket @relation(fields: [bucketId], references: [id], onDelete: Cascade)
+  pricingSnapshot PricingSnapshot? @relation(fields: [pricingSnapshotId], references: [id], onDelete: SetNull)
+
+  @@index([bucketId])
+  @@index([pricingSnapshotId])
+  @@index([quoteId])
 }
 
 model Session {
