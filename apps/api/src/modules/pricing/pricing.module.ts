@@ -7,12 +7,13 @@ import { PricingIntelligenceRepository } from './repositories/pricing-intelligen
 import { SmartBufferService } from './smart-buffer.service';
 import { JlcpcbPricingProvider } from './suppliers/jlcpcb-pricing.provider';
 import { PcbWayPricingProvider } from './suppliers/pcbway-pricing.provider';
+import { SupplierOrderService } from './suppliers/supplier-order.service';
 import { SupplierPricingService } from './suppliers/supplier-pricing.service';
 
 @Module({
   imports: [UploadsModule],
   controllers: [PricingController],
-  providers: [PricingService, PricingRuleRepository, PricingIntelligenceRepository, SmartBufferService, JlcpcbPricingProvider, PcbWayPricingProvider, SupplierPricingService],
-  exports: [PricingService, PricingRuleRepository, PricingIntelligenceRepository, SmartBufferService, SupplierPricingService],
+  providers: [PricingService, PricingRuleRepository, PricingIntelligenceRepository, SmartBufferService, JlcpcbPricingProvider, PcbWayPricingProvider, SupplierPricingService, SupplierOrderService],
+  exports: [PricingService, PricingRuleRepository, PricingIntelligenceRepository, SmartBufferService, SupplierPricingService, SupplierOrderService],
 })
 export class PricingModule {}

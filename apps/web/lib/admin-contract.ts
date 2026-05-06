@@ -131,6 +131,79 @@ export interface RecordSupplierRealPriceRequest {
   note?: string;
 }
 
+export interface PrepareSupplierOrderRequest {
+  mode?: 'prepare' | 'create';
+  supplier?: string;
+  note?: string;
+}
+
+export interface AdminSupplierOrderPackage {
+  orderId: string;
+  orderNumber: string;
+  orderStatus: string;
+  quoteId: string;
+  supplier: string;
+  mode: 'prepare' | 'create';
+  liveCreateAvailable: boolean;
+  status: string;
+  supplierOrderId?: string;
+  realSupplierPrice?: number;
+  createdAt: string;
+  customer: {
+    email: string;
+    fullName?: string | null;
+    companyName?: string | null;
+  };
+  gerber: {
+    uploadId: string;
+    originalFilename: string;
+    storageKey: string;
+    fileSizeBytes: number;
+    status: string;
+    analysis: {
+      widthMm?: number;
+      heightMm?: number;
+      detectedLayers?: number | null;
+      holesCount: number;
+      hasSlots: boolean;
+      boardAreaCm2?: number;
+      complexity: string;
+      parserConfidence: number;
+      units?: string | null;
+      outlineSource?: string | null;
+      copperLayerFiles: string[];
+      drillFiles: string[];
+      warnings: string[];
+    } | null;
+  } | null;
+  pcb: {
+    productType: string;
+    gerberFileId: string;
+    layers: number;
+    lengthMm: number;
+    widthMm: number;
+    quantity: number;
+    destinationCountryIso2: string;
+    shippingMode: string;
+    configSnapshot: Record<string, unknown>;
+    supplierPayload: Record<string, unknown>;
+  };
+  pricing: {
+    supplierEstimatedPrice: number | null;
+    supplierRealPrice?: number | null;
+    bufferUsed: number | null;
+    serviceFee: number | null;
+    pcbClientPrice: number | null;
+    shippingPrice: number | null;
+    totalClientPrice: number;
+    currency: string;
+    bucketKey: string | null;
+    confidence: string;
+    formulaVersion: string;
+  };
+  notes: string[];
+}
+
 export interface UpdateShipmentRequest {
   carrierName?: string;
   trackingNumber?: string;
@@ -160,6 +233,13 @@ export const adminApiContract = {
     path: '/api/admin/orders/:orderId/supplier-real-price',
     request: 'RecordSupplierRealPriceRequest',
     sensitivity: 'Admin-only supplier cost data. Never render on customer pages.',
+  },
+  supplierOrder: {
+    method: 'POST',
+    path: '/api/admin/orders/:orderId/supplier-order',
+    request: 'PrepareSupplierOrderRequest',
+    response: 'AdminSupplierOrderPackage',
+    sensitivity: 'Admin-only supplier package. Never render on customer pages.',
   },
   shipment: {
     method: 'PATCH',

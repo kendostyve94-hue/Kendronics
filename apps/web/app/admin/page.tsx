@@ -19,8 +19,10 @@ import type {
   AdminOrderStatus,
   AdminPricingIntelligence,
   AdminPricingRule,
+  AdminSupplierOrderPackage,
   AdminPricingSnapshot,
   AdminSupportTicket,
+  PrepareSupplierOrderRequest,
   RecordSupplierRealPriceRequest,
   UpdateAdminOrderStatusRequest,
   UpdateShipmentRequest,
@@ -45,6 +47,7 @@ export default function AdminPage() {
   const [countryFilter, setCountryFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [message, setMessage] = useState('');
+  const [supplierOrderPackage, setSupplierOrderPackage] = useState<AdminSupplierOrderPackage | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,6 +107,10 @@ export default function AdminPage() {
   );
   const selectedOrder = orders.find((order) => order.id === selectedOrderId) ?? orders[0];
 
+  useEffect(() => {
+    setSupplierOrderPackage(null);
+  }, [selectedOrderId]);
+
   async function mutateAdmin<TBody extends object>(path: string, method: string, body: TBody) {
     const session = readAuthSession();
     if (!session) {
@@ -160,6 +167,31 @@ export default function AdminPage() {
       adminApiContract.supplierRealPrice.method,
       payload,
     );
+  }
+
+  async function submitSupplierOrder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const session = readAuthSession();
+    if (!session) {
+      setLoadState('forbidden');
+      return;
+    }
+
+    const form = new FormData(event.currentTarget);
+    const payload: PrepareSupplierOrderRequest = {
+      mode: String(form.get('mode') || 'prepare') as PrepareSupplierOrderRequest['mode'],
+      supplier: String(form.get('supplier') || 'jlcpcb'),
+      note: String(form.get('note') || ''),
+    };
+
+    setMessage('');
+    const result = await adminRequest<AdminSupplierOrderPackage>(
+      adminApiContract.supplierOrder.path.replace(':orderId', selectedOrderId),
+      session,
+      { method: adminApiContract.supplierOrder.method, body: payload },
+    );
+    setSupplierOrderPackage(result);
+    setMessage(result.mode === 'create' ? 'Supplier order creation request completed.' : 'Supplier order package prepared.');
   }
 
   async function submitShipment(event: FormEvent<HTMLFormElement>) {
@@ -284,8 +316,10 @@ export default function AdminPage() {
                 order={selectedOrder}
                 onSubmitStatus={submitStatus}
                 onSubmitSupplier={submitSupplier}
+                onSubmitSupplierOrder={submitSupplierOrder}
                 onSubmitSupplierRealPrice={submitSupplierRealPrice}
                 onSubmitShipment={submitShipment}
+                supplierOrderPackage={supplierOrderPackage}
               />
             )}
           </div>
@@ -356,14 +390,18 @@ function AdminOrderActions({
   order,
   onSubmitStatus,
   onSubmitSupplier,
+  onSubmitSupplierOrder,
   onSubmitSupplierRealPrice,
   onSubmitShipment,
+  supplierOrderPackage,
 }: {
   order: AdminOrderRow;
   onSubmitStatus: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitSupplier: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitSupplierOrder: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitSupplierRealPrice: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitShipment: (event: FormEvent<HTMLFormElement>) => void;
+  supplierOrderPackage: AdminSupplierOrderPackage | null;
 }) {
   return (
     <div className="space-y-5">
@@ -387,6 +425,18 @@ function AdminOrderActions({
         <p className="text-xs font-bold text-slate-500">Admin-only. These values are never shown on customer order detail pages.</p>
       </AdminForm>
 
+      <AdminForm title="Supplier order package" onSubmit={onSubmitSupplierOrder}>
+        <select name="mode" defaultValue="prepare" className={fieldClassName}>
+          <option value="prepare">Prepare package</option>
+          <option value="create">Create through API</option>
+        </select>
+        <input name="supplier" placeholder="Supplier" defaultValue={order.externalManufacturingPartner || 'jlcpcb'} className={fieldClassName} />
+        <input name="note" placeholder="Internal note optional" className={fieldClassName} />
+        <p className="text-xs font-bold text-slate-500">Prepare mode is assisted ordering. Create mode only works when the supplier order API is configured.</p>
+      </AdminForm>
+
+      {supplierOrderPackage ? <SupplierOrderPackagePanel packageData={supplierOrderPackage} /> : null}
+
       <AdminForm title="Supplier real price" onSubmit={onSubmitSupplierRealPrice}>
         <input name="realSupplierPrice" type="number" min="0.01" step="0.01" placeholder="Real supplier PCB price" className={fieldClassName} />
         <input name="supplierOrderId" placeholder="Supplier order ID optional" defaultValue={order.externalSupplierOrderId} className={fieldClassName} />
@@ -399,6 +449,41 @@ function AdminOrderActions({
         <input name="trackingNumber" placeholder="Tracking number" defaultValue={order.trackingNumber} className={fieldClassName} />
         <input name="estimatedDeliveryAt" type="date" className={fieldClassName} />
       </AdminForm>
+    </div>
+  );
+}
+
+function SupplierOrderPackagePanel({ packageData }: { packageData: AdminSupplierOrderPackage }) {
+  const analysis = packageData.gerber?.analysis;
+
+  return (
+    <Card className="p-5">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Prepared supplier data</p>
+      <h2 className="mt-2 text-lg font-black text-ink">{packageData.supplier.toUpperCase()} package</h2>
+      <div className="mt-4 space-y-3 text-sm text-slate-600">
+        <InfoLine label="Order" value={`${packageData.orderNumber} / ${packageData.quoteId.slice(0, 8)}`} />
+        <InfoLine label="Gerber" value={packageData.gerber?.storageKey ?? 'Missing upload record'} />
+        <InfoLine label="Board" value={`${packageData.pcb.layers} layers, ${packageData.pcb.lengthMm} x ${packageData.pcb.widthMm} mm, ${packageData.pcb.quantity} pcs`} />
+        <InfoLine label="Parser" value={analysis ? `${analysis.complexity}, confidence ${(analysis.parserConfidence * 100).toFixed(0)}%` : 'No analysis'} />
+        <InfoLine label="Supplier estimate" value={packageData.pricing.supplierEstimatedPrice == null ? 'Missing' : formatCurrency(packageData.pricing.supplierEstimatedPrice)} />
+        <InfoLine label="Client PCB" value={packageData.pricing.pcbClientPrice == null ? 'Missing' : formatCurrency(packageData.pricing.pcbClientPrice)} />
+        <InfoLine label="Shipping" value={packageData.pricing.shippingPrice == null ? 'Missing' : formatCurrency(packageData.pricing.shippingPrice)} />
+        <InfoLine label="Buffer" value={packageData.pricing.bufferUsed == null ? 'Missing' : `x${packageData.pricing.bufferUsed.toFixed(2)}`} />
+        <InfoLine label="Live API" value={packageData.liveCreateAvailable ? 'Configured' : 'Not configured'} />
+        {packageData.supplierOrderId ? <InfoLine label="Supplier ID" value={packageData.supplierOrderId} /> : null}
+      </div>
+      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-bold text-slate-600">
+        {packageData.notes.join(' ')}
+      </div>
+    </Card>
+  );
+}
+
+function InfoLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex gap-3">
+      <span className="min-w-28 font-black text-ink">{label}</span>
+      <span className="break-all">{value}</span>
     </div>
   );
 }

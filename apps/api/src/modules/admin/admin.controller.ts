@@ -11,6 +11,7 @@ import {
   UpdateShipmentDto,
 } from '../orders/dto/admin-order-update.dto';
 import { UpsertPricingRuleDto } from '../pricing/dto/upsert-pricing-rule.dto';
+import { PrepareSupplierOrderDto } from '../pricing/dto/prepare-supplier-order.dto';
 import { RecordSupplierRealPriceDto } from '../pricing/dto/record-supplier-real-price.dto';
 import { CreateTrackingEventDto } from '../tracking/dto/create-tracking-event.dto';
 import { AdminService } from './admin.service';
@@ -51,6 +52,15 @@ export class AdminController {
     @Body() dto: RecordSupplierRealPriceDto,
   ) {
     return this.adminService.recordSupplierRealPrice(admin, orderId, dto);
+  }
+
+  @Post('orders/:orderId/supplier-order')
+  prepareSupplierOrder(
+    @CurrentUser() admin: AuthenticatedUser,
+    @Param('orderId') orderId: string,
+    @Body() dto: PrepareSupplierOrderDto,
+  ) {
+    return this.adminService.prepareSupplierOrder(admin, orderId, dto);
   }
 
   @Patch('orders/:orderId/shipment')

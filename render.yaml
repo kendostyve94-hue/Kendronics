@@ -56,9 +56,13 @@ services:
         sync: false
       - key: JLCPCB_QUOTE_ENDPOINT
         sync: false
+      - key: JLCPCB_ORDER_ENDPOINT
+        sync: false
       - key: PCBWAY_API_KEY
         sync: false
       - key: PCBWAY_QUOTE_ENDPOINT
+        sync: false
+      - key: PCBWAY_ORDER_ENDPOINT
         sync: false
       - key: REQUIRE_LIVE_SUPPLIER_PRICING
         value: "false"

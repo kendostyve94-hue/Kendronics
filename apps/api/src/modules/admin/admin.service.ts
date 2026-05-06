@@ -7,10 +7,12 @@ import {
 } from '../orders/dto/admin-order-update.dto';
 import { OrdersService } from '../orders/orders.service';
 import { UpsertPricingRuleDto } from '../pricing/dto/upsert-pricing-rule.dto';
+import { PrepareSupplierOrderDto } from '../pricing/dto/prepare-supplier-order.dto';
 import { RecordSupplierRealPriceDto } from '../pricing/dto/record-supplier-real-price.dto';
 import { PricingIntelligenceRepository } from '../pricing/repositories/pricing-intelligence.repository';
 import { PricingRuleRepository } from '../pricing/repositories/pricing-rule.repository';
 import { SmartBufferService } from '../pricing/smart-buffer.service';
+import { SupplierOrderService } from '../pricing/suppliers/supplier-order.service';
 import { SupportService } from '../support/support.service';
 import { CreateTrackingEventDto } from '../tracking/dto/create-tracking-event.dto';
 import { TrackingService } from '../tracking/tracking.service';
@@ -23,6 +25,7 @@ export class AdminService {
     private readonly pricingRules: PricingRuleRepository,
     private readonly pricingIntelligence: PricingIntelligenceRepository,
     private readonly smartBuffer: SmartBufferService,
+    private readonly supplierOrderService: SupplierOrderService,
     private readonly trackingService: TrackingService,
     private readonly auditRepository: AdminAuditRepository,
     private readonly supportService: SupportService,
@@ -69,6 +72,17 @@ export class AdminService {
       supplierOrderId: dto.supplierOrderId,
       note: dto.note,
     };
+  }
+
+  async prepareSupplierOrder(admin: AuthenticatedUser, orderId: string, dto: PrepareSupplierOrderDto) {
+    const supplierOrder = await this.supplierOrderService.prepareOrder(orderId, dto);
+    await this.auditRepository.record(
+      admin.id,
+      dto.mode === 'create' ? 'admin.orders.supplier_order.create' : 'admin.orders.supplier_order.prepare',
+      'order',
+      orderId,
+    );
+    return supplierOrder;
   }
 
   async updateShipment(admin: AuthenticatedUser, orderId: string, dto: UpdateShipmentDto) {
