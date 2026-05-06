@@ -1,11 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PresignUploadDto } from './dto/presign-upload.dto';
 import { PresignedUpload } from './entities/presigned-upload.entity';
+import { GerberParserService } from './gerber-parser.service';
 import { UploadRepository } from './repositories/upload.repository';
 
 @Injectable()
 export class UploadsService {
-  constructor(private readonly uploadRepository: UploadRepository) {}
+  constructor(
+    private readonly uploadRepository: UploadRepository,
+    private readonly gerberParser: GerberParserService,
+  ) {}
 
   async createPresignedUpload(userId: string, dto: PresignUploadDto): Promise<PresignedUpload> {
     this.validateUpload(dto);
@@ -37,7 +41,13 @@ export class UploadsService {
     this.validateUpload(dto);
 
     const sanitizedFilename = dto.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
-    return this.uploadRepository.uploadFile(userId, sanitizedFilename, dto, file.buffer);
+    const analysis = this.gerberParser.analyzeZip(file.buffer);
+    const uploaded = await this.uploadRepository.uploadFile(userId, sanitizedFilename, dto, file.buffer);
+    return this.uploadRepository.recordDirectUpload(userId, sanitizedFilename, dto, uploaded.storageKey, analysis);
+  }
+
+  getAnalysis(userId: string, uploadId: string) {
+    return this.uploadRepository.findAnalysis(uploadId, userId);
   }
 
   private validateUpload(dto: PresignUploadDto): void {

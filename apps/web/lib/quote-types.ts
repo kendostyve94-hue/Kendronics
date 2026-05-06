@@ -68,6 +68,14 @@ export interface QuoteConfig {
   liveShippingCurrency?: string;
   liveShippingTransitTime?: string;
   insuranceRequired: boolean;
+  parserConfidence?: number;
+  gerberComplexity?: 'low' | 'medium' | 'high' | 'unknown';
+  holesCount?: number;
+  hasSlots?: boolean;
+  detectedLayers?: number;
+  detectedWidthMm?: number;
+  detectedHeightMm?: number;
+  boardAreaCm2?: number;
 }
 
 export interface PricingBreakdown {

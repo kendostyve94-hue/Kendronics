@@ -241,6 +241,8 @@ function calculateSmartBuffer(config: QuoteConfig, supplierPrice: number): numbe
   if (config.surfaceFinish === 'ENIG') buffer += 0.06;
   if (config.blindBuriedVias || config.viaInPad) buffer += 0.08;
   if (config.castellatedHoles || config.edgePlating) buffer += 0.05;
+  if (config.hasSlots) buffer += 0.05;
+  if (typeof config.parserConfidence === 'number' && config.parserConfidence < 0.8) buffer += 0.1;
 
   const complexity = getSmartBufferComplexity(config);
   if (complexity === 'high') buffer += 0.1;
@@ -264,6 +266,10 @@ function getSmartBufferBucketKey(config: QuoteConfig, supplierPrice: number): st
 }
 
 function getSmartBufferComplexity(config: QuoteConfig): 'low' | 'medium' | 'high' {
+  if (config.gerberComplexity === 'high' || config.gerberComplexity === 'medium' || config.gerberComplexity === 'low') {
+    return config.gerberComplexity;
+  }
+
   const specialCount = countTrue([
     config.impedanceControl,
     config.goldFingers,

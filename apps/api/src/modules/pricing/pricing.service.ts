@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { UploadsService } from '../uploads/uploads.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { PricingBreakdown, Quote } from './entities/quote.entity';
 import { PricingRuleRepository } from './repositories/pricing-rule.repository';
@@ -18,22 +19,25 @@ export class PricingService {
     private readonly pricingRules: PricingRuleRepository,
     private readonly prisma: PrismaService,
     private readonly smartBuffer: SmartBufferService,
+    private readonly uploadsService: UploadsService,
   ) {}
 
   async createQuote(userId: string, dto: CreateQuoteDto): Promise<Quote> {
-    if (dto.productType === 'pcb_assembly' && (!dto.bomFileId || !dto.cplFileId)) {
+    const effectiveDto = await this.applyGerberAnalysis(userId, dto);
+
+    if (effectiveDto.productType === 'pcb_assembly' && (!effectiveDto.bomFileId || !effectiveDto.cplFileId)) {
       throw new BadRequestException('PCB assembly requires BOM and CPL files.');
     }
 
-    const supplierEstimate = await this.getLiveSupplierEstimate(dto);
+    const supplierEstimate = await this.getLiveSupplierEstimate(effectiveDto);
     if (supplierEstimate) {
       const smartPrice = await this.smartBuffer.priceQuote({
-        dto,
+        dto: effectiveDto,
         supplier: supplierEstimate.supplier,
         supplierEstimatedPrice: supplierEstimate.manufacturingPrice,
-        shippingPrice: this.customerShippingPrice(dto, supplierEstimate.shippingPrice),
+        shippingPrice: this.customerShippingPrice(effectiveDto, supplierEstimate.shippingPrice),
       });
-      return this.persistQuote(userId, dto, this.toSmartBufferBreakdown(smartPrice), smartPrice);
+      return this.persistQuote(userId, effectiveDto, this.toSmartBufferBreakdown(smartPrice), smartPrice);
     }
 
     if (this.isLiveSupplierPricingRequired()) {
@@ -43,20 +47,46 @@ export class PricingService {
     }
 
     const rules = await this.pricingRules.getActiveRules();
-    const layerMultiplier = rules.layerMultipliers[dto.layers];
+    const layerMultiplier = rules.layerMultipliers[effectiveDto.layers];
     if (!layerMultiplier) {
       throw new BadRequestException('Unsupported PCB layer count.');
     }
 
-    const areaCm2 = (dto.lengthMm * dto.widthMm) / 100;
-    const manufacturing = areaCm2 * dto.quantity * rules.areaRate * layerMultiplier;
+    const areaCm2 = (effectiveDto.lengthMm * effectiveDto.widthMm) / 100;
+    const manufacturing = areaCm2 * effectiveDto.quantity * rules.areaRate * layerMultiplier;
     const smartPrice = await this.smartBuffer.priceQuote({
-      dto,
+      dto: effectiveDto,
       supplier: 'local_calibrated_supplier_estimate',
       supplierEstimatedPrice: manufacturing,
-      shippingPrice: this.customerShippingPrice(dto, rules.zoneBaseDeliveryFee),
+      shippingPrice: this.customerShippingPrice(effectiveDto, rules.zoneBaseDeliveryFee),
     });
-    return this.persistQuote(userId, dto, this.toSmartBufferBreakdown(smartPrice), smartPrice);
+    return this.persistQuote(userId, effectiveDto, this.toSmartBufferBreakdown(smartPrice), smartPrice);
+  }
+
+  private async applyGerberAnalysis(userId: string, dto: CreateQuoteDto): Promise<CreateQuoteDto> {
+    const analysis = await this.uploadsService.getAnalysis(userId, dto.gerberFileId);
+    if (!analysis) return dto;
+
+    return {
+      ...dto,
+      layers: analysis.detectedLayers ?? dto.layers,
+      lengthMm: analysis.heightMm && analysis.widthMm ? Math.max(analysis.widthMm, analysis.heightMm) : dto.lengthMm,
+      widthMm: analysis.heightMm && analysis.widthMm ? Math.min(analysis.widthMm, analysis.heightMm) : dto.widthMm,
+      configSnapshot: {
+        ...(dto.configSnapshot ?? {}),
+        gerberAnalysisApplied: true,
+        parserConfidence: analysis.parserConfidence,
+        gerberComplexity: analysis.complexity,
+        holesCount: analysis.holesCount,
+        hasSlots: analysis.hasSlots,
+        detectedLayers: analysis.detectedLayers,
+        detectedWidthMm: analysis.widthMm,
+        detectedHeightMm: analysis.heightMm,
+        boardAreaCm2: analysis.boardAreaCm2,
+        outlineSource: analysis.outlineSource,
+        gerberWarnings: analysis.warnings,
+      },
+    };
   }
 
   private async persistQuote(

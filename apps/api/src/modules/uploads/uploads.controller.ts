@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Param, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -29,5 +29,15 @@ export class UploadsController {
     },
   ) {
     return this.uploadsService.uploadFileThroughApi(user.id, file);
+  }
+
+  @Get(':uploadId/analysis')
+  async analysis(@CurrentUser() user: AuthenticatedUser, @Param('uploadId') uploadId: string) {
+    const analysis = await this.uploadsService.getAnalysis(user.id, uploadId);
+    if (!analysis) {
+      throw new NotFoundException('Gerber analysis not found for this upload.');
+    }
+
+    return analysis;
   }
 }

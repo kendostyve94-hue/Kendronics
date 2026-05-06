@@ -204,6 +204,9 @@ export class SmartBufferService {
     if (this.booleanConfig(config.castellatedHoles) || this.booleanConfig(config.edgePlating)) {
       reasons.push(reason('edge_processes', 'Edge plating or castellations add fabrication risk.', 0.05));
     }
+    if (this.booleanConfig(config.hasSlots)) {
+      reasons.push(reason('slots_detected', 'Slots detected in Gerber drill data add routing risk.', 0.05));
+    }
     if (bucket.complexity === 'high') reasons.push(reason('high_complexity', 'High complexity bucket adds extra protection.', 0.1));
     else if (bucket.complexity === 'medium') reasons.push(reason('medium_complexity', 'Medium complexity bucket adds moderate protection.', 0.05));
 
@@ -235,6 +238,9 @@ export class SmartBufferService {
 
   private complexity(dto: CreateQuoteDto): BufferBucketDescriptor['complexity'] {
     const config = dto.configSnapshot ?? {};
+    if (config.gerberComplexity === 'high' || config.gerberComplexity === 'medium' || config.gerberComplexity === 'low') {
+      return config.gerberComplexity;
+    }
     const specialCount = [
       config.impedanceControl,
       config.goldFingers,

@@ -118,6 +118,17 @@ type QuoteSaveState = {
 type UploadResponse = {
   uploadId: string;
   uploadUrl?: string;
+  analysis?: {
+    widthMm?: number;
+    heightMm?: number;
+    detectedLayers?: number;
+    holesCount: number;
+    hasSlots: boolean;
+    boardAreaCm2?: number;
+    complexity: 'low' | 'medium' | 'high' | 'unknown';
+    parserConfidence: number;
+    warnings: string[];
+  };
 };
 
 type QuotePanelId = 'base' | 'specs' | 'highSpec' | 'advanced';
@@ -214,59 +225,46 @@ export default function QuotePage() {
         throw new Error('Connectez-vous avant de téléverser un fichier Gerber.');
       }
 
-      let presignResponse: Response;
-      try {
-        presignResponse = await fetch(`${apiBaseUrl}/api/uploads/presign`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            filename: file.name,
-            mimeType: file.type || 'application/zip',
-            fileSizeBytes: file.size,
-          }),
-        });
-      } catch {
-        throw new Error("Impossible de contacter l’API pour préparer l’upload.");
-      }
-
-      if (!presignResponse.ok) {
-        const error = await presignResponse.json().catch(() => null);
-        throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Upload impossible pour le moment.');
-      }
-
-      let uploadedFile = (await presignResponse.json()) as UploadResponse;
-      let uploadResponse: Response;
-      try {
-        if (!uploadedFile.uploadUrl) {
-          throw new Error('URL upload absente.');
-        }
-
-        uploadResponse = await fetch(uploadedFile.uploadUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/zip' },
-          body: file,
-        });
-      } catch {
-        setGerberUpload({ status: 'uploading', message: 'Upload direct bloqué, relais sécurisé via API...' });
-        uploadedFile = await uploadGerberThroughApi(file, session.accessToken);
-        uploadResponse = new Response(null, { status: 200 });
-      }
-
-      if (!uploadResponse.ok) {
-        throw new Error(`Le stockage privé a refusé le fichier (${uploadResponse.status}).`);
-      }
-
-      update('gerberFileName', file.name);
-      setGerberUpload({ status: 'uploaded', uploadId: uploadedFile.uploadId, message: 'ZIP Gerber téléversé en stockage privé.' });
+      const uploadedFile = await uploadGerberThroughApi(file, session.accessToken);
+      applyGerberAnalysis(file.name, uploadedFile.analysis);
+      setGerberUpload({
+        status: 'uploaded',
+        uploadId: uploadedFile.uploadId,
+        message: uploadedFile.analysis
+          ? `Gerber analysé: ${uploadedFile.analysis.detectedLayers ?? config.layers} couches, ${formatDimension(uploadedFile.analysis.widthMm)} x ${formatDimension(uploadedFile.analysis.heightMm)} mm.`
+          : 'ZIP Gerber téléversé. Analyse indisponible.',
+      });
     } catch (error) {
       setGerberUpload({
         status: 'error',
         message: error instanceof Error ? error.message : 'Upload impossible pour le moment.',
       });
     }
+  }
+
+  function applyGerberAnalysis(fileName: string, analysis: UploadResponse['analysis']) {
+    setSaved(false);
+    setQuoteSave({ status: 'idle' });
+    setConfig((current) => {
+      if (!analysis) return { ...current, gerberFileName: fileName };
+
+      return {
+        ...current,
+        gerberFileName: fileName,
+        layers: analysis.detectedLayers ?? current.layers,
+        length: analysis.widthMm && analysis.heightMm ? Math.max(analysis.widthMm, analysis.heightMm) : current.length,
+        width: analysis.widthMm && analysis.heightMm ? Math.min(analysis.widthMm, analysis.heightMm) : current.width,
+        unit: 'mm',
+        parserConfidence: analysis.parserConfidence,
+        gerberComplexity: analysis.complexity,
+        holesCount: analysis.holesCount,
+        hasSlots: analysis.hasSlots,
+        detectedLayers: analysis.detectedLayers,
+        detectedWidthMm: analysis.widthMm,
+        detectedHeightMm: analysis.heightMm,
+        boardAreaCm2: analysis.boardAreaCm2,
+      };
+    });
   }
 
   async function uploadGerberThroughApi(file: File, accessToken: string): Promise<UploadResponse> {
@@ -660,6 +658,10 @@ export default function QuotePage() {
 
 function toMillimeters(value: number, unit: QuoteConfig['unit']): number {
   return unit === 'inch' ? Math.round(value * 25.4 * 100) / 100 : value;
+}
+
+function formatDimension(value: number | undefined): string {
+  return typeof value === 'number' && Number.isFinite(value) ? value.toFixed(2) : '?';
 }
 
 function rememberCustomerOrder(orderId: string) {
