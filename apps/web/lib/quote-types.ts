@@ -78,6 +78,8 @@ export interface PricingBreakdown {
   franceToAfricaDelivery: number;
   paymentProcessingFee: number;
   kendronicsServiceFee: number;
+  supplierEstimatedPrice?: number;
+  pcbClientPrice?: number;
   smartBufferMultiplier?: number;
   smartBufferRiskScore?: number;
   smartBufferConfidence?: 'low' | 'medium' | 'high';

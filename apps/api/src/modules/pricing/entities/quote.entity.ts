@@ -12,6 +12,7 @@ export interface PricingBreakdown {
   finalTotal: number;
   supplier?: string;
   supplierEstimatedPrice?: number;
+  pcbClientPrice?: number;
   smartBufferMultiplier?: number;
   smartBufferRiskScore?: number;
   smartBufferConfidence?: 'low' | 'medium' | 'high';

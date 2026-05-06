@@ -117,6 +117,7 @@ export class PricingService {
       finalTotal: round(result.totalClientPrice),
       supplier: result.supplier,
       supplierEstimatedPrice: round(result.supplierEstimatedPrice),
+      pcbClientPrice: round(result.pcbClientPrice),
       smartBufferMultiplier: result.bufferUsed,
       smartBufferRiskScore: result.riskScore,
       smartBufferConfidence: result.confidence,

@@ -64,6 +64,10 @@ export function PricingSummary({
 
   const selectedCountry = countries.find((country) => country.iso2 === destinationCountry) ?? countries[0];
   const isSupplierPrice = pricing.pricingSource === 'supplier_api';
+  const supplierEstimatedPrice = pricing.supplierEstimatedPrice ?? pricing.partnerManufacturingCost;
+  const smartBufferMultiplier = pricing.smartBufferMultiplier ?? 1;
+  const smartBufferAmount = Math.max(0, supplierEstimatedPrice * smartBufferMultiplier - supplierEstimatedPrice);
+  const pcbClientPrice = pricing.pcbClientPrice ?? supplierEstimatedPrice + smartBufferAmount + pricing.kendronicsServiceFee;
   const filteredCountries = useMemo(() => {
     const query = countryQuery.trim().toLowerCase();
     if (!query) return countries;
@@ -120,28 +124,20 @@ export function PricingSummary({
         </div>
 
         <div className="mt-3 space-y-2 border-b border-slate-200 pb-3 text-xs sm:mt-5 sm:space-y-3 sm:pb-4 sm:text-sm">
-          <FeeRow label="Recouvrement des vias" value={pricing.viaCoveringFee} />
-          <FeeRow label="Finition de surface" value={pricing.surfaceFinishFee} />
-          <FeeRow label="Livraison Afrique" value={pricing.franceToAfricaDelivery} highlight />
-        </div>
-
-        <div className="border-b border-slate-200 py-3 sm:py-4">
-          <div className="mb-2 flex items-center gap-2 sm:mb-3">
-            <h3 className="text-sm font-black text-slate-950">Délais production PCB</h3>
-            <span className="grid h-4 w-4 place-items-center rounded-full bg-slate-300 text-[10px] font-black text-white">?</span>
-          </div>
-          <ProductionSpeedRow label="2 jours" value="standard" price={0} active={productionSpeed === 'standard'} onChange={onProductionSpeedChange} />
-          <ProductionSpeedRow label="24 heures" value="express_24h" price={pricing.productionSpeedFee || 7.5} active={productionSpeed === 'express_24h'} onChange={onProductionSpeedChange} />
+          <FeeRow label="Prix fournisseur estimé" value={supplierEstimatedPrice} />
+          <FeeRow label={`Buffer intelligent x${smartBufferMultiplier.toFixed(2)}`} value={smartBufferAmount} />
+          <FeeRow label="Service Kendronics" value={pricing.kendronicsServiceFee} />
+          <FeeRow label="Sous-total PCB" value={pcbClientPrice} strong />
+          <FeeRow label="Livraison choisie" value={pricing.franceToAfricaDelivery} highlight />
         </div>
 
         <div className="py-3 sm:py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-base font-black text-slate-950 sm:text-lg">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif'}</h3>
+              <h3 className="text-base font-black text-slate-950 sm:text-lg">{isSupplierPrice ? 'Prix live Kendronics' : 'Prix estimé Kendronics'}</h3>
             </div>
             <div className="text-right text-base font-black sm:text-lg">
-              <span className="mr-1 text-slate-400 line-through sm:mr-2">${pricing.displayTotalBeforeAdjustment.toFixed(2)}</span>
-              <span className="block text-[#ff7a00] sm:inline">${pricing.finalTotal.toFixed(2)}</span>
+              <span className="block text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -207,7 +203,7 @@ export function PricingSummary({
             <div className="mb-2 flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-sm font-black text-slate-950">Détails du prix</h2>
-                <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif avant validation.'}</p>
+                <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{isSupplierPrice ? 'Prix live Kendronics.' : 'Prix estimé avec buffer intelligent.'}</p>
               </div>
               <button type="button" className="grid h-8 w-8 place-items-center rounded-full bg-white text-base font-black text-slate-700" onClick={() => setPriceDetailsOpen(false)} aria-label="Fermer">
                 x
@@ -216,21 +212,16 @@ export function PricingSummary({
 
             <div className="rounded-sm border border-slate-200 bg-white p-2.5">
               <div className="space-y-2 border-b border-slate-200 pb-2 text-xs">
-                <FeeRow label="Recouvrement des vias" value={pricing.viaCoveringFee} />
-                <FeeRow label="Finition de surface" value={pricing.surfaceFinishFee} />
-                <FeeRow label="Livraison Afrique" value={pricing.franceToAfricaDelivery} highlight />
-              </div>
-
-              <div className="border-b border-slate-200 py-2">
-                <h3 className="mb-1 text-xs font-black text-slate-950">Délais production</h3>
-                <ProductionSpeedRow label="2 jours" value="standard" price={0} active={productionSpeed === 'standard'} onChange={onProductionSpeedChange} />
-                <ProductionSpeedRow label="24 heures" value="express_24h" price={pricing.productionSpeedFee || 7.5} active={productionSpeed === 'express_24h'} onChange={onProductionSpeedChange} />
+                <FeeRow label="Prix fournisseur estimé" value={supplierEstimatedPrice} />
+                <FeeRow label={`Buffer intelligent x${smartBufferMultiplier.toFixed(2)}`} value={smartBufferAmount} />
+                <FeeRow label="Service Kendronics" value={pricing.kendronicsServiceFee} />
+                <FeeRow label="Sous-total PCB" value={pcbClientPrice} strong />
+                <FeeRow label="Livraison choisie" value={pricing.franceToAfricaDelivery} highlight />
               </div>
 
               <div className="flex items-end justify-between gap-4 pt-2">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{isSupplierPrice ? 'Prix fournisseur live' : 'Prix indicatif'}</p>
-                  <p className="mt-1 text-xs text-slate-500 line-through">${pricing.displayTotalBeforeAdjustment.toFixed(2)}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">{isSupplierPrice ? 'Prix live' : 'Prix estimé'}</p>
                 </div>
                 <p className="text-xl font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
               </div>
@@ -354,7 +345,7 @@ export function PricingSummary({
         <p className="mt-3 border-t border-slate-200 pt-3 text-xs leading-5 text-slate-500 sm:mt-4">
           {isSupplierPrice
             ? pricing.transparencyNote
-            : 'Ce montant estime la fabrication, la logistique et les frais de service à partir des paramètres sélectionnés. Une vérification peut être nécessaire avant confirmation finale.'}
+            : 'Le PCB est calculé avec un prix fournisseur estimé, un buffer intelligent et un service Kendronics visible. La livraison reste séparée et choisie par le client.'}
         </p>
       </div>
     </aside>
@@ -434,11 +425,11 @@ function CountryDropdown({
   );
 }
 
-function FeeRow({ label, value, highlight = false }: { label: string; value: number; highlight?: boolean }) {
+function FeeRow({ label, value, highlight = false, strong = false }: { label: string; value: number; highlight?: boolean; strong?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className={highlight ? 'font-black text-slate-950' : undefined}>{label}</span>
-      <span className={highlight ? 'font-black text-[#ff7a00]' : undefined}>${value.toFixed(2)}</span>
+      <span className={highlight || strong ? 'font-black text-slate-950' : undefined}>{label}</span>
+      <span className={highlight ? 'font-black text-[#ff7a00]' : strong ? 'font-black text-slate-950' : undefined}>${value.toFixed(2)}</span>
     </div>
   );
 }

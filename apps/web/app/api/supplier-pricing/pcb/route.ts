@@ -40,23 +40,29 @@ export async function POST(request: Request) {
 
   const manufacturingPrice = Number(data.priceList?.[0]?.Price ?? 0);
   const shippingPrice = Number(data.Shipping?.ShipCost ?? 0);
-  const subtotal = manufacturingPrice + shippingPrice;
-  const kendronicsServiceFee = Math.max(10, subtotal * 0.145);
-  const paymentProcessingFee = (subtotal + kendronicsServiceFee) * 0.029 + 0.3;
+  const smartBufferMultiplier = calculateSmartBuffer(manufacturingPrice, payload);
+  const kendronicsServiceFee = getVisibleServiceFee(manufacturingPrice);
+  const pcbClientPrice = manufacturingPrice * smartBufferMultiplier + kendronicsServiceFee;
+  const finalTotal = pcbClientPrice + shippingPrice;
 
   return NextResponse.json({
     partnerManufacturingCost: round(manufacturingPrice),
     partnerHandlingCost: 0,
-    chinaToFranceLogistics: round(shippingPrice),
+    chinaToFranceLogistics: 0,
     franceProcessingFee: 0,
-    franceToAfricaDelivery: 0,
-    paymentProcessingFee: round(paymentProcessingFee),
+    franceToAfricaDelivery: round(shippingPrice),
+    paymentProcessingFee: 0,
     kendronicsServiceFee: round(kendronicsServiceFee),
+    supplierEstimatedPrice: round(manufacturingPrice),
+    pcbClientPrice: round(pcbClientPrice),
+    smartBufferMultiplier: roundRatio(smartBufferMultiplier),
+    smartBufferRiskScore: roundRatio((smartBufferMultiplier - 1) / 0.7),
+    smartBufferConfidence: 'low',
     viaCoveringFee: 0,
     surfaceFinishFee: 0,
     productionSpeedFee: 0,
-    finalTotal: round(subtotal + kendronicsServiceFee + paymentProcessingFee),
-    displayTotalBeforeAdjustment: round(subtotal + kendronicsServiceFee + paymentProcessingFee),
+    finalTotal: round(finalTotal),
+    displayTotalBeforeAdjustment: round(finalTotal),
     deliveryWeightKg: 0,
     shippingCarrier: data.Shipping?.ShipName ?? 'Supplier shipping',
     estimatedShippingTime: data.Shipping?.DeliveryTime ?? 'Supplier estimate',
@@ -66,4 +72,35 @@ export async function POST(request: Request) {
 
 function round(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function roundRatio(value: number): number {
+  return Math.round(value * 10000) / 10000;
+}
+
+function calculateSmartBuffer(manufacturingPrice: number, payload: Record<string, unknown>): number {
+  let buffer = 1.1;
+
+  if (manufacturingPrice < 10) buffer += 0.25;
+  else if (manufacturingPrice < 30) buffer += 0.15;
+  else if (manufacturingPrice < 100) buffer += 0.08;
+  else buffer += 0.04;
+
+  const layers = Number(payload.layers ?? 2);
+  if (layers >= 6) buffer += 0.15;
+  else if (layers >= 4) buffer += 0.08;
+
+  const surfaceFinish = String(payload.surfaceFinish ?? '').toLowerCase();
+  if (surfaceFinish.includes('enig')) buffer += 0.06;
+
+  if (payload.blindBuriedVias === 'Yes' || payload.viaInPad === 'Yes') buffer += 0.08;
+  if (payload.castellatedHoles === 'Yes' || payload.edgePlating === 'Yes') buffer += 0.05;
+
+  return Math.min(1.7, Math.max(1.08, buffer));
+}
+
+function getVisibleServiceFee(supplierPrice: number): number {
+  if (supplierPrice < 10) return 3;
+  if (supplierPrice < 50) return 4;
+  return 5;
 }

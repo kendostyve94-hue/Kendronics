@@ -566,12 +566,12 @@ function buildOrderDetail(orderPayload: CustomerOrderSummary, trackingPayload: u
 
 function breakdownLines(breakdown: Record<string, number>): PricingLineItem[] {
   const labels: Record<string, string> = {
-    partnerManufacturingCost: 'Production PCB',
+    partnerManufacturingCost: 'Prix fournisseur estimé',
     partnerHandlingCost: 'Traitement fournisseur',
-    ChinaToFranceLogistics: 'Logistique Chine-France',
-    FranceProcessingFee: 'Traitement France',
-    FranceToAfricaDelivery: 'Livraison Afrique',
-    customsRiskBuffer: 'Marge douane',
+    ChinaToFranceLogistics: 'Logistique fournisseur',
+    FranceProcessingFee: 'Traitement fournisseur',
+    FranceToAfricaDelivery: 'Livraison choisie',
+    customsRiskBuffer: 'Buffer intelligent',
     paymentProcessingFee: 'Frais paiement',
     KendronicsServiceFee: 'Service Kendronics',
     taxesIfApplicable: 'Taxes applicables',

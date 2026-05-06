@@ -40,7 +40,7 @@ const zoneDeliveryDays: Record<string, number> = {
 };
 
 const transparencyNote =
-  'Prix calcule par Kendronics a partir des parametres selectionnes. Le prix final peut etre valide apres verification fournisseur.';
+  'Prix PCB calcule avec le modele Kendronics: estimation fournisseur, buffer intelligent, service visible et livraison separee.';
 
 export class LocalPricingProvider implements SupplierPricingProvider {
   name = 'local_calibrated';
@@ -184,25 +184,28 @@ function calculateLocalCalibratedQuote(config: QuoteConfig): PricingBreakdown {
   const smartBufferMultiplier = calculateSmartBuffer(config, supplierEstimatedPrice);
   const kendronicsServiceFee = getVisibleServiceFee(supplierEstimatedPrice);
   const paymentProcessingFee = 0;
-  const finalTotal = supplierEstimatedPrice * smartBufferMultiplier + kendronicsServiceFee + franceToAfricaDelivery;
+  const pcbClientPrice = supplierEstimatedPrice * smartBufferMultiplier + kendronicsServiceFee;
+  const finalTotal = pcbClientPrice + franceToAfricaDelivery;
   const leadTimeDays = getLeadTimeDays(config, country.logisticsZone);
-  const displayTotalBeforeAdjustment = finalTotal + Math.max(2, finalTotal * 0.08);
+  const displayTotalBeforeAdjustment = finalTotal;
 
   return {
-    partnerManufacturingCost: round(partnerManufacturingCost),
-    partnerHandlingCost: round(partnerHandlingCost),
-    chinaToFranceLogistics: round(chinaToFranceLogistics),
-    franceProcessingFee: round(franceProcessingFee),
+    partnerManufacturingCost: round(supplierEstimatedPrice),
+    partnerHandlingCost: 0,
+    chinaToFranceLogistics: 0,
+    franceProcessingFee: 0,
     franceToAfricaDelivery: round(franceToAfricaDelivery),
     paymentProcessingFee: round(paymentProcessingFee),
     kendronicsServiceFee: round(kendronicsServiceFee),
+    supplierEstimatedPrice: round(supplierEstimatedPrice),
+    pcbClientPrice: round(pcbClientPrice),
     smartBufferMultiplier: roundRatio(smartBufferMultiplier),
     smartBufferRiskScore: roundRatio((smartBufferMultiplier - 1) / 0.7),
     smartBufferConfidence: 'low',
     smartBufferBucketKey: getSmartBufferBucketKey(config, supplierEstimatedPrice),
-    viaCoveringFee: round(viaCoveringFee),
-    surfaceFinishFee: round(surfaceFinishFee),
-    productionSpeedFee: round(productionSpeedFee),
+    viaCoveringFee: 0,
+    surfaceFinishFee: 0,
+    productionSpeedFee: 0,
     finalTotal: round(finalTotal),
     displayTotalBeforeAdjustment: round(displayTotalBeforeAdjustment),
     deliveryWeightKg: round(volumeWeightKg),
