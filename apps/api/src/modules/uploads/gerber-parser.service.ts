@@ -143,23 +143,25 @@ export class GerberParserService {
     const integerDigits = format ? Number(format[1]) : 2;
     const decimalDigits = format ? Number(format[2]) : units === 'inch' ? 5 : 4;
     const scale = units === 'inch' ? 25.4 : 1;
-    const coordinatePattern = /X(-?\d+)Y(-?\d+)/gi;
+    const coordinatePattern = /X(-?\d+)|Y(-?\d+)/gi;
     let match: RegExpExecArray | null;
     let minX = Number.POSITIVE_INFINITY;
     let maxX = Number.NEGATIVE_INFINITY;
     let minY = Number.POSITIVE_INFINITY;
     let maxY = Number.NEGATIVE_INFINITY;
+    let currentX: number | undefined;
+    let currentY: number | undefined;
     let count = 0;
 
     while ((match = coordinatePattern.exec(text))) {
-      const x = this.decodeCoordinate(match[1], integerDigits, decimalDigits) * scale;
-      const y = this.decodeCoordinate(match[2], integerDigits, decimalDigits) * scale;
-      if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+      if (match[1]) currentX = this.decodeCoordinate(match[1], integerDigits, decimalDigits) * scale;
+      if (match[2]) currentY = this.decodeCoordinate(match[2], integerDigits, decimalDigits) * scale;
+      if (typeof currentX !== 'number' || typeof currentY !== 'number' || !Number.isFinite(currentX) || !Number.isFinite(currentY)) continue;
 
-      minX = Math.min(minX, x);
-      maxX = Math.max(maxX, x);
-      minY = Math.min(minY, y);
-      maxY = Math.max(maxY, y);
+      minX = Math.min(minX, currentX);
+      maxX = Math.max(maxX, currentX);
+      minY = Math.min(minY, currentY);
+      maxY = Math.max(maxY, currentY);
       count += 1;
     }
 
