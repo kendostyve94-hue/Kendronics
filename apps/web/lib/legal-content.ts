@@ -67,6 +67,64 @@ export const termsDocument: LegalDocument = {
   ],
 };
 
+Object.assign(termsDocument, {
+  eyebrow: 'Cadre legal',
+  description:
+    'Documents de reference pour utiliser Kendronics, commander des PCB, gerer les fichiers, le paiement, la confidentialite et les cookies.',
+  sections: [
+    {
+      id: 'conditions-generales-de-vente',
+      title: 'Conditions Generales de Vente',
+      body: [
+        'Les presentes Conditions Generales de Vente (ci-apres les « CGV ») ont pour objet de definir les droits et obligations contractuels applicables a toute commande passee sur la plateforme Kendronics, accessible via le site internet exploite par l’editeur.',
+        'Kendronics est une plateforme digitale specialisee dans la mise en relation entre des utilisateurs souhaitant faire fabriquer des circuits imprimes (PCB) et des partenaires industriels tiers disposant des capacites techniques necessaires a leur production.',
+        'Le service propose repose sur une infrastructure logicielle permettant notamment : la configuration technique de circuits imprimes a partir de fichiers fournis par l’utilisateur, la generation automatisee de devis, la gestion de la commande, la coordination logistique internationale.',
+        'Il est expressement precise que Kendronics n’intervient pas en qualite de fabricant, mais exclusivement en qualite d’intermediaire technique et commercial.',
+        'Toute commande implique l’acceptation sans reserve des presentes CGV. voir plus...',
+      ],
+    },
+    {
+      id: 'conditions-generales-utilisation',
+      title: 'Conditions Generales d’Utilisation',
+      body: [
+        'Les presentes Conditions Generales d’Utilisation (ci-apres les « CGU ») ont pour objet de definir les modalites d’acces et d’utilisation de la plateforme Kendronics, ainsi que les droits et obligations des utilisateurs.',
+        'La plateforme Kendronics constitue un service numerique permettant la configuration, la commande et le suivi de circuits imprimes (PCB), via une interface connectant les utilisateurs a des partenaires industriels.',
+        'Toute utilisation du site implique l’acceptation pleine, entiere et sans reserve des presentes CGU.voir plus...',
+      ],
+    },
+    {
+      id: 'politique-confidentialite',
+      title: 'Politique de Confidentialite',
+      body: [
+        'La presente politique de confidentialite a pour objet d’informer les utilisateurs de la plateforme Kendronics sur les modalites de collecte, de traitement, de stockage et de protection de leurs donnees personnelles.',
+        'Kendronics attache une importance particuliere au respect de la vie privee et s’engage a traiter les donnees personnelles dans le respect des dispositions du Reglement General sur la Protection des Donnees (RGPD) ainsi que de la legislation nationale applicable.',
+        'L’utilisateur est invite a lire attentivement le present document afin de comprendre la maniere dont ses donnees sont utilisees. voir plus...',
+      ],
+    },
+    {
+      id: 'politique-cookies',
+      title: 'Politique de Cookies',
+      body: [
+        'La presente politique de cookies a pour objectif d’informer les utilisateurs de la plateforme Kendronics sur l’utilisation des cookies et technologies similaires lors de la navigation sur le site.',
+        'Elle precise notamment : les types de cookies utilises, les finalites de ces cookies, les modalites de gestion et de consentement, les droits des utilisateurs.',
+        'Cette politique s’inscrit dans le respect des exigences du Reglement General sur la Protection des Donnees (RGPD) et des recommandations de la CNIL. voir plus...',
+      ],
+    },
+    {
+      id: 'mentions-legales',
+      title: 'Mentions legales',
+      body: [
+        'Le present site internet, accessible a l’adresse kendronics.com (ci-apres le « Site »), est edite par : Kendronics, [Nom complet ou raison sociale a completer], [Statut juridique : SAS / SARL / Auto-entrepreneur], [Numero d’immatriculation : RCS ou equivalent], [Numero SIRET le cas echeant], [Numero de TVA intracommunautaire si applicable], Adresse du siege social : [adresse complete].',
+        'Adresse electronique : contact.kendronics@gmail.com.',
+        'Le directeur de la publication est : Loic NIANZE KENDONG.',
+        'Kendronics est une entreprise specialisee dans la mise en relation entre des utilisateurs souhaitant faire fabriquer des circuits imprimes (PCB) et des partenaires de fabrication industriels certifie.',
+        'Le service propose comprend notamment : la configuration de circuits imprimes, la transmission de fichiers techniques, la generation de devis automatises, la coordination de la fabrication, l’organisation de la livraison internationale.',
+        'Kendronics agit exclusivement en qualite d’intermediaire technique et commercial et ne realise pas directement la fabrication des produits. voir plus...',
+      ],
+    },
+  ],
+} satisfies Pick<LegalDocument, 'eyebrow' | 'description' | 'sections'>);
+
 export const privacyDocument: LegalDocument = {
   title: 'Privacy Policy',
   eyebrow: 'Privacy',
