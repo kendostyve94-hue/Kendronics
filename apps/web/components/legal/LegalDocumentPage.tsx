@@ -9,11 +9,11 @@ const heroImage =
   'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2400&q=85';
 
 const legalDocumentLinks = [
-  ['Conditions Générales de Vente', '/terms'],
-  ['Conditions Générales d’Utilisation', '/terms'],
-  ['Politique de confidentialité', '/privacy'],
-  ['Politique de cookies', '/cookie-policy'],
-  ['Mentions légales', '/terms'],
+  ['Conditions Générales de Vente', '/terms#conditions-generales-de-vente'],
+  ['Conditions Générales d’Utilisation', '/terms#conditions-generales-utilisation'],
+  ['Politique de confidentialité', '/terms#politique-confidentialite'],
+  ['Politique de cookies', '/terms#politique-cookies'],
+  ['Mentions légales', '/terms#mentions-legales'],
 ];
 
 export function LegalDocumentPage({ document }: { document: LegalDocument }) {
@@ -37,30 +37,32 @@ export function LegalDocumentPage({ document }: { document: LegalDocument }) {
       </section>
 
       <section className="mx-auto max-w-[1440px] px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
-          <Card glass className="p-5">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Dernière mise à jour</p>
-            <p className="mt-2 text-lg font-black text-ink">{document.lastUpdated}</p>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Pour toute question liée à ces documents, contactez le support Kendronics.
-            </p>
-          </Card>
-
-          <Card className="p-5">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Documents</p>
-            <div className="mt-4 grid gap-2 text-sm font-black sm:grid-cols-2">
-              {legalDocumentLinks.map(([label, href]) => (
-                <a key={label} className="block rounded-xl border border-slate-200 px-3 py-3 text-slate-600 transition hover:border-sky-200 hover:text-deepblue" href={href}>
-                  {label}
-                </a>
-              ))}
+        <Card glass className="p-5 sm:p-6">
+          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.4fr] lg:items-start">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Dernière mise à jour</p>
+              <p className="mt-2 text-lg font-black text-ink">{document.lastUpdated}</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                Pour toute question liée à ces documents, contactez le support Kendronics.
+              </p>
             </div>
-          </Card>
-        </div>
+
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Documents</p>
+              <div className="mt-4 grid gap-2 text-sm font-black sm:grid-cols-2">
+                {legalDocumentLinks.map(([label, href]) => (
+                  <a key={label} className="block rounded-xl border border-slate-200 bg-white/70 px-3 py-3 text-slate-600 transition hover:border-sky-200 hover:text-deepblue" href={href}>
+                    {label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Card>
 
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
           {document.sections.map((section) => (
-            <Card key={section.title} className="p-6 sm:p-7">
+            <Card key={section.title} id={section.id} className="scroll-mt-28 p-6 sm:p-7">
               <h2 className="text-2xl font-black tracking-tight text-ink">{section.title}</h2>
               <div className="mt-4 space-y-4">
                 {section.body.map((paragraph) => (

@@ -1,6 +1,7 @@
 import { officialContactEmail } from './official-contact';
 
 export interface LegalSection {
+  id?: string;
   title: string;
   body: string[];
 }
@@ -24,6 +25,7 @@ export const termsDocument: LegalDocument = {
     'Kendronics may update these terms as operations, partners, payment methods, and logistics flows evolve.',
   sections: [
     {
+      id: 'conditions-generales-de-vente',
       title: 'Conditions Générales de Vente',
       body: [
         'Kendronics is an intermediary platform. Kendronics helps customers configure PCB-related orders, upload files, request quotes, facilitate payment, coordinate logistics, track orders, and manage support.',
@@ -31,6 +33,7 @@ export const termsDocument: LegalDocument = {
       ],
     },
     {
+      id: 'conditions-generales-utilisation',
       title: 'Conditions Générales d’Utilisation',
       body: [
         'External manufacturing partners are responsible for producing PCBs, PCBA work, SMT stencils, and related manufacturing services according to accepted production files and confirmed specifications.',
@@ -38,6 +41,7 @@ export const termsDocument: LegalDocument = {
       ],
     },
     {
+      id: 'politique-confidentialite',
       title: 'Politique de Confidentialité',
       body: [
         'Customers are responsible for the correctness, completeness, revision control, and production-readiness of uploaded Gerber, BOM, CPL, drill, outline, and related files.',
@@ -45,6 +49,7 @@ export const termsDocument: LegalDocument = {
       ],
     },
     {
+      id: 'politique-cookies',
       title: 'Politique de Cookies',
       body: [
         'Quotes may include partner manufacturing cost, partner handling, China to France logistics where applicable, France processing and logistics, France to Africa delivery, payment processing, Kendronics service fee, and customs or delivery risk buffer where applicable.',
@@ -52,6 +57,7 @@ export const termsDocument: LegalDocument = {
       ],
     },
     {
+      id: 'mentions-legales',
       title: 'Mentions légales',
       body: [
         'Payments may be processed through Stripe, Mobile Money providers, or other supported payment providers. Kendronics does not require customers to send card details by email or support ticket.',

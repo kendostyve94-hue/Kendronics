@@ -24,11 +24,11 @@ const groups = [
   {
     title: 'CADRE LÉGAL',
     links: [
-      ['Conditions Générales de Vente', '/terms'],
-      ['Conditions Générales d’Utilisation', '/terms'],
-      ['Politique de confidentialité', '/privacy'],
-      ['Politique de cookies', '/cookie-policy'],
-      ['Mentions légales', '/terms'],
+      ['Conditions Générales de Vente', '/terms#conditions-generales-de-vente'],
+      ['Conditions Générales d’Utilisation', '/terms#conditions-generales-utilisation'],
+      ['Politique de confidentialité', '/terms#politique-confidentialite'],
+      ['Politique de cookies', '/terms#politique-cookies'],
+      ['Mentions légales', '/terms#mentions-legales'],
     ],
   },
   {
