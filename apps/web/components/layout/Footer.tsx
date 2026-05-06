@@ -37,6 +37,8 @@ const paymentLogos = [
   { name: 'Visa', src: 'https://cdn.simpleicons.org/visa/1A1F71' },
   { name: 'Mastercard', src: 'https://cdn.simpleicons.org/mastercard/EB001B' },
   { name: 'Stripe', src: 'https://cdn.simpleicons.org/stripe/635BFF' },
+  { name: 'American Express', src: 'https://cdn.simpleicons.org/americanexpress/2E77BC' },
+  { name: 'Discover', src: 'https://cdn.simpleicons.org/discover/FF6000' },
 ];
 
 const deliveryLogos = [
@@ -95,8 +97,8 @@ export function Footer() {
         </div>
 
         <div className="mt-8 grid gap-8 border-t border-[#243447] pt-6 md:grid-cols-[1fr_1fr_auto]">
-          <FooterLogoGroup title="Moyens de paiement" logos={paymentLogos} />
-          <FooterLogoGroup title="Services de livraison" logos={deliveryLogos} />
+          <PaymentLogoStrip />
+          <DeliveryLogoStrip />
           <SocialGroup />
         </div>
       </div>
@@ -104,7 +106,7 @@ export function Footer() {
       <div className="border-t border-[#243447] px-4 py-4 text-sm text-slate-300 sm:px-5 lg:px-6">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <span className="flex items-center gap-4">
-            <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-9 w-auto rounded-sm bg-white px-2 py-1" />
+            <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-8 w-auto" />
             Fabrication assuree par des partenaires externes.
           </span>
           <span className="text-xs text-slate-400">&copy; 2026 Kendronics Industrial. Tous droits reserves.</span>
@@ -114,14 +116,29 @@ export function Footer() {
   );
 }
 
-function FooterLogoGroup({ title, logos }: { title: string; logos: Array<{ name: string; src: string }> }) {
+function PaymentLogoStrip() {
   return (
     <div>
-      <h3 className="text-sm font-medium text-slate-300">{title}</h3>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {logos.map((logo) => (
-          <span key={logo.name} className="inline-flex h-10 min-w-20 items-center justify-center bg-white px-3">
-            <img src={logo.src} alt={logo.name} className="max-h-7 max-w-28 object-contain" />
+      <h3 className="text-sm font-medium text-slate-300">Moyens de paiement</h3>
+      <div className="mt-3 inline-flex min-h-10 flex-wrap items-center gap-3 border border-[#5d6670] bg-white px-3 py-2">
+        {paymentLogos.map((logo) => (
+          <span key={logo.name} className="inline-flex h-7 min-w-10 items-center justify-center">
+            <img src={logo.src} alt={logo.name} className="max-h-6 max-w-20 object-contain" />
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DeliveryLogoStrip() {
+  return (
+    <div>
+      <h3 className="text-sm font-medium text-slate-300">Services de livraison</h3>
+      <div className="mt-3 flex flex-wrap gap-3">
+        {deliveryLogos.map((logo) => (
+          <span key={logo.name} className="inline-flex h-11 min-w-36 items-center justify-center border border-[#5d6670] bg-white px-4">
+            <img src={logo.src} alt={logo.name} className="max-h-8 max-w-32 object-contain" />
           </span>
         ))}
       </div>
@@ -141,10 +158,10 @@ function SocialGroup() {
             target="_blank"
             rel="noreferrer"
             aria-label={item.name}
-            className="inline-flex h-8 w-8 items-center justify-center transition hover:opacity-80"
+            className="inline-flex h-9 w-9 items-center justify-center transition hover:opacity-80"
             style={{ backgroundColor: item.bg }}
           >
-            <img src={item.src} alt="" className="h-5 w-5" />
+            <img src={item.src} alt="" className="h-6 w-6" />
           </a>
         ))}
       </div>
