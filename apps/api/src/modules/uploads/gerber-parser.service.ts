@@ -76,9 +76,12 @@ export class GerberParserService {
   private readTextFiles(buffer: Buffer): ParsedFile[] {
     const entries = this.readZipEntries(buffer);
     return entries
-      .filter((entry) => !entry.name.endsWith('/') && this.isGerberLikeFile(entry.name))
-      .map((entry) => ({ name: entry.name, text: this.readEntry(buffer, entry).toString('utf8') }))
-      .filter((file) => file.text.trim().length > 0);
+      .filter((entry) => !entry.name.endsWith('/') && entry.uncompressedSize <= 15 * 1024 * 1024)
+      .map((entry) => {
+        const content = this.readEntry(buffer, entry);
+        return { name: entry.name, text: content.toString('utf8') };
+      })
+      .filter((file) => file.text.trim().length > 0 && (this.isGerberLikeFile(file.name) || this.hasGerberOrDrillSyntax(file.text)));
   }
 
   private readZipEntries(buffer: Buffer): ZipEntry[] {
@@ -201,7 +204,11 @@ export class GerberParserService {
   }
 
   private isGerberLikeFile(name: string): boolean {
-    return /\.(gbr|ger|gtl|gbl|gts|gbs|gto|gbo|gko|gm1|gml|g[0-9]+|gl[0-9]+|drl|xln|txt)$/i.test(name);
+    return /\.(gbr|ger|pho|art|cmp|sol|stc|sts|plc|pls|gtl|gbl|gts|gbs|gto|gbo|gko|gm1|gml|g[0-9]+|gl[0-9]+|drl|xln|rou|route|txt)$/i.test(name);
+  }
+
+  private hasGerberOrDrillSyntax(text: string): boolean {
+    return /%FS|%MO|%ADD|D0[123]\*|M48|T\d+C|X-?\d+Y-?\d+/i.test(text);
   }
 
   private isCopperLayer(name: string): boolean {
