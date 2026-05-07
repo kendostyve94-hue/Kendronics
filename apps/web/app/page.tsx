@@ -98,16 +98,6 @@ const homeCapabilityGroups = [
   },
 ];
 
-const homeAdvancedOptions = [
-  'Gold fingers',
-  'Castellated holes',
-  'Via-in-pad',
-  'Vias remplis',
-  'Impedance controlee',
-  'PCBA BOM/CPL',
-  'Stencil SMT',
-];
-
 const resourceItems = [
   ['Guide technique', 'Gerber, KiCad, EasyEDA, erreurs courantes et bases pour préparer un dossier propre.', '/guide-technique'],
   ['Capacités', 'Matériaux, finitions, vias, cuivre, assemblage et options avancées.', '/capabilities'],
@@ -197,23 +187,7 @@ function HomeCapabilityMatrix() {
                         key={row[0]}
                         row={row}
                         stripe={index % 2 === 1}
-                        detail={
-                          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
-                            <NestedCapabilityTable group={materialGroup} />
-                            <div className="border border-slate-300 bg-white">
-                              <div className="border-b border-slate-300 bg-[#f6fbff] px-4 py-3">
-                                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#008b6d]">Options avancees</p>
-                              </div>
-                              <div className="flex flex-wrap gap-2 p-4">
-                                {homeAdvancedOptions.map((option) => (
-                                  <span key={option} className="border border-slate-300 bg-slate-50 px-2.5 py-1 text-[11px] font-black text-slate-800">
-                                    {option}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        }
+                        detail={<NestedCapabilityTable group={materialGroup} />}
                       />
                     );
                   }
@@ -244,7 +218,7 @@ function HomeCapabilityRow({ row, stripe }: { row: string[]; stripe: boolean }) 
   return (
     <tr className={stripe ? 'bg-[#edf7fd]' : 'bg-white'}>
       {row.map((cell, index) => (
-        <td key={`${cell}-${index}`} className={`${index === 0 ? 'font-black text-ink' : 'leading-5 text-slate-700'} border-b border-r border-slate-300 px-4 py-3 align-top last:border-r-0`}>
+        <td key={`${cell}-${index}`} className={`${index === 0 ? 'font-normal text-[#008b6d]' : 'leading-5 text-slate-700'} border-b border-r border-slate-300 px-4 py-3 align-top last:border-r-0`}>
           {cell}
         </td>
       ))}
@@ -261,7 +235,7 @@ function HomeExpandableCapabilityRow({ row, stripe, detail }: { row: string[]; s
             {row.map((cell, index) => (
               <span
                 key={`${cell}-${index}`}
-                className={`${index === 0 ? 'font-black text-ink' : 'leading-5 text-slate-700'} border-r border-slate-300 px-4 py-3 last:border-r-0`}
+                className={`${index === 0 ? 'font-normal text-[#008b6d]' : 'leading-5 text-slate-700'} border-r border-slate-300 px-4 py-3 last:border-r-0`}
               >
                 {index === 0 ? (
                   <span className="flex items-center justify-between gap-3">
