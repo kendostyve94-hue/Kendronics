@@ -183,7 +183,7 @@ function HomeCapabilityMatrix() {
               <thead className="bg-[#d8edf8] text-[11px] font-black uppercase tracking-[0.1em] text-slate-900">
                 <tr>
                   {pcbGroup.headers.map((header, index) => (
-                    <th key={header} className={`${index === 0 ? 'w-[14rem]' : index === 1 ? 'w-[34%]' : ''} border-b border-r border-slate-300 px-4 py-3 last:border-r-0`}>
+                    <th key={header} className={`${index === 0 ? 'w-[14rem]' : index === 1 ? 'w-[24rem]' : ''} border-b border-r border-slate-300 px-4 py-3 last:border-r-0`}>
                       {header}
                     </th>
                   ))}
@@ -257,7 +257,7 @@ function HomeExpandableCapabilityRow({ row, stripe, detail }: { row: string[]; s
     <tr className={stripe ? 'bg-[#edf7fd]' : 'bg-white'}>
       <td colSpan={3} className="border-b border-slate-300 p-0 align-top">
         <details className="group">
-          <summary className="grid cursor-pointer list-none grid-cols-[14rem_1fr_1fr] border-slate-300 marker:content-none">
+          <summary className="grid cursor-pointer list-none grid-cols-[14rem_24rem_minmax(0,1fr)] border-slate-300 outline-none marker:content-none focus:outline-none [&::-webkit-details-marker]:hidden">
             {row.map((cell, index) => (
               <span
                 key={`${cell}-${index}`}
