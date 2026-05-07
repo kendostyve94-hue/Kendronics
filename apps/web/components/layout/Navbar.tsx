@@ -314,10 +314,10 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
             <a
               key={item.label}
               href={item.href}
-              className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-sm border text-[11px] font-black transition ${
+              className={`relative flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-black transition ${
                 isActive
-                  ? 'border-[#0f8f6b]/45 bg-[#edf3f8] text-[#0f8f6b]'
-                  : 'border-transparent text-slate-700 hover:bg-[#edf3f8]'
+                  ? 'text-[#0f8f6b]'
+                  : 'text-slate-700 hover:text-[#0f8f6b]'
               }`}
               aria-current={isActive ? 'page' : undefined}
             >
