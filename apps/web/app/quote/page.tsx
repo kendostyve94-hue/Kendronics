@@ -152,8 +152,30 @@ type MobileSheetId =
 const apiBaseUrl = getApiBaseUrl();
 const customerOrdersStorageKey = 'kendronics.customer.orders';
 
+function readNumberParam(params: URLSearchParams, key: string, fallback: number): number {
+  const value = Number(params.get(key));
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function getInitialConfigFromUrl(): QuoteConfig {
+  if (typeof window === 'undefined') return initialConfig;
+
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('layers') && !params.has('length') && !params.has('width') && !params.has('quantity')) {
+    return initialConfig;
+  }
+
+  return {
+    ...initialConfig,
+    layers: readNumberParam(params, 'layers', initialConfig.layers),
+    length: readNumberParam(params, 'length', initialConfig.length),
+    width: readNumberParam(params, 'width', initialConfig.width),
+    quantity: readNumberParam(params, 'quantity', initialConfig.quantity),
+  };
+}
+
 export default function QuotePage() {
-  const [config, setConfig] = useState<QuoteConfig>(initialConfig);
+  const [config, setConfig] = useState<QuoteConfig>(() => getInitialConfigFromUrl());
   const [saved, setSaved] = useState(false);
   const [gerberUpload, setGerberUpload] = useState<UploadState>({ status: 'idle' });
   const [quoteSave, setQuoteSave] = useState<QuoteSaveState>({ status: 'idle' });

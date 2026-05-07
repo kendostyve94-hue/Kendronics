@@ -68,6 +68,7 @@ const baseConfig: QuoteConfig = {
 
 export function HeroQuickQuote() {
   const [config, setConfig] = useState<QuoteConfig>(baseConfig);
+  const quoteHref = `/quote?layers=${config.layers}&length=${config.length}&width=${config.width}&quantity=${config.quantity}`;
 
   function update<K extends keyof QuoteConfig>(key: K, value: QuoteConfig[K]) {
     setConfig((current) => ({ ...current, [key]: value }));
@@ -75,9 +76,6 @@ export function HeroQuickQuote() {
 
   return (
     <aside className="hidden h-[3.35rem] items-center gap-3 bg-white/90 p-1 text-ink backdrop-blur-sm lg:flex">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center text-slate-500">
-        <CalculatorIcon />
-      </div>
       <SelectField
         label="Couches"
         value={config.layers}
@@ -110,8 +108,8 @@ export function HeroQuickQuote() {
           [100, '100 pcs'],
         ]}
       />
-      <a href="/quote" className="inline-flex h-full min-w-[10rem] items-center justify-center bg-[#0b74ff] px-7 text-base font-black text-white transition duration-300 hover:bg-[#075fd1]">
-        Voir mon devis
+      <a href={quoteHref} className="inline-flex h-full min-w-[10rem] items-center justify-center bg-[#0f8f6b] px-7 text-base font-black text-white transition duration-300 hover:bg-[#0b7558]">
+        Finaliser
       </a>
     </aside>
   );
@@ -186,14 +184,5 @@ function SelectField({
         })}
       </select>
     </label>
-  );
-}
-
-function CalculatorIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="5" y="3" width="14" height="18" />
-      <path d="M8 7h8M8 11h2M12 11h2M16 11h.01M8 15h2M12 15h2M16 15h.01M8 19h2M12 19h2M16 19h.01" />
-    </svg>
   );
 }
