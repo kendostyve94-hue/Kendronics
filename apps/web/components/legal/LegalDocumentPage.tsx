@@ -16,6 +16,32 @@ const legalDocumentLinks = [
   ['Mentions légales', '/terms#mentions-legales'],
 ];
 
+function renderParagraphWithMoreLink(paragraph: string, sectionId?: string) {
+  const marker = 'voir plus...';
+  const markerIndex = paragraph.toLowerCase().indexOf(marker);
+
+  if (markerIndex === -1) {
+    return paragraph;
+  }
+
+  const before = paragraph.slice(0, markerIndex).trimEnd();
+  const after = paragraph.slice(markerIndex + marker.length);
+
+  return (
+    <>
+      {before}
+      {before ? ' ' : ''}
+      <a
+        className="font-black text-blue-600 underline-offset-4 transition hover:text-blue-700 hover:underline"
+        href={sectionId ? `#${sectionId}` : '#'}
+      >
+        voir plus...
+      </a>
+      {after}
+    </>
+  );
+}
+
 export function LegalDocumentPage({ document }: { document: LegalDocument }) {
   return (
     <main className="overflow-hidden bg-cloud">
@@ -67,7 +93,7 @@ export function LegalDocumentPage({ document }: { document: LegalDocument }) {
               <div className="mt-4 space-y-4">
                 {section.body.map((paragraph) => (
                   <p key={paragraph} className="text-sm leading-7 text-slate-600 sm:text-base">
-                    {paragraph}
+                    {renderParagraphWithMoreLink(paragraph, section.id)}
                   </p>
                 ))}
               </div>
