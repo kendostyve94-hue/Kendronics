@@ -8,10 +8,10 @@ const baseConfig: QuoteConfig = {
   productType: 'standard_pcb',
   baseMaterial: 'FR4',
   layers: 2,
-  length: 80,
-  width: 60,
+  length: 100,
+  width: 100,
   unit: 'mm',
-  quantity: 10,
+  quantity: 5,
   differentDesigns: 1,
   usageType: 'consumer_industrial',
   deliveryFormat: 'single_pcb',
@@ -76,43 +76,85 @@ export function HeroQuickQuote() {
   }
 
   return (
-    <aside className="hidden h-12 items-center overflow-hidden border border-white/70 bg-white/90 text-ink backdrop-blur-sm lg:flex">
-      <SelectField label="Couches" value={config.layers} onChange={(value) => update('layers', Number(value))} options={[1, 2, 4, 6, 8, 10, 12]} />
-      <NumberField label="Longueur" value={config.length} onChange={(value) => update('length', value)} />
-      <NumberField label="Largeur" value={config.width} onChange={(value) => update('width', value)} />
-      <NumberField label="Qte" value={config.quantity} min={1} onChange={(value) => update('quantity', value)} />
-      <div className="flex h-full min-w-[8.5rem] items-center justify-center border-l border-line px-3 text-sm text-[#ff7a00]">
+    <aside className="hidden h-12 items-center gap-3 text-ink lg:flex">
+      <SelectField
+        label="Couches"
+        value={config.layers}
+        onChange={(value) => update('layers', Number(value))}
+        options={[
+          [1, '1 Couche'],
+          [2, '2 Couches'],
+          [4, '4 Couches'],
+          [6, '6 Couches'],
+          [8, '8 Couches'],
+          [10, '10 Couches'],
+          [12, '12 Couches'],
+        ]}
+      />
+      <DimensionField
+        length={config.length}
+        width={config.width}
+        onLengthChange={(value) => update('length', value)}
+        onWidthChange={(value) => update('width', value)}
+      />
+      <SelectField
+        label="Quantite"
+        value={config.quantity}
+        onChange={(value) => update('quantity', Number(value))}
+        options={[
+          [5, '5 pcs'],
+          [10, '10 pcs'],
+          [20, '20 pcs'],
+          [50, '50 pcs'],
+          [100, '100 pcs'],
+        ]}
+      />
+      <div className="flex h-full min-w-[8.5rem] items-center justify-center bg-white/90 px-3 text-sm text-[#ff7a00] backdrop-blur-sm">
         {formatMoney(pricing.finalTotal)}
       </div>
-      <a href="/quote" className="inline-flex h-full items-center justify-center bg-deepblue px-6 text-sm font-normal text-white transition duration-300 hover:bg-[#0b7558]">
+      <a href="/quote" className="inline-flex h-full items-center justify-center bg-[#0f8f6b] px-8 text-sm font-normal text-white transition duration-300 hover:bg-[#0b7558]">
         Finaliser
       </a>
     </aside>
   );
 }
 
-function NumberField({
-  label,
-  value,
-  min = 1,
-  onChange,
+function DimensionField({
+  length,
+  width,
+  onLengthChange,
+  onWidthChange,
 }: {
-  label: string;
-  value: number;
-  min?: number;
-  onChange: (value: number) => void;
+  length: number;
+  width: number;
+  onLengthChange: (value: number) => void;
+  onWidthChange: (value: number) => void;
 }) {
   return (
-    <label className="flex h-full w-[5.9rem] items-center gap-1 border-l border-line px-2 first:border-l-0">
-      <span className="sr-only">{label}</span>
-      <input
-        type="number"
-        min={min}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="h-full w-full border-0 bg-transparent px-0 text-sm font-normal text-ink outline-none"
-      />
-    </label>
+    <div className="flex h-full w-[12rem] items-center justify-center gap-2 bg-white/90 px-3 text-sm backdrop-blur-sm">
+      <label className="min-w-0 flex-1">
+        <span className="sr-only">Longueur</span>
+        <input
+          type="number"
+          min={1}
+          value={length}
+          onChange={(event) => onLengthChange(Number(event.target.value))}
+          className="h-full w-full border-0 bg-transparent px-0 text-center text-sm font-normal text-ink outline-none"
+        />
+      </label>
+      <span className="text-slate-500">x</span>
+      <label className="min-w-0 flex-1">
+        <span className="sr-only">Largeur</span>
+        <input
+          type="number"
+          min={1}
+          value={width}
+          onChange={(event) => onWidthChange(Number(event.target.value))}
+          className="h-full w-full border-0 bg-transparent px-0 text-center text-sm font-normal text-ink outline-none"
+        />
+      </label>
+      <span className="shrink-0 text-slate-500">mm</span>
+    </div>
   );
 }
 
@@ -128,7 +170,7 @@ function SelectField({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="flex h-full w-[7.5rem] items-center gap-1 px-3">
+    <label className="flex h-full w-[8.5rem] items-center bg-white/90 px-3 backdrop-blur-sm">
       <span className="sr-only">{label}</span>
       <select
         value={value}
