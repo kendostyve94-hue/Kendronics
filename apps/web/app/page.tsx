@@ -149,9 +149,9 @@ function HomeCapabilityMatrix() {
         <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <p className="label-caps text-deepblue">Capacites de fabrication</p>
-            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Les specs essentielles en lecture compacte.</h2>
+            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Options de fabrication disponibles via nos partenaires PCB.</h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Un tableau pleine largeur pour comparer les options de fabrication sans allonger la page.
+              Ces capacites decrivent ce que Kendronics peut aider a demander et coordonner. La disponibilite finale depend de la revue fichier, du materiau, du delai et de la confirmation partenaire.
             </p>
           </div>
           <Button href="/capabilities" variant="secondary" className="h-11 lg:h-12">
