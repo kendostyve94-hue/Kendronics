@@ -149,15 +149,19 @@ export default function HomePage() {
 }
 
 function HomeCapabilityMatrix() {
+  const pcbGroup = homeCapabilityGroups[0];
+  const materialGroup = homeCapabilityGroups[1];
+  const finishGroup = homeCapabilityGroups[2];
+
   return (
     <section className="bg-white px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-      <div className="mx-auto max-w-[1180px]">
+      <div className="mx-auto max-w-none">
         <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <p className="label-caps text-deepblue">Capacites de fabrication</p>
             <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Les specs essentielles en lecture compacte.</h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Un tableau dense pour comparer fabrication PCB, materiaux, finitions et options avancees sans allonger la page.
+              Un tableau pleine largeur pour comparer les options de fabrication sans allonger la page.
             </p>
           </div>
           <Button href="/capabilities" variant="secondary" className="h-11 lg:h-12">
@@ -165,50 +169,70 @@ function HomeCapabilityMatrix() {
           </Button>
         </div>
 
-        <div className="grid overflow-hidden border border-line bg-white lg:grid-cols-[15.5rem_minmax(0,1fr)]">
-          <aside className="border-b border-line bg-slate-50 lg:border-b-0 lg:border-r">
-            <div className="grid grid-cols-3 lg:grid-cols-1">
-              {homeCapabilityGroups.map((group, index) => (
-                <a
-                  key={group.label}
-                  href={`#home-capability-${index}`}
-                  className="min-h-[6rem] border-r border-line p-3 transition hover:bg-white lg:border-b lg:border-r-0 lg:p-4"
-                >
-                  <span className="text-[11px] font-black uppercase tracking-[0.12em] text-deepblue">{group.count}</span>
-                  <h3 className="mt-2 text-sm font-black leading-tight text-ink sm:text-base">{group.label}</h3>
-                  <p className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{group.description}</p>
-                </a>
-              ))}
+        <div className="overflow-hidden border border-slate-300 bg-white">
+          <div className="flex flex-col gap-2 border-b border-slate-300 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#008b6d]">{pcbGroup.count}</p>
+              <h3 className="text-lg font-black text-ink">{pcbGroup.label}</h3>
             </div>
-            <div className="hidden p-4 lg:block">
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Options avancees</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {homeAdvancedOptions.map((option) => (
-                  <span key={option} className="border border-line bg-white px-2.5 py-1 text-[11px] font-black text-slate-700">
-                    {option}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </aside>
+            <p className="max-w-xl text-xs leading-5 text-slate-500 sm:text-right">{pcbGroup.description}</p>
+          </div>
 
-          <div className="min-w-0">
-            <div className="grid gap-0 xl:grid-cols-[1.25fr_0.9fr]">
-              <CapabilityDenseTable group={homeCapabilityGroups[0]} index={0} featured />
-              <div className="grid border-t border-line xl:border-l xl:border-t-0">
-                <CapabilityDenseTable group={homeCapabilityGroups[1]} index={1} />
-                <CapabilityDenseTable group={homeCapabilityGroups[2]} index={2} compact />
-              </div>
-            </div>
-            <div className="border-t border-line bg-slate-50 p-3 lg:hidden">
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {homeAdvancedOptions.map((option) => (
-                  <span key={option} className="shrink-0 border border-line bg-white px-3 py-2 text-xs font-black text-slate-700">
-                    {option}
-                  </span>
-                ))}
-              </div>
-            </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-[62rem] w-full border-collapse text-left text-[13px]">
+              <thead className="bg-[#d8edf8] text-[11px] font-black uppercase tracking-[0.1em] text-slate-900">
+                <tr>
+                  {pcbGroup.headers.map((header, index) => (
+                    <th key={header} className={`${index === 0 ? 'w-[14rem]' : index === 1 ? 'w-[34%]' : ''} border-b border-r border-slate-300 px-4 py-3 last:border-r-0`}>
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {pcbGroup.rows.map((row, index) => {
+                  if (row[0] === 'Materiaux') {
+                    return (
+                      <HomeExpandableCapabilityRow
+                        key={row[0]}
+                        row={row}
+                        stripe={index % 2 === 1}
+                        detail={
+                          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+                            <NestedCapabilityTable group={materialGroup} />
+                            <div className="border border-slate-300 bg-white">
+                              <div className="border-b border-slate-300 bg-[#f6fbff] px-4 py-3">
+                                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#008b6d]">Options avancees</p>
+                              </div>
+                              <div className="flex flex-wrap gap-2 p-4">
+                                {homeAdvancedOptions.map((option) => (
+                                  <span key={option} className="border border-slate-300 bg-slate-50 px-2.5 py-1 text-[11px] font-black text-slate-800">
+                                    {option}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      />
+                    );
+                  }
+
+                  if (row[0] === 'Finitions') {
+                    return (
+                      <HomeExpandableCapabilityRow
+                        key={row[0]}
+                        row={row}
+                        stripe={index % 2 === 1}
+                        detail={<NestedCapabilityTable group={finishGroup} />}
+                      />
+                    );
+                  }
+
+                  return <HomeCapabilityRow key={row[0]} row={row} stripe={index % 2 === 1} />;
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -216,34 +240,63 @@ function HomeCapabilityMatrix() {
   );
 }
 
-function CapabilityDenseTable({
-  group,
-  index,
-  featured = false,
-  compact = false,
-}: {
-  group: (typeof homeCapabilityGroups)[number];
-  index: number;
-  featured?: boolean;
-  compact?: boolean;
-}) {
+function HomeCapabilityRow({ row, stripe }: { row: string[]; stripe: boolean }) {
   return (
-    <section id={`home-capability-${index}`} className={compact ? 'border-t border-line' : ''}>
-      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-line bg-white px-4 py-3">
+    <tr className={stripe ? 'bg-[#edf7fd]' : 'bg-white'}>
+      {row.map((cell, index) => (
+        <td key={`${cell}-${index}`} className={`${index === 0 ? 'font-black text-ink' : 'leading-5 text-slate-700'} border-b border-r border-slate-300 px-4 py-3 align-top last:border-r-0`}>
+          {cell}
+        </td>
+      ))}
+    </tr>
+  );
+}
+
+function HomeExpandableCapabilityRow({ row, stripe, detail }: { row: string[]; stripe: boolean; detail: React.ReactNode }) {
+  return (
+    <tr className={stripe ? 'bg-[#edf7fd]' : 'bg-white'}>
+      <td colSpan={3} className="border-b border-slate-300 p-0 align-top">
+        <details className="group">
+          <summary className="grid cursor-pointer list-none grid-cols-[14rem_1fr_1fr] border-slate-300 marker:content-none">
+            {row.map((cell, index) => (
+              <span
+                key={`${cell}-${index}`}
+                className={`${index === 0 ? 'font-black text-ink' : 'leading-5 text-slate-700'} border-r border-slate-300 px-4 py-3 last:border-r-0`}
+              >
+                {index === 0 ? (
+                  <span className="flex items-center justify-between gap-3">
+                    {cell}
+                    <span className="text-sm text-deepblue transition group-open:rotate-180">⌄</span>
+                  </span>
+                ) : (
+                  cell
+                )}
+              </span>
+            ))}
+          </summary>
+          <div className="border-t border-slate-300 bg-[#f8fbfd] p-4">{detail}</div>
+        </details>
+      </td>
+    </tr>
+  );
+}
+
+function NestedCapabilityTable({ group }: { group: (typeof homeCapabilityGroups)[number] }) {
+  return (
+    <div className="overflow-hidden border border-slate-300 bg-white">
+      <div className="flex flex-col gap-1 border-b border-slate-300 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-deepblue">{group.count}</p>
-          <h3 className="text-base font-black text-ink">{group.label}</h3>
+          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#008b6d]">{group.count}</p>
+          <h4 className="text-base font-black text-ink">{group.label}</h4>
         </div>
+        <p className="text-xs leading-5 text-slate-500">{group.description}</p>
       </div>
       <div className="overflow-x-auto">
-        <table className={`min-w-full text-left ${featured ? 'text-[13px]' : 'text-xs'}`}>
-          <thead className="bg-[#d8edf8] text-[11px] font-black uppercase tracking-[0.1em] text-slate-800">
+        <table className="min-w-full border-collapse text-left text-xs">
+          <thead className="bg-[#d8edf8] text-[10px] font-black uppercase tracking-[0.1em] text-slate-900">
             <tr>
-              {group.headers.map((header, headerIndex) => (
-                <th
-                  key={header}
-                  className={`${headerIndex === 0 ? 'w-[9rem]' : ''} whitespace-nowrap border-b border-r border-slate-300 px-3 py-2 last:border-r-0`}
-                >
+              {group.headers.map((header) => (
+                <th key={header} className="border-b border-r border-slate-300 px-3 py-2 last:border-r-0">
                   {header}
                 </th>
               ))}
@@ -251,11 +304,11 @@ function CapabilityDenseTable({
           </thead>
           <tbody>
             {group.rows.map((row, rowIndex) => (
-              <tr key={row.join(':')} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+              <tr key={row.join(':')} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-[#edf7fd]'}>
                 {row.map((cell, cellIndex) => (
                   <td
                     key={`${cell}-${cellIndex}`}
-                    className={`${cellIndex === 0 ? 'font-black text-ink' : 'leading-5 text-slate-600'} border-b border-r border-slate-200 px-3 py-2 align-top last:border-r-0`}
+                    className={`${cellIndex === 0 ? 'font-black text-ink' : 'leading-5 text-slate-700'} border-b border-r border-slate-300 px-3 py-2 align-top last:border-r-0`}
                   >
                     {cell}
                   </td>
@@ -265,7 +318,7 @@ function CapabilityDenseTable({
           </tbody>
         </table>
       </div>
-    </section>
+    </div>
   );
 }
 
