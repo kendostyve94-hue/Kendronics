@@ -24,6 +24,7 @@ model User {
   gerberUploads GerberUpload[]
   cookieConsents CookieConsent[]
   supportTickets SupportTicket[]
+  adminAuditLogs AdminAuditLog[]
 }
 
 model CookieConsent {
@@ -303,5 +304,21 @@ model SupportTicket {
 
   @@index([userId])
   @@index([status])
+  @@index([createdAt])
+}
+
+model AdminAuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String
+  action      String
+  targetType  String
+  targetId    String?
+  createdAt   DateTime @default(now())
+
+  actor User @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([actorUserId])
+  @@index([action])
+  @@index([targetType, targetId])
   @@index([createdAt])
 }
