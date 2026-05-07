@@ -429,6 +429,33 @@ function SmartOrdering() {
     <section className="relative overflow-hidden bg-ink px-4 py-8 text-white sm:px-6 sm:py-14 lg:px-8">
       <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70" />
       <div className="absolute inset-0 bg-ink/45" />
+      <svg className="smart-ordering-routes pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1200 520" aria-hidden="true">
+        <defs>
+          <linearGradient id="route-blue" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#78b7ff" stopOpacity="0" />
+            <stop offset="48%" stopColor="#0877ff" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#78b7ff" stopOpacity="0.2" />
+          </linearGradient>
+        </defs>
+        {[
+          'M118 350 C330 110 655 72 1048 286',
+          'M210 180 C455 30 760 74 1120 150',
+          'M250 410 C520 300 750 310 1040 286',
+          'M430 70 C610 205 855 210 1050 390',
+          'M80 275 C320 245 640 275 1040 286',
+        ].map((path, index) => (
+          <path key={path} d={path} className="smart-ordering-route" style={{ animationDelay: `${index * 0.65}s` }} />
+        ))}
+        {[
+          [118, 350],
+          [210, 180],
+          [250, 410],
+          [430, 70],
+          [1040, 286],
+        ].map(([cx, cy], index) => (
+          <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="4" className="smart-ordering-node" style={{ animationDelay: `${index * 0.4}s` }} />
+        ))}
+      </svg>
       <div className="relative mx-auto max-w-[1180px]">
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
           <div>
@@ -445,10 +472,10 @@ function SmartOrdering() {
 
           <div className="flex gap-3 overflow-x-auto pb-2 md:grid md:overflow-visible md:pb-0 md:grid-cols-2">
             {workflowSteps.map(([number, title, body]) => (
-              <article key={number} className="min-w-[16rem] border border-white/20 bg-white/92 p-4 text-ink backdrop-blur-sm md:min-w-0 md:p-5">
+              <article key={number} className="min-w-[16rem] border border-slate-200 bg-white p-4 text-ink md:min-w-0 md:p-5">
                 <span className="text-sm font-black text-deepblue">{number}</span>
                 <h3 className="mt-3 text-lg font-black text-ink">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">{body}</p>
               </article>
             ))}
           </div>

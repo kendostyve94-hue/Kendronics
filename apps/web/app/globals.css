@@ -658,6 +658,58 @@ section {
   animation: home-hero-skip 15s ease-in-out infinite;
 }
 
+.smart-ordering-route {
+  fill: none;
+  stroke: url("#route-blue");
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  opacity: 0;
+  animation: smart-route-travel 5.8s ease-in-out infinite;
+}
+
+.smart-ordering-node {
+  fill: #0877ff;
+  filter: drop-shadow(0 0 10px rgba(8, 119, 255, 0.8));
+  opacity: 0.3;
+  animation: smart-node-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes smart-route-travel {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 520;
+  }
+
+  16% {
+    opacity: 0.9;
+  }
+
+  64% {
+    opacity: 0.9;
+    stroke-dashoffset: 0;
+  }
+
+  100% {
+    opacity: 0;
+    stroke-dashoffset: -520;
+  }
+}
+
+@keyframes smart-node-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.92);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.45);
+  }
+}
+
 @keyframes home-hero-skip {
   0%,
   29% {
