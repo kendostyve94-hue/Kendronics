@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { NotificationsService } from '../../notifications/notifications.service';
 import { OrdersService } from '../../orders/orders.service';
 import { TrackingService } from '../../tracking/tracking.service';
 import { MobileMoneyCallbackDto } from '../dto/mobile-money-callback.dto';
@@ -11,6 +12,7 @@ export class PaymentWebhookHandler {
     private readonly paymentsRepository: PaymentsRepository,
     private readonly ordersService: OrdersService,
     private readonly trackingService: TrackingService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async handleStripeEvent(event: VerifiedStripePaymentEvent) {
@@ -44,6 +46,12 @@ export class PaymentWebhookHandler {
     if (event.paymentStatus === 'succeeded') {
       await this.paymentsRepository.updateStatus(payment.id, 'succeeded');
       await this.ordersService.markPaidFromVerifiedPayment(payment.orderId);
+      await this.notificationsService.create({
+        userId: payment.userId,
+        type: 'payment.succeeded',
+        title: 'Paiement confirme',
+        body: `Votre paiement de ${payment.amount.toFixed(2)} ${payment.currency} a ete confirme.`,
+      });
       await this.trackingService.addAdminStatusEvent(
         payment.orderId,
         'paid',
@@ -53,6 +61,12 @@ export class PaymentWebhookHandler {
 
     if (event.paymentStatus === 'failed') {
       await this.paymentsRepository.updateStatus(payment.id, 'failed');
+      await this.notificationsService.create({
+        userId: payment.userId,
+        type: 'payment.failed',
+        title: 'Paiement non confirme',
+        body: 'Le paiement de votre commande n’a pas pu etre confirme. Vous pouvez reessayer ou contacter le support.',
+      });
     }
 
     await this.paymentsRepository.markEventProcessed('stripe', event.id);
@@ -88,6 +102,12 @@ export class PaymentWebhookHandler {
     if (event.status === 'confirmed') {
       await this.paymentsRepository.updateStatus(payment.id, 'succeeded');
       await this.ordersService.markPaidFromVerifiedPayment(payment.orderId);
+      await this.notificationsService.create({
+        userId: payment.userId,
+        type: 'payment.succeeded',
+        title: 'Paiement confirme',
+        body: `Votre paiement Mobile Money de ${payment.amount.toFixed(2)} ${payment.currency} a ete confirme.`,
+      });
       await this.trackingService.addAdminStatusEvent(
         payment.orderId,
         'paid',
@@ -97,6 +117,12 @@ export class PaymentWebhookHandler {
 
     if (event.status === 'failed') {
       await this.paymentsRepository.updateStatus(payment.id, 'failed');
+      await this.notificationsService.create({
+        userId: payment.userId,
+        type: 'payment.failed',
+        title: 'Paiement non confirme',
+        body: 'Le paiement Mobile Money de votre commande n’a pas pu etre confirme.',
+      });
     }
 
     await this.paymentsRepository.markEventProcessed('mobile_money', event.providerEventId);

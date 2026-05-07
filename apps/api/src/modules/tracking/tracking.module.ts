@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { OrdersModule } from '../orders/orders.module';
 import { UsersModule } from '../users/users.module';
 import { TrackingController } from './tracking.controller';
@@ -7,7 +8,7 @@ import { TrackingRepository } from './repositories/tracking.repository';
 import { TrackingService } from './tracking.service';
 
 @Module({
-  imports: [PrismaModule, OrdersModule, UsersModule],
+  imports: [PrismaModule, OrdersModule, UsersModule, NotificationsModule],
   controllers: [TrackingController],
   providers: [TrackingService, TrackingRepository],
   exports: [TrackingService],

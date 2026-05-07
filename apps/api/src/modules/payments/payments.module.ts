@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { OrdersModule } from '../orders/orders.module';
 import { TrackingModule } from '../tracking/tracking.module';
 import { MobileMoneyProvider } from './providers/mobile-money.provider';
@@ -10,7 +11,7 @@ import { PaymentsRepository } from './repositories/payments.repository';
 import { PaymentWebhookHandler } from './webhooks/payment-webhook.handler';
 
 @Module({
-  imports: [OrdersModule, TrackingModule],
+  imports: [OrdersModule, TrackingModule, NotificationsModule],
   controllers: [PaymentsController],
   providers: [
     PaymentsService,

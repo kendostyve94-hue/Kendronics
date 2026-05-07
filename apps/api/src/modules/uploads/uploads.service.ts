@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PresignUploadDto } from './dto/presign-upload.dto';
 import { PresignedUpload } from './entities/presigned-upload.entity';
 import { GerberParserService } from './gerber-parser.service';
@@ -9,6 +10,7 @@ export class UploadsService {
   constructor(
     private readonly uploadRepository: UploadRepository,
     private readonly gerberParser: GerberParserService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createPresignedUpload(userId: string, dto: PresignUploadDto): Promise<PresignedUpload> {
@@ -43,7 +45,14 @@ export class UploadsService {
     const sanitizedFilename = dto.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     const analysis = this.gerberParser.analyzeZip(file.buffer);
     const uploaded = await this.uploadRepository.uploadFile(userId, sanitizedFilename, dto, file.buffer);
-    return this.uploadRepository.recordDirectUpload(userId, sanitizedFilename, dto, uploaded.storageKey, analysis);
+    const recordedUpload = await this.uploadRepository.recordDirectUpload(userId, sanitizedFilename, dto, uploaded.storageKey, analysis);
+    await this.notificationsService.create({
+      userId,
+      type: 'gerber.analysis.completed',
+      title: 'Fichier Gerber analyse',
+      body: gerberAnalysisSummary(analysis),
+    });
+    return recordedUpload;
   }
 
   getAnalysis(userId: string, uploadId: string) {
@@ -59,4 +68,20 @@ export class UploadsService {
       throw new BadRequestException('Upload exceeds the 50MB limit.');
     }
   }
+}
+
+function gerberAnalysisSummary(analysis: {
+  detectedLayers?: number;
+  widthMm?: number;
+  heightMm?: number;
+  complexity: string;
+  warnings: string[];
+}): string {
+  const dimensions =
+    analysis.widthMm && analysis.heightMm
+      ? ` Dimensions detectees : ${analysis.widthMm.toFixed(2)} x ${analysis.heightMm.toFixed(2)} mm.`
+      : '';
+  const layers = analysis.detectedLayers ? ` ${analysis.detectedLayers} couche(s) detectee(s).` : '';
+  const warnings = analysis.warnings.length > 0 ? ` ${analysis.warnings.length} point(s) a verifier.` : '';
+  return `Votre fichier Gerber a ete analyse.${layers}${dimensions} Complexite : ${analysis.complexity}.${warnings}`;
 }

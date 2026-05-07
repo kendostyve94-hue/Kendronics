@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
+import { NotificationsService } from '../notifications/notifications.service';
 import { OrdersService } from '../orders/orders.service';
 import { OrderStatus } from '../orders/entities/order.entity';
 import { isPublicTrackingStatus } from './entities/tracking-timeline.entity';
@@ -15,6 +16,7 @@ export class TrackingService {
     private readonly trackingRepository: TrackingRepository,
     private readonly ordersService: OrdersService,
     private readonly usersService: UsersService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   getOrderTracking(userId: string, orderId: string): Promise<TrackingEvent[]> {
@@ -45,17 +47,25 @@ export class TrackingService {
     };
   }
 
-  addAdminStatusEvent(orderId: string, status: OrderStatus, note?: string): Promise<TrackingEvent> {
-    return this.trackingRepository.addEvent({
+  async addAdminStatusEvent(orderId: string, status: OrderStatus, note?: string): Promise<TrackingEvent> {
+    const event = await this.trackingRepository.addEvent({
       orderId,
       status,
       title: humanizeStatus(status),
       description: note,
     });
+    const order = await this.ordersService.findByIdForInternal(orderId);
+    await this.notificationsService.create({
+      userId: order.userId,
+      type: 'order.status.updated',
+      title: 'Statut de commande mis a jour',
+      body: `Votre commande ${order.orderNumber} est maintenant : ${humanizeStatus(status)}.${note ? ` ${note}` : ''}`,
+    });
+    return event;
   }
 
-  addManualEvent(orderId: string, dto: CreateTrackingEventDto): Promise<TrackingEvent> {
-    return this.trackingRepository.addEvent({
+  async addManualEvent(orderId: string, dto: CreateTrackingEventDto): Promise<TrackingEvent> {
+    const event = await this.trackingRepository.addEvent({
       orderId,
       status: dto.status,
       title: dto.title,
@@ -63,6 +73,14 @@ export class TrackingService {
       location: dto.location,
       occurredAt: dto.occurredAt ? new Date(dto.occurredAt) : undefined,
     });
+    const order = await this.ordersService.findByIdForInternal(orderId);
+    await this.notificationsService.create({
+      userId: order.userId,
+      type: 'order.tracking.updated',
+      title: 'Suivi de commande mis a jour',
+      body: `${dto.title}${dto.description ? ` - ${dto.description}` : ''}`,
+    });
+    return event;
   }
 }
 

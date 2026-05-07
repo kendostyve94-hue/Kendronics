@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreatePublicSupportTicketDto, CreateSupportTicketDto } from './dto/create-support-ticket.dto';
 import { EmailNotificationService } from './email-notification.service';
 import { SupportTicket } from './entities/support-ticket.entity';
@@ -9,6 +10,7 @@ export class SupportService {
   constructor(
     private readonly ticketRepository: SupportTicketRepository,
     private readonly emailNotificationService: EmailNotificationService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   listTickets(userId: string): Promise<SupportTicket[]> {
@@ -21,6 +23,12 @@ export class SupportService {
 
   async createTicket(userId: string, dto: CreateSupportTicketDto): Promise<SupportTicket> {
     const ticket = await this.ticketRepository.create(userId, dto);
+    await this.notificationsService.create({
+      userId,
+      type: 'support.ticket.created',
+      title: 'Ticket support cree',
+      body: `Votre demande ${ticket.ticketNumber} a bien ete recue par Kendronics.`,
+    });
     await this.emailNotificationService.sendSupportTicketNotification(ticket);
     return ticket;
   }

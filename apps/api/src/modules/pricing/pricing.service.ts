@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { UploadsService } from '../uploads/uploads.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { PricingBreakdown, Quote } from './entities/quote.entity';
@@ -14,6 +15,7 @@ export class PricingService {
     private readonly smartBuffer: SmartBufferService,
     private readonly uploadsService: UploadsService,
     private readonly supplierPricing: SupplierPricingService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createQuote(userId: string, dto: CreateQuoteDto): Promise<Quote> {
@@ -30,7 +32,14 @@ export class PricingService {
       supplierEstimatedPrice: supplierQuote.manufacturingPrice,
       shippingPrice: this.customerShippingPrice(effectiveDto, supplierQuote.shippingPrice),
     });
-    return this.persistQuote(userId, effectiveDto, this.toSmartBufferBreakdown(smartPrice), smartPrice);
+    const quote = await this.persistQuote(userId, effectiveDto, this.toSmartBufferBreakdown(smartPrice), smartPrice);
+    await this.notificationsService.create({
+      userId,
+      type: 'quote.created',
+      title: 'Devis cree',
+      body: `Votre devis PCB de ${quote.finalTotal.toFixed(2)} ${quote.currency} est pret et valable pendant 2 heures.`,
+    });
+    return quote;
   }
 
   private async applyGerberAnalysis(userId: string, dto: CreateQuoteDto): Promise<CreateQuoteDto> {
