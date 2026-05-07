@@ -133,9 +133,7 @@ export default function HomePage() {
       <ProductCatalog />
       <HomeCapabilityMatrix />
       <SmartOrdering />
-      <OperationalProofs />
       <TrustAssurance />
-      <WhyKendronics />
       <Resources />
       <Footer />
     </main>
