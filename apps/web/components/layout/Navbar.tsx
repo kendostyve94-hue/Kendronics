@@ -159,6 +159,11 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
           <div className="flex min-w-0 items-center gap-7">
             <a href="/" className="-ml-3 inline-flex min-w-0 items-center sm:ml-0 lg:-ml-1" aria-label="Accueil Kendronics">
               <img
+                src="/images/kendronics-icon.jpeg"
+                alt=""
+                className="mr-2 h-8 w-8 rounded-full object-cover"
+              />
+              <img
                 src="/images/kendronics-logo.png"
                 alt="Kendronics"
                 className="h-12 w-auto max-w-[12.5rem] object-contain"

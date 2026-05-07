@@ -4,9 +4,51 @@ import { LanguageRuntime } from '../components/layout/LanguageRuntime';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Kendronics Devis PCB en ligne',
+  metadataBase: new URL('https://kendronics.com'),
+  title: {
+    default: 'Kendronics Devis PCB en ligne',
+    template: '%s | Kendronics',
+  },
   description:
-    'Plateforme de commande PCB, paiement, coordination et logistique pour les ingénieurs, étudiants et startups en Afrique.',
+    'Plateforme de devis PCB, commande de circuits imprimes, paiement, coordination et logistique internationale pour les ingenieurs, etudiants et startups en Afrique.',
+  keywords: [
+    'Kendronics',
+    'devis PCB',
+    'commande PCB',
+    'fabrication PCB Afrique',
+    'Gerber',
+    'circuit imprime',
+    'PCB prototype',
+  ],
+  alternates: {
+    canonical: '/',
+  },
+  icons: {
+    icon: '/images/kendronics-icon.jpeg',
+    shortcut: '/images/kendronics-icon.jpeg',
+    apple: '/images/kendronics-icon.jpeg',
+  },
+  openGraph: {
+    title: 'Kendronics Devis PCB en ligne',
+    description:
+      'Plateforme de devis PCB, paiement, coordination et logistique internationale pour commandes PCB vers l’Afrique.',
+    url: '/',
+    siteName: 'Kendronics',
+    images: [
+      {
+        url: '/images/kendronics-icon.jpeg',
+        width: 512,
+        height: 512,
+        alt: 'Kendronics',
+      },
+    ],
+    locale: 'fr_FR',
+    type: 'website',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

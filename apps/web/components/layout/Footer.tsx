@@ -120,7 +120,7 @@ function PaymentLogoStrip() {
   return (
     <div>
       <h3 className="text-sm font-medium text-slate-300">Moyens de paiement</h3>
-      <div className="mt-2 inline-flex flex-wrap items-center gap-2 rounded-sm border border-[#5d6670] bg-white px-2 py-1.5">
+      <div className="mt-2 flex flex-wrap gap-1.5">
         <VisaMark />
         <MastercardMark />
         <StripeMark />
@@ -132,19 +132,19 @@ function PaymentLogoStrip() {
 
 function VisaMark() {
   return (
-    <span aria-label="Visa" className="relative inline-flex h-8 w-14 items-center justify-center overflow-hidden rounded-[2px] border border-[#0b4f92] bg-white">
-      <span className="absolute left-1 right-1 top-1 h-1.5 bg-[#0b5a9d]" />
-      <span className="absolute bottom-1 left-1 right-1 h-1.5 bg-[#f6a21a]" />
-      <span className="text-[15px] font-black italic leading-none text-[#0b4f92]">VISA</span>
+    <span aria-label="Visa" className="relative inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-[2px] border border-[#0b4f92] bg-white">
+      <span className="absolute left-0.5 right-0.5 top-0.5 h-1 bg-[#0b5a9d]" />
+      <span className="absolute bottom-0.5 left-0.5 right-0.5 h-1 bg-[#f6a21a]" />
+      <span className="text-[10px] font-black italic leading-none text-[#0b4f92]">VISA</span>
     </span>
   );
 }
 
 function MastercardMark() {
   return (
-    <span aria-label="Mastercard" className="relative inline-flex h-8 w-14 items-center justify-center overflow-hidden rounded-[4px] bg-[#111111]">
-      <span className="h-5 w-5 rounded-full bg-[#eb001b]" />
-      <span className="-ml-2 h-5 w-5 rounded-full bg-[#f79e1b] opacity-95" />
+    <span aria-label="Mastercard" className="relative inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-[2px] bg-[#111111]">
+      <span className="h-4 w-4 rounded-full bg-[#eb001b]" />
+      <span className="-ml-1.5 h-4 w-4 rounded-full bg-[#f79e1b] opacity-95" />
     </span>
   );
 }
@@ -159,10 +159,10 @@ function StripeMark() {
 
 function DiscoverMark() {
   return (
-    <span aria-label="Discover" className="relative inline-flex h-8 w-[4.6rem] items-center overflow-hidden rounded-[4px] border border-[#f36f21] bg-white px-1">
-      <span className="absolute -right-3 top-0 h-full w-8 rounded-l-full bg-gradient-to-b from-[#f36f21] to-[#f9a01b]" />
-      <span className="relative text-[12px] font-black tracking-[-0.06em] text-[#231f20]">
-        DISC<span className="inline-block h-3 w-3 rounded-full bg-gradient-to-r from-[#e7351c] to-[#f9a01b] align-[-1px]" />VER
+    <span aria-label="Discover" className="relative inline-flex h-8 w-8 items-center overflow-hidden rounded-[2px] border border-[#f36f21] bg-white px-0.5">
+      <span className="absolute -right-2 top-0 h-full w-5 rounded-l-full bg-gradient-to-b from-[#f36f21] to-[#f9a01b]" />
+      <span className="relative text-[6.5px] font-black tracking-[-0.08em] text-[#231f20]">
+        DISC<span className="inline-block h-1.5 w-1.5 rounded-full bg-gradient-to-r from-[#e7351c] to-[#f9a01b] align-[-0.5px]" />VER
       </span>
     </span>
   );
@@ -172,10 +172,10 @@ function DeliveryLogoStrip() {
   return (
     <div>
       <h3 className="text-sm font-medium text-slate-300">Services de livraison</h3>
-      <div className="mt-2 flex flex-wrap gap-2">
+      <div className="mt-2 flex flex-wrap gap-1.5">
         {deliveryLogos.map((logo) => (
-          <span key={logo.name} className={`inline-flex h-11 w-32 items-center justify-center overflow-hidden rounded-sm border border-[#5d6670] px-2 ${logo.className}`}>
-            <img src={logo.src} alt={logo.name} className="max-h-9 max-w-28 object-contain" />
+          <span key={logo.name} className={`inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-sm border border-[#5d6670] px-0.5 ${logo.className}`}>
+            <img src={logo.src} alt={logo.name} className="max-h-6 max-w-7 object-contain" />
           </span>
         ))}
       </div>
