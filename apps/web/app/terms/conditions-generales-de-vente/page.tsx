@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { Footer } from '../../../components/layout/Footer';
 import { Navbar } from '../../../components/layout/Navbar';
-import { Button } from '../../../components/ui/Button';
-import { Card } from '../../../components/ui/Card';
 
 export const metadata: Metadata = {
   title: 'Conditions Generales de Vente | Kendronics',
@@ -297,10 +295,10 @@ export default function ConditionsGeneralesDeVentePage() {
         <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.88] to-deepblue/[0.62]" />
         <div className="relative mx-auto flex min-h-[52vh] max-w-[1440px] items-end px-4 pb-14 pt-32 sm:px-6 lg:px-8">
           <div>
-            <p className="inline-flex rounded-sm border border-white/[0.18] bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-sky-100 backdrop-blur-xl">
+            <p className="inline-flex rounded-sm border border-white/[0.18] bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-sky-100 backdrop-blur-xl">
               Cadre legal
             </p>
-            <h1 className="mt-7 max-w-5xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="mt-7 max-w-5xl text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
               Conditions Generales de Vente
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
@@ -310,41 +308,43 @@ export default function ConditionsGeneralesDeVentePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1120px] px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <Button href="/terms" variant="secondary">
-            Retour au cadre legal
-          </Button>
-          <span className="text-sm font-semibold text-slate-500">Derniere mise a jour : April 25, 2026</span>
-        </div>
-
-        <Card className="p-6 sm:p-8">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-signal">Kendronics</p>
-          <div className="mt-4 space-y-4 text-sm leading-7 text-slate-600 sm:text-base">
-            {introduction.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
+      <section className="mx-auto max-w-none px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
+            <a href="/terms" className="text-sm text-blue-600 underline-offset-4 transition hover:text-blue-700 hover:underline">
+              Retour au cadre legal
+            </a>
+            <span className="text-sm text-slate-500">Derniere mise a jour : April 25, 2026</span>
           </div>
-        </Card>
 
-        <div className="mt-5 grid gap-4">
-          {articles.map((article) => (
-            <Card key={article.title} className="p-6 sm:p-7">
-              <h2 className="text-xl font-black tracking-tight text-ink sm:text-2xl">{article.title}</h2>
-              <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600 sm:text-base">
-                {article.paragraphs.map((paragraph) => (
+          <div className="space-y-10 text-sm leading-7 text-slate-600 sm:text-base">
+            <section>
+              <p className="text-xs uppercase tracking-[0.18em] text-signal">Kendronics</p>
+              <div className="mt-4 space-y-4">
+                {introduction.map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
                 ))}
-                {article.bullets ? (
-                  <ul className="list-disc space-y-2 pl-5">
-                    {article.bullets.map((bullet) => (
-                      <li key={bullet}>{bullet}</li>
-                    ))}
-                  </ul>
-                ) : null}
               </div>
-            </Card>
-          ))}
+            </section>
+
+            {articles.map((article) => (
+              <section key={article.title}>
+                <h2 className="text-xl font-medium tracking-tight text-ink sm:text-2xl">{article.title}</h2>
+                <div className="mt-4 space-y-3">
+                  {article.paragraphs.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                  {article.bullets ? (
+                    <ul className="list-disc space-y-2 pl-5">
+                      {article.bullets.map((bullet) => (
+                        <li key={bullet}>{bullet}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </section>
+            ))}
+          </div>
         </div>
       </section>
 
