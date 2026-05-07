@@ -37,13 +37,13 @@ const heroSlides = [
 ];
 
 const workflowSteps = [
-  ['quote', 'Online Quote'],
-  ['upload', 'Upload PCB File'],
-  ['review', 'Order Review'],
-  ['payment', 'Payment'],
-  ['tracking', 'Real-time Fabrication Tracking'],
-  ['delivery', 'Delivery'],
-  ['received', 'Confirm Received'],
+  ['quote', 'Devis en ligne'],
+  ['upload', 'Fichier PCB'],
+  ['review', 'Revue commande'],
+  ['payment', 'Paiement'],
+  ['tracking', 'Suivi fabrication'],
+  ['delivery', 'Livraison'],
+  ['received', 'Reception confirmee'],
 ];
 
 const capabilityRows = [
@@ -459,7 +459,7 @@ function SmartOrdering() {
         ))}
       </svg>
       <div className="relative mx-auto max-w-[1180px]">
-        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <div className="grid gap-7 lg:grid-cols-[0.88fr_1.12fr] lg:items-end">
           <div>
             <p className="label-caps text-white">Commande intelligente</p>
             <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
@@ -467,20 +467,22 @@ function SmartOrdering() {
               Le devis conserve le contexte technique : fichiers, configuration, vérification, paiement, jalons de fabrication et livraison.
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:gap-3">
-              <Button href="/quote">Commencer</Button>
-              <Button href="/how-it-works" variant="secondary">Comment ça marche</Button>
+              <Button href="/quote" className="min-w-[8rem]">Commencer</Button>
+              <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap border-white/35 bg-white/10 text-white hover:border-white/55 hover:bg-white/15">
+                Comment ca marche
+              </Button>
             </div>
           </div>
 
-          <div className="smart-ordering-timeline overflow-x-auto border border-slate-200 bg-white px-6 py-6 text-slate-700 md:overflow-visible">
-            <div className="flex min-w-[58rem] items-start justify-between">
+          <div className="smart-ordering-timeline overflow-x-auto bg-transparent py-1 text-white md:overflow-visible">
+            <div className="flex min-w-[48rem] items-start justify-between">
               {workflowSteps.map(([icon, label], index) => (
                 <div key={label} className="flex min-w-0 flex-1 items-start">
-                  <div className="flex min-w-[6.5rem] flex-col items-center text-center">
+                  <div className="flex min-w-[5.75rem] flex-col items-center text-center">
                     <WorkflowIcon name={icon} />
-                    <span className="mt-3 text-sm font-normal leading-5 text-slate-600">{label}</span>
+                    <span className="mt-3 text-xs font-normal leading-5 text-slate-100 sm:text-sm">{label}</span>
                   </div>
-                  {index < workflowSteps.length - 1 ? <span className="mt-4 h-px flex-1 bg-slate-300" aria-hidden="true" /> : null}
+                  {index < workflowSteps.length - 1 ? <span className="mt-4 h-px flex-1 bg-white/30" aria-hidden="true" /> : null}
                 </div>
               ))}
             </div>
@@ -492,7 +494,7 @@ function SmartOrdering() {
 }
 
 function WorkflowIcon({ name }: { name: string }) {
-  const common = 'h-7 w-7 text-slate-500';
+  const common = 'h-7 w-7 text-white/75';
 
   if (name === 'quote') {
     return (
