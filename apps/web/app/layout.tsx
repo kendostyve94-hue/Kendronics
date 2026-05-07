@@ -24,9 +24,9 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   icons: {
-    icon: '/images/kendronics-icon.jpeg',
-    shortcut: '/images/kendronics-icon.jpeg',
-    apple: '/images/kendronics-icon.jpeg',
+    icon: '/images/kendronics-icon.png',
+    shortcut: '/images/kendronics-icon.png',
+    apple: '/images/kendronics-icon.png',
   },
   openGraph: {
     title: 'Kendronics Devis PCB en ligne',
@@ -36,9 +36,9 @@ export const metadata: Metadata = {
     siteName: 'Kendronics',
     images: [
       {
-        url: '/images/kendronics-icon.jpeg',
-        width: 512,
-        height: 512,
+        url: '/images/kendronics-icon.png',
+        width: 1307,
+        height: 1203,
         alt: 'Kendronics',
       },
     ],
