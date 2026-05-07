@@ -144,7 +144,7 @@ function HomeCapabilityMatrix() {
   const finishGroup = homeCapabilityGroups[2];
 
   return (
-    <section className="bg-white px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+    <section className="bg-white px-4 pb-8 pt-2 sm:px-6 sm:pb-12 sm:pt-3 lg:px-8">
       <div className="mx-auto max-w-none">
         <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
