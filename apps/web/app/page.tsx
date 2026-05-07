@@ -472,8 +472,8 @@ function SmartOrdering() {
           <div className="flex gap-3 overflow-x-auto pb-2 md:grid md:overflow-visible md:pb-0 md:grid-cols-2">
             {workflowSteps.map(([number, title, body]) => (
               <article key={number} className="smart-ordering-card min-w-[16rem] border border-slate-200 bg-white p-4 text-ink md:min-w-0 md:p-5">
-                <span className="text-sm font-black text-[#008b6d]">{number}</span>
-                <h3 className="mt-3 text-lg font-black text-slate-950">{title}</h3>
+                <span className="text-sm font-normal text-[#008b6d]">{number}</span>
+                <h3 className="mt-3 text-lg font-normal text-slate-950">{title}</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-700">{body}</p>
               </article>
             ))}
