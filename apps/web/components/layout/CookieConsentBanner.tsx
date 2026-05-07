@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getApiBaseUrl } from '../../lib/api-base-url';
+import { readFreshAuthSession } from '../../lib/auth-session';
 
 const consentStorageKey = 'kendronics.cookie.consent.v1';
+const consentVersion = '2026-05-07';
 
 type CookieConsent = {
   necessary: true;
@@ -25,9 +28,41 @@ export function CookieConsentBanner() {
   const [draftConsent, setDraftConsent] = useState<CookieConsent>(defaultConsent);
 
   useEffect(() => {
-    const savedConsent = window.localStorage.getItem(consentStorageKey);
-    setIsVisible(!savedConsent);
-    setIsReady(true);
+    let cancelled = false;
+
+    async function hydrateConsent() {
+      const savedConsent = readLocalConsent();
+      const serverConsent = await readServerConsent();
+
+      if (cancelled) return;
+
+      if (serverConsent) {
+        persistLocalConsent(serverConsent);
+        setDraftConsent(serverConsent);
+        setIsVisible(false);
+        setIsReady(true);
+        return;
+      }
+
+      if (savedConsent) {
+        setDraftConsent(savedConsent);
+        setIsVisible(false);
+        setIsReady(true);
+        void syncServerConsent(savedConsent);
+        return;
+      }
+
+      setIsVisible(true);
+      setIsReady(true);
+    }
+
+    void hydrateConsent();
+    window.addEventListener('kendronics:auth-updated', hydrateConsent);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('kendronics:auth-updated', hydrateConsent);
+    };
   }, []);
 
   function saveConsent(nextConsent: CookieConsent) {
@@ -37,10 +72,11 @@ export function CookieConsentBanner() {
       updatedAt: new Date().toISOString(),
     };
 
-    window.localStorage.setItem(consentStorageKey, JSON.stringify(consent));
+    persistLocalConsent(consent);
     window.dispatchEvent(new CustomEvent('kendronics:cookie-consent-updated', { detail: consent }));
     setIsVisible(false);
     setIsCustomizing(false);
+    void syncServerConsent(consent);
   }
 
   if (!isReady || !isVisible) {
@@ -116,6 +152,88 @@ export function CookieConsentBanner() {
       </div>
     </div>
   );
+}
+
+function readLocalConsent(): CookieConsent | null {
+  const rawConsent = window.localStorage.getItem(consentStorageKey);
+  if (!rawConsent) return null;
+
+  try {
+    const parsed = JSON.parse(rawConsent) as Partial<CookieConsent>;
+    if (parsed.necessary !== true || typeof parsed.analytics !== 'boolean' || typeof parsed.preferences !== 'boolean') {
+      return null;
+    }
+
+    return {
+      necessary: true,
+      analytics: parsed.analytics,
+      preferences: parsed.preferences,
+      updatedAt: parsed.updatedAt || new Date().toISOString(),
+    };
+  } catch {
+    window.localStorage.removeItem(consentStorageKey);
+    return null;
+  }
+}
+
+function persistLocalConsent(consent: CookieConsent) {
+  window.localStorage.setItem(
+    consentStorageKey,
+    JSON.stringify({
+      ...consent,
+      necessary: true,
+      updatedAt: consent.updatedAt || new Date().toISOString(),
+    }),
+  );
+}
+
+async function readServerConsent(): Promise<CookieConsent | null> {
+  const session = await readFreshAuthSession();
+  if (!session) return null;
+
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/users/me/cookie-consent`, {
+      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+      cache: 'no-store',
+    });
+
+    if (!response.ok || response.status === 204) return null;
+    const payload = (await response.json()) as Partial<CookieConsent> | null;
+    if (!payload || typeof payload.analytics !== 'boolean' || typeof payload.preferences !== 'boolean') {
+      return null;
+    }
+
+    return {
+      necessary: true,
+      analytics: payload.analytics,
+      preferences: payload.preferences,
+      updatedAt: payload.updatedAt || new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function syncServerConsent(consent: CookieConsent) {
+  const session = await readFreshAuthSession();
+  if (!session) return;
+
+  try {
+    await fetch(`${getApiBaseUrl()}/api/users/me/cookie-consent`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `${session.tokenType} ${session.accessToken}`,
+      },
+      body: JSON.stringify({
+        version: consentVersion,
+        analytics: consent.analytics,
+        preferences: consent.preferences,
+      }),
+    });
+  } catch {
+    // Local consent remains the source of truth until the API is available again.
+  }
 }
 
 function CookieChoice({

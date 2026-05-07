@@ -1,7 +1,8 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
+import { UpsertCookieConsentDto } from './dto/cookie-consent.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -12,5 +13,15 @@ export class UsersController {
   @Get('me')
   me(@CurrentUser() user: AuthenticatedUser) {
     return this.usersService.findById(user.id);
+  }
+
+  @Get('me/cookie-consent')
+  cookieConsent(@CurrentUser() user: AuthenticatedUser) {
+    return this.usersService.findCookieConsent(user.id);
+  }
+
+  @Put('me/cookie-consent')
+  updateCookieConsent(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpsertCookieConsentDto) {
+    return this.usersService.upsertCookieConsent(user.id, dto);
   }
 }

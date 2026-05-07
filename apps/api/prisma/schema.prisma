@@ -22,6 +22,24 @@ model User {
   orders   Order[]
   payments Payment[]
   gerberUploads GerberUpload[]
+  cookieConsents CookieConsent[]
+}
+
+model CookieConsent {
+  id          String   @id @default(uuid())
+  userId      String
+  version     String   @default("2026-05-07")
+  necessary   Boolean  @default(true)
+  analytics   Boolean  @default(false)
+  preferences Boolean  @default(false)
+  source      String   @default("web")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, version])
+  @@index([userId])
 }
 
 model GerberUpload {

@@ -2,14 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { PasswordService } from '../auth/password.service';
+import { UpsertCookieConsentDto } from './dto/cookie-consent.dto';
+import { CookieConsent } from './entities/cookie-consent.entity';
 import { User } from './entities/user.entity';
+import { CookieConsentRepository } from './repositories/cookie-consent.repository';
 import { UsersRepository } from './repositories/users.repository';
 import { UserRole } from '../../common/types/user-role.enum';
+
+const currentCookieConsentVersion = '2026-05-07';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
+    private readonly cookieConsentRepository: CookieConsentRepository,
     private readonly passwordService: PasswordService,
   ) {}
 
@@ -51,6 +57,19 @@ export class UsersService {
 
   findById(id: string): Promise<User | null> {
     return this.usersRepository.findById(id);
+  }
+
+  findCookieConsent(userId: string): Promise<CookieConsent | null> {
+    return this.cookieConsentRepository.findLatestByUserId(userId);
+  }
+
+  upsertCookieConsent(userId: string, dto: UpsertCookieConsentDto): Promise<CookieConsent> {
+    return this.cookieConsentRepository.upsert({
+      userId,
+      version: dto.version?.trim() || currentCookieConsentVersion,
+      analytics: dto.analytics,
+      preferences: dto.preferences,
+    });
   }
 
   private rolesForEmail(email: string): UserRole[] {
