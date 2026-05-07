@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { PrismaModule } from '../../prisma/prisma.module';
 import { SupportModule } from '../support/support.module';
 import { UsersModule } from '../users/users.module';
 import { AuthTokenService } from './auth-token.service';
@@ -11,7 +12,7 @@ import { SessionRepository } from './repositories/session.repository';
 
 @Global()
 @Module({
-  imports: [UsersModule, SupportModule],
+  imports: [PrismaModule, UsersModule, SupportModule],
   controllers: [AuthController],
   providers: [AuthService, AuthTokenService, SessionRepository, ProfileVerificationService, OAuthStateService, GoogleOAuthService],
   exports: [AuthService, AuthTokenService, ProfileVerificationService],

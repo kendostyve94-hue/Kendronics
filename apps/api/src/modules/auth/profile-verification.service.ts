@@ -1,17 +1,14 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
 import { EmailNotificationService } from '../support/email-notification.service';
 import { ProfileVerificationAction } from './dto/profile-verification.dto';
 
-type VerificationRecord = {
-  code: string;
-  expiresAt: number;
-};
-
 @Injectable()
 export class ProfileVerificationService {
-  private readonly records = new Map<string, VerificationRecord>();
-
-  constructor(private readonly emailNotificationService: EmailNotificationService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailNotificationService: EmailNotificationService,
+  ) {}
 
   async requestCode(input: { userId: string; email: string; action: ProfileVerificationAction }): Promise<{ ok: true }> {
     if (!input.email) {
@@ -19,9 +16,23 @@ export class ProfileVerificationService {
     }
 
     const code = String(Math.floor(100000 + Math.random() * 900000));
-    this.records.set(this.keyFor(input.userId, input.action), {
-      code,
-      expiresAt: Date.now() + 10 * 60 * 1000,
+    await this.prisma.profileVerificationCode.upsert({
+      where: {
+        userId_action: {
+          userId: input.userId,
+          action: input.action,
+        },
+      },
+      create: {
+        userId: input.userId,
+        action: input.action,
+        code,
+        expiresAt: this.expiresAt(),
+      },
+      update: {
+        code,
+        expiresAt: this.expiresAt(),
+      },
     });
 
     try {
@@ -31,7 +42,7 @@ export class ProfileVerificationService {
         action: input.action,
       });
     } catch (error) {
-      this.records.delete(this.keyFor(input.userId, input.action));
+      await this.deleteCode(input.userId, input.action);
       if (error instanceof ServiceUnavailableException) throw error;
       const message = smtpErrorDetails(error);
       console.error('Profile verification email failed:', message);
@@ -41,12 +52,18 @@ export class ProfileVerificationService {
     return { ok: true };
   }
 
-  verifyCode(input: { userId: string; action: ProfileVerificationAction; code: string }): { ok: true } {
-    const key = this.keyFor(input.userId, input.action);
-    const record = this.records.get(key);
+  async verifyCode(input: { userId: string; action: ProfileVerificationAction; code: string }): Promise<{ ok: true }> {
+    const record = await this.prisma.profileVerificationCode.findUnique({
+      where: {
+        userId_action: {
+          userId: input.userId,
+          action: input.action,
+        },
+      },
+    });
 
-    if (!record || record.expiresAt < Date.now()) {
-      this.records.delete(key);
+    if (!record || record.expiresAt.getTime() < Date.now()) {
+      await this.deleteCode(input.userId, input.action);
       throw new BadRequestException('Verification code expired or missing.');
     }
 
@@ -54,12 +71,18 @@ export class ProfileVerificationService {
       throw new BadRequestException('Invalid verification code.');
     }
 
-    this.records.delete(key);
+    await this.deleteCode(input.userId, input.action);
     return { ok: true };
   }
 
-  private keyFor(userId: string, action: ProfileVerificationAction) {
-    return `${userId}:${action}`;
+  private expiresAt(): Date {
+    return new Date(Date.now() + 10 * 60 * 1000);
+  }
+
+  private async deleteCode(userId: string, action: ProfileVerificationAction): Promise<void> {
+    await this.prisma.profileVerificationCode.deleteMany({
+      where: { userId, action },
+    });
   }
 }
 
