@@ -49,6 +49,65 @@ const capabilityRows = [
   ['Logistique', 'Coordination France, transport vers l’Afrique et suivi client.'],
 ];
 
+const homeCapabilityGroups = [
+  {
+    label: 'PCB fabrication',
+    count: '11 specs',
+    description: 'Options principales coordonnees via partenaires.',
+    headers: ['Item', 'Specifications', 'Note'],
+    rows: [
+      ['Materiaux', 'FR4, flex, aluminium, copper core, Rogers, PTFE Teflon', 'Standards, thermiques, flexibles ou RF selon revue.'],
+      ['Couches', '1-2, 4, 6, 8 et plus sur demande', 'Selon complexite, empilage, materiau et capacite partenaire.'],
+      ['Epaisseurs', '0,4 mm a 2,0 mm courants, sur mesure possible', 'Pour prototypes, boitiers contraints et cartes rigides.'],
+      ['Finitions', 'HASL sans plomb, ENIG, immersion silver, OSP, hard gold', 'Selon usage, delai, assemblage et disponibilite.'],
+      ['Cuivre', '1 oz, 2 oz et cuivre plus epais sur revue', 'Pour courant, thermique et contraintes DFM.'],
+      ['Masque', 'Vert, noir, blanc, bleu, rouge, jaune, mat selon disponibilite', 'La couleur depend de la ligne partenaire.'],
+      ['Serigraphie', 'Blanc, noir et autres options selon masque', 'References, polarites, logos et lisibilite assemblage.'],
+      ['Vias', 'Standards, tented, filled, via-in-pad sur revue', 'Les vias avances exigent une validation fichier.'],
+      ['Tests electriques', 'Flying probe ou test fixture selon disponibilite', 'Controle ouvertures et courts-circuits avant expedition.'],
+      ['PCBA', 'Demandes SMT et mixtes sur revue BOM/CPL', 'Assemblage confirme apres analyse partenaire.'],
+      ['Stencil', 'Avec ou sans cadre sur demande', 'Pour prototypes, SMT et petites series.'],
+    ],
+  },
+  {
+    label: 'Materiaux',
+    count: '6 familles',
+    description: 'Choix rapide selon usage de la carte.',
+    headers: ['Materiau', 'Usage typique', 'Disponibilite'],
+    rows: [
+      ['FR4', 'PCB rigides polyvalents, prototypes et petites series', 'Large disponibilite'],
+      ['Flex', 'Circuits flexibles, zones pliees, boitiers contraints', 'Revue partenaire'],
+      ['Aluminium', 'LED, puissance et cartes thermiques', 'Revue partenaire'],
+      ['Copper Core', 'Fort transfert thermique et electronique de puissance', 'Revue avancee'],
+      ['Rogers', 'RF, hautes frequences et controle dielectrique', 'Revue avancee'],
+      ['PTFE Teflon', 'RF specialise, faible perte, contraintes serrees', 'Revue avancee'],
+    ],
+  },
+  {
+    label: 'Finitions',
+    count: '5 choix',
+    description: 'Soudabilite, stockage, cout et connecteurs.',
+    headers: ['Finition', 'Usage typique', 'Note pratique'],
+    rows: [
+      ['HASL lead-free', 'Prototypes economiques et FR4 courants', 'Abordable, moins plat que ENIG.'],
+      ['ENIG', 'Fine pitch, assemblage et prototypes premium', 'Surface plate et tres polyvalente.'],
+      ['OSP', 'Production courte duree et assemblage simple', 'Stockage et manipulation a planifier.'],
+      ['Immersion silver', 'Signal ou assemblage avec bonne soudabilite', 'Precautions de stockage necessaires.'],
+      ['Hard gold', 'Gold fingers et surfaces d usure', 'Pour connecteurs et insertions repetees.'],
+    ],
+  },
+];
+
+const homeAdvancedOptions = [
+  'Gold fingers',
+  'Castellated holes',
+  'Via-in-pad',
+  'Vias remplis',
+  'Impedance controlee',
+  'PCBA BOM/CPL',
+  'Stencil SMT',
+];
+
 const resourceItems = [
   ['Guide technique', 'Gerber, KiCad, EasyEDA, erreurs courantes et bases pour préparer un dossier propre.', '/guide-technique'],
   ['Capacités', 'Matériaux, finitions, vias, cuivre, assemblage et options avancées.', '/capabilities'],
@@ -78,6 +137,7 @@ export default function HomePage() {
       <Hero />
       <MobileQuickAccess />
       <ProductCatalog />
+      <HomeCapabilityMatrix />
       <SmartOrdering />
       <OperationalProofs />
       <TrustAssurance />
@@ -85,6 +145,127 @@ export default function HomePage() {
       <Resources />
       <Footer />
     </main>
+  );
+}
+
+function HomeCapabilityMatrix() {
+  return (
+    <section className="bg-white px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <div className="mx-auto max-w-[1180px]">
+        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="label-caps text-deepblue">Capacites de fabrication</p>
+            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Les specs essentielles en lecture compacte.</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Un tableau dense pour comparer fabrication PCB, materiaux, finitions et options avancees sans allonger la page.
+            </p>
+          </div>
+          <Button href="/capabilities" variant="secondary" className="h-11 lg:h-12">
+            Voir le detail
+          </Button>
+        </div>
+
+        <div className="grid overflow-hidden border border-line bg-white lg:grid-cols-[15.5rem_minmax(0,1fr)]">
+          <aside className="border-b border-line bg-slate-50 lg:border-b-0 lg:border-r">
+            <div className="grid grid-cols-3 lg:grid-cols-1">
+              {homeCapabilityGroups.map((group, index) => (
+                <a
+                  key={group.label}
+                  href={`#home-capability-${index}`}
+                  className="min-h-[6rem] border-r border-line p-3 transition hover:bg-white lg:border-b lg:border-r-0 lg:p-4"
+                >
+                  <span className="text-[11px] font-black uppercase tracking-[0.12em] text-deepblue">{group.count}</span>
+                  <h3 className="mt-2 text-sm font-black leading-tight text-ink sm:text-base">{group.label}</h3>
+                  <p className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{group.description}</p>
+                </a>
+              ))}
+            </div>
+            <div className="hidden p-4 lg:block">
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Options avancees</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {homeAdvancedOptions.map((option) => (
+                  <span key={option} className="border border-line bg-white px-2.5 py-1 text-[11px] font-black text-slate-700">
+                    {option}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </aside>
+
+          <div className="min-w-0">
+            <div className="grid gap-0 xl:grid-cols-[1.25fr_0.9fr]">
+              <CapabilityDenseTable group={homeCapabilityGroups[0]} index={0} featured />
+              <div className="grid border-t border-line xl:border-l xl:border-t-0">
+                <CapabilityDenseTable group={homeCapabilityGroups[1]} index={1} />
+                <CapabilityDenseTable group={homeCapabilityGroups[2]} index={2} compact />
+              </div>
+            </div>
+            <div className="border-t border-line bg-slate-50 p-3 lg:hidden">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {homeAdvancedOptions.map((option) => (
+                  <span key={option} className="shrink-0 border border-line bg-white px-3 py-2 text-xs font-black text-slate-700">
+                    {option}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CapabilityDenseTable({
+  group,
+  index,
+  featured = false,
+  compact = false,
+}: {
+  group: (typeof homeCapabilityGroups)[number];
+  index: number;
+  featured?: boolean;
+  compact?: boolean;
+}) {
+  return (
+    <section id={`home-capability-${index}`} className={compact ? 'border-t border-line' : ''}>
+      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-line bg-white px-4 py-3">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-deepblue">{group.count}</p>
+          <h3 className="text-base font-black text-ink">{group.label}</h3>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className={`min-w-full text-left ${featured ? 'text-[13px]' : 'text-xs'}`}>
+          <thead className="bg-[#d8edf8] text-[11px] font-black uppercase tracking-[0.1em] text-slate-800">
+            <tr>
+              {group.headers.map((header, headerIndex) => (
+                <th
+                  key={header}
+                  className={`${headerIndex === 0 ? 'w-[9rem]' : ''} whitespace-nowrap border-b border-r border-slate-300 px-3 py-2 last:border-r-0`}
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {group.rows.map((row, rowIndex) => (
+              <tr key={row.join(':')} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                {row.map((cell, cellIndex) => (
+                  <td
+                    key={`${cell}-${cellIndex}`}
+                    className={`${cellIndex === 0 ? 'font-black text-ink' : 'leading-5 text-slate-600'} border-b border-r border-slate-200 px-3 py-2 align-top last:border-r-0`}
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
