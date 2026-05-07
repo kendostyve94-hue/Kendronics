@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { CookieConsentBanner } from '../components/layout/CookieConsentBanner';
 import { LanguageRuntime } from '../components/layout/LanguageRuntime';
 import './globals.css';
 
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <LanguageRuntime />
         {children}
+        <CookieConsentBanner />
       </body>
     </html>
   );
