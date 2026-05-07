@@ -17,6 +17,10 @@ const legalDocumentLinks = [
 
 const moreLinkTargets: Record<string, string> = {
   'conditions-generales-de-vente': '/terms/conditions-generales-de-vente',
+  'conditions-generales-utilisation': '/terms/conditions-generales-utilisation',
+  'politique-confidentialite': '/terms/politique-confidentialite',
+  'politique-cookies': '/terms/politique-cookies',
+  'mentions-legales': '/terms/mentions-legales',
 };
 
 function renderParagraphWithMoreLink(paragraph: string, sectionId?: string) {
