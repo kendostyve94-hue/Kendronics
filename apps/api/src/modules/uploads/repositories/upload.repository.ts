@@ -18,7 +18,19 @@ export class UploadRepository {
     const uploadId = randomUUID();
     const storageKey = `uploads/${userId}/${uploadId}/${sanitizedFilename}`;
     const uploadUrl = this.createPresignedPutUrl(storageKey);
-    void dto;
+
+    await this.prisma.gerberUpload.create({
+      data: {
+        id: uploadId,
+        userId,
+        originalFilename: dto.filename,
+        sanitizedFilename,
+        storageKey,
+        mimeType: dto.mimeType,
+        fileSizeBytes: dto.fileSizeBytes,
+        status: 'pending_upload',
+      },
+    });
 
     return {
       uploadId,
@@ -52,6 +64,53 @@ export class UploadRepository {
     };
   }
 
+  async downloadUploadFile(uploadId: string, userId: string): Promise<{ buffer: Buffer; storageKey: string } | null> {
+    const upload = await this.prisma.gerberUpload.findFirst({
+      where: { id: uploadId, userId },
+      select: { storageKey: true },
+    });
+    if (!upload) return null;
+
+    const response = await fetch(this.createPresignedGetUrl(upload.storageKey));
+    if (!response.ok) {
+      throw new ServiceUnavailableException(`Private storage rejected the download (${response.status}).`);
+    }
+
+    return {
+      buffer: Buffer.from(await response.arrayBuffer()),
+      storageKey: upload.storageKey,
+    };
+  }
+
+  async recordAnalysisForUpload(
+    userId: string,
+    uploadId: string,
+    analysis: GerberAnalysisResult,
+  ): Promise<PresignedUpload | null> {
+    const upload = await this.prisma.gerberUpload.findFirst({
+      where: { id: uploadId, userId },
+      include: { analysis: true },
+    });
+    if (!upload) return null;
+
+    const updatedUpload = await this.prisma.gerberUpload.update({
+      where: { id: upload.id },
+      data: {
+        status: 'analyzed',
+        analysis: upload.analysis
+          ? {
+              update: this.toAnalysisData(analysis),
+            }
+          : {
+              create: this.toAnalysisData(analysis),
+            },
+      },
+      include: { analysis: true },
+    });
+
+    return this.toPresignedUpload(updatedUpload, analysis);
+  }
+
   async recordDirectUpload(
     userId: string,
     sanitizedFilename: string,
@@ -59,62 +118,22 @@ export class UploadRepository {
     storageKey: string,
     analysis: GerberAnalysisResult,
   ): Promise<PresignedUpload> {
-    const upload = await this.prisma.gerberUpload.create({
+    const upload = await this.prisma.gerberUpload.update({
+      where: { id: storageKey.split('/')[2] },
       data: {
-        userId,
         originalFilename: dto.filename,
         sanitizedFilename,
-        storageKey,
         mimeType: dto.mimeType,
         fileSizeBytes: dto.fileSizeBytes,
         status: 'analyzed',
         analysis: {
-          create: {
-            widthMm: optionalDecimal(analysis.widthMm),
-            heightMm: optionalDecimal(analysis.heightMm),
-            detectedLayers: analysis.detectedLayers,
-            holesCount: analysis.holesCount,
-            hasSlots: analysis.hasSlots,
-            boardAreaCm2: optionalDecimal(analysis.boardAreaCm2),
-            complexity: analysis.complexity,
-            parserConfidence: new Prisma.Decimal(analysis.parserConfidence),
-            units: analysis.units,
-            outlineSource: analysis.outlineSource,
-            copperLayerFiles: analysis.copperLayerFiles,
-            drillFiles: analysis.drillFiles,
-            warnings: analysis.warnings,
-            rawSummary: analysis.rawSummary as Prisma.InputJsonObject,
-          },
+          create: this.toAnalysisData(analysis),
         },
       },
       include: { analysis: true },
     });
 
-    return {
-      uploadId: upload.id,
-      storageKey: upload.storageKey,
-      uploadUrl: '',
-      expiresAt: new Date(),
-      status: 'uploaded',
-      analysis: upload.analysis
-        ? {
-            widthMm: upload.analysis.widthMm?.toNumber(),
-            heightMm: upload.analysis.heightMm?.toNumber(),
-            detectedLayers: upload.analysis.detectedLayers ?? undefined,
-            holesCount: upload.analysis.holesCount,
-            hasSlots: upload.analysis.hasSlots,
-            boardAreaCm2: upload.analysis.boardAreaCm2?.toNumber(),
-            complexity: upload.analysis.complexity as GerberAnalysisResult['complexity'],
-            parserConfidence: upload.analysis.parserConfidence.toNumber(),
-            units: upload.analysis.units as GerberAnalysisResult['units'],
-            outlineSource: upload.analysis.outlineSource ?? undefined,
-            copperLayerFiles: upload.analysis.copperLayerFiles,
-            drillFiles: upload.analysis.drillFiles,
-            warnings: upload.analysis.warnings,
-            rawSummary: upload.analysis.rawSummary as Record<string, unknown>,
-          }
-        : analysis,
-    };
+    return this.toPresignedUpload(upload, analysis);
   }
 
   async findAnalysis(uploadId: string, userId: string): Promise<GerberAnalysisResult | null> {
@@ -142,6 +161,14 @@ export class UploadRepository {
   }
 
   private createPresignedPutUrl(storageKey: string): string {
+    return this.createPresignedUrl(storageKey, 'PUT');
+  }
+
+  private createPresignedGetUrl(storageKey: string): string {
+    return this.createPresignedUrl(storageKey, 'GET');
+  }
+
+  private createPresignedUrl(storageKey: string, method: 'GET' | 'PUT'): string {
     const bucket = this.configValue('S3_BUCKET');
     const region = this.configValue('S3_REGION');
     const accessKeyId = this.configValue('S3_ACCESS_KEY_ID');
@@ -171,19 +198,20 @@ export class UploadRepository {
     url.searchParams.set('X-Amz-Credential', `${accessKeyId}/${credentialScope}`);
     url.searchParams.set('X-Amz-Date', amzDate);
     url.searchParams.set('X-Amz-Expires', expiresSeconds);
-    url.searchParams.set('X-Amz-SignedHeaders', 'content-type;host');
+    const signedHeaders = method === 'PUT' ? 'content-type;host' : 'host';
+    url.searchParams.set('X-Amz-SignedHeaders', signedHeaders);
 
     const canonicalQueryString = [...url.searchParams.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
       .join('&');
-    const canonicalHeaders = `content-type:application/zip\nhost:${url.host}\n`;
+    const canonicalHeaders = method === 'PUT' ? `content-type:application/zip\nhost:${url.host}\n` : `host:${url.host}\n`;
     const canonicalRequest = [
-      'PUT',
+      method,
       url.pathname,
       canonicalQueryString,
       canonicalHeaders,
-      'content-type;host',
+      signedHeaders,
       'UNSIGNED-PAYLOAD',
     ].join('\n');
     const stringToSign = [
@@ -197,6 +225,75 @@ export class UploadRepository {
 
     url.searchParams.set('X-Amz-Signature', signature);
     return url.toString();
+  }
+
+  private toAnalysisData(analysis: GerberAnalysisResult) {
+    return {
+      widthMm: optionalDecimal(analysis.widthMm),
+      heightMm: optionalDecimal(analysis.heightMm),
+      detectedLayers: analysis.detectedLayers,
+      holesCount: analysis.holesCount,
+      hasSlots: analysis.hasSlots,
+      boardAreaCm2: optionalDecimal(analysis.boardAreaCm2),
+      complexity: analysis.complexity,
+      parserConfidence: new Prisma.Decimal(analysis.parserConfidence),
+      units: analysis.units,
+      outlineSource: analysis.outlineSource,
+      copperLayerFiles: analysis.copperLayerFiles,
+      drillFiles: analysis.drillFiles,
+      warnings: analysis.warnings,
+      rawSummary: analysis.rawSummary as Prisma.InputJsonObject,
+    };
+  }
+
+  private toPresignedUpload(
+    upload: {
+      id: string;
+      storageKey: string;
+      analysis: {
+        widthMm: Prisma.Decimal | null;
+        heightMm: Prisma.Decimal | null;
+        detectedLayers: number | null;
+        holesCount: number;
+        hasSlots: boolean;
+        boardAreaCm2: Prisma.Decimal | null;
+        complexity: string;
+        parserConfidence: Prisma.Decimal;
+        units: string | null;
+        outlineSource: string | null;
+        copperLayerFiles: string[];
+        drillFiles: string[];
+        warnings: string[];
+        rawSummary: Prisma.JsonValue;
+      } | null;
+    },
+    fallbackAnalysis: GerberAnalysisResult,
+  ): PresignedUpload {
+    return {
+      uploadId: upload.id,
+      storageKey: upload.storageKey,
+      uploadUrl: '',
+      expiresAt: new Date(),
+      status: 'uploaded',
+      analysis: upload.analysis
+        ? {
+            widthMm: upload.analysis.widthMm?.toNumber(),
+            heightMm: upload.analysis.heightMm?.toNumber(),
+            detectedLayers: upload.analysis.detectedLayers ?? undefined,
+            holesCount: upload.analysis.holesCount,
+            hasSlots: upload.analysis.hasSlots,
+            boardAreaCm2: upload.analysis.boardAreaCm2?.toNumber(),
+            complexity: upload.analysis.complexity as GerberAnalysisResult['complexity'],
+            parserConfidence: upload.analysis.parserConfidence.toNumber(),
+            units: upload.analysis.units as GerberAnalysisResult['units'],
+            outlineSource: upload.analysis.outlineSource ?? undefined,
+            copperLayerFiles: upload.analysis.copperLayerFiles,
+            drillFiles: upload.analysis.drillFiles,
+            warnings: upload.analysis.warnings,
+            rawSummary: upload.analysis.rawSummary as Record<string, unknown>,
+          }
+        : fallbackAnalysis,
+    };
   }
 
   private uriEncodePath(value: string): string {

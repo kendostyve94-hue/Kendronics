@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PresignUploadDto } from './dto/presign-upload.dto';
 import { PresignedUpload } from './entities/presigned-upload.entity';
@@ -46,6 +46,27 @@ export class UploadsService {
     const analysis = this.gerberParser.analyzeZip(file.buffer);
     const uploaded = await this.uploadRepository.uploadFile(userId, sanitizedFilename, dto, file.buffer);
     const recordedUpload = await this.uploadRepository.recordDirectUpload(userId, sanitizedFilename, dto, uploaded.storageKey, analysis);
+    await this.notificationsService.create({
+      userId,
+      type: 'gerber.analysis.completed',
+      title: 'Fichier Gerber analyse',
+      body: gerberAnalysisSummary(analysis),
+    });
+    return recordedUpload;
+  }
+
+  async confirmDirectStorageUpload(userId: string, uploadId: string): Promise<PresignedUpload> {
+    const uploadedFile = await this.uploadRepository.downloadUploadFile(uploadId, userId);
+    if (!uploadedFile) {
+      throw new NotFoundException('Upload not found for this user.');
+    }
+
+    const analysis = this.gerberParser.analyzeZip(uploadedFile.buffer);
+    const recordedUpload = await this.uploadRepository.recordAnalysisForUpload(userId, uploadId, analysis);
+    if (!recordedUpload) {
+      throw new NotFoundException('Upload not found for this user.');
+    }
+
     await this.notificationsService.create({
       userId,
       type: 'gerber.analysis.completed',

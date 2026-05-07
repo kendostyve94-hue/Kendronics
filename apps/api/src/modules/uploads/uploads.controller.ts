@@ -3,6 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
+import { ConfirmUploadDto } from './dto/confirm-upload.dto';
 import { PresignUploadDto } from './dto/presign-upload.dto';
 import { UploadsService } from './uploads.service';
 
@@ -14,6 +15,11 @@ export class UploadsController {
   @Post('presign')
   presign(@CurrentUser() user: AuthenticatedUser, @Body() dto: PresignUploadDto) {
     return this.uploadsService.createPresignedUpload(user.id, dto);
+  }
+
+  @Post('confirm')
+  confirm(@CurrentUser() user: AuthenticatedUser, @Body() dto: ConfirmUploadDto) {
+    return this.uploadsService.confirmDirectStorageUpload(user.id, dto.uploadId);
   }
 
   @Post('direct')

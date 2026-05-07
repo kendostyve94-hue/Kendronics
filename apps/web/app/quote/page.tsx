@@ -131,6 +131,13 @@ type UploadResponse = {
   };
 };
 
+type PresignUploadResponse = {
+  uploadId: string;
+  uploadUrl: string;
+  expiresAt: string;
+  status: 'pending_scan' | 'uploaded';
+};
+
 type QuotePanelId = 'base' | 'specs' | 'highSpec' | 'advanced';
 type MobileSheetId =
   | 'baseMaterial'
@@ -247,7 +254,7 @@ export default function QuotePage() {
         throw new Error('Connectez-vous avant de téléverser un fichier Gerber.');
       }
 
-      const uploadedFile = await uploadGerberThroughApi(file, session.accessToken);
+      const uploadedFile = await uploadGerberDirectToStorage(file, session.accessToken);
       applyGerberAnalysis(file.name, uploadedFile.analysis);
       setGerberUpload({
         status: 'uploaded',
@@ -289,29 +296,69 @@ export default function QuotePage() {
     });
   }
 
-  async function uploadGerberThroughApi(file: File, accessToken: string): Promise<UploadResponse> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    let response: Response;
+  async function uploadGerberDirectToStorage(file: File, accessToken: string): Promise<UploadResponse> {
+    let presignResponse: Response;
     try {
-      response = await fetch(`${apiBaseUrl}/api/uploads/direct`, {
+      presignResponse = await fetch(`${apiBaseUrl}/api/uploads/presign`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify({
+          filename: file.name,
+          mimeType: 'application/zip',
+          fileSizeBytes: file.size,
+        }),
       });
     } catch {
-      throw new Error("Impossible de contacter l’API pour relayer l’upload.");
+      throw new Error("Impossible de contacter l'API pour preparer l'upload.");
     }
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => null);
+    if (!presignResponse.ok) {
+      const error = await presignResponse.json().catch(() => null);
       throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Upload impossible pour le moment.');
     }
 
-    return response.json() as Promise<UploadResponse>;
+    const presignedUpload = (await presignResponse.json()) as PresignUploadResponse;
+
+    let storageResponse: Response;
+    try {
+      storageResponse = await fetch(presignedUpload.uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/zip',
+        },
+        body: file,
+      });
+    } catch {
+      throw new Error("Impossible d'envoyer le fichier vers le stockage securise.");
+    }
+
+    if (!storageResponse.ok) {
+      throw new Error(`Le stockage securise a refuse le fichier (${storageResponse.status}).`);
+    }
+
+    let confirmResponse: Response;
+    try {
+      confirmResponse = await fetch(`${apiBaseUrl}/api/uploads/confirm`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ uploadId: presignedUpload.uploadId }),
+      });
+    } catch {
+      throw new Error("Impossible de lancer l'analyse du fichier Gerber.");
+    }
+
+    if (!confirmResponse.ok) {
+      const error = await confirmResponse.json().catch(() => null);
+      throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Analyse Gerber impossible pour le moment.');
+    }
+
+    return confirmResponse.json() as Promise<UploadResponse>;
   }
 
   async function saveQuote() {
