@@ -37,10 +37,13 @@ const heroSlides = [
 ];
 
 const workflowSteps = [
-  ['01', 'Uploader les fichiers', 'Ajoutez Gerber ZIP, BOM et CPL si assemblage.'],
-  ['02', 'Configurer le PCB', 'Choisissez couches, dimensions, quantité, finition et livraison.'],
-  ['03', 'Réviser le devis', 'Visualisez fabrication, logistique, paiement et frais de service.'],
-  ['04', 'Commander et suivre', 'Payez puis suivez les jalons dans la page Suivi.'],
+  ['quote', 'Online Quote'],
+  ['upload', 'Upload PCB File'],
+  ['review', 'Order Review'],
+  ['payment', 'Payment'],
+  ['tracking', 'Real-time Fabrication Tracking'],
+  ['delivery', 'Delivery'],
+  ['received', 'Confirm Received'],
 ];
 
 const capabilityRows = [
@@ -469,18 +472,87 @@ function SmartOrdering() {
             </div>
           </div>
 
-          <div className="flex gap-3 overflow-x-auto pb-2 md:grid md:overflow-visible md:pb-0 md:grid-cols-2">
-            {workflowSteps.map(([number, title, body]) => (
-              <article key={number} className="smart-ordering-card min-w-[16rem] border border-slate-200 bg-white p-4 text-ink md:min-w-0 md:p-5">
-                <span className="text-sm font-normal text-[#008b6d]">{number}</span>
-                <h3 className="mt-3 text-lg font-normal text-slate-950">{title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-700">{body}</p>
-              </article>
-            ))}
+          <div className="smart-ordering-timeline overflow-x-auto border border-slate-200 bg-white px-6 py-6 text-slate-700 md:overflow-visible">
+            <div className="flex min-w-[58rem] items-start justify-between">
+              {workflowSteps.map(([icon, label], index) => (
+                <div key={label} className="flex min-w-0 flex-1 items-start">
+                  <div className="flex min-w-[6.5rem] flex-col items-center text-center">
+                    <WorkflowIcon name={icon} />
+                    <span className="mt-3 text-sm font-normal leading-5 text-slate-600">{label}</span>
+                  </div>
+                  {index < workflowSteps.length - 1 ? <span className="mt-4 h-px flex-1 bg-slate-300" aria-hidden="true" /> : null}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+function WorkflowIcon({ name }: { name: string }) {
+  const common = 'h-7 w-7 text-slate-500';
+
+  if (name === 'quote') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <path d="M7 3h10v18H7z" />
+        <path d="M9 7h6M9 11h2M13 11h2M9 15h2M13 15h2" />
+      </svg>
+    );
+  }
+
+  if (name === 'upload') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <path d="M6 3h9l3 3v15H6z" />
+        <path d="M14 3v4h4M12 17V9M9 12l3-3 3 3" />
+      </svg>
+    );
+  }
+
+  if (name === 'review') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <path d="M4 4h14v16H4z" />
+        <path d="M7 8h8M7 12h5M16 16l4 4M17.5 17.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+      </svg>
+    );
+  }
+
+  if (name === 'payment') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <rect x="3" y="6" width="18" height="12" rx="1.5" />
+        <path d="M3 10h18M7 15h5" />
+      </svg>
+    );
+  }
+
+  if (name === 'tracking') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" />
+      </svg>
+    );
+  }
+
+  if (name === 'delivery') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <path d="M3 11l18-7-7 18-3-8-8-3Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+      <path d="M12 3 4 7l8 4 8-4-8-4Z" />
+      <path d="M4 7v9l8 5 8-5V7M12 11v10M16 5l-8 4" />
+      <path d="m15.5 14.5 1.5 1.5 3-3" />
+    </svg>
   );
 }
 
