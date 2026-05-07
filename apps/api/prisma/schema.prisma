@@ -23,6 +23,7 @@ model User {
   payments Payment[]
   gerberUploads GerberUpload[]
   cookieConsents CookieConsent[]
+  supportTickets SupportTicket[]
 }
 
 model CookieConsent {
@@ -281,4 +282,26 @@ model PaymentEvent {
 
   @@unique([provider, providerEventId])
   @@index([paymentId])
+}
+
+model SupportTicket {
+  id              String   @id @default(uuid())
+  ticketNumber    String   @unique
+  userId          String?
+  requesterName   String?
+  requesterEmail  String?
+  category        String?
+  orderId         String?
+  subject         String
+  message         String?
+  attachmentName  String?
+  status          String   @default("open")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
