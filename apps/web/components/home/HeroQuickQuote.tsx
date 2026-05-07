@@ -1,7 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { calculatePCBQuote } from '../../lib/pricing';
+import { useState } from 'react';
 import type { QuoteConfig } from '../../lib/quote-types';
 
 const baseConfig: QuoteConfig = {
@@ -69,14 +68,16 @@ const baseConfig: QuoteConfig = {
 
 export function HeroQuickQuote() {
   const [config, setConfig] = useState<QuoteConfig>(baseConfig);
-  const pricing = useMemo(() => calculatePCBQuote(config), [config]);
 
   function update<K extends keyof QuoteConfig>(key: K, value: QuoteConfig[K]) {
     setConfig((current) => ({ ...current, [key]: value }));
   }
 
   return (
-    <aside className="hidden h-12 items-center gap-3 text-ink lg:flex">
+    <aside className="hidden h-[3.35rem] items-center gap-3 bg-white/90 p-1 text-ink backdrop-blur-sm lg:flex">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center text-slate-500">
+        <CalculatorIcon />
+      </div>
       <SelectField
         label="Couches"
         value={config.layers}
@@ -109,11 +110,8 @@ export function HeroQuickQuote() {
           [100, '100 pcs'],
         ]}
       />
-      <div className="flex h-full min-w-[8.5rem] items-center justify-center bg-white/90 px-3 text-sm text-[#ff7a00] backdrop-blur-sm">
-        {formatMoney(pricing.finalTotal)}
-      </div>
-      <a href="/quote" className="inline-flex h-full items-center justify-center bg-[#0f8f6b] px-8 text-sm font-normal text-white transition duration-300 hover:bg-[#0b7558]">
-        Finaliser
+      <a href="/quote" className="inline-flex h-full min-w-[10rem] items-center justify-center bg-[#0b74ff] px-7 text-base font-black text-white transition duration-300 hover:bg-[#075fd1]">
+        Voir mon devis
       </a>
     </aside>
   );
@@ -131,7 +129,7 @@ function DimensionField({
   onWidthChange: (value: number) => void;
 }) {
   return (
-    <div className="flex h-full w-[12rem] items-center justify-center gap-2 bg-white/90 px-3 text-sm backdrop-blur-sm">
+    <div className="flex h-11 w-[12rem] items-center justify-center gap-2 bg-slate-100 px-4 text-sm">
       <label className="min-w-0 flex-1">
         <span className="sr-only">Longueur</span>
         <input
@@ -170,7 +168,7 @@ function SelectField({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="flex h-full w-[8.5rem] items-center bg-white/90 px-3 backdrop-blur-sm">
+    <label className="flex h-11 w-[8.5rem] items-center bg-slate-100 px-4">
       <span className="sr-only">{label}</span>
       <select
         value={value}
@@ -191,6 +189,11 @@ function SelectField({
   );
 }
 
-function formatMoney(amount: number): string {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+function CalculatorIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="5" y="3" width="14" height="18" />
+      <path d="M8 7h8M8 11h2M12 11h2M16 11h.01M8 15h2M12 15h2M16 15h.01M8 19h2M12 19h2M16 19h.01" />
+    </svg>
+  );
 }
