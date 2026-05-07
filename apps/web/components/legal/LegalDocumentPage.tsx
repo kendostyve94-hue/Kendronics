@@ -9,12 +9,16 @@ const heroImage =
   'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2400&q=85';
 
 const legalDocumentLinks = [
-  ['Conditions Générales de Vente', '/terms#conditions-generales-de-vente'],
+  ['Conditions Générales de Vente', '/terms/conditions-generales-de-vente'],
   ['Conditions Générales d’Utilisation', '/terms#conditions-generales-utilisation'],
   ['Politique de confidentialité', '/terms#politique-confidentialite'],
   ['Politique de cookies', '/terms#politique-cookies'],
   ['Mentions légales', '/terms#mentions-legales'],
 ];
+
+const moreLinkTargets: Record<string, string> = {
+  'conditions-generales-de-vente': '/terms/conditions-generales-de-vente',
+};
 
 function renderParagraphWithMoreLink(paragraph: string, sectionId?: string) {
   const marker = 'voir plus...';
@@ -33,7 +37,7 @@ function renderParagraphWithMoreLink(paragraph: string, sectionId?: string) {
       {before ? ' ' : ''}
       <a
         className="font-black text-blue-600 underline-offset-4 transition hover:text-blue-700 hover:underline"
-        href={sectionId ? `#${sectionId}` : '#'}
+        href={sectionId ? moreLinkTargets[sectionId] ?? `#${sectionId}` : '#'}
       >
         voir plus...
       </a>

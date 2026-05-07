@@ -24,7 +24,7 @@ const footerGroups = [
   {
     title: 'CADRE LEGAL',
     links: [
-      ['Conditions de vente', '/terms#conditions-generales-de-vente'],
+      ['Conditions de vente', '/terms/conditions-generales-de-vente'],
       ['Conditions utilisation', '/terms#conditions-generales-utilisation'],
       ['Confidentialite', '/terms#politique-confidentialite'],
       ['Cookies', '/terms#politique-cookies'],
