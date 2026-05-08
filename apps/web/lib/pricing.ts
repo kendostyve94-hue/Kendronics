@@ -163,11 +163,8 @@ function calculateLocalCalibratedQuote(config: QuoteConfig): PricingBreakdown {
     assemblyCost +
     stencilCost;
 
-  const partnerHandlingCost = 3.8 + partnerManufacturingCost * 0.055 + (config.removeMarking ? 2.5 : 0) + (config.twoDBarcode ? 1.8 : 0);
   const grossWeightKg = estimateGrossWeightKg(dimensions.lengthMm, dimensions.widthMm, config.thickness, quantity, config.layers);
   const volumeWeightKg = Math.max(grossWeightKg, (dimensions.lengthMm * dimensions.widthMm * 18 * quantity) / 5000000);
-  const chinaToFranceLogistics = 8.5 + Math.min(48, volumeWeightKg * 7.2) + (config.shippingMode === 'express' ? 7 : 0);
-  const franceProcessingFee = 7.5 + (config.assemblyRequired ? 6 : 0) + (config.productType === 'advanced_pcb' ? 4 : 0);
   const modeMultiplier = config.shippingMode === 'express' ? 1.55 : config.shippingMode === 'economy' ? 0.82 : 1;
   const localFranceToAfricaDelivery = (zoneDeliveryFee[country.logisticsZone] ?? 30) * modeMultiplier + volumeWeightKg * 5.8 + (config.insuranceRequired ? 7 : 0);
   const franceToAfricaDelivery =
@@ -175,12 +172,7 @@ function calculateLocalCalibratedQuote(config: QuoteConfig): PricingBreakdown {
       ? config.liveShippingAmount
       : localFranceToAfricaDelivery;
   const productionSpeedFee = getProductionSpeedFee(config);
-  const supplierEstimatedPrice =
-    partnerManufacturingCost +
-    partnerHandlingCost +
-    chinaToFranceLogistics +
-    franceProcessingFee +
-    productionSpeedFee;
+  const supplierEstimatedPrice = partnerManufacturingCost + productionSpeedFee;
   const smartBufferMultiplier = calculateSmartBuffer(config, supplierEstimatedPrice);
   const kendronicsServiceFee = getVisibleServiceFee(supplierEstimatedPrice);
   const paymentProcessingFee = 0;
