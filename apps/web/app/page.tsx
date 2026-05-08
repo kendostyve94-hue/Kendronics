@@ -10,6 +10,7 @@ const heroControllerBoardImage = '/images/hero-controller-board-transparent.png'
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
 const smartOrderingMapImage = '/images/smart-ordering-world-map.png';
 const quoteWorkflowImage = '/images/quote-workflow.png';
+const smartOrderingWorkflowImage = '/images/smart-ordering-workflow-fade.png';
 const heroSlides = [
   {
     eyebrow: 'PCB personnalisés et assemblage',
@@ -473,11 +474,11 @@ function SmartOrdering() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-sm bg-white/95 p-2 md:p-3">
+          <div className="overflow-hidden py-1">
             <img
-              src={quoteWorkflowImage}
+              src={smartOrderingWorkflowImage}
               alt="Demande en ligne, telechargement du fichier PCB, verification de la commande, paiement, suivi fabrication, livraison et reception confirmee."
-              className="h-auto w-full object-contain"
+              className="h-auto w-full object-contain opacity-85"
             />
           </div>
         </div>
