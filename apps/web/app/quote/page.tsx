@@ -273,16 +273,6 @@ export default function QuotePage() {
     }));
   }
 
-  function resetQuote() {
-    setSaved(false);
-    setGerberUpload({ status: 'idle' });
-    setQuoteSave({ status: 'idle' });
-    setOpenPanel('base');
-    setMobileSheet(null);
-    setSelectedProductTitle(productCards[0].title);
-    setConfig(initialConfig);
-  }
-
   async function uploadGerber(file: File) {
     setSaved(false);
     setQuoteSave({ status: 'idle' });
@@ -485,7 +475,7 @@ export default function QuotePage() {
   return (
     <main className="min-h-screen bg-white text-[#1f2933]">
       <Navbar />
-      <section className="border-b border-slate-200 bg-[#eef6fb] pt-3">
+      <section className="border-b border-slate-200 bg-[#eef6fb] pt-20 sm:pt-24">
         <div className="mx-auto max-w-[1280px] px-3 pb-3 sm:px-6 lg:px-8">
           <div className="quote-product-strip overflow-x-auto">
             <div className="grid min-w-[980px] grid-cols-6 gap-2">
@@ -511,15 +501,6 @@ export default function QuotePage() {
               </button>
             ))}
             </div>
-          </div>
-
-          <div className="mt-3 grid gap-3 md:grid-cols-[1fr_1fr]">
-            <button type="button" onClick={resetQuote} className="h-9 rounded-sm border border-slate-300 bg-white text-sm font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
-              Reset
-            </button>
-            <button type="button" onClick={() => setOpenPanel('base')} className="h-9 rounded-sm bg-[#23a85f] text-sm font-black text-white transition hover:bg-[#16804b]">
-              Calculate
-            </button>
           </div>
         </div>
       </section>

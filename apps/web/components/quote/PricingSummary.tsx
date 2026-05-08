@@ -117,13 +117,13 @@ export function PricingSummary({
 
   return (
     <aside className="space-y-3">
-      <div className="hidden rounded-sm border border-slate-200 bg-white p-3 lg:block">
-        <div className="-m-3 mb-3 border-b border-slate-200 bg-slate-50 px-3 py-2">
-          <h2 className="text-sm font-black text-slate-950">Pricing And Build Time</h2>
+      <div className="hidden rounded-sm border border-slate-200 bg-[#f4f7fa] p-5 lg:block">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-black text-slate-950 sm:text-base">Pricing</h2>
           <span className="sr-only">Pricing status</span>
         </div>
 
-        <div className="mb-4">
+        <div className="mt-4 mb-4">
           <p className="mb-2 text-sm font-semibold text-slate-700">PCB Price</p>
           <div className="overflow-hidden rounded-sm border border-slate-200">
             <button type="button" onClick={() => onProductionSpeedChange('standard')} className={`grid w-full grid-cols-[1fr_4rem_5rem] items-center gap-2 px-3 py-2 text-left text-sm ${productionSpeed === 'standard' ? 'bg-[#eefbf6]' : 'bg-white'}`}>
