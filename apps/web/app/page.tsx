@@ -9,6 +9,7 @@ const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
 const heroControllerBoardImage = '/images/hero-controller-board-transparent.png';
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
 const smartOrderingMapImage = '/images/smart-ordering-world-map.png';
+const orderingWorkflowImage = '/images/ordering-workflow-transparent.png';
 const heroSlides = [
   {
     eyebrow: 'PCB personnalisés et assemblage',
@@ -427,10 +428,10 @@ function MobileQuickAccess() {
 
 function SmartOrdering() {
   return (
-    <section className="relative overflow-hidden bg-ink px-4 py-8 text-white sm:px-6 sm:py-14 lg:px-8">
-      <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
-      <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/78 to-ink/50" />
-      <svg className="smart-ordering-routes pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1200 520" aria-hidden="true">
+    <section className="relative overflow-hidden bg-white px-4 py-8 text-ink sm:px-6 sm:py-14 lg:px-8">
+      <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-10" />
+      <div className="absolute inset-0 bg-gradient-to-r from-white via-white/94 to-white/82" />
+      <svg className="smart-ordering-routes pointer-events-none absolute inset-0 hidden h-full w-full" viewBox="0 0 1200 520" aria-hidden="true">
         <defs>
           <linearGradient id="route-blue" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#8fc5ff" stopOpacity="0" />
@@ -459,31 +460,25 @@ function SmartOrdering() {
       <div className="relative mx-auto max-w-[1180px]">
         <div className="grid gap-7 lg:grid-cols-[0.88fr_1.12fr] lg:items-end">
           <div>
-            <p className="label-caps text-white">Commande intelligente</p>
-            <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
-            <p className="mt-4 text-sm leading-7 text-slate-100">
+            <p className="label-caps text-deepblue">Commande intelligente</p>
+            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
+            <p className="mt-4 text-sm leading-7 text-slate-600">
               Le devis conserve le contexte technique : fichiers, configuration, vérification, paiement, jalons de fabrication et livraison.
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:gap-3">
               <Button href="/quote" className="min-w-[8rem]">Commencer</Button>
-              <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap border-white/35 bg-white/10 text-white hover:border-white/55 hover:bg-white/15">
+              <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap">
                 Comment ca marche
               </Button>
             </div>
           </div>
 
-          <div className="smart-ordering-timeline overflow-x-auto bg-transparent py-1 text-white md:overflow-visible">
-            <div className="flex min-w-[48rem] items-start justify-between">
-              {workflowSteps.map(([icon, label], index) => (
-                <div key={label} className="flex min-w-0 flex-1 items-start">
-                  <div className="flex min-w-[5.75rem] flex-col items-center text-center">
-                    <WorkflowIcon name={icon} />
-                    <span className="mt-3 text-xs font-normal leading-5 text-slate-100 sm:text-sm">{label}</span>
-                  </div>
-                  {index < workflowSteps.length - 1 ? <span className="mt-4 h-px flex-1 bg-white/30" aria-hidden="true" /> : null}
-                </div>
-              ))}
-            </div>
+          <div className="overflow-x-auto py-1 md:overflow-visible">
+            <img
+              src={orderingWorkflowImage}
+              alt="Demande en ligne, telechargement du fichier PCB, verification de la commande, paiement, suivi fabrication, livraison et reception confirmee."
+              className="h-auto min-w-[48rem] max-w-none md:min-w-0 md:w-full"
+            />
           </div>
         </div>
       </div>

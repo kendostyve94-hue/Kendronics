@@ -548,6 +548,17 @@ export default function QuotePage() {
       <Navbar />
       <section className="border-b border-slate-200 bg-[#eef6fb] pt-20 sm:pt-24">
         <div className="mx-auto max-w-[1280px] px-3 pb-3 sm:px-6 lg:px-8">
+          <div className="mb-4 flex flex-col gap-2 sm:mb-5 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="text-xs font-bold text-slate-500">
+                Livraison vers : <span className="text-[#0f8f6b]">{selectedCountry.name}</span> / {selectedCountry.logisticsZone}
+              </div>
+              <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:mt-2 sm:text-3xl">Devis PCB en ligne</h1>
+            </div>
+            <a href="/how-it-works" className="text-xs font-bold text-[#0f8f6b] hover:text-[#096b51] sm:text-sm">
+              Instructions de commande &gt;
+            </a>
+          </div>
           <div className="quote-product-strip overflow-x-auto">
             <div className="grid min-w-[980px] grid-cols-6 gap-2">
             {productCards.map((product) => (
