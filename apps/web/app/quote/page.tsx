@@ -468,6 +468,10 @@ export default function QuotePage() {
         throw new Error('Connectez-vous avant de sauvegarder un devis.');
       }
 
+      if (errors.length > 0) {
+        throw new Error(errors[0]);
+      }
+
       if (!gerberUpload.uploadId) {
         throw new Error('Téléversez un fichier Gerber ZIP avant de sauvegarder le devis.');
       }
