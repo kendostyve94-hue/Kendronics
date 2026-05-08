@@ -60,7 +60,7 @@ export function PricingSummary({
   const [ratesState, setRatesState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [priceDetailsOpen, setPriceDetailsOpen] = useState(false);
   const countryMenuRef = useRef<HTMLDivElement>(null);
-  const canSave = saveState !== 'saving';
+  const canSave = errors.length === 0 && saveState !== 'saving';
 
   const selectedCountry = countries.find((country) => country.iso2 === destinationCountry) ?? countries[0];
   const isSupplierPrice = pricing.pricingSource === 'supplier_api';
@@ -183,7 +183,7 @@ export function PricingSummary({
           className={`mt-2 h-11 w-full rounded-sm text-xs font-black uppercase text-white transition sm:mt-3 sm:h-12 sm:text-sm ${
             canSave
               ? 'bg-[#0f8f6b] hover:bg-[#0b7558] active:translate-y-px'
-              : 'cursor-not-allowed bg-slate-300 opacity-70'
+              : 'cursor-not-allowed bg-[#0f8f6b]/25 text-white/80 blur-[0.35px]'
           }`}
         >
           {saveState === 'saving' ? 'Sauvegarde...' : saveState === 'saved' ? 'Devis sauvegarde' : 'Sauvegarder dans le panier'}
@@ -213,7 +213,7 @@ export function PricingSummary({
               onClick={onSave}
               disabled={!canSave}
               className={`h-11 shrink-0 rounded-sm px-5 text-xs font-black uppercase text-white transition ${
-                canSave ? 'bg-[#0f8f6b] hover:bg-[#0b7558]' : 'cursor-not-allowed bg-slate-300 opacity-70'
+                canSave ? 'bg-[#0f8f6b] hover:bg-[#0b7558]' : 'cursor-not-allowed bg-[#0f8f6b]/25 text-white/80 blur-[0.35px]'
               }`}
             >
               {saveState === 'saving' ? 'Sauvegarde...' : 'Panier'}
