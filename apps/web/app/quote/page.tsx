@@ -207,6 +207,7 @@ type MobileSheetId =
   | 'destination';
 
 const apiBaseUrl = getApiBaseUrl();
+const quoteWorkflowImage = '/images/quote-workflow.png';
 const customerOrdersStorageKey = 'kendronics.customer.orders';
 
 function readNumberParam(params: URLSearchParams, key: string, fallback: number): number {
@@ -548,14 +549,21 @@ export default function QuotePage() {
       <Navbar />
       <section className="border-b border-slate-200 bg-[#eef6fb] pt-20 sm:pt-24">
         <div className="mx-auto max-w-[1280px] px-3 pb-3 sm:px-6 lg:px-8">
-          <div className="mb-4 flex flex-col gap-2 sm:mb-5 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="mb-4 grid gap-3 sm:mb-5 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,36rem)_minmax(0,1fr)] lg:items-center">
             <div>
               <div className="text-xs font-bold text-slate-500">
                 Livraison vers : <span className="text-[#0f8f6b]">{selectedCountry.name}</span> / {selectedCountry.logisticsZone}
               </div>
               <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:mt-2 sm:text-3xl">Devis PCB en ligne</h1>
             </div>
-            <a href="/how-it-works" className="text-xs font-bold text-[#0f8f6b] hover:text-[#096b51] sm:text-sm">
+            <div className="flex justify-center">
+              <img
+                src={quoteWorkflowImage}
+                alt="Demande en ligne, telechargement du fichier PCB, verification, paiement, suivi fabrication, livraison et reception confirmee."
+                className="h-auto max-h-24 w-full max-w-[36rem] object-contain mix-blend-multiply sm:max-h-28"
+              />
+            </div>
+            <a href="/how-it-works" className="text-xs font-bold text-[#0f8f6b] hover:text-[#096b51] sm:text-sm lg:justify-self-end">
               Instructions de commande &gt;
             </a>
           </div>
