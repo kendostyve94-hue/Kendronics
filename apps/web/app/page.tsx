@@ -418,9 +418,9 @@ function MobileQuickAccess() {
 
 function SmartOrdering() {
   return (
-    <section className="relative overflow-hidden bg-ink px-4 py-8 text-white sm:px-6 sm:py-14 lg:px-8">
-      <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
-      <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/78 to-white/88" />
+    <section className="relative overflow-hidden bg-[#082033] px-4 py-6 text-white sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+      <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#082033] via-[#082033]/86 to-[#082033]/68" />
       <svg className="smart-ordering-routes pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1200 520" aria-hidden="true">
         <defs>
           <linearGradient id="route-blue" x1="0" y1="0" x2="1" y2="0">
@@ -448,26 +448,26 @@ function SmartOrdering() {
         ))}
       </svg>
       <div className="relative mx-auto max-w-[1180px]">
-        <div className="grid gap-7 lg:grid-cols-[0.38fr_0.62fr] lg:items-center">
+        <div className="grid gap-5 lg:grid-cols-[0.34fr_0.66fr] lg:items-center">
           <div>
             <p className="label-caps text-white">Commande intelligente</p>
-            <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
-            <p className="mt-4 text-sm leading-7 text-slate-100">
+            <h2 className="mt-2 text-2xl font-black leading-tight text-white sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-100">
               Le devis conserve le contexte technique : fichiers, configuration, vérification, paiement, jalons de fabrication et livraison.
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:gap-3">
-              <Button href="/quote" className="min-w-[8rem]">Commencer</Button>
-              <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap border-white/35 bg-white/10 text-white hover:border-white/55 hover:bg-white/15">
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+              <Button href="/quote" className="h-10 min-w-[8rem]">Commencer</Button>
+              <Button href="/how-it-works" variant="secondary" className="h-10 min-w-[11rem] whitespace-nowrap border-white/35 bg-white/10 text-white hover:border-white/55 hover:bg-white/15">
                 Comment ca marche
               </Button>
             </div>
           </div>
 
-          <div className="overflow-x-auto bg-transparent py-1 lg:overflow-visible">
+          <div className="overflow-hidden bg-white/95 px-3 py-3 sm:px-4 sm:py-4">
             <img
               src={orderingWorkflowImage}
               alt="Parcours de commande Kendronics"
-              className="h-auto min-w-[56rem] max-w-none lg:min-w-0 lg:w-full"
+              className="mx-auto h-auto max-h-[11rem] w-full object-contain sm:max-h-[14rem] lg:max-h-[16rem]"
             />
           </div>
         </div>
