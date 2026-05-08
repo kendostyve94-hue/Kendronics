@@ -48,6 +48,18 @@ export class SupplierPricingService {
     }
 
     try {
+      const accountProbe = normalizedSupplier === 'pcbway' ? await this.pcbway.testAccountConnection() : undefined;
+      if (accountProbe && !accountProbe.ok) {
+        return {
+          supplier: provider.name,
+          configured: true,
+          ok: false,
+          expectedEnv,
+          account: accountProbe,
+          message: accountProbe.message,
+        };
+      }
+
       const quote = await provider.getPcbQuote({
         productType: 'standard_pcb',
         gerberFileId: crypto.randomUUID(),
@@ -77,6 +89,7 @@ export class SupplierPricingService {
         configured: true,
         ok: true,
         expectedEnv,
+        account: accountProbe,
         quote: {
           supplierQuoteId: quote.supplierQuoteId,
           manufacturingPrice: quote.manufacturingPrice,

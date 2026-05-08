@@ -54,6 +54,46 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
     };
   }
 
+  async testAccountConnection(): Promise<PcbWayAccountProbe> {
+    const apiKey = this.configValue('PCBWAY_API_KEY');
+    if (!apiKey) {
+      return {
+        ok: false,
+        statusCode: 0,
+        message: 'PCBWay API key is not configured.',
+      };
+    }
+
+    const endpoint =
+      this.configValue('PCBWAY_BALANCE_ENDPOINT') ?? 'https://api-partner.pcbway.com/api/Account/QueryBalance';
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = (await response.json().catch(() => null)) as PcbWayBalanceResponse | null;
+    if (!response.ok || !data || this.isBalanceErrorResponse(data)) {
+      return {
+        ok: false,
+        statusCode: response.status,
+        message: this.balanceErrorMessage(response.status, data),
+      };
+    }
+
+    return {
+      ok: true,
+      statusCode: response.status,
+      balance: numberOrUndefined(data.balance),
+      coupon: numberOrUndefined(data.coupon),
+      point: numberOrUndefined(data.point),
+      message: 'PCBWay account API accepted the key.',
+    };
+  }
+
   toQuotePayload(dto: CreateQuoteDto): Record<string, unknown> {
     return this.toPcbWayPayload(toSupplierPcbPayload(dto));
   }
@@ -135,6 +175,11 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
     return status === 'error' || data.Code === 0;
   }
 
+  private isBalanceErrorResponse(data: PcbWayBalanceResponse): boolean {
+    const status = String(data.Status ?? '').toLowerCase();
+    return status === 'error' || data.Code === 0;
+  }
+
   private countryName(countryCode: string): string {
     const code = countryCode.toUpperCase();
     return PCBWAY_COUNTRIES[code] ?? code;
@@ -162,6 +207,24 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
     ].filter(Boolean);
 
     return details.length > 0 ? `PCBWay live quote failed: ${details.join(', ')}` : 'PCBWay live quote failed.';
+  }
+
+  private balanceErrorMessage(statusCode: number, data: PcbWayBalanceResponse | null): string {
+    if (statusCode === 401) {
+      return 'PCBWay account API rejected the key: http=401. This points to an inactive key, wrong environment, or account/key mismatch.';
+    }
+
+    const errorText = typeof data?.ErrorText === 'string' && data.ErrorText.trim() ? data.ErrorText.trim() : undefined;
+    const status = typeof data?.Status === 'string' && data.Status.trim() ? data.Status.trim() : undefined;
+    const code = typeof data?.Code === 'number' ? data.Code : undefined;
+    const details = [
+      errorText,
+      status ? `status=${status}` : undefined,
+      code !== undefined ? `code=${code}` : undefined,
+      `http=${statusCode}`,
+    ].filter(Boolean);
+
+    return details.length > 0 ? `PCBWay account API failed: ${details.join(', ')}` : 'PCBWay account API failed.';
   }
 
   private boardType(boardType: string): string {
@@ -286,6 +349,24 @@ interface PcbWayQuoteResponse extends Record<string, unknown> {
   quoteId?: string;
 }
 
+interface PcbWayBalanceResponse extends Record<string, unknown> {
+  balance?: number | string;
+  coupon?: number | string;
+  point?: number | string;
+  Status?: string;
+  ErrorText?: string;
+  Code?: number;
+}
+
+export interface PcbWayAccountProbe {
+  ok: boolean;
+  statusCode: number;
+  balance?: number;
+  coupon?: number;
+  point?: number;
+  message: string;
+}
+
 const PCBWAY_COUNTRIES: Record<string, string> = {
   BJ: 'BENIN',
   BF: 'BURKINA FASO',
@@ -324,4 +405,9 @@ function firstString(...values: unknown[]): string | undefined {
 
 function round(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function numberOrUndefined(value: unknown): number | undefined {
+  const numberValue = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : Number.NaN;
+  return Number.isFinite(numberValue) ? round(numberValue) : undefined;
 }

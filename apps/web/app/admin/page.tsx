@@ -570,6 +570,14 @@ function SupplierConnectionPanel({
         <div className={`mt-4 rounded-xl border p-4 text-sm font-bold ${result.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
           <p>{result.message}</p>
           <p className="mt-2 text-xs">Expected env: {result.expectedEnv.join(', ')}</p>
+          {result.account ? (
+            <p className="mt-2 text-xs">
+              Account auth: {result.account.ok ? 'accepted' : 'rejected'} / http {result.account.statusCode}
+              {result.account.balance !== undefined ? ` / balance ${formatCurrency(result.account.balance)}` : ''}
+              {result.account.coupon !== undefined ? ` / coupon ${formatCurrency(result.account.coupon)}` : ''}
+              {result.account.point !== undefined ? ` / points ${result.account.point}` : ''}
+            </p>
+          ) : null}
           {result.quote ? (
             <p className="mt-2 text-xs">
               Test quote: {formatCurrency(result.quote.manufacturingPrice)} PCB, {formatCurrency(result.quote.shippingPrice)} shipping

@@ -75,6 +75,14 @@ export interface AdminSupplierConnectionTest {
   ok: boolean;
   expectedEnv: string[];
   message: string;
+  account?: {
+    ok: boolean;
+    statusCode: number;
+    balance?: number;
+    coupon?: number;
+    point?: number;
+    message: string;
+  };
   quote?: {
     supplierQuoteId?: string;
     manufacturingPrice: number;
