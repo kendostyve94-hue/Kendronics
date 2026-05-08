@@ -32,7 +32,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
 
     const data = (await response.json().catch(() => null)) as PcbWayQuoteResponse | null;
     if (!response.ok || !data || this.isErrorResponse(data)) {
-      throw new ServiceUnavailableException(data?.ErrorText ?? 'PCBWay live quote failed.');
+      throw new ServiceUnavailableException(this.quoteErrorMessage(response.status, data));
     }
 
     const priceItem = this.selectPriceItem(data.priceList ?? [], dto);
@@ -141,8 +141,22 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
 
   private shipType(shippingMode: string): number {
     if (shippingMode === 'express') return 1;
-    if (shippingMode === 'standard') return 2;
-    return 0;
+    if (shippingMode === 'standard') return 35;
+    return 35;
+  }
+
+  private quoteErrorMessage(statusCode: number, data: PcbWayQuoteResponse | null): string {
+    const errorText = typeof data?.ErrorText === 'string' && data.ErrorText.trim() ? data.ErrorText.trim() : undefined;
+    const status = typeof data?.Status === 'string' && data.Status.trim() ? data.Status.trim() : undefined;
+    const code = typeof data?.Code === 'number' ? data.Code : undefined;
+    const details = [
+      errorText,
+      status ? `status=${status}` : undefined,
+      code !== undefined ? `code=${code}` : undefined,
+      `http=${statusCode}`,
+    ].filter(Boolean);
+
+    return details.length > 0 ? `PCBWay live quote failed: ${details.join(', ')}` : 'PCBWay live quote failed.';
   }
 
   private boardType(boardType: string): string {
