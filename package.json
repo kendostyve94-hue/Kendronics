@@ -9,6 +9,7 @@
     "api:prod:build": "npm run db:generate && npm run api:build",
     "api:start:prod": "node dist/apps/api/main.js",
     "api:deploy:start": "npm run db:deploy && npm run api:start:prod",
+    "test:production-flow": "node scripts/production-flow.test.mjs",
     "db:generate": "node scripts/prisma-api.mjs generate",
     "db:migrate": "node scripts/prisma-api.mjs migrate",
     "db:deploy": "node scripts/prisma-api.mjs deploy",
