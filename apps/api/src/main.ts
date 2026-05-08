@@ -2,6 +2,7 @@ import './config/load-env';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { SecurityMiddleware } from './common/middleware/security.middleware';
 import { validateProductionConfig } from './config/production-config';
 
 async function bootstrap() {
@@ -14,6 +15,7 @@ async function bootstrap() {
     origin: process.env.FRONTEND_ORIGIN?.split(',') ?? ['http://localhost:3000'],
     credentials: true,
   });
+  app.use(new SecurityMiddleware().use);
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

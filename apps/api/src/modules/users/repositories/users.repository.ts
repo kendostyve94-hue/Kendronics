@@ -31,6 +31,13 @@ export class UsersRepository {
     return user ? this.toUser(user) : null;
   }
 
+  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+  }
+
   private toUser(user: {
     id: string;
     email: string;

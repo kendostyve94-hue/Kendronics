@@ -27,6 +27,7 @@ model User {
   adminAuditLogs AdminAuditLog[]
   notifications Notification[]
   profileVerificationCodes ProfileVerificationCode[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model CookieConsent {
@@ -353,5 +354,19 @@ model ProfileVerificationCode {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, action])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
   @@index([expiresAt])
 }

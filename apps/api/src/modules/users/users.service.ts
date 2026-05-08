@@ -59,6 +59,14 @@ export class UsersService {
     return this.usersRepository.findById(id);
   }
 
+  findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findByEmail(email.toLowerCase());
+  }
+
+  async updatePassword(userId: string, password: string): Promise<void> {
+    await this.usersRepository.updatePasswordHash(userId, await this.passwordService.hash(password));
+  }
+
   findCookieConsent(userId: string): Promise<CookieConsent | null> {
     return this.cookieConsentRepository.findLatestByUserId(userId);
   }

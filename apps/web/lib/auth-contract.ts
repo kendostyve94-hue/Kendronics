@@ -33,6 +33,15 @@ export interface ForgotPasswordResponse {
   message: string;
 }
 
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+
+export interface ResetPasswordResponse {
+  ok: true;
+}
+
 export const authApiContract = {
   login: {
     method: 'POST',
@@ -59,5 +68,12 @@ export const authApiContract = {
     request: 'ForgotPasswordRequest',
     response: 'ForgotPasswordResponse',
     privacyRule: 'Always return a neutral success response when the request is accepted.',
+  },
+  resetPassword: {
+    method: 'POST',
+    path: '/api/auth/reset-password',
+    request: 'ResetPasswordRequest',
+    response: 'ResetPasswordResponse',
+    failureMessage: 'Lien de reinitialisation invalide ou expire.',
   },
 } as const;

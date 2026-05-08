@@ -73,6 +73,31 @@ export class EmailNotificationService {
       throw new ServiceUnavailableException(`SMTP profile verification send failed. ${message}`);
     }
   }
+
+  async sendPasswordResetLink(input: { to: string; resetUrl: string }): Promise<void> {
+    const subject = '[Kendronics] Reinitialisation du mot de passe';
+    const body = [
+      'Reinitialisation du mot de passe Kendronics',
+      '',
+      'Utilisez le lien ci-dessous pour definir un nouveau mot de passe :',
+      input.resetUrl,
+      '',
+      'Ce lien expire dans 30 minutes.',
+      "Si vous n'avez pas demande cette action, ignorez cet e-mail.",
+    ].join('\n');
+
+    try {
+      await sendTransactionalMail({
+        to: input.to,
+        subject,
+        text: body,
+      });
+    } catch (error) {
+      const message = smtpErrorDetails(error);
+      console.error('SMTP password reset send failed:', message);
+      throw new ServiceUnavailableException(`SMTP password reset send failed. ${message}`);
+    }
+  }
 }
 
 async function sendTransactionalMail(message: EmailMessage): Promise<void> {
