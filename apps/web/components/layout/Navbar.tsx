@@ -4,44 +4,49 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { readAuthSession } from '../../lib/auth-session';
+import { useI18n, type TranslationKey } from './LanguageRuntime';
 const ORDER_STORAGE_KEY = 'kendronics.customer.orders';
 const AVATAR_STORAGE_KEY = 'kendronics.customer.avatar';
 const apiBaseUrl = getApiBaseUrl();
 
+type NavLabelKey = TranslationKey;
+type NavItem = { labelKey: NavLabelKey; href: string };
+type SearchItem = NavItem & { keywords: string };
+
 const productItems = [
-  { label: 'PCB prototype', href: '/services#pcb-standard' },
-  { label: 'Petites series', href: '/services#pcb-petit-lot' },
-  { label: 'PCB avance', href: '/services#pcb-avance' },
-  { label: 'Assistance Gerber', href: '/services#assistance-technique' },
-  { label: 'Comment ca marche', href: '/how-it-works' },
-];
+  { labelKey: 'nav.item.prototype', href: '/services#pcb-standard' },
+  { labelKey: 'nav.item.smallSeries', href: '/services#pcb-petit-lot' },
+  { labelKey: 'nav.item.advanced', href: '/services#pcb-avance' },
+  { labelKey: 'nav.item.gerberHelp', href: '/services#assistance-technique' },
+  { labelKey: 'nav.item.howItWorks', href: '/how-it-works' },
+] satisfies NavItem[];
 
 const supportItems = [
-  { label: 'Centre aide', href: '/centre-aide' },
-  { label: 'FAQ', href: '/faq' },
-  { label: 'Guide technique', href: '/guide-technique' },
-  { label: 'Suivi commande', href: '/tracking' },
-  { label: 'Contact', href: '/contact' },
-];
+  { labelKey: 'nav.item.helpCenter', href: '/centre-aide' },
+  { labelKey: 'nav.item.faq', href: '/faq' },
+  { labelKey: 'nav.item.technicalGuide', href: '/guide-technique' },
+  { labelKey: 'nav.tracking', href: '/tracking' },
+  { labelKey: 'nav.item.contact', href: '/contact' },
+] satisfies NavItem[];
 
 const aboutItems = [
-  { label: 'Qui sommes-nous', href: '/how-it-works' },
-  { label: 'FAQ', href: '/faq' },
-  { label: 'Remboursement', href: '/refund-policy' },
-  { label: 'Termes et conditions', href: '/terms' },
-  { label: 'Cookies', href: '/cookie-policy' },
-];
+  { labelKey: 'nav.item.aboutUs', href: '/how-it-works' },
+  { labelKey: 'nav.item.faq', href: '/faq' },
+  { labelKey: 'nav.item.refund', href: '/refund-policy' },
+  { labelKey: 'nav.item.terms', href: '/terms' },
+  { labelKey: 'nav.item.cookies', href: '/cookie-policy' },
+] satisfies NavItem[];
 
 const searchItems = [
-  { label: 'Accueil', href: '/', keywords: 'home accueil kendronics' },
-  { label: 'Devis PCB', href: '/quote', keywords: 'devis commande pcb pcba gerber prix' },
-  { label: 'Panier', href: '/orders', keywords: 'panier commande order' },
-  { label: 'Suivi', href: '/tracking', keywords: 'suivi tracking livraison commande' },
-  { label: 'Services', href: '/services', keywords: 'services pcb pcba stencil assemblage' },
-  { label: 'Guide technique', href: '/guide-technique', keywords: 'guide technique gerber kicad easyeda' },
-  { label: 'Centre aide', href: '/centre-aide', keywords: 'aide support faq contact' },
-  { label: 'Compte', href: '/profile', keywords: 'compte profil utilisateur' },
-];
+  { labelKey: 'nav.home', href: '/', keywords: 'home accueil kendronics' },
+  { labelKey: 'nav.quote', href: '/quote', keywords: 'devis quote commande pcb pcba gerber prix' },
+  { labelKey: 'nav.cart', href: '/orders', keywords: 'panier cart commande order' },
+  { labelKey: 'nav.tracking', href: '/tracking', keywords: 'suivi tracking livraison commande' },
+  { labelKey: 'nav.item.services', href: '/services', keywords: 'services pcb pcba stencil assemblage' },
+  { labelKey: 'nav.item.technicalGuide', href: '/guide-technique', keywords: 'guide technical technique gerber kicad easyeda' },
+  { labelKey: 'nav.item.helpCenter', href: '/centre-aide', keywords: 'aide help support faq contact' },
+  { labelKey: 'nav.item.profile', href: '/profile', keywords: 'compte account profil utilisateur' },
+] satisfies SearchItem[];
 
 export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -55,6 +60,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   const headerRef = useRef<HTMLElement | null>(null);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
+  const { language, t, toggleLanguage } = useI18n();
 
   useEffect(() => {
     function handleScroll() {
@@ -77,9 +83,6 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
 
   useEffect(() => {
     function refreshClientState() {
-      const storedLanguage = window.localStorage.getItem('kendronics.language');
-      document.documentElement.lang = storedLanguage === 'en' ? 'en' : 'fr';
-
       try {
         const parsedOrders = JSON.parse(window.localStorage.getItem(ORDER_STORAGE_KEY) ?? '[]') as string[];
         setOrders(Array.isArray(parsedOrders) ? parsedOrders.filter(Boolean) : []);
@@ -147,10 +150,10 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
 
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    const items = searchItems.map((item) => (item.label === 'Panier' ? { ...item, href: cartHref } : item));
+    const items = searchItems.map((item) => (item.labelKey === 'nav.cart' ? { ...item, href: cartHref } : item));
     if (!query) return [];
-    return items.filter((item) => `${item.label} ${item.keywords}`.toLowerCase().includes(query)).slice(0, 6);
-  }, [cartHref, searchQuery]);
+    return items.filter((item) => `${t(item.labelKey)} ${item.keywords}`.toLowerCase().includes(query)).slice(0, 6);
+  }, [cartHref, searchQuery, t]);
   return (
     <>
     {hideHeader ? null : <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
@@ -166,31 +169,32 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             </a>
 
             <nav className="hidden items-center gap-8 text-[17px] font-normal text-slate-900 lg:flex">
-              <Dropdown label="Produit" items={productItems} />
-              <Dropdown label="Support" items={supportItems} />
-              <Dropdown label="A propos" items={aboutItems} />
+              <Dropdown label={t('nav.product')} items={productItems} t={t} />
+              <Dropdown label={t('nav.support')} items={supportItems} t={t} />
+              <Dropdown label={t('nav.about')} items={aboutItems} t={t} />
               <a href="/tracking" className="transition hover:text-[#0f8f6b]">
-                Suivi
+                {t('nav.tracking')}
               </a>
             </nav>
           </div>
 
           <nav className="hidden items-center justify-end gap-5 text-[15px] font-normal text-slate-800 lg:flex">
-            <button type="button" className="text-slate-900 transition hover:text-[#0f8f6b]" aria-label="Rechercher">
+            <button type="button" className="text-slate-900 transition hover:text-[#0f8f6b]" aria-label={t('nav.search')}>
               <SearchIcon />
             </button>
+            <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} />
             <CartLink href={cartHref} count={orders.length} />
             <a href="/quote" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-white px-5 font-normal text-[#0877ff] transition hover:border-[#0068e8] hover:bg-[#eef6ff] hover:text-[#0068e8]">
-              Commande
+              {t('nav.order')}
             </a>
-            <LoginMenu isSignedIn={isSignedIn} avatarDataUrl={avatarDataUrl} />
+            <LoginMenu isSignedIn={isSignedIn} avatarDataUrl={avatarDataUrl} t={t} />
           </nav>
 
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
             <button
               type="button"
               className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-slate-200 bg-white text-slate-900 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]"
-              aria-label="Rechercher"
+              aria-label={t('nav.search')}
               aria-expanded={isSearchOpen}
               onClick={() => {
                 setIsSearchOpen((open) => !open);
@@ -200,19 +204,20 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             >
               <SearchIcon />
             </button>
+            <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} compact />
             {isSignedIn ? (
-              <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[#0f8f6b] bg-[#e8f7f1] text-xs font-black text-[#0f8f6b]" aria-label="Ouvrir la page compte">
+              <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[#0f8f6b] bg-[#e8f7f1] text-xs font-black text-[#0f8f6b]" aria-label={t('nav.openAccount')}>
                 {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : <span>K</span>}
               </a>
             ) : (
               <a href="/login" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-[#0877ff] px-3 text-sm font-normal text-white transition hover:border-[#0068e8] hover:bg-[#0068e8]">
-                Connexion
+                {t('nav.login')}
               </a>
             )}
             <button
               type="button"
               className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-slate-200 bg-white text-[#0f8f6b] transition hover:border-[#0f8f6b] hover:text-[#0b7558]"
-              aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label={isMenuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation"
               onClick={() => {
@@ -246,7 +251,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
                   autoFocus
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Rechercher une page, un service..."
+                  placeholder={t('nav.searchPlaceholder')}
                   className="min-w-0 flex-1 bg-transparent text-[16px] font-bold outline-none placeholder:text-slate-500"
                 />
               </label>
@@ -260,11 +265,11 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
                   className="flex min-h-10 items-center rounded-sm border border-slate-200 bg-[#edf3f8] px-3 text-sm font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]"
                   onClick={() => setIsSearchOpen(false)}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </a>
               ))}
               {searchResults.length === 0 ? (
-                <p className="rounded-sm border border-slate-200 bg-[#edf3f8] px-3 py-3 text-sm font-semibold text-slate-700">Aucun resultat trouve.</p>
+                <p className="rounded-sm border border-slate-200 bg-[#edf3f8] px-3 py-3 text-sm font-semibold text-slate-700">{t('nav.noSearchResults')}</p>
               ) : null}
             </div>
             ) : null}
@@ -274,9 +279,9 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         {isMenuOpen ? (
           <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-5.5rem)] max-w-[21.5rem] overflow-y-auto border-t border-slate-200 pt-2 sm:max-w-[1180px] lg:hidden">
             <div className="grid gap-2">
-              <MobileSection title="Produit" items={productItems} isOpen={openMobileSection === 'Produit'} onToggle={() => setOpenMobileSection((current) => (current === 'Produit' ? null : 'Produit'))} onNavigate={() => setIsMenuOpen(false)} />
-              <MobileSection title="Support" items={supportItems} isOpen={openMobileSection === 'Support'} onToggle={() => setOpenMobileSection((current) => (current === 'Support' ? null : 'Support'))} onNavigate={() => setIsMenuOpen(false)} />
-              <MobileSection title="A propos" items={aboutItems} isOpen={openMobileSection === 'A propos'} onToggle={() => setOpenMobileSection((current) => (current === 'A propos' ? null : 'A propos'))} onNavigate={() => setIsMenuOpen(false)} />
+              <MobileSection title={t('nav.product')} sectionId="product" items={productItems} t={t} isOpen={openMobileSection === 'product'} onToggle={() => setOpenMobileSection((current) => (current === 'product' ? null : 'product'))} onNavigate={() => setIsMenuOpen(false)} />
+              <MobileSection title={t('nav.support')} sectionId="support" items={supportItems} t={t} isOpen={openMobileSection === 'support'} onToggle={() => setOpenMobileSection((current) => (current === 'support' ? null : 'support'))} onNavigate={() => setIsMenuOpen(false)} />
+              <MobileSection title={t('nav.about')} sectionId="about" items={aboutItems} t={t} isOpen={openMobileSection === 'about'} onToggle={() => setOpenMobileSection((current) => (current === 'about' ? null : 'about'))} onNavigate={() => setIsMenuOpen(false)} />
             </div>
           </nav>
         ) : null}
@@ -288,12 +293,13 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
 }
 
 function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orderCount: number; pathname: string }) {
+  const { t } = useI18n();
   const items = [
-    { label: 'Accueil', href: '/', icon: <HomeIcon /> },
-    { label: 'Panier', href: cartHref, icon: <CartIcon />, count: orderCount },
-    { label: 'Devis', href: '/quote', icon: <PlusIcon /> },
-    { label: 'Suivi', href: '/tracking', icon: <RouteIcon /> },
-    { label: 'Compte', href: '/profile', icon: <UserIcon /> },
+    { labelKey: 'nav.home' as const, href: '/', icon: <HomeIcon /> },
+    { labelKey: 'nav.cart' as const, href: cartHref, icon: <CartIcon />, count: orderCount },
+    { labelKey: 'nav.quote' as const, href: '/quote', icon: <PlusIcon /> },
+    { labelKey: 'nav.tracking' as const, href: '/tracking', icon: <RouteIcon /> },
+    { labelKey: 'nav.account' as const, href: '/profile', icon: <UserIcon /> },
   ];
 
   return (
@@ -306,13 +312,13 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
           const isActive =
             item.href === '/'
               ? pathname === '/'
-              : item.label === 'Panier'
+              : item.labelKey === 'nav.cart'
                 ? pathname.startsWith('/orders')
                 : pathname.startsWith(item.href);
 
           return (
             <a
-              key={item.label}
+              key={item.labelKey}
               href={item.href}
               className={`relative flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-black transition ${
                 isActive
@@ -329,7 +335,7 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
                   </span>
                 ) : null}
               </span>
-              <span className={isActive ? 'text-[#0f8f6b]' : ''}>{item.label}</span>
+              <span className={isActive ? 'text-[#0f8f6b]' : ''}>{t(item.labelKey)}</span>
             </a>
           );
         })}
@@ -340,13 +346,17 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
 
 function MobileSection({
   title,
+  sectionId: _sectionId,
   items,
+  t,
   isOpen,
   onToggle,
   onNavigate,
 }: {
   title: string;
-  items: Array<{ label: string; href: string }>;
+  sectionId: string;
+  items: NavItem[];
+  t: (key: NavLabelKey) => string;
   isOpen: boolean;
   onToggle: () => void;
   onNavigate: () => void;
@@ -365,7 +375,7 @@ function MobileSection({
             className="flex min-h-10 items-center rounded-sm px-3 text-sm font-medium text-slate-700 transition hover:bg-[#edf3f8] hover:text-[#0f8f6b]"
             onClick={onNavigate}
           >
-            {item.label}
+            {t(item.labelKey)}
           </a>
         ))}
       </div>
@@ -374,7 +384,7 @@ function MobileSection({
   );
 }
 
-function Dropdown({ label, items }: { label: string; items: Array<{ label: string; href: string }> }) {
+function Dropdown({ label, items, t }: { label: string; items: NavItem[]; t: (key: NavLabelKey) => string }) {
   return (
     <div className="group relative">
       <button type="button" className="inline-flex h-14 items-center gap-1 text-slate-900 transition hover:text-[#0f8f6b]" aria-haspopup="true">
@@ -384,7 +394,7 @@ function Dropdown({ label, items }: { label: string; items: Array<{ label: strin
       <div className="invisible absolute right-0 top-full min-w-44 translate-y-2 border border-slate-200 bg-[#edf3f8] p-1.5 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
         {items.map((item) => (
           <a key={item.href} href={item.href} className="block px-3 py-1.5 text-sm font-normal text-slate-800 transition hover:bg-[#f1f5f9] hover:text-[#0f8f6b]">
-            {item.label}
+            {t(item.labelKey)}
           </a>
         ))}
       </div>
@@ -392,14 +402,14 @@ function Dropdown({ label, items }: { label: string; items: Array<{ label: strin
   );
 }
 
-function LoginMenu({ isSignedIn, avatarDataUrl }: { isSignedIn: boolean; avatarDataUrl: string }) {
+function LoginMenu({ isSignedIn, avatarDataUrl, t }: { isSignedIn: boolean; avatarDataUrl: string; t: (key: NavLabelKey) => string }) {
   if (isSignedIn) {
     return (
       <div className="flex items-center gap-2">
         <a href="/profile" className="inline-flex h-9 items-center rounded-sm border border-[#0f8f6b] bg-[#0f8f6b] px-5 font-normal text-white transition hover:border-[#0b7558] hover:bg-[#0b7558]">
-          Connecté
+          {t('nav.connected')}
         </a>
-        <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[#0f8f6b] bg-[#e8f7f1] text-xs font-black text-[#0f8f6b]" aria-label="Ouvrir la page compte">
+        <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[#0f8f6b] bg-[#e8f7f1] text-xs font-black text-[#0f8f6b]" aria-label={t('nav.openAccount')}>
           {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : <span>K</span>}
         </a>
       </div>
@@ -409,17 +419,17 @@ function LoginMenu({ isSignedIn, avatarDataUrl }: { isSignedIn: boolean; avatarD
   return (
     <div className="group relative">
       <a href="/login" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-[#0877ff] px-5 font-normal text-white transition hover:border-[#0068e8] hover:bg-[#0068e8]">
-        Connexion
+        {t('nav.login')}
       </a>
       <div className="invisible absolute right-0 top-full min-w-60 translate-y-2 border border-slate-200 bg-[#edf3f8] p-4 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
         <span className="absolute -top-2 right-8 h-4 w-4 rotate-45 border-l border-t border-slate-200 bg-[#edf3f8]" />
         <a href="/login" className="flex h-10 items-center justify-center rounded-sm bg-[#0877ff] text-sm font-semibold text-white hover:bg-[#0068e8]">
-          Connexion
+          {t('nav.login')}
         </a>
         <p className="mt-3 text-sm text-slate-600">
-          Nouveau client ?{' '}
+          {t('nav.newCustomer')}{' '}
           <a href="/register" className="font-semibold text-[#0f8f6b] hover:text-[#0b7558]">
-            Creer mon compte
+            {t('nav.createAccount')}
           </a>
         </p>
       </div>
@@ -427,9 +437,40 @@ function LoginMenu({ isSignedIn, avatarDataUrl }: { isSignedIn: boolean; avatarD
   );
 }
 
-function CartLink({ href, count }: { href: string; count: number }) {
+function LanguageToggle({
+  language,
+  label,
+  switchLabel,
+  compact = false,
+  onToggle,
+}: {
+  language: 'fr' | 'en';
+  label: string;
+  switchLabel: string;
+  compact?: boolean;
+  onToggle: () => void;
+}) {
   return (
-    <a href={href} className="relative inline-flex h-9 w-9 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-10 sm:w-10" aria-label="Panier">
+    <button
+      type="button"
+      className={`inline-flex h-9 items-center justify-center rounded-sm border border-slate-200 bg-white text-[#0f8f6b] transition hover:border-[#0f8f6b] hover:text-[#0b7558] ${
+        compact ? 'w-9' : 'gap-1.5 px-2.5'
+      }`}
+      aria-label={switchLabel}
+      title={switchLabel}
+      onClick={onToggle}
+    >
+      <GlobeIcon />
+      <span className={compact ? 'sr-only' : 'text-[11px] font-black uppercase tracking-[0.08em]'}>{language}</span>
+      <span className="sr-only">{label}</span>
+    </button>
+  );
+}
+
+function CartLink({ href, count }: { href: string; count: number }) {
+  const { t } = useI18n();
+  return (
+    <a href={href} className="relative inline-flex h-9 w-9 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-10 sm:w-10" aria-label={t('nav.cart')}>
       <CartIcon />
       <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-pink-500 px-1 text-[11px] font-semibold leading-none text-white">
         {count}
@@ -462,6 +503,17 @@ function SearchIcon({ small = false }: { small?: boolean }) {
     >
       <circle cx="11" cy="11" r="7" />
       <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a13.5 13.5 0 0 1 0 18" />
+      <path d="M12 3a13.5 13.5 0 0 0 0 18" />
     </svg>
   );
 }

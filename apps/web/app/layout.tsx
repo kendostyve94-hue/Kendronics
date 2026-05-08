@@ -55,9 +55,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="fr">
       <body>
-        <LanguageRuntime />
-        {children}
-        <CookieConsentBanner />
+        <LanguageRuntime>
+          {children}
+          <CookieConsentBanner />
+        </LanguageRuntime>
       </body>
     </html>
   );
