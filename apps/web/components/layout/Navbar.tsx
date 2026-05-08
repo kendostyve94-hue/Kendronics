@@ -453,15 +453,16 @@ function LanguageToggle({
   return (
     <button
       type="button"
-      className={`inline-flex h-9 items-center justify-center rounded-sm border border-slate-200 bg-white text-[#0f8f6b] transition hover:border-[#0f8f6b] hover:text-[#0b7558] ${
-        compact ? 'w-9' : 'gap-1.5 px-2.5'
+      className={`inline-flex h-9 items-center justify-center bg-transparent text-[#0f8f6b] transition hover:text-[#0b7558] ${
+        compact ? 'w-9 gap-0' : 'gap-1.5 px-1'
       }`}
       aria-label={switchLabel}
       title={switchLabel}
       onClick={onToggle}
+      data-i18n-skip="true"
     >
       <GlobeIcon />
-      <span className={compact ? 'sr-only' : 'text-[11px] font-black uppercase tracking-[0.08em]'}>{language}</span>
+      <span className="text-[11px] font-black uppercase tracking-[0.08em]">{language}</span>
       <span className="sr-only">{label}</span>
     </button>
   );
