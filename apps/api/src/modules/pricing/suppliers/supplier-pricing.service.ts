@@ -16,14 +16,24 @@ export class SupplierPricingService {
   async getBestQuote(dto: CreateQuoteDto): Promise<SupplierQuote> {
     const preferred = this.preferredSupplier();
     const providers = preferred === 'pcbway' ? [this.pcbway, this.jlcpcb] : [this.jlcpcb, this.pcbway];
+    let lastError: unknown;
 
     for (const provider of providers) {
       if (!provider.isConfigured()) continue;
-      return provider.getPcbQuote(dto);
+      try {
+        return await provider.getPcbQuote(dto);
+      } catch (error) {
+        lastError = error;
+        if (this.isLiveSupplierPricingRequired()) {
+          throw error;
+        }
+      }
     }
 
     if (this.isLiveSupplierPricingRequired()) {
-      throw new ServiceUnavailableException('Live supplier pricing is required, but no supplier API is configured.');
+      throw lastError instanceof Error
+        ? new ServiceUnavailableException(lastError.message)
+        : new ServiceUnavailableException('Live supplier pricing is required, but no supplier API is configured.');
     }
 
     return this.getLocalQuote(dto);

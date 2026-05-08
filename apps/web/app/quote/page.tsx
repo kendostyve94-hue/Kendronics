@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navbar } from '../../components/layout/Navbar';
 import { Footer } from '../../components/layout/Footer';
 import { PricingSummary } from '../../components/quote/PricingSummary';
@@ -9,7 +9,7 @@ import { getApiBaseUrl } from '../../lib/api-base-url';
 import { readFreshAuthSession } from '../../lib/auth-session';
 import { calculatePCBQuote } from '../../lib/pricing';
 import { validateQuoteConfig } from '../../lib/quote-pricing';
-import type { QuoteConfig } from '../../lib/quote-types';
+import type { PricingBreakdown, QuoteConfig } from '../../lib/quote-types';
 
 const productCards: Array<{
   value: QuoteConfig['productType'];
@@ -167,6 +167,27 @@ type PresignUploadResponse = {
   status: 'pending_scan' | 'uploaded';
 };
 
+type ApiPricingPreview = {
+  partnerManufacturingCost: number;
+  partnerHandlingCost: number;
+  ChinaToFranceLogistics: number;
+  FranceProcessingFee: number;
+  FranceToAfricaDelivery: number;
+  customsRiskBuffer: number;
+  paymentProcessingFee: number;
+  KendronicsServiceFee: number;
+  totalBeforeTax: number;
+  taxesIfApplicable: number;
+  finalTotal: number;
+  supplier?: string;
+  supplierEstimatedPrice?: number;
+  pcbClientPrice?: number;
+  smartBufferMultiplier?: number;
+  smartBufferRiskScore?: number;
+  smartBufferConfidence?: 'low' | 'medium' | 'high';
+  smartBufferBucketKey?: string;
+};
+
 type QuotePanelId = 'base' | 'specs' | 'highSpec' | 'advanced';
 type MobileSheetId =
   | 'baseMaterial'
@@ -218,13 +239,59 @@ export default function QuotePage() {
   const [openPanel, setOpenPanel] = useState<QuotePanelId>('base');
   const [mobileSheet, setMobileSheet] = useState<MobileSheetId | null>(null);
   const [selectedProductTitle, setSelectedProductTitle] = useState(productCards[0].title);
+  const [apiPricing, setApiPricing] = useState<PricingBreakdown | null>(null);
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === config.destinationCountry) ?? africanCountries[0],
     [config.destinationCountry],
   );
-  const pricing = useMemo(() => calculatePCBQuote(config), [config]);
+  const localPricing = useMemo(() => calculatePCBQuote(config), [config]);
+  const pricing = apiPricing ?? localPricing;
   const errors = useMemo(() => validateQuoteConfig(config), [config]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+
+    const timeout = window.setTimeout(async () => {
+      try {
+        const session = await readFreshAuthSession();
+        if (!session || cancelled) {
+          setApiPricing(null);
+          return;
+        }
+
+        const response = await fetch(`${apiBaseUrl}/api/pricing/preview`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(buildPricingPayload(config, gerberUpload.uploadId)),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error('API pricing preview failed.');
+        }
+
+        const data = (await response.json()) as ApiPricingPreview;
+        if (!cancelled) {
+          setApiPricing(normalizeApiPricingPreview(data, localPricing));
+        }
+      } catch (error) {
+        if (!cancelled && !(error instanceof DOMException && error.name === 'AbortError')) {
+          setApiPricing(null);
+        }
+      }
+    }, 450);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [config, gerberUpload.uploadId, localPricing]);
 
   function update<K extends keyof QuoteConfig>(key: K, value: QuoteConfig[K]) {
     setSaved(false);
@@ -690,7 +757,7 @@ export default function QuotePage() {
               <div className="grid gap-3 md:grid-cols-3">
                 <SelectBox
                   value={config.destinationCountry}
-                  onChange={(value) => update('destinationCountry', value)}
+                  onChange={updateDestinationCountry}
                   options={africanCountries.map((country) => [country.iso2, country.name])}
                 />
                 <SelectBox value={selectedCountry.logisticsZone} onChange={() => undefined} options={[selectedCountry.logisticsZone]} />
@@ -748,6 +815,68 @@ export default function QuotePage() {
 
 function toMillimeters(value: number, unit: QuoteConfig['unit']): number {
   return unit === 'inch' ? Math.round(value * 25.4 * 100) / 100 : value;
+}
+
+function buildPricingPayload(config: QuoteConfig, gerberFileId?: string) {
+  return {
+    productType: config.productType,
+    gerberFileId,
+    layers: config.layers,
+    lengthMm: toMillimeters(config.length, config.unit),
+    widthMm: toMillimeters(config.width, config.unit),
+    quantity: config.quantity,
+    destinationCountryIso2: config.destinationCountry,
+    shippingMode: config.shippingMode,
+    configSnapshot: {
+      ...config,
+      lengthMm: toMillimeters(config.length, config.unit),
+      widthMm: toMillimeters(config.width, config.unit),
+      gerberFileId,
+      gerberFileName: config.gerberFileName,
+      bomFileName: config.bomFileName,
+      cplFileName: config.cplFileName,
+    },
+  };
+}
+
+function normalizeApiPricingPreview(data: ApiPricingPreview, fallback: PricingBreakdown): PricingBreakdown {
+  const supplierEstimatedPrice = data.supplierEstimatedPrice ?? data.partnerManufacturingCost;
+  const pcbClientPrice = data.pcbClientPrice ?? data.totalBeforeTax - data.FranceToAfricaDelivery;
+  const pricingSource = data.supplier && data.supplier !== 'local_calibrated_supplier_estimate' ? 'supplier_api' : 'local_calibrated';
+
+  return {
+    partnerManufacturingCost: roundCurrency(supplierEstimatedPrice),
+    partnerHandlingCost: roundCurrency(data.partnerHandlingCost ?? 0),
+    chinaToFranceLogistics: roundCurrency(data.ChinaToFranceLogistics ?? 0),
+    franceProcessingFee: roundCurrency(data.FranceProcessingFee ?? 0),
+    franceToAfricaDelivery: roundCurrency(data.FranceToAfricaDelivery),
+    paymentProcessingFee: roundCurrency(data.paymentProcessingFee ?? 0),
+    kendronicsServiceFee: roundCurrency(data.KendronicsServiceFee),
+    supplierEstimatedPrice: roundCurrency(supplierEstimatedPrice),
+    pcbClientPrice: roundCurrency(pcbClientPrice),
+    smartBufferMultiplier: data.smartBufferMultiplier,
+    smartBufferRiskScore: data.smartBufferRiskScore,
+    smartBufferConfidence: data.smartBufferConfidence,
+    smartBufferBucketKey: data.smartBufferBucketKey,
+    viaCoveringFee: fallback.viaCoveringFee,
+    surfaceFinishFee: fallback.surfaceFinishFee,
+    productionSpeedFee: fallback.productionSpeedFee,
+    finalTotal: roundCurrency(data.finalTotal),
+    displayTotalBeforeAdjustment: roundCurrency(data.finalTotal),
+    deliveryWeightKg: fallback.deliveryWeightKg,
+    shippingCarrier: fallback.shippingCarrier,
+    estimatedShippingTime: fallback.estimatedShippingTime,
+    estimatedLeadTime: fallback.estimatedLeadTime,
+    pricingSource,
+    transparencyNote:
+      pricingSource === 'supplier_api'
+        ? 'Prix PCB calcule depuis le fournisseur live, puis Smart Buffer Kendronics applique.'
+        : fallback.transparencyNote,
+  };
+}
+
+function roundCurrency(value: number): number {
+  return Math.round(value * 100) / 100;
 }
 
 function formatDimension(value: number | undefined): string {

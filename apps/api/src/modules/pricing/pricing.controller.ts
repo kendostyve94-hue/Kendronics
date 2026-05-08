@@ -3,6 +3,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { CreateQuoteDto } from './dto/create-quote.dto';
+import { PreviewQuoteDto } from './dto/preview-quote.dto';
 import { PricingService } from './pricing.service';
 
 @Controller('pricing')
@@ -13,5 +14,10 @@ export class PricingController {
   @Post('quote')
   createQuote(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateQuoteDto) {
     return this.pricingService.createQuote(user.id, dto);
+  }
+
+  @Post('preview')
+  previewQuote(@CurrentUser() user: AuthenticatedUser, @Body() dto: PreviewQuoteDto) {
+    return this.pricingService.previewQuote(user.id, dto);
   }
 }

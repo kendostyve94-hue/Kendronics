@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UploadsService } from '../uploads/uploads.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
+import { PreviewQuoteDto } from './dto/preview-quote.dto';
 import { PricingBreakdown, Quote } from './entities/quote.entity';
 import { SmartBufferResult, SmartBufferService } from './smart-buffer.service';
 import { SupplierPricingService } from './suppliers/supplier-pricing.service';
@@ -42,7 +43,55 @@ export class PricingService {
     return quote;
   }
 
+  async previewQuote(userId: string, dto: PreviewQuoteDto): Promise<PricingBreakdown> {
+    const effectiveDto = await this.applyOptionalGerberAnalysis(userId, dto);
+    const gerberFileId = effectiveDto.gerberFileId ?? crypto.randomUUID();
+    const supplierDto = {
+      ...effectiveDto,
+      gerberFileId,
+    };
+    const supplierQuote = await this.supplierPricing.getBestQuote({
+      ...supplierDto,
+    });
+    const smartPrice = await this.smartBuffer.priceQuote({
+      dto: supplierDto,
+      supplier: supplierQuote.supplier,
+      supplierEstimatedPrice: supplierQuote.manufacturingPrice,
+      shippingPrice: this.customerShippingPrice(supplierDto, supplierQuote.shippingPrice),
+    });
+
+    return this.toSmartBufferBreakdown(smartPrice);
+  }
+
   private async applyGerberAnalysis(userId: string, dto: CreateQuoteDto): Promise<CreateQuoteDto> {
+    const analysis = await this.uploadsService.getAnalysis(userId, dto.gerberFileId);
+    if (!analysis) return dto;
+
+    return {
+      ...dto,
+      layers: analysis.detectedLayers ?? dto.layers,
+      lengthMm: analysis.heightMm && analysis.widthMm ? Math.max(analysis.widthMm, analysis.heightMm) : dto.lengthMm,
+      widthMm: analysis.heightMm && analysis.widthMm ? Math.min(analysis.widthMm, analysis.heightMm) : dto.widthMm,
+      configSnapshot: {
+        ...(dto.configSnapshot ?? {}),
+        gerberAnalysisApplied: true,
+        parserConfidence: analysis.parserConfidence,
+        gerberComplexity: analysis.complexity,
+        holesCount: analysis.holesCount,
+        hasSlots: analysis.hasSlots,
+        detectedLayers: analysis.detectedLayers,
+        detectedWidthMm: analysis.widthMm,
+        detectedHeightMm: analysis.heightMm,
+        boardAreaCm2: analysis.boardAreaCm2,
+        outlineSource: analysis.outlineSource,
+        gerberWarnings: analysis.warnings,
+      },
+    };
+  }
+
+  private async applyOptionalGerberAnalysis(userId: string, dto: PreviewQuoteDto): Promise<PreviewQuoteDto> {
+    if (!dto.gerberFileId) return dto;
+
     const analysis = await this.uploadsService.getAnalysis(userId, dto.gerberFileId);
     if (!analysis) return dto;
 
@@ -140,7 +189,7 @@ export class PricingService {
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
   }
 
-  private customerShippingPrice(dto: CreateQuoteDto, fallback: number): number {
+  private customerShippingPrice(dto: Pick<CreateQuoteDto, 'configSnapshot'>, fallback: number): number {
     return this.numberConfig(dto.configSnapshot?.liveShippingAmount, fallback);
   }
 
