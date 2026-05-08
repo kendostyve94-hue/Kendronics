@@ -548,15 +548,15 @@ export default function QuotePage() {
     <main className="min-h-screen bg-white text-[#1f2933]">
       <Navbar />
       <section className="border-b border-slate-200 bg-[#eef6fb] pt-[4.35rem] sm:pt-[4.85rem]">
-        <div className="mx-auto max-w-[1280px] px-3 pb-3 sm:px-6 lg:px-8">
-          <div className="mb-2 grid gap-2 sm:mb-3 lg:grid-cols-[minmax(0,1fr)_minmax(26rem,48rem)_minmax(0,1fr)] lg:items-center">
+        <div className="mx-auto max-w-[1280px] px-3 pb-2 sm:px-6 sm:pb-3 lg:px-8">
+          <div className="mb-1 grid gap-0 sm:mb-3 sm:gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(26rem,48rem)_minmax(0,1fr)] lg:items-center">
             <div>
               <div className="text-xs font-bold text-slate-500">
                 Livraison vers : <span className="text-[#0f8f6b]">{selectedCountry.name}</span> / {selectedCountry.logisticsZone}
               </div>
               <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:mt-2 sm:text-3xl">Devis PCB en ligne</h1>
             </div>
-            <div className="flex justify-center">
+            <div className="-my-1 flex justify-center overflow-hidden sm:my-0">
               <img
                 src={quoteWorkflowImage}
                 alt="Demande en ligne, telechargement du fichier PCB, verification, paiement, suivi fabrication, livraison et reception confirmee."
