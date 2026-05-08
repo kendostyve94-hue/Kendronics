@@ -547,9 +547,9 @@ export default function QuotePage() {
   return (
     <main className="min-h-screen bg-white text-[#1f2933]">
       <Navbar />
-      <section className="border-b border-slate-200 bg-[#eef6fb] pt-20 sm:pt-24">
+      <section className="border-b border-slate-200 bg-[#eef6fb] pt-[4.35rem] sm:pt-[4.85rem]">
         <div className="mx-auto max-w-[1280px] px-3 pb-3 sm:px-6 lg:px-8">
-          <div className="mb-4 grid gap-3 sm:mb-5 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,36rem)_minmax(0,1fr)] lg:items-center">
+          <div className="mb-2 grid gap-2 sm:mb-3 lg:grid-cols-[minmax(0,1fr)_minmax(26rem,48rem)_minmax(0,1fr)] lg:items-center">
             <div>
               <div className="text-xs font-bold text-slate-500">
                 Livraison vers : <span className="text-[#0f8f6b]">{selectedCountry.name}</span> / {selectedCountry.logisticsZone}
@@ -560,7 +560,7 @@ export default function QuotePage() {
               <img
                 src={quoteWorkflowImage}
                 alt="Demande en ligne, telechargement du fichier PCB, verification, paiement, suivi fabrication, livraison et reception confirmee."
-                className="h-auto max-h-24 w-full max-w-[36rem] object-contain mix-blend-multiply sm:max-h-28"
+                className="h-auto max-h-20 w-full max-w-[48rem] object-contain mix-blend-multiply sm:max-h-24"
               />
             </div>
             <a href="/how-it-works" className="text-xs font-bold text-[#0f8f6b] hover:text-[#096b51] sm:text-sm lg:justify-self-end">
