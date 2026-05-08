@@ -459,7 +459,7 @@ function SmartOrdering() {
         ))}
       </svg>
       <div className="relative mx-auto max-w-[1240px]">
-        <div className="grid gap-7 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
+        <div className="grid gap-7 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
           <div>
             <p className="label-caps text-white">Commande intelligente</p>
             <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
@@ -474,11 +474,11 @@ function SmartOrdering() {
             </div>
           </div>
 
-          <div className="overflow-hidden py-1 lg:-mr-8 lg:py-0">
+          <div className="overflow-hidden py-1 lg:pb-1">
             <img
               src={smartOrderingWorkflowImage}
               alt="Demande en ligne, telechargement du fichier PCB, verification de la commande, paiement, suivi fabrication, livraison et reception confirmee."
-              className="h-auto w-full object-contain opacity-85 lg:scale-110"
+              className="h-auto w-full object-contain opacity-85"
             />
           </div>
         </div>
