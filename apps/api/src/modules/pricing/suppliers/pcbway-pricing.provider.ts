@@ -25,6 +25,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
       method: 'POST',
       headers: {
         'api-key': apiKey,
+        Accept: 'application/json',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(this.toQuotePayload(dto)),
@@ -146,6 +147,10 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
   }
 
   private quoteErrorMessage(statusCode: number, data: PcbWayQuoteResponse | null): string {
+    if (statusCode === 401) {
+      return 'PCBWay rejected the API key: http=401. Ask PCBWay to activate or regenerate the key for api-partner.pcbway.com, then replace PCBWAY_API_KEY in Render.';
+    }
+
     const errorText = typeof data?.ErrorText === 'string' && data.ErrorText.trim() ? data.ErrorText.trim() : undefined;
     const status = typeof data?.Status === 'string' && data.Status.trim() ? data.Status.trim() : undefined;
     const code = typeof data?.Code === 'number' ? data.Code : undefined;
