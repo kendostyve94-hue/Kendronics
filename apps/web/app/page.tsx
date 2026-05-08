@@ -9,7 +9,6 @@ const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
 const heroControllerBoardImage = '/images/hero-controller-board-transparent.png';
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
 const smartOrderingMapImage = '/images/smart-ordering-world-map.png';
-const orderingWorkflowImage = '/images/ordering-workflow-transparent.png';
 const heroSlides = [
   {
     eyebrow: 'PCB personnalisés et assemblage',
@@ -35,6 +34,16 @@ const heroSlides = [
     type: 'image',
     imageClassName: 'object-contain object-right opacity-100 lg:translate-x-0',
   },
+];
+
+const workflowSteps = [
+  ['quote', 'Devis en ligne'],
+  ['upload', 'Fichier PCB'],
+  ['review', 'Revue commande'],
+  ['payment', 'Paiement'],
+  ['tracking', 'Suivi fabrication'],
+  ['delivery', 'Livraison'],
+  ['received', 'Reception confirmee'],
 ];
 
 const capabilityRows = [
@@ -418,9 +427,9 @@ function MobileQuickAccess() {
 
 function SmartOrdering() {
   return (
-    <section className="relative overflow-hidden bg-[#082033] px-4 py-6 text-white sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-      <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#082033] via-[#082033]/86 to-[#082033]/68" />
+    <section className="relative overflow-hidden bg-ink px-4 py-8 text-white sm:px-6 sm:py-14 lg:px-8">
+      <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
+      <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/78 to-ink/50" />
       <svg className="smart-ordering-routes pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1200 520" aria-hidden="true">
         <defs>
           <linearGradient id="route-blue" x1="0" y1="0" x2="1" y2="0">
@@ -448,31 +457,102 @@ function SmartOrdering() {
         ))}
       </svg>
       <div className="relative mx-auto max-w-[1180px]">
-        <div className="grid gap-5 lg:grid-cols-[0.34fr_0.66fr] lg:items-end">
+        <div className="grid gap-7 lg:grid-cols-[0.88fr_1.12fr] lg:items-end">
           <div>
             <p className="label-caps text-white">Commande intelligente</p>
-            <h2 className="mt-2 text-2xl font-black leading-tight text-white sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-100">
+            <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
+            <p className="mt-4 text-sm leading-7 text-slate-100">
               Le devis conserve le contexte technique : fichiers, configuration, vérification, paiement, jalons de fabrication et livraison.
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:gap-3">
               <Button href="/quote" className="min-w-[8rem]">Commencer</Button>
-              <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap !border-white/35 !bg-transparent !text-white hover:!border-white/55 hover:!bg-white/10">
+              <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap border-white/35 bg-white/10 text-white hover:border-white/55 hover:bg-white/15">
                 Comment ca marche
               </Button>
             </div>
           </div>
 
-          <div className="overflow-hidden bg-transparent">
-            <img
-              src={orderingWorkflowImage}
-              alt="Parcours de commande Kendronics"
-              className="mx-auto h-auto max-h-[8.5rem] w-full object-contain sm:max-h-[10.5rem] lg:max-h-[12.5rem]"
-            />
+          <div className="smart-ordering-timeline overflow-x-auto bg-transparent py-1 text-white md:overflow-visible">
+            <div className="flex min-w-[48rem] items-start justify-between">
+              {workflowSteps.map(([icon, label], index) => (
+                <div key={label} className="flex min-w-0 flex-1 items-start">
+                  <div className="flex min-w-[5.75rem] flex-col items-center text-center">
+                    <WorkflowIcon name={icon} />
+                    <span className="mt-3 text-xs font-normal leading-5 text-slate-100 sm:text-sm">{label}</span>
+                  </div>
+                  {index < workflowSteps.length - 1 ? <span className="mt-4 h-px flex-1 bg-white/30" aria-hidden="true" /> : null}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+function WorkflowIcon({ name }: { name: string }) {
+  const common = 'h-7 w-7 text-white/75';
+
+  if (name === 'quote') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <path d="M7 3h10v18H7z" />
+        <path d="M9 7h6M9 11h2M13 11h2M9 15h2M13 15h2" />
+      </svg>
+    );
+  }
+
+  if (name === 'upload') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <path d="M6 3h9l3 3v15H6z" />
+        <path d="M14 3v4h4M12 17V9M9 12l3-3 3 3" />
+      </svg>
+    );
+  }
+
+  if (name === 'review') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <path d="M4 4h14v16H4z" />
+        <path d="M7 8h8M7 12h5M16 16l4 4M17.5 17.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+      </svg>
+    );
+  }
+
+  if (name === 'payment') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <rect x="3" y="6" width="18" height="12" rx="1.5" />
+        <path d="M3 10h18M7 15h5" />
+      </svg>
+    );
+  }
+
+  if (name === 'tracking') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" />
+      </svg>
+    );
+  }
+
+  if (name === 'delivery') {
+    return (
+      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+        <path d="M3 11l18-7-7 18-3-8-8-3Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+      <path d="M12 3 4 7l8 4 8-4-8-4Z" />
+      <path d="M4 7v9l8 5 8-5V7M12 11v10M16 5l-8 4" />
+      <path d="m15.5 14.5 1.5 1.5 3-3" />
+    </svg>
   );
 }
 
