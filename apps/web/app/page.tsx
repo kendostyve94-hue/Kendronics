@@ -448,26 +448,26 @@ function SmartOrdering() {
         ))}
       </svg>
       <div className="relative mx-auto max-w-[1180px]">
-        <div className="grid gap-5 lg:grid-cols-[0.34fr_0.66fr] lg:items-center">
+        <div className="grid gap-5 lg:grid-cols-[0.34fr_0.66fr] lg:items-end">
           <div>
             <p className="label-caps text-white">Commande intelligente</p>
             <h2 className="mt-2 text-2xl font-black leading-tight text-white sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
             <p className="mt-3 text-sm leading-6 text-slate-100">
               Le devis conserve le contexte technique : fichiers, configuration, vérification, paiement, jalons de fabrication et livraison.
             </p>
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:gap-3">
-              <Button href="/quote" className="h-10 min-w-[8rem]">Commencer</Button>
-              <Button href="/how-it-works" variant="secondary" className="h-10 min-w-[11rem] whitespace-nowrap border-white/35 bg-white/10 text-white hover:border-white/55 hover:bg-white/15">
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+              <Button href="/quote" className="min-w-[8rem]">Commencer</Button>
+              <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap !border-white/35 !bg-transparent !text-white hover:!border-white/55 hover:!bg-white/10">
                 Comment ca marche
               </Button>
             </div>
           </div>
 
-          <div className="overflow-hidden bg-white/95 px-3 py-3 sm:px-4 sm:py-4">
+          <div className="overflow-hidden bg-transparent">
             <img
               src={orderingWorkflowImage}
               alt="Parcours de commande Kendronics"
-              className="mx-auto h-auto max-h-[11rem] w-full object-contain sm:max-h-[14rem] lg:max-h-[16rem]"
+              className="mx-auto h-auto max-h-[8.5rem] w-full object-contain sm:max-h-[10.5rem] lg:max-h-[12.5rem]"
             />
           </div>
         </div>
