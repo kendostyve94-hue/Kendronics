@@ -15,16 +15,45 @@ const productCards: Array<{
   value: QuoteConfig['productType'];
   title: string;
   description: string;
+  visual: 'standard' | 'advanced' | 'flex' | 'assembly' | 'stencil' | 'cnc';
+  badge?: string;
 }> = [
   {
     value: 'standard_pcb',
-    title: 'Standard PCB/PCBA',
+    title: 'Standard PCB',
     description: 'Rigid FR-4, quick prototype, small batch and assembly-ready files.',
+    visual: 'standard',
   },
   {
     value: 'advanced_pcb',
     title: 'Advanced PCB/PCBA',
+    visual: 'advanced',
     description: 'HDI, impédance, matériaux haute fréquence et options de fiabilité.',
+  },
+  {
+    value: 'advanced_pcb',
+    title: 'FPC/Rigid-Flex',
+    description: 'Flex, rigid-flex and lightweight electronics.',
+    visual: 'flex',
+    badge: 'NEW',
+  },
+  {
+    value: 'pcb_assembly',
+    title: 'Assembly',
+    description: 'PCB assembly with BOM and CPL coordination.',
+    visual: 'assembly',
+  },
+  {
+    value: 'smt_stencil',
+    title: 'SMD-Stencil',
+    description: 'Stencil options for SMT production.',
+    visual: 'stencil',
+  },
+  {
+    value: 'advanced_pcb',
+    title: 'CNC | 3D',
+    description: 'Advanced fabrication request.',
+    visual: 'cnc',
   },
 ];
 
@@ -188,6 +217,7 @@ export default function QuotePage() {
   const [quoteSave, setQuoteSave] = useState<QuoteSaveState>({ status: 'idle' });
   const [openPanel, setOpenPanel] = useState<QuotePanelId>('base');
   const [mobileSheet, setMobileSheet] = useState<MobileSheetId | null>(null);
+  const [selectedProductTitle, setSelectedProductTitle] = useState(productCards[0].title);
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === config.destinationCountry) ?? africanCountries[0],
@@ -241,6 +271,16 @@ export default function QuotePage() {
       liveShippingCurrency: rate.currency,
       liveShippingTransitTime: rate.transitTime,
     }));
+  }
+
+  function resetQuote() {
+    setSaved(false);
+    setGerberUpload({ status: 'idle' });
+    setQuoteSave({ status: 'idle' });
+    setOpenPanel('base');
+    setMobileSheet(null);
+    setSelectedProductTitle(productCards[0].title);
+    setConfig(initialConfig);
   }
 
   async function uploadGerber(file: File) {
@@ -445,46 +485,46 @@ export default function QuotePage() {
   return (
     <main className="min-h-screen bg-white text-[#1f2933]">
       <Navbar />
-      <section className="border-b border-slate-200 bg-white pt-4 sm:pt-6">
-        <div className="mx-auto max-w-[1280px] px-3 pb-3 sm:px-6 sm:pb-5 lg:px-8">
-          <div className="flex flex-col gap-2 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="text-xs font-bold text-slate-500">
-                Livraison vers : <span className="text-[#0f8f6b]">{selectedCountry.name}</span> / {selectedCountry.logisticsZone}
-              </div>
-              <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:mt-2 sm:text-3xl">Devis PCB en ligne</h1>
-            </div>
-            <a href="/how-it-works" className="text-xs font-bold text-[#0f8f6b] hover:text-[#096b51] sm:text-sm">
-              Instructions de commande &gt;
-            </a>
-          </div>
-
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3 md:grid-cols-2">
+      <section className="border-b border-slate-200 bg-[#eef6fb] pt-3">
+        <div className="mx-auto max-w-[1280px] px-3 pb-3 sm:px-6 lg:px-8">
+          <div className="quote-product-strip overflow-x-auto">
+            <div className="grid min-w-[980px] grid-cols-6 gap-2">
             {productCards.map((product) => (
               <button
-                key={product.value}
+                key={`${product.title}-${product.value}`}
                 type="button"
-                onClick={() => update('productType', product.value)}
-                className={`flex min-h-[4.75rem] items-start gap-2 rounded-sm border p-2.5 text-left transition sm:min-h-24 sm:gap-3 sm:p-4 ${
-                  config.productType === product.value
+                onClick={() => {
+                  setSelectedProductTitle(product.title);
+                  update('productType', product.value);
+                }}
+                className={`relative flex h-16 items-center gap-3 rounded-sm border bg-white px-3 text-left transition ${
+                  selectedProductTitle === product.title
                     ? 'border-[#0f8f6b] bg-[#eefbf6]'
                     : 'border-slate-200 bg-white hover:border-[#0f8f6b]/55'
                 }`}
               >
-                <span className="hidden h-10 w-10 shrink-0 place-items-center rounded-sm bg-[#e8f7f2] text-xs font-black text-[#0f8f6b] sm:grid">
-                  PCB
-                </span>
+                {product.badge ? <span className="absolute right-0 top-0 bg-[#00a63e] px-1 text-[10px] font-black text-white">{product.badge}</span> : null}
+                <ProductVisual kind={product.visual} />
                 <span>
-                  <span className="block text-xs font-bold text-slate-950 sm:text-sm">{product.title}</span>
-                  <span className="mt-1 hidden text-xs leading-5 text-slate-500 sm:block">{product.description}</span>
+                  <span className="block whitespace-nowrap text-sm font-semibold text-slate-950">{product.title}</span>
                 </span>
               </button>
             ))}
+            </div>
+          </div>
+
+          <div className="mt-3 grid gap-3 md:grid-cols-[1fr_1fr]">
+            <button type="button" onClick={resetQuote} className="h-9 rounded-sm border border-slate-300 bg-white text-sm font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+              Reset
+            </button>
+            <button type="button" onClick={() => setOpenPanel('base')} className="h-9 rounded-sm bg-[#23a85f] text-sm font-black text-white transition hover:bg-[#16804b]">
+              Calculate
+            </button>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-[1280px] gap-3 px-3 py-3 pb-40 sm:gap-5 sm:px-6 sm:py-5 sm:pb-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
+      <section className="mx-auto grid max-w-[1280px] gap-3 px-3 py-3 pb-40 sm:gap-5 sm:px-6 sm:py-5 sm:pb-5 lg:grid-cols-[minmax(0,1fr)_330px] lg:px-8">
         <div className="space-y-2 sm:space-y-4">
           <Panel
             title="Devis Express PCB"
@@ -504,8 +544,8 @@ export default function QuotePage() {
           </Panel>
 
           <Panel
-            title="Paramètres de base"
-            description="Matériau, couches, dimensions, quantité et type de produit."
+            title="PCB Specification Selection"
+            description="Board type, dimensions, layers, material and production options."
             isOpen={openPanel === 'base'}
             onToggle={() => setOpenPanel('base')}
           >
@@ -745,6 +785,26 @@ function rememberCustomerOrder(orderId: string) {
     window.localStorage.setItem(customerOrdersStorageKey, JSON.stringify([orderId]));
     window.dispatchEvent(new Event('kendronics:orders-updated'));
   }
+}
+
+function ProductVisual({ kind }: { kind: 'standard' | 'advanced' | 'flex' | 'assembly' | 'stencil' | 'cnc' }) {
+  const colors: Record<typeof kind, string> = {
+    standard: 'from-[#1fb35d] to-[#0b7f42]',
+    advanced: 'from-[#2ca36b] to-[#0e6b45]',
+    flex: 'from-[#d79a2b] to-[#a46f0c]',
+    assembly: 'from-[#1f2937] to-[#64748b]',
+    stencil: 'from-[#dbe4ec] to-[#94a3b8]',
+    cnc: 'from-[#c8a47c] to-[#7c5a3a]',
+  };
+
+  return (
+    <span className={`relative h-11 w-16 shrink-0 overflow-hidden rounded-sm border border-slate-300 bg-gradient-to-br ${colors[kind]}`}>
+      <span className="absolute inset-x-2 top-2 h-2 rounded-sm bg-white/35" />
+      <span className="absolute bottom-2 left-2 h-2 w-2 rounded-full bg-white/70" />
+      <span className="absolute bottom-2 right-3 h-2 w-5 rounded-sm bg-white/45" />
+      <span className="absolute left-5 top-5 h-px w-8 rotate-12 bg-white/65" />
+    </span>
+  );
 }
 
 function Panel({

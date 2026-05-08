@@ -117,13 +117,36 @@ export function PricingSummary({
 
   return (
     <aside className="space-y-3">
-      <div className="hidden rounded-sm border border-slate-200 bg-[#f4f7fa] p-3 sm:p-5 lg:block">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-black text-slate-950 sm:text-base">Détails des frais</h2>
-          <span className="text-lg font-black text-slate-950">^</span>
+      <div className="hidden rounded-sm border border-slate-200 bg-white p-3 lg:block">
+        <div className="-m-3 mb-3 border-b border-slate-200 bg-slate-50 px-3 py-2">
+          <h2 className="text-sm font-black text-slate-950">Pricing And Build Time</h2>
+          <span className="sr-only">Pricing status</span>
         </div>
 
-        <div className="mt-3 space-y-2 border-b border-slate-200 pb-3 text-xs sm:mt-5 sm:space-y-3 sm:pb-4 sm:text-sm">
+        <div className="mb-4">
+          <p className="mb-2 text-sm font-semibold text-slate-700">PCB Price</p>
+          <div className="overflow-hidden rounded-sm border border-slate-200">
+            <button type="button" onClick={() => onProductionSpeedChange('standard')} className={`grid w-full grid-cols-[1fr_4rem_5rem] items-center gap-2 px-3 py-2 text-left text-sm ${productionSpeed === 'standard' ? 'bg-[#eefbf6]' : 'bg-white'}`}>
+              <span className="flex items-center gap-2 font-semibold text-slate-800">
+                <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-black ${productionSpeed === 'standard' ? 'bg-[#23a85f] text-white' : 'border border-slate-300 text-slate-400'}`}>{productionSpeed === 'standard' ? '✓' : ''}</span>
+                24hours
+              </span>
+              <span className="text-center text-slate-500">{pricing.pricingSource === 'supplier_api' ? 'Live' : 'Est.'}</span>
+              <span className="text-right font-black text-slate-900">${supplierEstimatedPrice.toFixed(2)}</span>
+            </button>
+            <button type="button" onClick={() => onProductionSpeedChange('express_24h')} className={`grid w-full grid-cols-[1fr_4rem_5rem] items-center gap-2 border-t border-slate-200 px-3 py-2 text-left text-sm ${productionSpeed === 'express_24h' ? 'bg-[#eefbf6]' : 'bg-slate-50'}`}>
+              <span className="flex items-center gap-2 font-semibold text-slate-600">
+                <span className={`grid h-6 w-6 place-items-center rounded-full text-xs font-black ${productionSpeed === 'express_24h' ? 'bg-[#23a85f] text-white' : 'border border-slate-300 text-slate-400'}`}>{productionSpeed === 'express_24h' ? '✓' : ''}</span>
+                Extra Urgent
+              </span>
+              <span className="text-center text-slate-500">{pricing.pricingSource === 'supplier_api' ? 'Live' : 'Est.'}</span>
+              <span className="text-right font-black text-slate-700">${(supplierEstimatedPrice + 7.5).toFixed(2)}</span>
+            </button>
+          </div>
+          <p className="mt-2 text-xs font-semibold text-[#ff7a00]">Final price is subject to supplier validation.</p>
+        </div>
+
+        <div className="space-y-2 border-b border-slate-200 pb-3 text-xs sm:space-y-3 sm:pb-4 sm:text-sm">
           <FeeRow label="Prix fournisseur estimé" value={supplierEstimatedPrice} />
           <FeeRow label={`Buffer intelligent x${smartBufferMultiplier.toFixed(2)}`} value={smartBufferAmount} />
           <FeeRow label="Service Kendronics" value={pricing.kendronicsServiceFee} />
