@@ -560,7 +560,7 @@ export default function QuotePage() {
               <img
                 src={quoteWorkflowImage}
                 alt="Demande en ligne, telechargement du fichier PCB, verification, paiement, suivi fabrication, livraison et reception confirmee."
-                className="mx-auto h-auto max-h-32 min-w-[42rem] max-w-none object-contain mix-blend-multiply sm:max-h-24 sm:min-w-0 sm:max-w-[48rem]"
+                className="mx-auto h-28 min-w-[58rem] max-w-none object-contain mix-blend-multiply sm:h-auto sm:max-h-24 sm:min-w-0 sm:max-w-[48rem]"
               />
             </div>
             <a href="/how-it-works" className="text-xs font-bold text-[#0f8f6b] hover:text-[#096b51] sm:text-sm lg:justify-self-end">
