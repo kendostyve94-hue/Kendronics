@@ -8,6 +8,7 @@ import { officialContactEmail } from '../lib/official-contact';
 const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
 const heroControllerBoardImage = '/images/hero-controller-board-transparent.png';
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
+const smartOrderingMapImage = '/images/smart-ordering-world-map.png';
 const orderingWorkflowImage = '/images/ordering-workflow-transparent.png';
 const heroSlides = [
   {
@@ -417,18 +418,46 @@ function MobileQuickAccess() {
 
 function SmartOrdering() {
   return (
-    <section className="relative overflow-hidden bg-white px-4 py-8 text-ink sm:px-6 sm:py-14 lg:px-8">
+    <section className="relative overflow-hidden bg-ink px-4 py-8 text-white sm:px-6 sm:py-14 lg:px-8">
+      <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
+      <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/78 to-white/88" />
+      <svg className="smart-ordering-routes pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1200 520" aria-hidden="true">
+        <defs>
+          <linearGradient id="route-blue" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#8fc5ff" stopOpacity="0" />
+            <stop offset="52%" stopColor="#7bb9ff" stopOpacity="0.58" />
+            <stop offset="100%" stopColor="#8fc5ff" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {[
+          'M180 330 C380 205 650 190 985 275',
+          'M250 215 C500 95 760 132 1070 210',
+          'M335 405 C570 310 785 320 1000 278',
+          'M505 135 C650 230 820 245 1032 350',
+        ].map((path, index) => (
+          <path key={path} d={path} className="smart-ordering-route" style={{ animationDelay: `${index * 1.1}s` }} />
+        ))}
+        {[
+          [180, 330],
+          [250, 215],
+          [335, 405],
+          [505, 135],
+          [1000, 278],
+        ].map(([cx, cy], index) => (
+          <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="2.5" className="smart-ordering-node" style={{ animationDelay: `${index * 0.55}s` }} />
+        ))}
+      </svg>
       <div className="relative mx-auto max-w-[1180px]">
         <div className="grid gap-7 lg:grid-cols-[0.38fr_0.62fr] lg:items-center">
           <div>
-            <p className="label-caps text-deepblue">Commande intelligente</p>
-            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
-            <p className="mt-4 text-sm leading-7 text-slate-600">
+            <p className="label-caps text-white">Commande intelligente</p>
+            <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
+            <p className="mt-4 text-sm leading-7 text-slate-100">
               Le devis conserve le contexte technique : fichiers, configuration, vérification, paiement, jalons de fabrication et livraison.
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:gap-3">
               <Button href="/quote" className="min-w-[8rem]">Commencer</Button>
-              <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap">
+              <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap border-white/35 bg-white/10 text-white hover:border-white/55 hover:bg-white/15">
                 Comment ca marche
               </Button>
             </div>
