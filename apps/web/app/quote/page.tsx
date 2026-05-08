@@ -556,11 +556,11 @@ export default function QuotePage() {
               </div>
               <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:mt-2 sm:text-3xl">Devis PCB en ligne</h1>
             </div>
-            <div className="flex justify-center">
+            <div className="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:overflow-visible sm:px-0">
               <img
                 src={quoteWorkflowImage}
                 alt="Demande en ligne, telechargement du fichier PCB, verification, paiement, suivi fabrication, livraison et reception confirmee."
-                className="h-auto max-h-20 w-full max-w-[48rem] object-contain mix-blend-multiply sm:max-h-24"
+                className="mx-auto h-auto max-h-32 min-w-[42rem] max-w-none object-contain mix-blend-multiply sm:max-h-24 sm:min-w-0 sm:max-w-[48rem]"
               />
             </div>
             <a href="/how-it-works" className="text-xs font-bold text-[#0f8f6b] hover:text-[#096b51] sm:text-sm lg:justify-self-end">
