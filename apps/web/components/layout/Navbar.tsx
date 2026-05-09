@@ -193,7 +193,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-slate-200 bg-white text-slate-900 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]"
+              className="inline-flex h-9 w-9 items-center justify-center text-slate-900 transition hover:text-[#0f8f6b]"
               aria-label={t('nav.search')}
               aria-expanded={isSearchOpen}
               onClick={() => {
@@ -216,7 +216,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             )}
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-slate-200 bg-white text-[#0f8f6b] transition hover:border-[#0f8f6b] hover:text-[#0b7558]"
+              className="inline-flex h-9 w-9 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558]"
               aria-label={isMenuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation"
