@@ -658,7 +658,7 @@ export default function QuotePage() {
                   key={`${product.title}-${product.value}`}
                   type="button"
                   onClick={() => selectProduct(product)}
-                  className={`relative flex h-16 items-center gap-3 rounded-sm border px-3 text-left transition ${
+                  className={`relative flex h-16 items-center gap-2 rounded-sm border px-2 text-left transition sm:gap-3 sm:px-3 ${
                     isSelected
                       ? 'border-[#0f8f6b] bg-[#0f8f6b]'
                       : 'border-slate-200 bg-white hover:border-[#0f8f6b]/55'
@@ -667,7 +667,7 @@ export default function QuotePage() {
                   {product.badge ? <span className="absolute right-0 top-0 bg-[#00a63e] px-1 text-[10px] font-black text-white">{product.badge}</span> : null}
                   <ProductVisual kind={product.visual} />
                   <span className="min-w-0 flex-1">
-                    <span className={`block text-sm font-semibold leading-4 ${isSelected ? 'text-white' : 'text-slate-950'}`}>{product.title}</span>
+                    <span className={`line-clamp-2 block overflow-hidden break-words text-[11px] font-semibold leading-3.5 sm:text-sm sm:leading-4 ${isSelected ? 'text-white' : 'text-slate-950'}`}>{product.title}</span>
                   </span>
                 </button>
               );
