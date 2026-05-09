@@ -445,15 +445,25 @@ function SmartOrdering() {
           'M250 215 C500 95 760 132 1070 210',
           'M335 405 C570 310 785 320 1000 278',
           'M505 135 C650 230 820 245 1032 350',
+          'M90 255 C330 175 560 250 805 160 C930 118 1035 145 1160 210',
+          'M120 420 C360 350 620 405 815 330 C950 278 1065 315 1165 385',
+          'M65 145 C305 95 520 145 725 118 C870 98 1010 85 1168 132',
+          'M420 462 C540 380 680 355 822 372 C965 390 1072 438 1160 474',
+          'M190 92 C365 188 470 285 650 285 C835 286 930 198 1105 260',
         ].map((path, index) => (
-          <path key={path} d={path} className="smart-ordering-route" style={{ animationDelay: `${index * 1.1}s` }} />
+          <path key={path} d={path} className="smart-ordering-route" style={{ animationDelay: `${index * 0.72}s` }} />
         ))}
         {[
           [180, 330],
           [250, 215],
           [335, 405],
           [505, 135],
+          [725, 118],
+          [815, 330],
+          [930, 198],
           [1000, 278],
+          [1105, 260],
+          [1160, 474],
         ].map(([cx, cy], index) => (
           <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="2.5" className="smart-ordering-node" style={{ animationDelay: `${index * 0.55}s` }} />
         ))}
