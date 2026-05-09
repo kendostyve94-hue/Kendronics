@@ -650,24 +650,28 @@ export default function QuotePage() {
           </div>
           <div className="quote-product-strip overflow-x-auto">
             <div className="grid min-w-[980px] grid-cols-6 gap-2">
-            {productCards.map((product) => (
-              <button
-                key={`${product.title}-${product.value}`}
-                type="button"
-                onClick={() => selectProduct(product)}
-                className={`relative flex h-16 items-center gap-3 rounded-sm border bg-white px-3 text-left transition ${
-                  selectedProductTitle === product.title
-                    ? 'border-[#0f8f6b] bg-[#0f8f6b]'
-                    : 'border-slate-200 bg-white hover:border-[#0f8f6b]/55'
-                }`}
-              >
-                {product.badge ? <span className="absolute right-0 top-0 bg-[#00a63e] px-1 text-[10px] font-black text-white">{product.badge}</span> : null}
-                <ProductVisual kind={product.visual} />
-                <span className="min-w-0 flex-1">
-                  <span className={`block text-sm font-semibold leading-4 ${selectedProductTitle === product.title ? 'text-white' : 'text-slate-950'}`}>{product.title}</span>
-                </span>
-              </button>
-            ))}
+            {productCards.map((product) => {
+              const isSelected = config.productType === product.value;
+
+              return (
+                <button
+                  key={`${product.title}-${product.value}`}
+                  type="button"
+                  onClick={() => selectProduct(product)}
+                  className={`relative flex h-16 items-center gap-3 rounded-sm border px-3 text-left transition ${
+                    isSelected
+                      ? 'border-[#0f8f6b] bg-[#0f8f6b]'
+                      : 'border-slate-200 bg-white hover:border-[#0f8f6b]/55'
+                  }`}
+                >
+                  {product.badge ? <span className="absolute right-0 top-0 bg-[#00a63e] px-1 text-[10px] font-black text-white">{product.badge}</span> : null}
+                  <ProductVisual kind={product.visual} />
+                  <span className="min-w-0 flex-1">
+                    <span className={`block text-sm font-semibold leading-4 ${isSelected ? 'text-white' : 'text-slate-950'}`}>{product.title}</span>
+                  </span>
+                </button>
+              );
+            })}
             </div>
           </div>
         </div>
