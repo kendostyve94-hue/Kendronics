@@ -235,7 +235,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
 
   private material(value: string): string {
     const lower = value.toLowerCase();
-    if (lower.includes('aluminum')) return 'Aluminum board';
+    if (lower.includes('aluminum') || lower.includes('aluminium')) return 'Aluminum board';
     if (lower.includes('rogers')) return 'Rogers';
     if (lower.includes('hdi')) return 'HDI';
     if (lower.includes('copper')) return 'Copper';

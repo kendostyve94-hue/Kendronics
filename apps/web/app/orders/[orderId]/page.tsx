@@ -586,8 +586,10 @@ function productLabel(value: string): string {
   return {
     standard_pcb: 'PCB standard',
     advanced_pcb: 'PCB avancé',
+    fpc_rigid_flex: 'FPC / Rigid-Flex',
     pcb_assembly: 'Assemblage PCB',
     smt_stencil: 'Stencil SMT',
+    cnc_3d: 'CNC / 3D',
   }[value] ?? value;
 }
 

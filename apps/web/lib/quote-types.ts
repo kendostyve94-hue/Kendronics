@@ -1,7 +1,7 @@
 export interface QuoteConfig {
   gerberFileName?: string;
-  productType: 'standard_pcb' | 'advanced_pcb' | 'pcb_assembly' | 'smt_stencil';
-  baseMaterial: 'FR4' | 'Flex' | 'Aluminum' | 'Copper Core' | 'Rogers' | 'PTFE Teflon';
+  productType: 'standard_pcb' | 'advanced_pcb' | 'fpc_rigid_flex' | 'pcb_assembly' | 'smt_stencil' | 'cnc_3d';
+  baseMaterial: 'FR4' | 'Flex' | 'Aluminum' | 'Aluminium' | 'Copper Core' | 'Rogers' | 'PTFE Teflon';
   layers: number;
   length: number;
   width: number;

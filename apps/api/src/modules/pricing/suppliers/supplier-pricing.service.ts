@@ -128,7 +128,7 @@ export class SupplierPricingService {
     }
 
     const areaCm2 = (dto.lengthMm * dto.widthMm) / 100;
-    const manufacturingPrice = areaCm2 * dto.quantity * rules.areaRate * layerMultiplier;
+    const manufacturingPrice = areaCm2 * dto.quantity * rules.areaRate * layerMultiplier * productMultiplier(dto.productType);
     return {
       supplier: 'local_calibrated_supplier_estimate',
       manufacturingPrice: round(manufacturingPrice),
@@ -148,4 +148,15 @@ export class SupplierPricingService {
 
 function round(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+function productMultiplier(productType: string): number {
+  return {
+    standard_pcb: 1,
+    advanced_pcb: 1.28,
+    fpc_rigid_flex: 1.42,
+    pcb_assembly: 1.18,
+    smt_stencil: 0.72,
+    cnc_3d: 1.65,
+  }[productType] ?? 1;
 }

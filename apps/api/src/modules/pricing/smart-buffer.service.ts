@@ -254,8 +254,8 @@ export class SmartBufferService {
       config.pressFitHoles,
     ].filter(Boolean).length;
 
-    if (dto.layers >= 6 || specialCount >= 3 || dto.productType === 'pcb_assembly') return 'high';
-    if (dto.layers >= 4 || specialCount >= 1 || this.stringConfig(config.surfaceFinish, '').toLowerCase().includes('enig')) return 'medium';
+    if (dto.layers >= 6 || specialCount >= 3 || ['advanced_pcb', 'fpc_rigid_flex', 'pcb_assembly', 'cnc_3d'].includes(dto.productType)) return 'high';
+    if (dto.layers >= 4 || specialCount >= 1 || dto.productType === 'smt_stencil' || this.stringConfig(config.surfaceFinish, '').toLowerCase().includes('enig')) return 'medium';
     return 'low';
   }
 

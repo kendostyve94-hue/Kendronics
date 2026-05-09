@@ -1,7 +1,7 @@
 import { IsIn, IsInt, IsNumber, IsObject, IsOptional, IsString, IsUUID, Min } from 'class-validator';
 
 export class PreviewQuoteDto {
-  @IsIn(['standard_pcb', 'advanced_pcb', 'pcb_assembly', 'smt_stencil'])
+  @IsIn(['standard_pcb', 'advanced_pcb', 'fpc_rigid_flex', 'pcb_assembly', 'smt_stencil', 'cnc_3d'])
   productType!: string;
 
   @IsOptional()

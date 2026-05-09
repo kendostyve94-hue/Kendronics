@@ -129,6 +129,7 @@ function calculateLocalCalibratedQuote(config: QuoteConfig): PricingBreakdown {
   const quantityMultiplier = quantity <= anchor.quantity ? 1 : Math.pow(quantity / anchor.quantity, 0.72);
   const layerMultiplier = getLayerMultiplier(config.layers, anchor.layers);
   const materialMultiplier = getMaterialMultiplier(config.baseMaterial);
+  const productMultiplier = getProductMultiplier(config);
   const finishMultiplier = getSurfaceFinishMultiplier(config.surfaceFinish);
   const surfaceFinishFee = getSurfaceFinishFee(config.surfaceFinish, areaCm2, quantity);
   const thicknessMultiplier = getThicknessMultiplier(config.thickness);
@@ -149,6 +150,7 @@ function calculateLocalCalibratedQuote(config: QuoteConfig): PricingBreakdown {
       quantityMultiplier *
       layerMultiplier *
       materialMultiplier *
+      productMultiplier *
       finishMultiplier *
       thicknessMultiplier *
       colorMultiplier *
@@ -233,6 +235,9 @@ function calculateSmartBuffer(config: QuoteConfig, supplierPrice: number): numbe
   if (config.surfaceFinish === 'ENIG') buffer += 0.06;
   if (config.blindBuriedVias || config.viaInPad) buffer += 0.08;
   if (config.castellatedHoles || config.edgePlating) buffer += 0.05;
+  if (config.productType === 'fpc_rigid_flex') buffer += 0.08;
+  if (config.productType === 'pcb_assembly') buffer += 0.1;
+  if (config.productType === 'cnc_3d') buffer += 0.12;
   if (config.hasSlots) buffer += 0.05;
   if (typeof config.parserConfidence === 'number' && config.parserConfidence < 0.8) buffer += 0.1;
 
@@ -275,8 +280,8 @@ function getSmartBufferComplexity(config: QuoteConfig): 'low' | 'medium' | 'high
     config.pressFitHoles,
   ]);
 
-  if (config.layers >= 6 || specialCount >= 3 || config.productType === 'pcb_assembly') return 'high';
-  if (config.layers >= 4 || specialCount >= 1 || config.surfaceFinish === 'ENIG') return 'medium';
+  if (config.layers >= 6 || specialCount >= 3 || ['advanced_pcb', 'fpc_rigid_flex', 'pcb_assembly', 'cnc_3d'].includes(config.productType)) return 'high';
+  if (config.layers >= 4 || specialCount >= 1 || config.surfaceFinish === 'ENIG' || config.productType === 'smt_stencil') return 'medium';
   return 'low';
 }
 
@@ -310,10 +315,22 @@ function getMaterialMultiplier(material: QuoteConfig['baseMaterial']): number {
     FR4: 1,
     Flex: 2.45,
     Aluminum: 1.55,
+    Aluminium: 1.55,
     'Copper Core': 1.72,
     Rogers: 3.15,
     'PTFE Teflon': 3.45,
   }[material];
+}
+
+function getProductMultiplier(config: QuoteConfig): number {
+  return {
+    standard_pcb: 1,
+    advanced_pcb: 1.28,
+    fpc_rigid_flex: 1.42,
+    pcb_assembly: 1.18,
+    smt_stencil: 0.72,
+    cnc_3d: 1.65,
+  }[config.productType];
 }
 
 function getSurfaceFinishMultiplier(finish: string): number {
@@ -421,7 +438,10 @@ function getLeadTimeDays(config: QuoteConfig, logisticsZone: string): number {
     (config.layers > 2 ? 2 : 0) +
     (config.layers > 6 ? 3 : 0) +
     (config.baseMaterial !== 'FR4' ? 3 : 0) +
-    (config.assemblyRequired ? 4 : 0) +
+    (config.assemblyRequired || config.productType === 'pcb_assembly' ? 4 : 0) +
+    (config.productType === 'fpc_rigid_flex' ? 3 : 0) +
+    (config.productType === 'cnc_3d' ? 4 : 0) +
+    (config.productType === 'smt_stencil' ? -1 : 0) +
     countTrue([config.impedanceControl, config.blindBuriedVias, config.viaInPad]) * 2;
   const logisticsDays = zoneDeliveryDays[logisticsZone] ?? 16;
   const speedDays = config.productionSpeed === 'express_24h' ? -1 : 0;

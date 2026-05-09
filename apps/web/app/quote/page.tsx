@@ -31,7 +31,7 @@ const productCards: Array<{
     description: 'HDI, impédance, matériaux haute fréquence et options de fiabilité.',
   },
   {
-    value: 'advanced_pcb',
+    value: 'fpc_rigid_flex',
     title: 'FPC/Rigid-Flex',
     description: 'Flex, rigid-flex and lightweight electronics.',
     visual: 'flex',
@@ -50,7 +50,7 @@ const productCards: Array<{
     visual: 'stencil',
   },
   {
-    value: 'advanced_pcb',
+    value: 'cnc_3d',
     title: 'CNC | 3D',
     description: 'Advanced fabrication request.',
     visual: 'cnc',
@@ -62,6 +62,62 @@ const productVisualImages: Partial<Record<(typeof productCards)[number]['visual'
   flex: '/images/quote-product-fpc-rigid-flex.png',
   advanced: '/images/quote-product-advanced-pcba.png',
   assembly: '/images/quote-product-assembly.png',
+};
+
+const productDefaults: Record<QuoteConfig['productType'], Partial<QuoteConfig>> = {
+  standard_pcb: {
+    baseMaterial: 'FR4',
+    layers: 2,
+    assemblyRequired: false,
+    stencilRequired: false,
+    impedanceControl: false,
+    blindBuriedVias: false,
+    viaInPad: false,
+  },
+  advanced_pcb: {
+    baseMaterial: 'Rogers',
+    layers: 4,
+    assemblyRequired: false,
+    stencilRequired: false,
+    impedanceControl: true,
+    surfaceFinish: 'ENIG',
+  },
+  fpc_rigid_flex: {
+    baseMaterial: 'Flex',
+    layers: 2,
+    assemblyRequired: false,
+    stencilRequired: false,
+    coverlayThickness: '25um',
+    stiffenerType: 'PI',
+    cuttingMethod: 'Laser',
+  },
+  pcb_assembly: {
+    baseMaterial: 'FR4',
+    layers: 2,
+    assemblyRequired: true,
+    stencilRequired: true,
+    assemblySide: 'top',
+    componentSourcing: 'partner_sourced',
+    confirmPartsPlacement: false,
+  },
+  smt_stencil: {
+    baseMaterial: 'FR4',
+    layers: 2,
+    assemblyRequired: false,
+    stencilRequired: true,
+    stencilType: 'SMT',
+    stencilSize: '280x380mm',
+    stencilThickness: '0.12mm',
+    stencilFrame: true,
+  },
+  cnc_3d: {
+    baseMaterial: 'Aluminum',
+    layers: 2,
+    assemblyRequired: false,
+    stencilRequired: false,
+    cuttingMethod: 'CNC',
+    surfaceFinish: 'HASL lead-free',
+  },
 };
 
 const initialConfig: QuoteConfig = {
@@ -305,6 +361,24 @@ export default function QuotePage() {
     setSaved(false);
     setQuoteSave({ status: 'idle' });
     setConfig((current) => ({ ...current, [key]: value }));
+  }
+
+  function selectProduct(product: (typeof productCards)[number]) {
+    setSaved(false);
+    setQuoteSave({ status: 'idle' });
+    setSelectedProductTitle(product.title);
+    setOpenPanel(product.value === 'fpc_rigid_flex' || product.value === 'cnc_3d' ? 'advanced' : product.value === 'pcb_assembly' || product.value === 'smt_stencil' ? 'highSpec' : 'base');
+    setConfig((current) => ({
+      ...current,
+      ...productDefaults[product.value],
+      productType: product.value,
+      liveShippingRateId: undefined,
+      liveShippingCarrier: undefined,
+      liveShippingService: undefined,
+      liveShippingAmount: undefined,
+      liveShippingCurrency: undefined,
+      liveShippingTransitTime: undefined,
+    }));
   }
 
   function clearLiveShippingFields(current: QuoteConfig): QuoteConfig {
@@ -580,10 +654,7 @@ export default function QuotePage() {
               <button
                 key={`${product.title}-${product.value}`}
                 type="button"
-                onClick={() => {
-                  setSelectedProductTitle(product.title);
-                  update('productType', product.value);
-                }}
+                onClick={() => selectProduct(product)}
                 className={`relative flex h-16 items-center gap-3 rounded-sm border bg-white px-3 text-left transition ${
                   selectedProductTitle === product.title
                     ? 'border-[#0f8f6b] bg-[#eefbf6]'
