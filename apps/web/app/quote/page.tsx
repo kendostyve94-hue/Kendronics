@@ -62,6 +62,7 @@ const productVisualImages: Partial<Record<(typeof productCards)[number]['visual'
   flex: '/images/quote-product-fpc-rigid-flex.png',
   advanced: '/images/quote-product-advanced-pcba.png',
   assembly: '/images/quote-product-assembly.png',
+  stencil: '/images/quote-product-smd-stencil.png',
 };
 
 const productDefaults: Record<QuoteConfig['productType'], Partial<QuoteConfig>> = {
