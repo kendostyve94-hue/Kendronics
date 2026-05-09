@@ -57,6 +57,13 @@ const productCards: Array<{
   },
 ];
 
+const productVisualImages: Partial<Record<(typeof productCards)[number]['visual'], string>> = {
+  standard: '/images/quote-product-standard-pcb.png',
+  flex: '/images/quote-product-fpc-rigid-flex.png',
+  advanced: '/images/quote-product-advanced-pcba.png',
+  assembly: '/images/quote-product-assembly.png',
+};
+
 const initialConfig: QuoteConfig = {
   productType: 'standard_pcb',
   baseMaterial: 'FR4',
@@ -921,6 +928,16 @@ function rememberCustomerOrder(orderId: string) {
 }
 
 function ProductVisual({ kind }: { kind: 'standard' | 'advanced' | 'flex' | 'assembly' | 'stencil' | 'cnc' }) {
+  const image = productVisualImages[kind];
+
+  if (image) {
+    return (
+      <span className="relative flex h-11 w-16 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-slate-300 bg-white">
+        <img src={image} alt="" className="h-full w-full object-contain" />
+      </span>
+    );
+  }
+
   const colors: Record<typeof kind, string> = {
     standard: 'from-[#1fb35d] to-[#0b7f42]',
     advanced: 'from-[#2ca36b] to-[#0e6b45]',
