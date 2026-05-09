@@ -133,8 +133,8 @@ export default function HomePage() {
       <Hero />
       <MobileQuickAccess />
       <ProductCatalog />
-      <HomeCapabilityMatrix />
       <SmartOrdering />
+      <HomeCapabilityMatrix />
       <TrustAssurance />
       <Resources />
       <Footer />
