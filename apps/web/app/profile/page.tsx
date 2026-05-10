@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Footer } from '../../components/layout/Footer';
 import { clearAuthSession, readAuthSession } from '../../lib/auth-session';
 
 const profileStorageKey = 'kendronics.customer.profile';
@@ -63,24 +64,24 @@ export default function ProfilePage() {
     <main className="min-h-screen bg-[#eeeeee] text-[#25364a]">
       <ProfileNavbar firstName={firstName} avatarDataUrl={avatarDataUrl} />
 
-      <div className="mx-auto grid max-w-[1368px] gap-5 px-4 pb-10 pt-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+      <div className="mx-auto grid max-w-[1368px] gap-3 px-3 pb-8 pt-3 sm:gap-5 sm:px-4 sm:pt-6 lg:grid-cols-[260px_minmax(0,1fr)]">
         <ProfileSidebar />
 
         <section className="min-w-0">
           <ProductQuickGrid />
 
-          <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="mt-3 grid gap-3 sm:mt-5 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="border border-[#d8d8d8] bg-white">
               <div className="grid gap-0 lg:grid-cols-[240px_minmax(0,1fr)]">
                 <ProfileIdentity firstName={firstName} lastName={lastName} userId={userId} avatarDataUrl={avatarDataUrl} />
-                <div className="border-t border-[#e5e5e5] p-5 lg:border-l lg:border-t-0">
+                <div className="border-t border-[#e5e5e5] p-3 sm:p-5 lg:border-l lg:border-t-0">
                   <AccountSummary />
                   <RewardsBanner />
                 </div>
               </div>
             </div>
 
-            <aside className="grid gap-5">
+            <aside className="grid gap-3 sm:gap-5">
               <PromoCard />
               <NewsCard />
             </aside>
@@ -90,6 +91,7 @@ export default function ProfilePage() {
           <RecentOrders />
         </section>
       </div>
+      <Footer />
     </main>
   );
 }
@@ -97,11 +99,11 @@ export default function ProfilePage() {
 function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatarDataUrl: string }) {
   return (
     <header className="sticky top-0 z-40 border-b border-[#d7d7d7] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.16)]">
-      <div className="mx-auto flex h-[70px] max-w-[1368px] items-center gap-4 px-5">
-        <a href="/" className="mr-3 shrink-0" aria-label="Kendronics accueil">
-          <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-12 w-auto" />
+      <div className="mx-auto flex h-14 max-w-[1368px] items-center gap-2 px-3 sm:h-[70px] sm:gap-4 sm:px-5">
+        <a href="/" className="shrink-0 sm:mr-3" aria-label="Kendronics accueil">
+          <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-8 w-auto sm:h-12" />
         </a>
-        <nav className="flex min-w-0 flex-1 items-center justify-between gap-2 overflow-x-auto text-[15px] text-[#111827]">
+        <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto text-[12px] text-[#111827] sm:justify-between sm:gap-2 sm:text-[15px]">
           <ProfileNavLink href="/profile" label="Mon compte" />
           <ProfileNavLink href="/quote" label="Devis immediat" />
           <ProfileNavLink href="/quote" label="Assemblage PCB" />
@@ -110,11 +112,11 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
           <ProfileNavLink href="/orders" label="Mes commandes" />
           <ProfileNavLink href="/profile" label="Parametres" />
         </nav>
-        <a href="/cart" className="relative hidden h-10 w-10 place-items-center text-[#111827] sm:grid" aria-label="Panier">
+        <a href="/cart" className="relative grid h-9 w-9 shrink-0 place-items-center text-[#111827] sm:h-10 sm:w-10" aria-label="Panier">
           <CartIcon />
           <span className="absolute right-0 top-0 grid h-5 min-w-5 place-items-center rounded-full bg-[#0ac15f] px-1 text-xs font-black text-white">0</span>
         </a>
-        <a href="/profile" className="hidden items-center gap-3 sm:flex">
+        <a href="/profile" className="hidden items-center gap-3 md:flex">
           <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-[#d1d5db] bg-[#f4f4f4]">
             {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : null}
           </span>
@@ -130,7 +132,7 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
 
 function ProfileNavLink({ href, label }: { href: string; label: string }) {
   return (
-    <a href={href} className="grid min-h-[54px] min-w-[92px] place-items-center px-2 text-center leading-6 hover:text-[#00a651]">
+    <a href={href} className="grid min-h-10 min-w-[76px] place-items-center px-2 text-center leading-4 hover:text-[#00a651] sm:min-h-[54px] sm:min-w-[92px] sm:leading-6">
       {label}
     </a>
   );
@@ -164,19 +166,19 @@ function SidebarGroup({ title, items }: { title: string; items: string[] }) {
 
 function ProductQuickGrid() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 xl:grid-cols-6">
       {quickProducts.map((product) => (
         <a
           key={product.title}
           href={product.href}
-          className="min-h-[144px] border bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
+          className="min-h-[86px] border bg-white p-2.5 transition hover:-translate-y-0.5 hover:shadow-lg sm:min-h-[144px] sm:p-5"
           style={{ borderColor: product.color }}
         >
-          <div className="mb-2 grid h-10 w-10 place-items-center overflow-hidden border-[3px] border-[#111827]" style={{ backgroundColor: product.color, borderRadius: product.shape === 'circle' ? '999px' : '0' }}>
+          <div className="mb-1.5 grid h-8 w-8 place-items-center overflow-hidden border-2 border-[#111827] sm:mb-2 sm:h-10 sm:w-10 sm:border-[3px]" style={{ backgroundColor: product.color, borderRadius: product.shape === 'circle' ? '999px' : '0' }}>
             {product.image ? <img src={product.image} alt="" className="h-full w-full object-cover" /> : null}
           </div>
-          <h3 className="text-xl font-black leading-6 text-[#1f2937]">{product.title}</h3>
-          <p className="mt-2 text-sm leading-6 text-[#64748b]">Commander maintenant &gt;</p>
+          <h3 className="text-sm font-black leading-4 text-[#1f2937] sm:text-xl sm:leading-6">{product.title}</h3>
+          <p className="mt-1 text-[11px] leading-4 text-[#64748b] sm:mt-2 sm:text-sm sm:leading-6">Commander &gt;</p>
         </a>
       ))}
     </div>
@@ -185,13 +187,15 @@ function ProductQuickGrid() {
 
 function ProfileIdentity({ firstName, lastName, userId, avatarDataUrl }: { firstName: string; lastName: string; userId: string; avatarDataUrl: string }) {
   return (
-    <div className="grid place-items-center border-b border-[#e5e5e5] px-6 py-8 text-center lg:border-b-0">
-      <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-full bg-[#e7e7e7]">
+    <div className="grid grid-cols-[4.25rem_minmax(0,1fr)] items-center gap-3 border-b border-[#e5e5e5] px-4 py-4 text-left sm:grid-cols-1 sm:place-items-center sm:px-6 sm:py-8 sm:text-center lg:border-b-0">
+      <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-[#e7e7e7] sm:h-24 sm:w-24">
         {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : null}
       </div>
-      <h1 className="mt-6 text-2xl font-black text-[#5f6368]">Bonjour, {firstName}</h1>
-      <p className="mt-2 text-sm uppercase text-[#6b7280]">{lastName}</p>
-      <p className="mt-6 text-sm text-[#6b7280]">ID utilisateur : {userId}</p>
+      <div className="min-w-0">
+        <h1 className="text-lg font-black text-[#5f6368] sm:mt-6 sm:text-2xl">Bonjour, {firstName}</h1>
+        <p className="mt-1 text-xs uppercase text-[#6b7280] sm:mt-2 sm:text-sm">{lastName}</p>
+        <p className="mt-2 text-xs text-[#6b7280] sm:mt-6 sm:text-sm">ID utilisateur : {userId}</p>
+      </div>
     </div>
   );
 }
@@ -204,11 +208,11 @@ function AccountSummary() {
   ];
 
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div className="grid grid-cols-3 gap-2 sm:gap-4">
       {cells.map(([label, value, color]) => (
-        <div key={label} className="min-h-[136px] border border-[#e5e7eb] bg-[#fafafa] p-6">
-          <p className="text-sm text-[#64748b]">{label}</p>
-          <p className={`mt-5 text-4xl font-black ${color}`}>{value}</p>
+        <div key={label} className="min-h-[76px] border border-[#e5e7eb] bg-[#fafafa] p-3 sm:min-h-[136px] sm:p-6">
+          <p className="text-[11px] leading-4 text-[#64748b] sm:text-sm">{label}</p>
+          <p className={`mt-2 text-xl font-black sm:mt-5 sm:text-4xl ${color}`}>{value}</p>
         </div>
       ))}
     </div>
@@ -217,13 +221,13 @@ function AccountSummary() {
 
 function RewardsBanner() {
   return (
-    <div className="mt-5 flex min-h-[96px] items-center justify-between gap-5 overflow-hidden bg-gradient-to-r from-[#ff6b00] via-[#ff9f00] to-[#ffd400] px-8 text-white">
+    <div className="mt-3 flex min-h-[72px] items-center justify-between gap-3 overflow-hidden bg-gradient-to-r from-[#ff6b00] via-[#ff9f00] to-[#ffd400] px-4 text-white sm:mt-5 sm:min-h-[96px] sm:gap-5 sm:px-8">
       <div>
-        <p className="-mt-2 text-4xl font-black italic leading-9">Kendronics</p>
-        <p className="text-4xl font-black italic leading-9">Rewards</p>
-        <p className="mt-2 text-sm">Partagez vos projets PCB et obtenez des avantages.</p>
+        <p className="text-xl font-black italic leading-5 sm:-mt-2 sm:text-4xl sm:leading-9">Kendronics</p>
+        <p className="text-xl font-black italic leading-5 sm:text-4xl sm:leading-9">Rewards</p>
+        <p className="mt-1 text-xs sm:mt-2 sm:text-sm">Partagez vos projets PCB.</p>
       </div>
-      <a href="#" className="shrink-0 rounded-full bg-white px-8 py-3 text-sm font-black text-[#ff6b00]">
+      <a href="#" className="shrink-0 rounded-full bg-white px-4 py-2 text-xs font-black text-[#ff6b00] sm:px-8 sm:py-3 sm:text-sm">
         Rejoindre
       </a>
     </div>
@@ -232,10 +236,10 @@ function RewardsBanner() {
 
 function PromoCard() {
   return (
-    <article className="border border-[#d8d8d8] bg-white p-5">
-      <h2 className="text-3xl font-black text-[#1f2937]">PCB Prototype</h2>
-      <p className="mt-4 text-lg text-[#52525b]">Seulement $5</p>
-      <div className="mt-5 h-24 bg-gradient-to-r from-[#0fe36f] to-[#03b7e8]" />
+    <article className="border border-[#d8d8d8] bg-white p-4 sm:p-5">
+      <h2 className="text-2xl font-black text-[#1f2937] sm:text-3xl">PCB Prototype</h2>
+      <p className="mt-2 text-sm text-[#52525b] sm:mt-4 sm:text-lg">Seulement $5</p>
+      <div className="mt-3 h-14 bg-gradient-to-r from-[#0fe36f] to-[#03b7e8] sm:mt-5 sm:h-24" />
     </article>
   );
 }
@@ -244,12 +248,12 @@ function NewsCard() {
   const news = ['Comment preparer vos fichiers Gerber', "Reduction sur l'assemblage PCB", 'Delais de livraison Afrique', 'Mise a jour du moteur de pricing'];
 
   return (
-    <article className="border border-[#d8d8d8] bg-white p-5">
+    <article className="border border-[#d8d8d8] bg-white p-4 sm:p-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-black text-[#1f2937]">Dernieres nouvelles</h2>
+        <h2 className="text-xl font-black text-[#1f2937] sm:text-2xl">Dernieres nouvelles</h2>
         <a href="/blog" className="text-sm text-blue-600">Plus</a>
       </div>
-      <ul className="mt-5 grid gap-4 text-sm text-[#475569]">
+      <ul className="mt-3 grid gap-2 text-sm text-[#475569] sm:mt-5 sm:gap-4">
         {news.map((item) => (
           <li key={item}>• {item}</li>
         ))}
@@ -262,12 +266,12 @@ function StatusStrip() {
   const statuses = ['Verification en cours', 'Paiement en attente', 'Statut de production', "Questions d'ingenierie", 'Livraison', 'Commentaires en attente'];
 
   return (
-    <section className="mt-5 grid border border-[#d8d8d8] bg-white py-6 sm:grid-cols-2 lg:grid-cols-6">
+    <section className="mt-3 grid grid-cols-3 border border-[#d8d8d8] bg-white py-3 sm:mt-5 sm:grid-cols-2 sm:py-6 lg:grid-cols-6">
       {statuses.map((status) => (
-        <div key={status} className="grid min-h-[120px] place-items-center border-b border-[#e5e7eb] px-4 text-center last:border-b-0 sm:border-r sm:last:border-r-0 lg:border-b-0">
+        <div key={status} className="grid min-h-[82px] place-items-center border-b border-r border-[#e5e7eb] px-2 text-center sm:min-h-[120px] sm:px-4 sm:last:border-r-0 lg:border-b-0">
           <div>
-            <p className="text-5xl font-light text-[#475569]">0</p>
-            <p className="mt-3 text-sm leading-5 text-[#475569]">{status}</p>
+            <p className="text-3xl font-light text-[#475569] sm:text-5xl">0</p>
+            <p className="mt-1 text-[11px] leading-4 text-[#475569] sm:mt-3 sm:text-sm sm:leading-5">{status}</p>
           </div>
         </div>
       ))}
@@ -277,12 +281,12 @@ function StatusStrip() {
 
 function RecentOrders() {
   return (
-    <section className="mt-5 border border-[#d8d8d8] bg-white p-6">
+    <section className="mt-3 border border-[#d8d8d8] bg-white p-4 sm:mt-5 sm:p-6">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-3xl font-black text-[#1f2937]">Ma commande</h2>
+        <h2 className="text-2xl font-black text-[#1f2937] sm:text-3xl">Ma commande</h2>
         <a href="/orders" className="text-sm text-blue-600">Afficher plus &gt;</a>
       </div>
-      <div className="mt-8 grid min-h-[128px] place-items-center border border-dashed border-[#d1d5db] text-lg text-[#9ca3af]">
+      <div className="mt-5 grid min-h-[88px] place-items-center border border-dashed border-[#d1d5db] text-sm text-[#9ca3af] sm:mt-8 sm:min-h-[128px] sm:text-lg">
         Aucune commande recente
       </div>
       <div className="mt-6 flex justify-end">
