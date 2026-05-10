@@ -32,13 +32,161 @@ import type {
 import type { PaymentStatus } from '../../lib/order-detail-contract';
 
 type AdminLoadState = 'checking' | 'authorized' | 'forbidden' | 'error';
-type AdminTab = 'orders' | 'pricing' | 'support' | 'audit';
+type AdminTab =
+  | 'dashboard'
+  | 'orders'
+  | 'orderValidation'
+  | 'production'
+  | 'delivery'
+  | 'disputes'
+  | 'gerberAnalysis'
+  | 'gerberValidation'
+  | 'gerberHistory'
+  | 'clients'
+  | 'companies'
+  | 'clientActivity'
+  | 'clientRisk'
+  | 'quotes'
+  | 'pricing'
+  | 'buffers'
+  | 'priceHistory'
+  | 'suppliers'
+  | 'jlcpcb'
+  | 'pcbway'
+  | 'futureSuppliers'
+  | 'shipments'
+  | 'tracking'
+  | 'customs'
+  | 'logisticsIncidents'
+  | 'support'
+  | 'urgentTickets'
+  | 'afterSales'
+  | 'payments'
+  | 'refunds'
+  | 'stripeDisputes'
+  | 'analytics'
+  | 'revenueAnalytics'
+  | 'countryAnalytics'
+  | 'performanceAnalytics'
+  | 'compliance'
+  | 'gdpr'
+  | 'consents'
+  | 'legalLogs'
+  | 'settings'
+  | 'users'
+  | 'permissions'
+  | 'apiSettings'
+  | 'emailSettings'
+  | 'notificationSettings';
 
 const apiBaseUrl = getApiBaseUrl();
 
+const adminNavigation: Array<{ title: string; items: Array<{ id: AdminTab; label: string }> }> = [
+  { title: 'Pilotage', items: [{ id: 'dashboard', label: 'Dashboard' }] },
+  {
+    title: 'Commandes',
+    items: [
+      { id: 'orders', label: 'Toutes les commandes' },
+      { id: 'orderValidation', label: 'À valider' },
+      { id: 'production', label: 'En fabrication' },
+      { id: 'delivery', label: 'En livraison' },
+      { id: 'disputes', label: 'Litiges' },
+    ],
+  },
+  {
+    title: 'Fichiers Gerber',
+    items: [
+      { id: 'gerberAnalysis', label: 'Analyse automatique' },
+      { id: 'gerberValidation', label: 'Validation manuelle' },
+      { id: 'gerberHistory', label: 'Historique' },
+    ],
+  },
+  {
+    title: 'Clients',
+    items: [
+      { id: 'clients', label: 'Tous les clients' },
+      { id: 'companies', label: 'Entreprises' },
+      { id: 'clientActivity', label: 'Activité' },
+      { id: 'clientRisk', label: 'Risques' },
+    ],
+  },
+  {
+    title: 'Devis & Pricing',
+    items: [
+      { id: 'quotes', label: 'Devis générés' },
+      { id: 'pricing', label: 'Marges' },
+      { id: 'buffers', label: 'Buffers' },
+      { id: 'priceHistory', label: 'Historique prix' },
+    ],
+  },
+  {
+    title: 'Fournisseurs',
+    items: [
+      { id: 'suppliers', label: 'Vue fournisseurs' },
+      { id: 'jlcpcb', label: 'JLCPCB' },
+      { id: 'pcbway', label: 'PCBWay' },
+      { id: 'futureSuppliers', label: 'Fournisseurs futurs' },
+    ],
+  },
+  {
+    title: 'Logistique',
+    items: [
+      { id: 'shipments', label: 'Expéditions' },
+      { id: 'tracking', label: 'Tracking' },
+      { id: 'customs', label: 'Douane' },
+      { id: 'logisticsIncidents', label: 'Incidents' },
+    ],
+  },
+  {
+    title: 'Support',
+    items: [
+      { id: 'support', label: 'Tickets ouverts' },
+      { id: 'urgentTickets', label: 'Tickets urgents' },
+      { id: 'afterSales', label: 'SAV' },
+    ],
+  },
+  {
+    title: 'Paiements',
+    items: [
+      { id: 'payments', label: 'Transactions' },
+      { id: 'refunds', label: 'Remboursements' },
+      { id: 'stripeDisputes', label: 'Litiges Stripe' },
+    ],
+  },
+  {
+    title: 'Analytics',
+    items: [
+      { id: 'analytics', label: 'Revenus' },
+      { id: 'revenueAnalytics', label: 'Commandes' },
+      { id: 'countryAnalytics', label: 'Pays' },
+      { id: 'performanceAnalytics', label: 'Performance' },
+    ],
+  },
+  {
+    title: 'Conformité',
+    items: [
+      { id: 'compliance', label: 'RGPD' },
+      { id: 'gdpr', label: 'Consentements' },
+      { id: 'consents', label: 'Cookies' },
+      { id: 'legalLogs', label: 'Logs légaux' },
+    ],
+  },
+  {
+    title: 'Paramètres',
+    items: [
+      { id: 'settings', label: 'Utilisateurs' },
+      { id: 'users', label: 'Rôles' },
+      { id: 'permissions', label: 'Permissions' },
+      { id: 'apiSettings', label: 'API' },
+      { id: 'emailSettings', label: 'Emails' },
+      { id: 'notificationSettings', label: 'Notifications' },
+    ],
+  },
+];
+
 export default function AdminPage() {
   const [loadState, setLoadState] = useState<AdminLoadState>('checking');
-  const [tab, setTab] = useState<AdminTab>('orders');
+  const [tab, setTab] = useState<AdminTab>('dashboard');
   const [orders, setOrders] = useState<AdminOrderRow[]>([]);
   const [pricingRules, setPricingRules] = useState<AdminPricingRule[]>([]);
   const [pricingIntelligence, setPricingIntelligence] = useState<AdminPricingIntelligence | null>(null);
@@ -108,6 +256,7 @@ export default function AdminPage() {
       }),
     [countryFilter, orders, paymentFilter, statusFilter],
   );
+  const scopedOrders = useMemo(() => filterOrdersForAdminTab(filteredOrders, tab), [filteredOrders, tab]);
   const selectedOrder = orders.find((order) => order.id === selectedOrderId) ?? orders[0];
 
   useEffect(() => {
@@ -291,79 +440,397 @@ export default function AdminPage() {
 
   return (
     <AdminShell>
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-4">
-          <Metric label="Orders" value={orders.length.toString()} />
-          <Metric label="Open tickets" value={supportTickets.filter((ticket) => ticket.status !== 'closed').length.toString()} />
-          <Metric label="Pricing rules" value={pricingRules.length.toString()} />
-          <Metric label="Audit events" value={auditLogs.length.toString()} />
+      <div className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
+        <AdminSidebar activeTab={tab} onSelect={setTab} />
+
+        <div className="min-w-0 space-y-5">
+          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+            <Metric label="Commandes" value={orders.length.toString()} />
+            <Metric label="CA suivi" value={formatCurrency(sumOrderTotals(orders))} />
+            <Metric label="Marge moyenne" value={pricingIntelligence ? `x${pricingIntelligence.metrics.averageBuffer.toFixed(2)}` : 'x0.00'} />
+            <Metric label="En attente" value={orders.filter((order) => order.status === 'awaiting_payment').length.toString()} />
+            <Metric label="Tickets ouverts" value={supportTickets.filter((ticket) => ticket.status !== 'closed').length.toString()} />
+            <Metric label="Bloquées" value={orders.filter((order) => ['cancelled', 'refunded'].includes(order.status)).length.toString()} />
+          </div>
+
+          {message && <div className="rounded-sm border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{message}</div>}
+
+          {tab === 'dashboard' && (
+            <DashboardPanel orders={orders} tickets={supportTickets} logs={auditLogs} intelligence={pricingIntelligence} />
+          )}
+
+          {['orders', 'orderValidation', 'production', 'delivery', 'disputes'].includes(tab) && (
+            <OrdersWorkspace
+              tab={tab}
+              orders={scopedOrders}
+              selectedOrder={selectedOrder}
+              selectedOrderId={selectedOrderId}
+              statusFilter={statusFilter}
+              countryFilter={countryFilter}
+              paymentFilter={paymentFilter}
+              countries={countries}
+              onSelectOrder={setSelectedOrderId}
+              onStatusFilter={setStatusFilter}
+              onCountryFilter={setCountryFilter}
+              onPaymentFilter={setPaymentFilter}
+              onSubmitStatus={submitStatus}
+              onSubmitSupplier={submitSupplier}
+              onSubmitSupplierOrder={submitSupplierOrder}
+              onSubmitSupplierRealPrice={submitSupplierRealPrice}
+              onSubmitShipment={submitShipment}
+              supplierOrderPackage={supplierOrderPackage}
+            />
+          )}
+
+          {['quotes', 'pricing', 'buffers', 'priceHistory'].includes(tab) && (
+            <PricingPanel
+              rules={pricingRules}
+              intelligence={pricingIntelligence}
+              supplierConnectionTest={supplierConnectionTest}
+              onSubmit={submitPricingRule}
+              onSubmitSupplierConnectionTest={submitSupplierConnectionTest}
+            />
+          )}
+
+          {['support', 'urgentTickets', 'afterSales'].includes(tab) && <SupportTicketsPanel tickets={supportTickets} />}
+          {['compliance', 'gdpr', 'consents', 'legalLogs'].includes(tab) && <AuditLogPanel logs={auditLogs} />}
+
+          {['gerberAnalysis', 'gerberValidation', 'gerberHistory'].includes(tab) && (
+            <OperationalPanel
+              eyebrow="Fichiers Gerber"
+              title={adminTabTitle(tab)}
+              description="Analyse automatique, validation manuelle, historique des fichiers, erreurs potentielles et confiance parser."
+              rows={orders.map((order) => [order.orderNumber, order.quoteId, order.status, order.createdAt ? formatDate(order.createdAt) : 'Pending'])}
+              columns={['Commande', 'Quote', 'Statut', 'Upload']}
+            />
+          )}
+
+          {['clients', 'companies', 'clientActivity', 'clientRisk'].includes(tab) && (
+            <OperationalPanel
+              eyebrow="Clients"
+              title={adminTabTitle(tab)}
+              description="Vision 360 client : pays, volume, tickets, paiements, commandes et score de risque interne."
+              rows={orders.map((order) => [order.orderNumber, order.destinationCountryIso2, getPaymentStatus(order), formatCurrency(order.totalPrice ?? 0)])}
+              columns={['Dernière commande', 'Pays', 'Paiement', 'Volume']}
+            />
+          )}
+
+          {['suppliers', 'jlcpcb', 'pcbway', 'futureSuppliers'].includes(tab) && (
+            <SupplierPanel orders={orders} supplierConnectionTest={supplierConnectionTest} onSubmitSupplierConnectionTest={submitSupplierConnectionTest} />
+          )}
+
+          {['shipments', 'tracking', 'customs', 'logisticsIncidents'].includes(tab) && (
+            <OperationalPanel
+              eyebrow="Logistique"
+              title={adminTabTitle(tab)}
+              description="Expéditions, tracking, douane, incidents, transporteurs et ETA critiques."
+              rows={orders.map((order) => [order.orderNumber, order.carrierName || 'En attente', order.trackingNumber || 'Aucun', order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : 'ETA pending'])}
+              columns={['Commande', 'Transporteur', 'Tracking', 'ETA']}
+            />
+          )}
+
+          {['payments', 'refunds', 'stripeDisputes'].includes(tab) && (
+            <OperationalPanel
+              eyebrow="Paiements"
+              title={adminTabTitle(tab)}
+              description="Transactions Stripe, remboursements, litiges, statuts de paiement et montants suivis."
+              rows={orders.map((order) => [order.orderNumber, getPaymentStatus(order), formatCurrency(order.totalPrice ?? 0), order.paidAt ? formatDate(order.paidAt) : 'En attente'])}
+              columns={['Commande', 'Statut', 'Montant', 'Date']}
+            />
+          )}
+
+          {['analytics', 'revenueAnalytics', 'countryAnalytics', 'performanceAnalytics'].includes(tab) && (
+            <AnalyticsPanel orders={orders} tickets={supportTickets} intelligence={pricingIntelligence} />
+          )}
+
+          {['settings', 'users', 'permissions', 'apiSettings', 'emailSettings', 'notificationSettings'].includes(tab) && (
+            <OperationalPanel
+              eyebrow="Paramètres"
+              title={adminTabTitle(tab)}
+              description="Utilisateurs, rôles, permissions, clés API, emails, notifications, maintenance et logs système."
+              rows={[
+                ['Stripe', 'Paiements', 'Actif', 'Dashboard fournisseur'],
+                ['PCBWay', 'Fournisseur', supplierConnectionTest?.ok ? 'Connecté' : 'À vérifier', 'API partenaire'],
+                ['Resend', 'Email', 'Configuré', 'Notifications'],
+                ['R2/S3', 'Stockage fichiers', 'Actif', 'Gerber/BOM/CPL'],
+              ]}
+              columns={['Service', 'Scope', 'Statut', 'Usage']}
+            />
+          )}
         </div>
-
-        <Card className="p-2">
-          <div className="flex flex-wrap gap-2">
-            {(['orders', 'pricing', 'support', 'audit'] satisfies AdminTab[]).map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setTab(item)}
-                className={`h-10 rounded-xl px-4 text-sm font-black capitalize transition ${
-                  tab === item ? 'bg-deepblue text-white' : 'bg-white text-slate-600 hover:bg-sky-50 hover:text-deepblue'
-                }`}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-        </Card>
-
-        {message && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{message}</div>}
-
-        {tab === 'orders' && (
-          <div className="grid gap-6 xl:grid-cols-[1fr_24rem]">
-            <Card className="overflow-hidden">
-              <div className="border-b border-slate-100 p-5">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">All orders</p>
-                    <h2 className="mt-2 text-2xl font-black text-ink">Fulfillment queue</h2>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={['all', ...adminOrderStatuses]} />
-                    <FilterSelect label="Country" value={countryFilter} onChange={setCountryFilter} options={['all', ...countries]} />
-                    <FilterSelect label="Payment" value={paymentFilter} onChange={setPaymentFilter} options={['all', 'pending', 'paid', 'failed', 'refunded']} />
-                  </div>
-                </div>
-              </div>
-              <OrdersTable orders={filteredOrders} selectedOrderId={selectedOrderId} onSelect={setSelectedOrderId} />
-            </Card>
-
-            {selectedOrder && (
-              <AdminOrderActions
-                order={selectedOrder}
-                onSubmitStatus={submitStatus}
-                onSubmitSupplier={submitSupplier}
-                onSubmitSupplierOrder={submitSupplierOrder}
-                onSubmitSupplierRealPrice={submitSupplierRealPrice}
-                onSubmitShipment={submitShipment}
-                supplierOrderPackage={supplierOrderPackage}
-              />
-            )}
-          </div>
-        )}
-
-        {tab === 'pricing' && (
-          <PricingPanel
-            rules={pricingRules}
-            intelligence={pricingIntelligence}
-            supplierConnectionTest={supplierConnectionTest}
-            onSubmit={submitPricingRule}
-            onSubmitSupplierConnectionTest={submitSupplierConnectionTest}
-          />
-        )}
-        {tab === 'support' && <SupportTicketsPanel tickets={supportTickets} />}
-        {tab === 'audit' && <AuditLogPanel logs={auditLogs} />}
       </div>
     </AdminShell>
+  );
+}
+
+function AdminSidebar({ activeTab, onSelect }: { activeTab: AdminTab; onSelect: (tab: AdminTab) => void }) {
+  return (
+    <aside className="lg:sticky lg:top-24 lg:self-start">
+      <Card className="overflow-hidden">
+        <div className="border-b border-slate-100 p-4">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-signal">Admin workspace</p>
+          <h2 className="mt-2 text-lg font-black text-ink">Kendronics OS</h2>
+        </div>
+        <nav className="max-h-[72vh] overflow-y-auto p-2">
+          {adminNavigation.map((group) => (
+            <div key={group.title} className="pb-3">
+              <p className="px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">{group.title}</p>
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => onSelect(item.id)}
+                    className={`flex min-h-9 w-full items-center rounded-sm px-3 text-left text-sm font-bold transition ${
+                      activeTab === item.id ? 'bg-[#0f8f6b] text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-ink'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+      </Card>
+    </aside>
+  );
+}
+
+function DashboardPanel({
+  orders,
+  tickets,
+  logs,
+  intelligence,
+}: {
+  orders: AdminOrderRow[];
+  tickets: AdminSupportTicket[];
+  logs: AdminAuditLog[];
+  intelligence: AdminPricingIntelligence | null;
+}) {
+  const recentOrders = orders.slice(0, 5);
+  const recentLogs = logs.slice(0, 6);
+
+  return (
+    <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <Card className="p-5">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Dashboard</p>
+        <h2 className="mt-2 text-2xl font-black text-ink">Vue globale en 10 secondes</h2>
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <DashboardTile label="Commandes du jour" value={orders.filter((order) => isToday(order.createdAt)).length.toString()} />
+          <DashboardTile label="Commandes en attente" value={orders.filter((order) => order.status === 'awaiting_payment').length.toString()} />
+          <DashboardTile label="Tickets ouverts" value={tickets.filter((ticket) => ticket.status !== 'closed').length.toString()} />
+          <DashboardTile label="Buffers surveillés" value={String(intelligence?.metrics.flaggedBucketCount ?? 0)} />
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Activité récente</p>
+        <div className="mt-5 space-y-4">
+          {recentLogs.map((log) => (
+            <TimelineItem key={log.id} title={log.action} meta={`${log.targetType}${log.targetId ? ` / ${log.targetId.slice(0, 8)}` : ''}`} date={log.createdAt} />
+          ))}
+          {recentLogs.length === 0 ? <p className="text-sm font-bold text-slate-500">Aucune activité récente.</p> : null}
+        </div>
+      </Card>
+
+      <Card className="overflow-hidden xl:col-span-2">
+        <div className="border-b border-slate-100 p-5">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Production / Logistique / Finance</p>
+          <h2 className="mt-2 text-xl font-black text-ink">Flux opérationnel récent</h2>
+        </div>
+        <OrdersTable orders={recentOrders} selectedOrderId="" onSelect={() => undefined} />
+      </Card>
+    </div>
+  );
+}
+
+function OrdersWorkspace({
+  tab,
+  orders,
+  selectedOrder,
+  selectedOrderId,
+  statusFilter,
+  countryFilter,
+  paymentFilter,
+  countries,
+  onSelectOrder,
+  onStatusFilter,
+  onCountryFilter,
+  onPaymentFilter,
+  onSubmitStatus,
+  onSubmitSupplier,
+  onSubmitSupplierOrder,
+  onSubmitSupplierRealPrice,
+  onSubmitShipment,
+  supplierOrderPackage,
+}: {
+  tab: AdminTab;
+  orders: AdminOrderRow[];
+  selectedOrder?: AdminOrderRow;
+  selectedOrderId: string;
+  statusFilter: string;
+  countryFilter: string;
+  paymentFilter: string;
+  countries: string[];
+  onSelectOrder: (id: string) => void;
+  onStatusFilter: (value: string) => void;
+  onCountryFilter: (value: string) => void;
+  onPaymentFilter: (value: string) => void;
+  onSubmitStatus: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitSupplier: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitSupplierOrder: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitSupplierRealPrice: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmitShipment: (event: FormEvent<HTMLFormElement>) => void;
+  supplierOrderPackage: AdminSupplierOrderPackage | null;
+}) {
+  const title = adminTabTitle(tab);
+
+  return (
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
+      <Card className="overflow-hidden">
+        <div className="border-b border-slate-100 p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Commandes</p>
+              <h2 className="mt-2 text-2xl font-black text-ink">{title}</h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <FilterSelect label="Status" value={statusFilter} onChange={onStatusFilter} options={['all', ...adminOrderStatuses]} />
+              <FilterSelect label="Country" value={countryFilter} onChange={onCountryFilter} options={['all', ...countries]} />
+              <FilterSelect label="Payment" value={paymentFilter} onChange={onPaymentFilter} options={['all', 'pending', 'paid', 'failed', 'refunded']} />
+            </div>
+          </div>
+        </div>
+        <OrdersTable orders={orders} selectedOrderId={selectedOrderId} onSelect={onSelectOrder} />
+      </Card>
+
+      {selectedOrder ? (
+        <AdminOrderActions
+          order={selectedOrder}
+          onSubmitStatus={onSubmitStatus}
+          onSubmitSupplier={onSubmitSupplier}
+          onSubmitSupplierOrder={onSubmitSupplierOrder}
+          onSubmitSupplierRealPrice={onSubmitSupplierRealPrice}
+          onSubmitShipment={onSubmitShipment}
+          supplierOrderPackage={supplierOrderPackage}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function OperationalPanel({
+  eyebrow,
+  title,
+  description,
+  columns,
+  rows,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  columns: string[];
+  rows: string[][];
+}) {
+  return (
+    <Card className="overflow-hidden">
+      <div className="border-b border-slate-100 p-5">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">{eyebrow}</p>
+        <h2 className="mt-2 text-2xl font-black text-ink">{title}</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
+          <thead className="bg-slate-50 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+            <tr>{columns.map((column) => <th key={column} className="px-5 py-4">{column}</th>)}</tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 bg-white">
+            {rows.slice(0, 12).map((row, index) => (
+              <tr key={`${row.join('-')}-${index}`}>
+                {row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`} className="px-5 py-4 font-bold text-slate-700">{cell}</td>)}
+              </tr>
+            ))}
+            {rows.length === 0 ? <tr><td className="px-5 py-8 text-center text-sm font-bold text-slate-500" colSpan={columns.length}>Aucune donnée disponible.</td></tr> : null}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
+
+function SupplierPanel({
+  orders,
+  supplierConnectionTest,
+  onSubmitSupplierConnectionTest,
+}: {
+  orders: AdminOrderRow[];
+  supplierConnectionTest: AdminSupplierConnectionTest | null;
+  onSubmitSupplierConnectionTest: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <SupplierConnectionPanel result={supplierConnectionTest} onSubmit={onSubmitSupplierConnectionTest} />
+      <OperationalPanel
+        eyebrow="Fournisseurs"
+        title="JLCPCB / PCBWay / Fournisseurs futurs"
+        description="Suivi des partenaires industriels : API, délais moyens, coût, qualité, incidents et références externes."
+        columns={['Fournisseur', 'Commandes', 'API', 'Dernier statut']}
+        rows={[
+          ['PCBWay', orders.filter((order) => (order.externalManufacturingPartner ?? '').toLowerCase().includes('pcbway')).length.toString(), supplierConnectionTest?.supplier === 'pcbway' && supplierConnectionTest.ok ? 'Connectée' : 'À vérifier', supplierConnectionTest?.message ?? 'Pas de test récent'],
+          ['JLCPCB', orders.filter((order) => (order.externalManufacturingPartner ?? '').toLowerCase().includes('jlcpcb')).length.toString(), 'Prévu', 'Fournisseur configurable'],
+          ['Futurs', '0', 'Prévu', 'Marketplace fournisseur'],
+        ]}
+      />
+    </div>
+  );
+}
+
+function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[]; intelligence: AdminPricingIntelligence | null }) {
+  return (
+    <div className="grid gap-5 lg:grid-cols-2">
+      <Card className="p-5">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Analytics</p>
+        <h2 className="mt-2 text-2xl font-black text-ink">Croissance et performance</h2>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <DashboardTile label="Revenu suivi" value={formatCurrency(sumOrderTotals(orders))} />
+          <DashboardTile label="Panier moyen" value={formatCurrency(orders.length ? sumOrderTotals(orders) / orders.length : 0)} />
+          <DashboardTile label="Pays actifs" value={uniqueValues(orders.map((order) => order.destinationCountryIso2)).length.toString()} />
+          <DashboardTile label="Taux SAV" value={`${orders.length ? Math.round((tickets.length / orders.length) * 100) : 0}%`} />
+        </div>
+      </Card>
+      <Card className="p-5">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Pricing intelligence</p>
+        <h2 className="mt-2 text-2xl font-black text-ink">Moteur Smart Buffer</h2>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <DashboardTile label="Snapshots" value={String(intelligence?.metrics.snapshotCount ?? 0)} />
+          <DashboardTile label="Buckets" value={String(intelligence?.metrics.bucketCount ?? 0)} />
+          <DashboardTile label="Buckets risque" value={String(intelligence?.metrics.flaggedBucketCount ?? 0)} />
+          <DashboardTile label="Buffer moyen" value={intelligence ? `x${intelligence.metrics.averageBuffer.toFixed(2)}` : 'x0.00'} />
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function DashboardTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-sm border border-slate-200 bg-slate-50 p-4">
+      <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-black text-ink">{value}</p>
+    </div>
+  );
+}
+
+function TimelineItem({ title, meta, date }: { title: string; meta: string; date: string }) {
+  return (
+    <div className="grid grid-cols-[0.75rem_1fr] gap-3">
+      <span className="mt-1 h-3 w-3 rounded-full bg-[#0f8f6b]" />
+      <div>
+        <p className="text-sm font-black text-ink">{title}</p>
+        <p className="mt-1 text-xs font-bold text-slate-500">{meta} · {formatDate(date)}</p>
+      </div>
+    </div>
   );
 }
 
@@ -846,6 +1313,32 @@ function getPaymentStatus(order: AdminOrderRow): PaymentStatus {
 
 function uniqueValues(values: string[]): string[] {
   return [...new Set(values.filter(Boolean))].sort();
+}
+
+function sumOrderTotals(orders: AdminOrderRow[]): number {
+  return orders.reduce((total, order) => total + (order.totalPrice ?? 0), 0);
+}
+
+function isToday(value: string): boolean {
+  const date = new Date(value);
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
+}
+
+function adminTabTitle(tab: AdminTab): string {
+  for (const group of adminNavigation) {
+    const item = group.items.find((entry) => entry.id === tab);
+    if (item) return item.label;
+  }
+  return 'Dashboard';
+}
+
+function filterOrdersForAdminTab(orders: AdminOrderRow[], tab: AdminTab): AdminOrderRow[] {
+  if (tab === 'orderValidation') return orders.filter((order) => ['awaiting_payment', 'created', 'file_review'].includes(order.status));
+  if (tab === 'production') return orders.filter((order) => ['production', 'quality_control'].includes(order.status));
+  if (tab === 'delivery') return orders.filter((order) => ['shipped', 'in_transit', 'delivered'].includes(order.status));
+  if (tab === 'disputes') return orders.filter((order) => ['cancelled', 'refunded'].includes(order.status) || getPaymentStatus(order) === 'refunded');
+  return orders;
 }
 
 function formatDate(value: string): string {
