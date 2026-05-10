@@ -447,7 +447,7 @@ export default function AdminPage() {
         <AdminSidebar activeTab={tab} onSelect={setTab} />
 
         <div className="min-w-0">
-          <AdminTopbar onSelect={setTab} />
+          <AdminTopbar activeTab={tab} onSelect={setTab} />
           <section className="px-4 py-6 sm:px-6 lg:px-10">
             <AdminPageHeader meta={pageMeta} />
             <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
@@ -588,7 +588,7 @@ function AdminSidebar({ activeTab, onSelect }: { activeTab: AdminTab; onSelect: 
   const currentGroup = getPrimaryAdminTab(activeTab);
 
   return (
-    <aside className="bg-[#0e6389] text-white lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
+    <aside className="hidden bg-[#0e6389] text-white lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
       <div className="border-b border-white/10 px-6 py-7">
         <h2 className="text-3xl font-black tracking-tight">Kendronics</h2>
         <p className="mt-3 text-xs font-bold uppercase tracking-[0.08em] text-white/85">ERP PCB & Logistique</p>
@@ -611,7 +611,66 @@ function AdminSidebar({ activeTab, onSelect }: { activeTab: AdminTab; onSelect: 
   );
 }
 
-function AdminTopbar({ onSelect }: { onSelect: (tab: AdminTab) => void }) {
+function AdminTopbar({ activeTab, onSelect }: { activeTab: AdminTab; onSelect: (tab: AdminTab) => void }) {
+  const items: Array<{ label: string; tab: AdminTab }> = [
+    { label: 'Bureau', tab: 'dashboard' },
+    { label: 'Production', tab: 'production' },
+    { label: 'Logistique', tab: 'shipments' },
+    { label: 'Qualite', tab: 'gerberValidation' },
+    { label: 'Facturation', tab: 'payments' },
+  ];
+  const activeGroup = getPrimaryAdminTab(activeTab);
+
+  return (
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#0a4f6f] bg-[#0e6389] px-4 text-white shadow-[0_2px_8px_rgba(6,54,77,0.22)] sm:px-6 lg:px-8">
+      <nav className="flex min-w-0 items-center gap-2 overflow-x-auto pr-4 text-sm font-medium sm:gap-5">
+        {items.map((item) => (
+          <button
+            key={item.label}
+            type="button"
+            onClick={() => onSelect(item.tab)}
+            className={`h-10 whitespace-nowrap rounded-lg px-3 transition ${
+              activeGroup === getPrimaryAdminTab(item.tab) ? 'bg-white/10 text-white' : 'text-white/95 hover:bg-white/10 hover:text-white'
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <div className="flex shrink-0 items-center gap-3">
+        <button type="button" aria-label="Notifications" className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-white transition hover:bg-white/20">
+          <AdminIcon type="bell" />
+        </button>
+        <button type="button" aria-label="Parametres admin" className="grid h-9 w-9 place-items-center rounded-lg bg-white/10 text-white transition hover:bg-white/20">
+          <AdminIcon type="settings" />
+        </button>
+        <button type="button" aria-label="Compte admin" className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-400 text-sm font-black text-[#06445f] shadow-sm">
+          K
+        </button>
+      </div>
+    </header>
+  );
+}
+
+function AdminIcon({ type }: { type: 'bell' | 'settings' }) {
+  if (type === 'bell') {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+        <path d="M10 21h4" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1A2 2 0 1 1 4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1A2 2 0 1 1 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6h.1a1.7 1.7 0 0 0 1.9-.3l.1-.1A2 2 0 1 1 19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.6 1h.1a2 2 0 1 1 0 4H21a1.7 1.7 0 0 0-1.6 1Z" />
+    </svg>
+  );
+}
+
+function LegacyAdminTopbar({ onSelect }: { onSelect: (tab: AdminTab) => void }) {
   const items: Array<{ label: string; tab: AdminTab }> = [
     { label: 'Bureau', tab: 'dashboard' },
     { label: 'Production', tab: 'production' },

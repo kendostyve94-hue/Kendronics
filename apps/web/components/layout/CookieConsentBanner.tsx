@@ -31,6 +31,12 @@ export function CookieConsentBanner() {
     let cancelled = false;
 
     async function hydrateConsent() {
+      if (window.location.pathname.startsWith('/admin')) {
+        setIsVisible(false);
+        setIsReady(true);
+        return;
+      }
+
       const savedConsent = readLocalConsent();
       const serverConsent = await readServerConsent();
 
