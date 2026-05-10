@@ -85,20 +85,25 @@ export default function ProfilePage() {
     <main className="min-h-screen overflow-x-hidden bg-[#f3f6fa] text-[#1f2f43]">
       <ProfileNavbar firstName={firstName} avatarDataUrl={avatarDataUrl} />
       <div className="w-full">
-        <div className="mx-auto grid w-full max-w-[1368px] gap-4 px-4 py-5 sm:gap-5 sm:px-6 lg:grid-cols-[260px_minmax(0,1fr)_330px] lg:gap-6 lg:px-8 lg:py-8">
+        <div className="mx-auto grid w-full max-w-[1368px] gap-4 px-3 py-4 sm:px-5 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-4 lg:px-5 lg:py-4">
           <ProfileSidebar />
 
           <section className="min-w-0">
             <ProductQuickGrid />
-            <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} />
-            <ReferralBanner />
-            <StatusStrip />
-            <OrdersTable />
-            <GiftExchange />
-            <ReviewsPanel />
-          </section>
 
-          <RightRail />
+            <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_330px]">
+              <div className="min-w-0">
+                <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} />
+                <ReferralBanner />
+                <StatusStrip />
+                <OrdersTable />
+                <GiftExchange />
+                <ReviewsPanel />
+              </div>
+
+              <RightRail />
+            </div>
+          </section>
         </div>
 
         <Footer />
@@ -151,14 +156,14 @@ function ProfileNavLink({ href, label }: { href: string; label: string }) {
 
 function ProfileSidebar() {
   return (
-    <aside className="grid gap-3 lg:block lg:bg-white lg:shadow-sm lg:ring-1 lg:ring-slate-200">
+    <aside className="grid gap-3 self-start bg-white shadow-sm ring-1 ring-slate-200 lg:sticky lg:top-[86px] lg:block">
       {sidebarGroups.map((group) => (
-        <section key={group.title} className="bg-white shadow-sm ring-1 ring-slate-200 lg:border-b lg:border-slate-200 lg:shadow-none lg:ring-0 lg:last:border-b-0">
-          <h2 className="px-3 py-3 text-xs font-black uppercase text-[#1f2f43] lg:px-4 lg:py-4 lg:text-sm">{group.title}</h2>
-          <div className="grid grid-cols-2 gap-1 px-2 pb-3 sm:grid-cols-4 lg:block lg:px-0">
+        <section key={group.title} className="border-b border-slate-200 last:border-b-0">
+          <h2 className="px-4 pb-2 pt-5 text-[12px] font-black uppercase text-[#1f2f43]">{group.title}</h2>
+          <div className="grid grid-cols-2 gap-1 px-2 pb-4 sm:grid-cols-4 lg:block lg:px-0">
             {group.items.map((item, index) => (
-              <a key={item} href="#" className="flex min-h-[30px] items-center gap-2 rounded bg-[#f8fafc] px-2 text-[11px] text-[#475569] hover:bg-[#f1f8f4] hover:text-[#0f9f6e] lg:gap-3 lg:rounded-none lg:bg-transparent lg:px-4 lg:text-[13px]">
-                <span className="hidden h-4 w-4 place-items-center rounded border border-slate-300 text-[9px] text-slate-400 lg:grid">{index + 1}</span>
+              <a key={item} href="#" className="flex min-h-[34px] items-center gap-3 rounded bg-[#f8fafc] px-2 text-[11px] text-[#475569] hover:bg-[#f1f8f4] hover:text-[#0f9f6e] lg:rounded-none lg:bg-transparent lg:px-4 lg:text-[13px]">
+                <span className="grid h-4 w-4 shrink-0 place-items-center rounded border border-slate-300 text-[9px] text-slate-400">{index + 1}</span>
                 <span className="min-w-0 truncate">{item}</span>
                 {index === 0 && group.title === 'Promotions' ? <span className="ml-auto rounded bg-red-500 px-1.5 text-[10px] font-black text-white">2</span> : null}
               </a>
@@ -172,18 +177,20 @@ function ProfileSidebar() {
 
 function ProductQuickGrid() {
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 lg:gap-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 lg:gap-4">
       {quickProducts.map((product) => (
-        <a key={product.title} href={product.href} className="min-h-[118px] bg-white p-3 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md lg:min-h-[165px] lg:p-4">
-          <div className="flex min-h-[54px] items-start justify-between gap-2 lg:min-h-[70px]">
-            <h3 className="text-[13px] font-black leading-4 text-[#111827] lg:text-sm lg:leading-5">{product.title}</h3>
+        <a key={product.title} href={product.href} className="grid min-h-[150px] content-between bg-white p-4 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md lg:min-h-[180px]">
+          <div className="grid gap-2">
+            <h3 className="text-[13px] font-black leading-5 text-[#111827] lg:text-[15px]">{product.title}</h3>
             {product.image ? (
-              <img src={product.image} alt="" className="h-12 w-12 rounded object-cover lg:h-16 lg:w-16" />
+              <img src={product.image} alt="" className="mx-auto h-16 w-20 object-contain lg:h-20 lg:w-24" />
             ) : (
-              <span className="grid h-11 w-11 place-items-center rounded-full lg:h-14 lg:w-14" style={{ backgroundColor: product.color }} />
+              <span className="mx-auto grid h-16 w-20 place-items-center rounded-full lg:h-20 lg:w-24" style={{ backgroundColor: `${product.color}22` }}>
+                <span className="h-10 w-10 rounded-full" style={{ border: `4px solid ${product.color}` }} />
+              </span>
             )}
           </div>
-          <p className="mt-3 text-[11px] leading-4 text-[#64748b] lg:mt-5 lg:text-xs lg:leading-5">{product.subtitle} &gt;</p>
+          <p className="text-[11px] leading-5 text-[#64748b] lg:text-xs">{product.subtitle} &gt;</p>
         </a>
       ))}
     </div>
@@ -192,7 +199,7 @@ function ProductQuickGrid() {
 
 function DashboardPanel({ firstName, userId, avatarDataUrl }: { firstName: string; userId: string; avatarDataUrl: string }) {
   return (
-    <section className="mt-3 grid bg-white shadow-sm ring-1 ring-slate-200 sm:grid-cols-[140px_minmax(0,1fr)] lg:mt-4 lg:grid-cols-[170px_minmax(0,1fr)]">
+    <section className="grid bg-white shadow-sm ring-1 ring-slate-200 sm:grid-cols-[150px_minmax(0,1fr)] lg:grid-cols-[170px_minmax(0,1fr)]">
       <div className="grid place-items-center border-b border-slate-200 px-3 py-4 text-center sm:border-b-0 sm:border-r lg:px-4 lg:py-8">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div>
@@ -244,7 +251,7 @@ function SmallInfo({ label, value, action, danger }: { label: string; value: str
 
 function ReferralBanner() {
   return (
-    <section className="mt-3 flex min-h-[68px] items-center justify-between gap-3 bg-gradient-to-r from-[#ff6233] via-[#ff8a18] to-[#ffb000] px-3 py-3 text-white lg:mt-4 lg:h-[74px] lg:px-5 lg:py-0">
+    <section className="mt-4 flex min-h-[68px] items-center justify-between gap-3 bg-gradient-to-r from-[#ff6233] via-[#ff8a18] to-[#ffb000] px-3 py-3 text-white lg:h-[74px] lg:px-5 lg:py-0">
       <div>
         <p className="text-lg font-black italic leading-none lg:text-2xl">Looking For New Referral Opportunities?</p>
         <p className="mt-2 text-xs">Refer others and explore the benefits of sharing our services.</p>
@@ -265,7 +272,7 @@ function StatusStrip() {
   ];
 
   return (
-    <section className="mt-3 grid grid-cols-3 bg-white py-3 shadow-sm ring-1 ring-slate-200 sm:grid-cols-6 lg:mt-4 lg:py-5">
+    <section className="mt-4 grid grid-cols-3 bg-white py-3 shadow-sm ring-1 ring-slate-200 sm:grid-cols-6 lg:py-5">
       {statuses.map(([value, label]) => (
         <div key={label} className="border-r border-slate-200 px-3 text-center last:border-r-0">
           <p className="text-2xl font-light text-[#111827] lg:text-3xl">{value}</p>
@@ -278,7 +285,7 @@ function StatusStrip() {
 
 function OrdersTable() {
   return (
-    <section className="mt-3 bg-white p-3 shadow-sm ring-1 ring-slate-200 lg:mt-4 lg:p-4">
+    <section className="mt-4 bg-white p-3 shadow-sm ring-1 ring-slate-200 lg:p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-[#1f2937]">Ma commande</h2>
         <a href="/orders" className="text-xs font-semibold text-blue-600">Plus &gt;</a>
@@ -333,7 +340,7 @@ function GiftExchange() {
   const gifts = ['Points: 2800', 'Points: 3200', 'Points: 1800', 'Points: 900', 'Points: 1200'];
 
   return (
-    <section className="mt-3 bg-white p-3 shadow-sm ring-1 ring-slate-200 lg:mt-4 lg:p-4">
+    <section className="mt-4 bg-white p-3 shadow-sm ring-1 ring-slate-200 lg:p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-black">Echanger des cadeaux</h2>
         <a href="#" className="text-xs font-semibold text-blue-600">Afficher plus &gt;</a>
@@ -352,7 +359,7 @@ function GiftExchange() {
 
 function ReviewsPanel() {
   return (
-    <section className="mt-3 bg-white p-3 shadow-sm ring-1 ring-slate-200 lg:mt-4 lg:p-4">
+    <section className="mt-4 bg-white p-3 shadow-sm ring-1 ring-slate-200 lg:p-4">
       <div className="flex items-center justify-between">
         <div className="flex gap-8 text-sm font-black">
           <span className="border-b-2 border-[#22c55e] pb-2 text-[#16a34a]">Show client</span>
@@ -375,7 +382,7 @@ function ReviewsPanel() {
 
 function RightRail() {
   return (
-    <aside className="grid content-start gap-3 lg:gap-4">
+    <aside className="grid content-start gap-4">
       <PromoBanner title="PCB Assembly for 1-20 pcs" price="$29" dark />
       <PromoBanner title="PCB Prototype Only" price="$5" />
       <InfoList title="Dernieres nouvelles" items={['Mise a jour des options expedition', 'Impact du nouveau tarif douanier', 'Bonne fete du travail !']} />
