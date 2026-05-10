@@ -81,15 +81,11 @@ export default function ProfilePage() {
 
   const firstName = firstNameOf(profile.name || emailName(profile.email) || 'Rafale');
   const userId = formatUserId(accountId);
-  const email = profile.email || 'kendostyve94@gmail.com';
-
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f3f6fa] text-[#1f2f43]">
+      <ProfileNavbar firstName={firstName} avatarDataUrl={avatarDataUrl} />
       <div className="w-full">
-        <ProfileHero firstName={firstName} email={email} userId={userId} avatarDataUrl={avatarDataUrl} />
-        <ProfileNav />
-
-        <div className="mx-auto grid w-full max-w-[1180px] gap-3 px-3 py-3 lg:grid-cols-[220px_minmax(0,1fr)_300px] lg:gap-4 lg:px-5 lg:py-5">
+        <div className="mx-auto grid w-full max-w-[1368px] gap-4 px-4 py-5 sm:gap-5 sm:px-6 lg:grid-cols-[260px_minmax(0,1fr)_330px] lg:gap-6 lg:px-8 lg:py-8">
           <ProfileSidebar />
 
           <section className="min-w-0">
@@ -111,63 +107,45 @@ export default function ProfilePage() {
   );
 }
 
-function ProfileHero({ firstName, email, userId, avatarDataUrl }: { firstName: string; email: string; userId: string; avatarDataUrl: string }) {
+function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatarDataUrl: string }) {
   return (
-    <header className="bg-[#07182c] text-white">
-      <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-3 px-3 py-3 lg:h-[100px] lg:px-5 lg:py-0">
-        <div className="flex min-w-0 items-center gap-3 lg:gap-8">
-          <a href="/" aria-label="Kendronics accueil">
-            <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-9 w-auto sm:h-11 lg:h-14" />
-          </a>
-          <div className="min-w-0 border-l border-white/20 pl-3 lg:pl-8">
-            <p className="truncate text-xs font-black text-[#22c55e] sm:text-sm lg:text-lg">Prototype de PCB en toute simplicite</p>
-            <p className="mt-1 hidden text-xs text-slate-200 sm:block lg:text-sm">Service complet de prototype de PCB personnalise.</p>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2 lg:gap-4">
-          <Avatar avatarDataUrl={avatarDataUrl} size="large" />
-          <div className="hidden min-w-[210px] text-sm sm:block">
-            <div className="flex items-center gap-2">
-              <strong>Bonjour, {firstName}</strong>
-              <span className="rounded bg-[#22c55e] px-2 py-0.5 text-[10px] font-black uppercase text-white">Client</span>
-            </div>
-            <p className="mt-2 text-xs text-slate-200">Email: {email}</p>
-            <p className="mt-1 text-xs text-slate-200">ID Client: {userId}</p>
-          </div>
-        </div>
+    <header className="sticky top-0 z-40 border-b border-[#d7d7d7] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.16)]">
+      <div className="mx-auto flex min-h-[64px] max-w-[1368px] items-center gap-3 px-3 py-2 sm:px-5 lg:h-[70px] lg:py-0">
+        <a href="/" className="shrink-0 lg:mr-3" aria-label="Kendronics accueil">
+          <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-9 w-auto sm:h-11 lg:h-12" />
+        </a>
+        <nav className="flex min-w-0 flex-1 snap-x items-center gap-1 overflow-x-auto text-[13px] text-[#111827] sm:justify-between sm:gap-2 sm:text-[15px]">
+          <ProfileNavLink href="/profile" label="Mon compte" />
+          <ProfileNavLink href="/quote" label="Devis immediat" />
+          <ProfileNavLink href="/quote" label="Assemblage PCB" />
+          <ProfileNavLink href="/services" label="Impression 3D" />
+          <ProfileNavLink href="/services" label="Conception PCB" />
+          <ProfileNavLink href="/orders" label="Mes commandes" />
+          <ProfileNavLink href="/profile" label="Parametres" />
+        </nav>
+        <a href="/cart" className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-10 sm:w-10" aria-label="Panier">
+          <CartIcon />
+          <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-[#14c469] px-1 text-[11px] font-black leading-none text-white">0</span>
+        </a>
+        <a href="/profile" className="hidden items-center gap-3 md:flex">
+          <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-[#d1d5db] bg-[#f4f4f4]">
+            {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : null}
+          </span>
+          <span className="text-xs leading-5 text-[#64748b]">
+            Bonjour, {firstName}
+            <strong className="block text-sm font-black text-[#00a651]">Mon Kendronics</strong>
+          </span>
+        </a>
       </div>
     </header>
   );
 }
 
-function ProfileNav() {
+function ProfileNavLink({ href, label }: { href: string; label: string }) {
   return (
-    <nav className="border-b border-[#d7dce3] bg-white">
-      <div className="mx-auto grid max-w-[1180px] gap-2 px-3 py-2 lg:flex lg:h-[86px] lg:items-end lg:justify-between lg:px-5 lg:py-0">
-        <div className="grid grid-cols-4 gap-1 text-[11px] text-[#334155] sm:grid-cols-7 lg:flex lg:h-full lg:items-end lg:gap-8 lg:text-sm">
-          {['Mon compte', 'Devis immediat', "Obtenir un devis d'assemblage", 'CNC | Impression 3D', 'Conception de circuits imprimes', 'Mes commandes', 'Parametres'].map((item, index) => (
-            <a key={item} href={index === 0 ? '/profile' : index === 1 ? '/quote' : '#'} className={`flex min-h-10 items-center border-b-2 px-1 leading-4 lg:h-[54px] ${index === 0 ? 'border-[#0f9f6e] font-black text-[#0f9f6e]' : 'border-transparent hover:text-[#0f9f6e]'}`}>
-              {item}
-            </a>
-          ))}
-        </div>
-        <div className="flex items-center justify-end gap-4 text-xs lg:h-full lg:gap-5 lg:text-sm">
-          <a href="/cart" className="relative inline-flex h-10 w-10 items-center justify-center text-[#111827]" aria-label="Panier">
-            <CartIcon />
-            <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-[#14c469] px-1 text-[11px] font-black leading-none text-white">2</span>
-          </a>
-          <span className="relative inline-flex h-10 w-10 items-center justify-center text-[#111827]">
-            <BellIcon />
-            <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[11px] font-black leading-none text-white">3</span>
-          </span>
-          <a href="/profile" className="flex items-center gap-2 text-[#0f9f6e]">
-            <UserIcon />
-            Mon compte
-          </a>
-        </div>
-      </div>
-    </nav>
+    <a href={href} className="grid min-h-[44px] min-w-[84px] snap-start place-items-center px-2 text-center leading-5 hover:text-[#00a651] sm:min-h-[54px] sm:min-w-[92px] sm:leading-6">
+      {label}
+    </a>
   );
 }
 
@@ -453,24 +431,6 @@ function CartIcon() {
       <circle cx="9" cy="20" r="1.4" />
       <circle cx="18" cy="20" r="1.4" />
       <path d="M3 4h2l2.3 11.2a2 2 0 0 0 2 1.6h8.5a2 2 0 0 0 1.9-1.4L21 8H6.2" />
-    </svg>
-  );
-}
-
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  );
-}
-
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20 21a8 8 0 0 0-16 0" />
-      <circle cx="12" cy="7" r="4" />
     </svg>
   );
 }
