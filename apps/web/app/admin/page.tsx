@@ -440,7 +440,7 @@ export default function AdminPage() {
 
   return (
     <AdminShell>
-      <div className="grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <div className="grid gap-5 lg:grid-cols-[17rem_minmax(0,1fr)]">
         <AdminSidebar activeTab={tab} onSelect={setTab} />
 
         <div className="min-w-0 space-y-5">
@@ -566,7 +566,7 @@ export default function AdminPage() {
 function AdminSidebar({ activeTab, onSelect }: { activeTab: AdminTab; onSelect: (tab: AdminTab) => void }) {
   return (
     <aside className="lg:sticky lg:top-24 lg:self-start">
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-slate-200">
         <div className="border-b border-slate-100 p-4">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-signal">Admin workspace</p>
           <h2 className="mt-2 text-lg font-black text-ink">Kendronics OS</h2>
@@ -582,7 +582,7 @@ function AdminSidebar({ activeTab, onSelect }: { activeTab: AdminTab; onSelect: 
                     type="button"
                     onClick={() => onSelect(item.id)}
                     className={`flex min-h-9 w-full items-center rounded-sm px-3 text-left text-sm font-bold transition ${
-                      activeTab === item.id ? 'bg-[#0f8f6b] text-white' : 'text-slate-700 hover:bg-slate-50 hover:text-ink'
+                      activeTab === item.id ? 'bg-[#edf8f4] text-[#0f8f6b]' : 'text-slate-600 hover:bg-slate-50 hover:text-ink'
                     }`}
                   >
                     {item.label}
@@ -815,7 +815,7 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
 
 function DashboardTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-sm border border-slate-200 bg-slate-50 p-4">
+    <div className="rounded-sm border border-slate-200 bg-white p-4">
       <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">{label}</p>
       <p className="mt-2 text-2xl font-black text-ink">{value}</p>
     </div>
@@ -973,7 +973,7 @@ function SupplierOrderPackagePanel({ packageData }: { packageData: AdminSupplier
         <InfoLine label="Live API" value={packageData.liveCreateAvailable ? 'Configured' : 'Not configured'} />
         {packageData.supplierOrderId ? <InfoLine label="Supplier ID" value={packageData.supplierOrderId} /> : null}
       </div>
-      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-bold text-slate-600">
+      <div className="mt-4 rounded-sm border border-slate-200 bg-slate-50 p-3 text-xs font-bold text-slate-600">
         {packageData.notes.join(' ')}
       </div>
     </Card>
@@ -1030,11 +1030,11 @@ function SupplierConnectionPanel({
             <option value="pcbway">PCBWay</option>
             <option value="jlcpcb">JLCPCB</option>
           </select>
-          <button type="submit" className="h-11 rounded-xl bg-deepblue px-5 text-sm font-black text-white transition hover:bg-deepblue-dark">Test</button>
+          <button type="submit" className="h-11 rounded-sm bg-deepblue px-5 text-sm font-black text-white transition hover:bg-deepblue-dark">Test</button>
         </form>
       </div>
       {result ? (
-        <div className={`mt-4 rounded-xl border p-4 text-sm font-bold ${result.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
+        <div className={`mt-4 rounded-sm border p-4 text-sm font-bold ${result.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
           <p>{result.message}</p>
           <p className="mt-2 text-xs">Expected env: {result.expectedEnv.join(', ')}</p>
           {result.account ? (
@@ -1233,7 +1233,7 @@ function AdminForm({ title, onSubmit, children }: { title: string; onSubmit: (ev
       <h2 className="text-lg font-black text-ink">{title}</h2>
       <form onSubmit={onSubmit} className="mt-4 space-y-3">
         {children}
-        <button type="submit" className="h-11 w-full rounded-xl bg-deepblue text-sm font-black text-white transition hover:bg-deepblue-dark">Save</button>
+        <button type="submit" className="h-11 w-full rounded-sm bg-deepblue text-sm font-black text-white transition hover:bg-deepblue-dark">Save</button>
       </form>
     </Card>
   );
@@ -1252,9 +1252,9 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <Card className="p-5">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</p>
-      <p className="mt-2 text-3xl font-black text-ink">{value}</p>
+    <Card className="p-4">
+      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p>
+      <p className="mt-2 text-2xl font-black text-ink">{value}</p>
     </Card>
   );
 }
@@ -1350,6 +1350,6 @@ function formatCurrency(value: number): string {
 }
 
 const fieldClassName =
-  'h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100';
+  'h-11 w-full rounded-sm border border-slate-200 bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100';
 
 class AdminForbiddenError extends Error {}
