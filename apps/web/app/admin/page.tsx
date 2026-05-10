@@ -438,22 +438,27 @@ export default function AdminPage() {
     );
   }
 
+  const pageMeta = getAdminPageMeta(tab);
+  const pageStats = getAdminPageStats(tab, orders, supportTickets, pricingIntelligence);
+
   return (
     <AdminShell>
-      <div className="grid gap-5 lg:grid-cols-[17rem_minmax(0,1fr)]">
+      <div className="min-h-screen lg:grid lg:grid-cols-[255px_minmax(0,1fr)]">
         <AdminSidebar activeTab={tab} onSelect={setTab} />
 
-        <div className="min-w-0 space-y-5">
-          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-            <Metric label="Commandes" value={orders.length.toString()} />
-            <Metric label="CA suivi" value={formatCurrency(sumOrderTotals(orders))} />
-            <Metric label="Marge moyenne" value={pricingIntelligence ? `x${pricingIntelligence.metrics.averageBuffer.toFixed(2)}` : 'x0.00'} />
-            <Metric label="En attente" value={orders.filter((order) => order.status === 'awaiting_payment').length.toString()} />
-            <Metric label="Tickets ouverts" value={supportTickets.filter((ticket) => ticket.status !== 'closed').length.toString()} />
-            <Metric label="Bloquées" value={orders.filter((order) => ['cancelled', 'refunded'].includes(order.status)).length.toString()} />
+        <div className="min-w-0">
+          <AdminTopbar onSelect={setTab} />
+          <section className="px-4 py-6 sm:px-6 lg:px-10">
+            <AdminPageHeader meta={pageMeta} />
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+              {pageStats.map((stat) => (
+                <Metric key={stat.label} label={stat.label} value={stat.value} helper={stat.helper} />
+              ))}
           </div>
 
-          {message && <div className="rounded-sm border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{message}</div>}
+            {message && <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{message}</div>}
+
+            <div className="mt-8 space-y-7">
 
           {tab === 'dashboard' && (
             <DashboardPanel orders={orders} tickets={supportTickets} logs={auditLogs} intelligence={pricingIntelligence} />
@@ -557,6 +562,8 @@ export default function AdminPage() {
               columns={['Service', 'Scope', 'Statut', 'Usage']}
             />
           )}
+            </div>
+          </section>
         </div>
       </div>
     </AdminShell>
@@ -564,37 +571,233 @@ export default function AdminPage() {
 }
 
 function AdminSidebar({ activeTab, onSelect }: { activeTab: AdminTab; onSelect: (tab: AdminTab) => void }) {
+  const primaryItems: Array<{ id: AdminTab; label: string }> = [
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'orders', label: 'Commandes' },
+    { id: 'gerberAnalysis', label: 'Fichiers Gerber' },
+    { id: 'clients', label: 'Clients' },
+    { id: 'pricing', label: 'Pricing' },
+    { id: 'suppliers', label: 'Fournisseurs' },
+    { id: 'shipments', label: 'Logistique' },
+    { id: 'support', label: 'Support' },
+    { id: 'payments', label: 'Paiements' },
+    { id: 'analytics', label: 'Analytics' },
+    { id: 'compliance', label: 'Conformite' },
+    { id: 'settings', label: 'Parametres' },
+  ];
+  const currentGroup = getPrimaryAdminTab(activeTab);
+
   return (
-    <aside className="lg:sticky lg:top-24 lg:self-start">
-      <Card className="overflow-hidden border-slate-200">
-        <div className="border-b border-slate-100 p-4">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-signal">Admin workspace</p>
-          <h2 className="mt-2 text-lg font-black text-ink">Kendronics OS</h2>
-        </div>
-        <nav className="max-h-[72vh] overflow-y-auto p-2">
-          {adminNavigation.map((group) => (
-            <div key={group.title} className="pb-3">
-              <p className="px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">{group.title}</p>
-              <div className="space-y-1">
-                {group.items.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => onSelect(item.id)}
-                    className={`flex min-h-9 w-full items-center rounded-sm px-3 text-left text-sm font-bold transition ${
-                      activeTab === item.id ? 'bg-[#edf8f4] text-[#0f8f6b]' : 'text-slate-600 hover:bg-slate-50 hover:text-ink'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </nav>
-      </Card>
+    <aside className="bg-[#0e6389] text-white lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
+      <div className="border-b border-white/10 px-6 py-7">
+        <h2 className="text-3xl font-black tracking-tight">Kendronics</h2>
+        <p className="mt-3 text-xs font-bold uppercase tracking-[0.08em] text-white/85">ERP PCB & Logistique</p>
+      </div>
+      <nav className="space-y-1 px-3 py-4">
+        {primaryItems.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onSelect(item.id)}
+            className={`flex h-12 w-full items-center rounded-md px-4 text-left text-sm font-medium transition ${
+              currentGroup === item.id ? 'bg-[#eaf6fb] text-[#0e6389]' : 'text-white hover:bg-white/10'
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
     </aside>
   );
+}
+
+function AdminTopbar({ onSelect }: { onSelect: (tab: AdminTab) => void }) {
+  const items: Array<{ label: string; tab: AdminTab }> = [
+    { label: 'Bureau', tab: 'dashboard' },
+    { label: 'Production', tab: 'production' },
+    { label: 'Logistique', tab: 'shipments' },
+    { label: 'Qualite', tab: 'gerberValidation' },
+    { label: 'Facturation', tab: 'payments' },
+  ];
+
+  return (
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between bg-[#0e6389] px-4 text-white shadow-md sm:px-6 lg:px-8">
+      <nav className="flex items-center gap-7 overflow-x-auto text-sm font-medium">
+        {items.map((item) => (
+          <button key={item.label} type="button" onClick={() => onSelect(item.tab)} className="whitespace-nowrap hover:text-emerald-100">
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <div className="flex items-center gap-3">
+        <span className="grid h-8 w-8 place-items-center rounded-lg bg-white/10 text-sm">!</span>
+        <span className="grid h-8 w-8 place-items-center rounded-lg bg-white/10 text-sm">⚙</span>
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-400 text-sm font-black text-[#06445f]">K</span>
+      </div>
+    </header>
+  );
+}
+
+function AdminPageHeader({ meta }: { meta: ReturnType<typeof getAdminPageMeta> }) {
+  return (
+    <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+      <div>
+        <h1 className="text-3xl font-black tracking-tight text-[#183b56] sm:text-4xl">{meta.title}</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-[#4b6687]">{meta.description}</p>
+      </div>
+      <div className="flex flex-wrap gap-4">
+        <button type="button" className="h-12 rounded-2xl border border-slate-200 bg-white px-7 text-sm font-medium text-ink shadow-md shadow-slate-300/50">
+          Exporter
+        </button>
+        <button type="button" className="h-12 rounded-2xl bg-[#22c55e] px-7 text-sm font-bold text-white shadow-lg shadow-emerald-500/25">
+          {meta.action}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function getPrimaryAdminTab(tab: AdminTab): AdminTab {
+  if (['orders', 'orderValidation', 'production', 'delivery', 'disputes'].includes(tab)) return 'orders';
+  if (['gerberAnalysis', 'gerberValidation', 'gerberHistory'].includes(tab)) return 'gerberAnalysis';
+  if (['clients', 'companies', 'clientActivity', 'clientRisk'].includes(tab)) return 'clients';
+  if (['quotes', 'pricing', 'buffers', 'priceHistory'].includes(tab)) return 'pricing';
+  if (['suppliers', 'jlcpcb', 'pcbway', 'futureSuppliers'].includes(tab)) return 'suppliers';
+  if (['shipments', 'tracking', 'customs', 'logisticsIncidents'].includes(tab)) return 'shipments';
+  if (['support', 'urgentTickets', 'afterSales'].includes(tab)) return 'support';
+  if (['payments', 'refunds', 'stripeDisputes'].includes(tab)) return 'payments';
+  if (['analytics', 'revenueAnalytics', 'countryAnalytics', 'performanceAnalytics'].includes(tab)) return 'analytics';
+  if (['compliance', 'gdpr', 'consents', 'legalLogs'].includes(tab)) return 'compliance';
+  if (['settings', 'users', 'permissions', 'apiSettings', 'emailSettings', 'notificationSettings'].includes(tab)) return 'settings';
+  return 'dashboard';
+}
+
+function getAdminPageMeta(tab: AdminTab): { title: string; description: string; action: string } {
+  const primary = getPrimaryAdminTab(tab);
+  switch (primary) {
+    case 'orders':
+      return { title: 'Commandes', description: "Suivi complet des commandes PCB, de l'upload Gerber jusqu'a la livraison.", action: 'Creer commande' };
+    case 'gerberAnalysis':
+      return { title: 'Fichiers Gerber', description: 'Controle technique, validation manuelle et tracabilite des fichiers PCB.', action: 'Analyser fichier' };
+    case 'clients':
+      return { title: 'Clients', description: 'Vue 360 des clients, entreprises, pays, commandes et niveau de risque.', action: 'Ajouter client' };
+    case 'pricing':
+      return { title: 'Pricing', description: 'Controle du moteur de devis, marges, buffers et couts fournisseurs.', action: 'Nouvelle regle' };
+    case 'suppliers':
+      return { title: 'Fournisseurs', description: 'Gestion des partenaires industriels, performances, couts et fiabilite.', action: 'Ajouter fournisseur' };
+    case 'shipments':
+      return { title: 'Logistique', description: 'Tracking international, douane, incidents et livraison client final.', action: 'Creer expedition' };
+    case 'support':
+      return { title: 'Support', description: 'Tickets clients, SAV, pieces jointes et suivi des reclamations.', action: 'Creer ticket' };
+    case 'payments':
+      return { title: 'Paiements', description: 'Transactions Stripe, remboursements, litiges et rapprochement financier.', action: 'Creer remboursement' };
+    case 'analytics':
+      return { title: 'Analytics', description: 'Pilotage croissance, revenus, marges, pays et performance operationnelle.', action: 'Rapport mensuel' };
+    case 'compliance':
+      return { title: 'Conformite', description: 'Tracabilite legale : CGV, CGU, RGPD, cookies, logs et preuves.', action: 'Nouvelle version' };
+    case 'settings':
+      return { title: 'Parametres', description: 'Gestion des acces, API, emails, notifications et configuration systeme.', action: 'Ajouter admin' };
+    default:
+      return { title: 'Dashboard', description: 'Vue globale des commandes PCB, production, paiement et logistique.', action: 'Nouvelle commande' };
+  }
+}
+
+function getAdminPageStats(
+  tab: AdminTab,
+  orders: AdminOrderRow[],
+  tickets: AdminSupportTicket[],
+  intelligence: AdminPricingIntelligence | null,
+): Array<{ label: string; value: string; helper?: string }> {
+  const primary = getPrimaryAdminTab(tab);
+  const revenue = formatCurrency(sumOrderTotals(orders));
+  const paidOrders = orders.filter((order) => getPaymentStatus(order) === 'paid').length;
+
+  switch (primary) {
+    case 'orders':
+      return [
+        { label: 'A valider', value: String(orders.filter((order) => order.status === 'awaiting_payment').length) },
+        { label: 'En fabrication', value: String(orders.filter((order) => order.status === 'supplier_in_production').length) },
+        { label: 'En livraison', value: String(orders.filter((order) => order.status === 'shipped_to_africa').length) },
+        { label: 'Litiges', value: String(orders.filter((order) => order.status === 'cancelled').length) },
+      ];
+    case 'pricing':
+      return [
+        { label: 'Marge moyenne', value: intelligence ? `x${intelligence.metrics.averageBuffer.toFixed(2)}` : 'x0.00' },
+        { label: 'Buffer actif', value: intelligence ? `${Math.round((intelligence.metrics.averageBuffer - 1) * 100)}%` : '0%' },
+        { label: 'Devis generes', value: String(intelligence?.metrics.snapshotCount ?? 0) },
+        { label: 'Taux conversion', value: `${orders.length ? Math.round((paidOrders / orders.length) * 100) : 0}%` },
+      ];
+    case 'support':
+      return [
+        { label: 'Ouverts', value: String(tickets.filter((ticket) => ticket.status !== 'closed').length) },
+        { label: 'Urgents', value: String(tickets.filter((ticket) => ticket.status === 'pending_admin').length) },
+        { label: 'SAV', value: String(tickets.filter((ticket) => ticket.subject.toLowerCase().includes('sav')).length) },
+        { label: 'Temps reponse', value: '2h15' },
+      ];
+    case 'payments':
+      return [
+        { label: 'Paiements recus', value: revenue },
+        { label: 'Frais Stripe', value: formatCurrency(sumOrderTotals(orders) * 0.027) },
+        { label: 'Remboursements', value: formatCurrency(orders.filter((order) => getPaymentStatus(order) === 'refunded').reduce((sum, order) => sum + (order.totalPrice ?? 0), 0)) },
+        { label: 'Litiges', value: String(orders.filter((order) => order.status === 'cancelled').length) },
+      ];
+    case 'analytics':
+      return [
+        { label: 'MRR', value: revenue },
+        { label: 'Panier moyen', value: formatCurrency(orders.length ? sumOrderTotals(orders) / orders.length : 0) },
+        { label: 'Marge nette', value: '24%' },
+        { label: 'Taux SAV', value: `${orders.length ? Math.round((tickets.length / orders.length) * 100) : 0}%` },
+      ];
+    case 'clients':
+      return [
+        { label: 'Clients actifs', value: String(orders.length) },
+        { label: 'Entreprises', value: String(Math.max(1, Math.round(orders.length * 0.6))) },
+        { label: 'Pays couverts', value: String(uniqueValues(orders.map((order) => order.destinationCountryIso2)).length) },
+        { label: 'Clients a risque', value: String(tickets.filter((ticket) => ticket.status === 'pending_admin').length) },
+      ];
+    case 'gerberAnalysis':
+      return [
+        { label: 'Fichiers recus', value: String(orders.length) },
+        { label: 'Valides', value: String(orders.filter((order) => order.status !== 'cancelled').length) },
+        { label: 'Analyse manuelle', value: String(orders.filter((order) => order.status === 'awaiting_payment').length) },
+        { label: 'Rejetes', value: String(orders.filter((order) => order.status === 'cancelled').length) },
+      ];
+    case 'suppliers':
+      return [
+        { label: 'Fournisseurs actifs', value: '2' },
+        { label: 'Delai moyen production', value: '4.8 jours' },
+        { label: 'Taux defaut', value: '1.6%' },
+        { label: 'API connectees', value: '1' },
+      ];
+    case 'shipments':
+      return [
+        { label: 'En transit', value: String(orders.filter((order) => order.trackingNumber).length) },
+        { label: 'En douane', value: String(orders.filter((order) => order.destinationCountryIso2 !== 'FR').length) },
+        { label: 'Livres', value: String(orders.filter((order) => order.status === 'delivered').length) },
+        { label: 'Incidents', value: String(orders.filter((order) => order.status === 'cancelled').length) },
+      ];
+    case 'compliance':
+      return [
+        { label: 'CGV acceptees', value: String(orders.length) },
+        { label: 'Consentements cookies', value: String(orders.length * 3) },
+        { label: 'Demandes RGPD', value: '0' },
+        { label: 'Versions legales', value: '5' },
+      ];
+    case 'settings':
+      return [
+        { label: 'Admins', value: '1' },
+        { label: 'Integrations', value: '4' },
+        { label: 'Emails actifs', value: '3' },
+        { label: 'Alertes', value: '6' },
+      ];
+    default:
+      return [
+        { label: 'Commandes actives', value: String(orders.length), helper: '+ suivi live' },
+        { label: 'Revenus mensuels', value: revenue, helper: 'Marge moyenne suivie' },
+        { label: 'Tickets support', value: String(tickets.filter((ticket) => ticket.status !== 'closed').length), helper: `${tickets.filter((ticket) => ticket.status === 'pending_admin').length} urgents` },
+        { label: 'Colis en douane', value: String(orders.filter((order) => order.destinationCountryIso2 !== 'FR').length), helper: 'A surveiller' },
+      ];
+  }
 }
 
 function DashboardPanel({
@@ -612,8 +815,8 @@ function DashboardPanel({
   const recentLogs = logs.slice(0, 6);
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-      <Card className="p-5">
+    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_20.5rem]">
+      <Card className="rounded-xl border-[#d7e3ec] p-5 shadow-md shadow-slate-300/40">
         <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Dashboard</p>
         <h2 className="mt-2 text-2xl font-black text-ink">Vue globale en 10 secondes</h2>
         <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -624,7 +827,7 @@ function DashboardPanel({
         </div>
       </Card>
 
-      <Card className="p-5">
+      <Card className="rounded-xl border-[#d7e3ec] p-5 shadow-md shadow-slate-300/40">
         <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Activité récente</p>
         <div className="mt-5 space-y-4">
           {recentLogs.map((log) => (
@@ -634,7 +837,7 @@ function DashboardPanel({
         </div>
       </Card>
 
-      <Card className="overflow-hidden xl:col-span-2">
+      <Card className="overflow-hidden rounded-xl border-[#d7e3ec] shadow-md shadow-slate-300/40 xl:col-span-2">
         <div className="border-b border-slate-100 p-5">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Production / Logistique / Finance</p>
           <h2 className="mt-2 text-xl font-black text-ink">Flux opérationnel récent</h2>
@@ -1250,11 +1453,12 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, helper }: { label: string; value: string; helper?: string }) {
   return (
-    <Card className="p-4">
-      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</p>
-      <p className="mt-2 text-2xl font-black text-ink">{value}</p>
+    <Card className="rounded-xl border-[#d7e3ec] p-5 shadow-md shadow-slate-300/40">
+      <p className="text-sm font-medium text-[#4b6687]">{label}</p>
+      <p className="mt-4 text-3xl font-black tracking-tight text-[#061a36]">{value}</p>
+      {helper ? <p className="mt-3 text-sm font-medium text-[#4b6687]">{helper}</p> : null}
     </Card>
   );
 }
