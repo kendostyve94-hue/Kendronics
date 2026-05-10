@@ -112,9 +112,9 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
           <ProfileNavLink href="/orders" label="Mes commandes" />
           <ProfileNavLink href="/profile" label="Parametres" />
         </nav>
-        <a href="/cart" className="relative grid h-9 w-9 shrink-0 place-items-center text-[#111827] sm:h-10 sm:w-10" aria-label="Panier">
+        <a href="/cart" className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-10 sm:w-10" aria-label="Panier">
           <CartIcon />
-          <span className="absolute right-0 top-0 grid h-5 min-w-5 place-items-center rounded-full bg-[#0ac15f] px-1 text-xs font-black text-white">0</span>
+          <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-pink-500 px-1 text-[11px] font-semibold leading-none text-white">0</span>
         </a>
         <a href="/profile" className="hidden items-center gap-3 md:flex">
           <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-[#d1d5db] bg-[#f4f4f4]">
@@ -171,14 +171,16 @@ function ProductQuickGrid() {
         <a
           key={product.title}
           href={product.href}
-          className="min-h-[86px] border bg-white p-2.5 transition hover:-translate-y-0.5 hover:shadow-lg sm:min-h-[144px] sm:p-5"
+          className="overflow-hidden border bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
           style={{ borderColor: product.color }}
         >
-          <div className="mb-1.5 grid h-8 w-8 place-items-center overflow-hidden border-2 border-[#111827] sm:mb-2 sm:h-10 sm:w-10 sm:border-[3px]" style={{ backgroundColor: product.color, borderRadius: product.shape === 'circle' ? '999px' : '0' }}>
-            {product.image ? <img src={product.image} alt="" className="h-full w-full object-cover" /> : null}
+          <div className="grid h-16 place-items-center bg-[#f8fafc] sm:h-20" style={{ backgroundColor: product.image ? '#f8fafc' : product.color }}>
+            {product.image ? <img src={product.image} alt="" className="h-full w-full object-cover" /> : <span className="h-10 w-10" style={{ backgroundColor: product.color, borderRadius: product.shape === 'circle' ? '999px' : '0' }} />}
           </div>
-          <h3 className="text-sm font-black leading-4 text-[#1f2937] sm:text-xl sm:leading-6">{product.title}</h3>
-          <p className="mt-1 text-[11px] leading-4 text-[#64748b] sm:mt-2 sm:text-sm sm:leading-6">Commander &gt;</p>
+          <div className="p-2.5 sm:p-4">
+            <h3 className="text-sm font-black leading-4 text-[#1f2937] sm:text-xl sm:leading-6">{product.title}</h3>
+            <p className="mt-1 text-[11px] leading-4 text-[#64748b] sm:mt-2 sm:text-sm sm:leading-6">Commander &gt;</p>
+          </div>
         </a>
       ))}
     </div>
@@ -300,10 +302,10 @@ function RecentOrders() {
 
 function CartIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M6 6h15l-2 8H8L6 3H3" />
-      <circle cx="9" cy="20" r="1.5" />
-      <circle cx="18" cy="20" r="1.5" />
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="9" cy="20" r="1.4" />
+      <circle cx="18" cy="20" r="1.4" />
+      <path d="M3 4h2l2.3 11.2a2 2 0 0 0 2 1.6h8.5a2 2 0 0 0 1.9-1.4L21 8H6.2" />
     </svg>
   );
 }
