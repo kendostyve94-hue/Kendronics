@@ -84,12 +84,12 @@ export default function ProfilePage() {
   const email = profile.email || 'kendostyve94@gmail.com';
 
   return (
-    <main className="min-h-screen overflow-x-auto bg-[#f3f6fa] text-[#1f2f43]">
-      <div className="min-w-[1180px]">
+    <main className="min-h-screen overflow-x-hidden bg-[#f3f6fa] text-[#1f2f43]">
+      <div className="w-full">
         <ProfileHero firstName={firstName} email={email} userId={userId} avatarDataUrl={avatarDataUrl} />
         <ProfileNav />
 
-        <div className="mx-auto grid max-w-[1180px] grid-cols-[220px_minmax(0,1fr)_300px] gap-4 px-5 py-5">
+        <div className="mx-auto grid w-full max-w-[1180px] gap-3 px-3 py-3 lg:grid-cols-[220px_minmax(0,1fr)_300px] lg:gap-4 lg:px-5 lg:py-5">
           <ProfileSidebar />
 
           <section className="min-w-0">
@@ -114,20 +114,20 @@ export default function ProfilePage() {
 function ProfileHero({ firstName, email, userId, avatarDataUrl }: { firstName: string; email: string; userId: string; avatarDataUrl: string }) {
   return (
     <header className="bg-[#07182c] text-white">
-      <div className="mx-auto flex h-[100px] max-w-[1180px] items-center justify-between px-5">
-        <div className="flex items-center gap-8">
+      <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-3 px-3 py-3 lg:h-[100px] lg:px-5 lg:py-0">
+        <div className="flex min-w-0 items-center gap-3 lg:gap-8">
           <a href="/" aria-label="Kendronics accueil">
-            <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-14 w-auto" />
+            <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-9 w-auto sm:h-11 lg:h-14" />
           </a>
-          <div className="border-l border-white/20 pl-8">
-            <p className="text-lg font-black text-[#22c55e]">Prototype de PCB en toute simplicite</p>
-            <p className="mt-1 text-sm text-slate-200">Service complet de prototype de PCB personnalise.</p>
+          <div className="min-w-0 border-l border-white/20 pl-3 lg:pl-8">
+            <p className="truncate text-xs font-black text-[#22c55e] sm:text-sm lg:text-lg">Prototype de PCB en toute simplicite</p>
+            <p className="mt-1 hidden text-xs text-slate-200 sm:block lg:text-sm">Service complet de prototype de PCB personnalise.</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex shrink-0 items-center gap-2 lg:gap-4">
           <Avatar avatarDataUrl={avatarDataUrl} size="large" />
-          <div className="min-w-[210px] text-sm">
+          <div className="hidden min-w-[210px] text-sm sm:block">
             <div className="flex items-center gap-2">
               <strong>Bonjour, {firstName}</strong>
               <span className="rounded bg-[#22c55e] px-2 py-0.5 text-[10px] font-black uppercase text-white">Client</span>
@@ -144,15 +144,15 @@ function ProfileHero({ firstName, email, userId, avatarDataUrl }: { firstName: s
 function ProfileNav() {
   return (
     <nav className="border-b border-[#d7dce3] bg-white">
-      <div className="mx-auto flex h-[86px] max-w-[1180px] items-end justify-between px-5">
-        <div className="flex h-full items-end gap-8 text-sm text-[#334155]">
+      <div className="mx-auto grid max-w-[1180px] gap-2 px-3 py-2 lg:flex lg:h-[86px] lg:items-end lg:justify-between lg:px-5 lg:py-0">
+        <div className="grid grid-cols-4 gap-1 text-[11px] text-[#334155] sm:grid-cols-7 lg:flex lg:h-full lg:items-end lg:gap-8 lg:text-sm">
           {['Mon compte', 'Devis immediat', "Obtenir un devis d'assemblage", 'CNC | Impression 3D', 'Conception de circuits imprimes', 'Mes commandes', 'Parametres'].map((item, index) => (
-            <a key={item} href={index === 0 ? '/profile' : index === 1 ? '/quote' : '#'} className={`flex h-[54px] items-center border-b-2 px-1 ${index === 0 ? 'border-[#0f9f6e] font-black text-[#0f9f6e]' : 'border-transparent hover:text-[#0f9f6e]'}`}>
+            <a key={item} href={index === 0 ? '/profile' : index === 1 ? '/quote' : '#'} className={`flex min-h-10 items-center border-b-2 px-1 leading-4 lg:h-[54px] ${index === 0 ? 'border-[#0f9f6e] font-black text-[#0f9f6e]' : 'border-transparent hover:text-[#0f9f6e]'}`}>
               {item}
             </a>
           ))}
         </div>
-        <div className="flex h-full items-center gap-5 text-sm">
+        <div className="flex items-center justify-end gap-4 text-xs lg:h-full lg:gap-5 lg:text-sm">
           <a href="/cart" className="relative inline-flex h-10 w-10 items-center justify-center text-[#111827]" aria-label="Panier">
             <CartIcon />
             <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-[#14c469] px-1 text-[11px] font-black leading-none text-white">2</span>
@@ -173,14 +173,14 @@ function ProfileNav() {
 
 function ProfileSidebar() {
   return (
-    <aside className="bg-white shadow-sm ring-1 ring-slate-200">
+    <aside className="grid gap-3 lg:block lg:bg-white lg:shadow-sm lg:ring-1 lg:ring-slate-200">
       {sidebarGroups.map((group) => (
-        <section key={group.title} className="border-b border-slate-200 last:border-b-0">
-          <h2 className="px-4 py-4 text-sm font-black uppercase text-[#1f2f43]">{group.title}</h2>
-          <div className="grid gap-0 pb-3">
+        <section key={group.title} className="bg-white shadow-sm ring-1 ring-slate-200 lg:border-b lg:border-slate-200 lg:shadow-none lg:ring-0 lg:last:border-b-0">
+          <h2 className="px-3 py-3 text-xs font-black uppercase text-[#1f2f43] lg:px-4 lg:py-4 lg:text-sm">{group.title}</h2>
+          <div className="grid grid-cols-2 gap-1 px-2 pb-3 sm:grid-cols-4 lg:block lg:px-0">
             {group.items.map((item, index) => (
-              <a key={item} href="#" className="flex min-h-[32px] items-center gap-3 px-4 text-[13px] text-[#475569] hover:bg-[#f1f8f4] hover:text-[#0f9f6e]">
-                <span className="grid h-4 w-4 place-items-center rounded border border-slate-300 text-[9px] text-slate-400">{index + 1}</span>
+              <a key={item} href="#" className="flex min-h-[30px] items-center gap-2 rounded bg-[#f8fafc] px-2 text-[11px] text-[#475569] hover:bg-[#f1f8f4] hover:text-[#0f9f6e] lg:gap-3 lg:rounded-none lg:bg-transparent lg:px-4 lg:text-[13px]">
+                <span className="hidden h-4 w-4 place-items-center rounded border border-slate-300 text-[9px] text-slate-400 lg:grid">{index + 1}</span>
                 <span className="min-w-0 truncate">{item}</span>
                 {index === 0 && group.title === 'Promotions' ? <span className="ml-auto rounded bg-red-500 px-1.5 text-[10px] font-black text-white">2</span> : null}
               </a>
@@ -194,18 +194,18 @@ function ProfileSidebar() {
 
 function ProductQuickGrid() {
   return (
-    <div className="grid grid-cols-6 gap-3">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 lg:gap-3">
       {quickProducts.map((product) => (
-        <a key={product.title} href={product.href} className="min-h-[165px] bg-white p-4 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md">
-          <div className="flex min-h-[70px] items-start justify-between gap-2">
-            <h3 className="text-sm font-black leading-5 text-[#111827]">{product.title}</h3>
+        <a key={product.title} href={product.href} className="min-h-[118px] bg-white p-3 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md lg:min-h-[165px] lg:p-4">
+          <div className="flex min-h-[54px] items-start justify-between gap-2 lg:min-h-[70px]">
+            <h3 className="text-[13px] font-black leading-4 text-[#111827] lg:text-sm lg:leading-5">{product.title}</h3>
             {product.image ? (
-              <img src={product.image} alt="" className="h-16 w-16 rounded object-cover" />
+              <img src={product.image} alt="" className="h-12 w-12 rounded object-cover lg:h-16 lg:w-16" />
             ) : (
-              <span className="grid h-14 w-14 place-items-center rounded-full" style={{ backgroundColor: product.color }} />
+              <span className="grid h-11 w-11 place-items-center rounded-full lg:h-14 lg:w-14" style={{ backgroundColor: product.color }} />
             )}
           </div>
-          <p className="mt-5 text-xs leading-5 text-[#64748b]">{product.subtitle} &gt;</p>
+          <p className="mt-3 text-[11px] leading-4 text-[#64748b] lg:mt-5 lg:text-xs lg:leading-5">{product.subtitle} &gt;</p>
         </a>
       ))}
     </div>
@@ -214,8 +214,8 @@ function ProductQuickGrid() {
 
 function DashboardPanel({ firstName, userId, avatarDataUrl }: { firstName: string; userId: string; avatarDataUrl: string }) {
   return (
-    <section className="mt-4 grid grid-cols-[170px_minmax(0,1fr)] bg-white shadow-sm ring-1 ring-slate-200">
-      <div className="grid place-items-center border-r border-slate-200 px-4 py-8 text-center">
+    <section className="mt-3 grid bg-white shadow-sm ring-1 ring-slate-200 sm:grid-cols-[140px_minmax(0,1fr)] lg:mt-4 lg:grid-cols-[170px_minmax(0,1fr)]">
+      <div className="grid place-items-center border-b border-slate-200 px-3 py-4 text-center sm:border-b-0 sm:border-r lg:px-4 lg:py-8">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div>
           <h1 className="mt-4 text-lg font-black text-[#475569]">{firstName}</h1>
@@ -224,9 +224,9 @@ function DashboardPanel({ firstName, userId, avatarDataUrl }: { firstName: strin
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-3 lg:p-4">
         <h2 className="text-sm font-black text-[#1f2f43]">Tableau de bord</h2>
-        <div className="mt-4 grid grid-cols-[1fr_180px] gap-4">
+        <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_150px] lg:mt-4 lg:grid-cols-[1fr_180px] lg:gap-4">
           <div className="grid grid-cols-2 border border-slate-200">
             <MetricCell label="Solde (USD)" value="$ 0.00" detail="(Non Retirable: $0.00)" />
             <MetricCell label="Recemment ajoute" value="+0.00" valueClass="text-[#ff5a00]" />
@@ -266,12 +266,12 @@ function SmallInfo({ label, value, action, danger }: { label: string; value: str
 
 function ReferralBanner() {
   return (
-    <section className="mt-4 flex h-[74px] items-center justify-between bg-gradient-to-r from-[#ff6233] via-[#ff8a18] to-[#ffb000] px-5 text-white">
+    <section className="mt-3 flex min-h-[68px] items-center justify-between gap-3 bg-gradient-to-r from-[#ff6233] via-[#ff8a18] to-[#ffb000] px-3 py-3 text-white lg:mt-4 lg:h-[74px] lg:px-5 lg:py-0">
       <div>
-        <p className="text-2xl font-black italic leading-none">Looking For New Referral Opportunities?</p>
+        <p className="text-lg font-black italic leading-none lg:text-2xl">Looking For New Referral Opportunities?</p>
         <p className="mt-2 text-xs">Refer others and explore the benefits of sharing our services.</p>
       </div>
-      <a href="#" className="rounded-full bg-white px-6 py-3 text-xs font-black text-[#ff5a00]">Sign Up Now</a>
+      <a href="#" className="shrink-0 rounded-full bg-white px-4 py-2 text-[11px] font-black text-[#ff5a00] lg:px-6 lg:py-3 lg:text-xs">Sign Up Now</a>
     </section>
   );
 }
@@ -287,10 +287,10 @@ function StatusStrip() {
   ];
 
   return (
-    <section className="mt-4 grid grid-cols-6 bg-white py-5 shadow-sm ring-1 ring-slate-200">
+    <section className="mt-3 grid grid-cols-3 bg-white py-3 shadow-sm ring-1 ring-slate-200 sm:grid-cols-6 lg:mt-4 lg:py-5">
       {statuses.map(([value, label]) => (
         <div key={label} className="border-r border-slate-200 px-3 text-center last:border-r-0">
-          <p className="text-3xl font-light text-[#111827]">{value}</p>
+          <p className="text-2xl font-light text-[#111827] lg:text-3xl">{value}</p>
           <p className="mt-2 text-xs leading-4 text-[#475569]">{label}</p>
         </div>
       ))}
@@ -300,17 +300,35 @@ function StatusStrip() {
 
 function OrdersTable() {
   return (
-    <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="mt-3 bg-white p-3 shadow-sm ring-1 ring-slate-200 lg:mt-4 lg:p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-[#1f2937]">Ma commande</h2>
         <a href="/orders" className="text-xs font-semibold text-blue-600">Plus &gt;</a>
       </div>
-      <div className="mt-4 flex gap-8 border-b border-slate-200 text-xs">
+      <div className="mt-4 grid grid-cols-3 gap-2 border-b border-slate-200 text-[11px] sm:flex sm:gap-8 sm:text-xs">
         {['Toutes (8)', 'Verification (2)', 'Production (3)', 'Livraison (1)', 'Termine (8)'].map((tab, index) => (
           <span key={tab} className={`pb-3 ${index === 0 ? 'border-b-2 border-blue-500 font-black text-blue-600' : 'text-slate-500'}`}>{tab}</span>
         ))}
       </div>
-      <table className="mt-2 w-full text-left text-xs">
+      <div className="mt-3 grid gap-2 sm:hidden">
+        {orderRows.map((row) => (
+          <a key={row[0]} href="/orders" className="grid gap-2 rounded border border-slate-200 bg-[#f8fafc] p-3 text-xs">
+            <div className="flex items-center justify-between gap-3">
+              <strong className="text-[#0f5f88]">{row[0]}</strong>
+              <span className={statusColor(row[4])}>{row[4]}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3 text-[#475569]">
+              <span>{row[1]}</span>
+              <span>{row[5]}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3 text-[#64748b]">
+              <span>{row[2]}</span>
+              <span>{row[3]}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+      <table className="mt-2 hidden w-full text-left text-xs sm:table">
         <thead className="text-[#64748b]">
           <tr>
             {['N Commande', 'Produit', 'Date de commande', 'Quantite', 'Statut', 'Montant', 'Action'].map((head) => (
@@ -337,12 +355,12 @@ function GiftExchange() {
   const gifts = ['Points: 2800', 'Points: 3200', 'Points: 1800', 'Points: 900', 'Points: 1200'];
 
   return (
-    <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="mt-3 bg-white p-3 shadow-sm ring-1 ring-slate-200 lg:mt-4 lg:p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-black">Echanger des cadeaux</h2>
         <a href="#" className="text-xs font-semibold text-blue-600">Afficher plus &gt;</a>
       </div>
-      <div className="mt-4 grid grid-cols-5 gap-4">
+      <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5 lg:gap-4">
         {gifts.map((gift, index) => (
           <div key={gift} className="text-center">
             <div className="mx-auto h-16 w-24 rounded bg-gradient-to-br from-[#0f9f6e] to-[#07182c]" />
@@ -356,7 +374,7 @@ function GiftExchange() {
 
 function ReviewsPanel() {
   return (
-    <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="mt-3 bg-white p-3 shadow-sm ring-1 ring-slate-200 lg:mt-4 lg:p-4">
       <div className="flex items-center justify-between">
         <div className="flex gap-8 text-sm font-black">
           <span className="border-b-2 border-[#22c55e] pb-2 text-[#16a34a]">Show client</span>
@@ -364,7 +382,7 @@ function ReviewsPanel() {
         </div>
         <a href="#" className="rounded bg-[#0f9f6e] px-5 py-2 text-xs font-black text-white">Laisser un commentaire</a>
       </div>
-      <div className="mt-5 grid grid-cols-3 gap-4">
+      <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:gap-4">
         {['Engineer', 'Kain', 'COSTA'].map((name) => (
           <article key={name} className="min-h-[150px] rounded bg-[#f8fafc] p-4">
             <p className="text-xs font-black">{name}</p>
@@ -379,7 +397,7 @@ function ReviewsPanel() {
 
 function RightRail() {
   return (
-    <aside className="grid content-start gap-4">
+    <aside className="grid content-start gap-3 lg:gap-4">
       <PromoBanner title="PCB Assembly for 1-20 pcs" price="$29" dark />
       <PromoBanner title="PCB Prototype Only" price="$5" />
       <InfoList title="Dernieres nouvelles" items={['Mise a jour des options expedition', 'Impact du nouveau tarif douanier', 'Bonne fete du travail !']} />
