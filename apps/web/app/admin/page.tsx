@@ -1308,7 +1308,7 @@ function SupplierConnectionPanel({
             </p>
           ) : null}
           {result.diagnostics ? (
-            <div className="mt-3 grid gap-2 rounded-sm border border-amber-200 bg-white/65 p-3 text-xs">
+            <div className="mt-3 grid gap-2 overflow-x-auto rounded-sm border border-amber-200 bg-white/65 p-3 text-xs" data-i18n-skip="true">
               <p>Endpoint: {result.diagnostics.endpoint}</p>
               <p>Method: {result.diagnostics.method}</p>
               <p>Headers: {result.diagnostics.headerNames.join(', ')}</p>

@@ -25,7 +25,6 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
       method: 'POST',
       headers: {
         'api-key': apiKey,
-        Accept: 'application/json',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(this.toQuotePayload(dto)),
@@ -61,7 +60,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
     return {
       endpoint: this.configValue('PCBWAY_QUOTE_ENDPOINT') ?? 'https://api-partner.pcbway.com/api/Pcb/PcbQuotation',
       method: 'POST',
-      headerNames: ['api-key', 'Accept', 'Content-Type'],
+      headerNames: ['api-key', 'Content-Type'],
       apiKeyFingerprint: this.apiKeyFingerprint(apiKey),
       payloadSummary: {
         Country: payload.Country,
@@ -98,7 +97,6 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
       method: 'POST',
       headers: {
         'api-key': apiKey,
-        Accept: 'application/json',
         'Content-Type': 'application/json',
       },
     });
