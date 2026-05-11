@@ -15,7 +15,7 @@
   --surface-muted: #eef6fb;
   --surface-raised: #ffffff;
   --surface-tint: #e8f7f1;
-  --neumo-radius: 0.5rem;
+  --neumo-radius: 0;
   --brand-gradient: linear-gradient(90deg, #0f8f6b, #12a87c);
   --glass-light: rgba(255, 255, 255, 0.92);
   --glass-dark: rgba(248, 251, 254, 0.92);
@@ -720,4 +720,12 @@ section {
   100% {
     opacity: 1;
   }
+}
+
+/* PCBWay-style square UI across the whole storefront. Keep this last so
+   legacy Tailwind rounded utilities and component overrides cannot re-round. */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
 }
