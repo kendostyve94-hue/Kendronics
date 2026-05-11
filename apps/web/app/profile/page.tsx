@@ -1,12 +1,11 @@
 'use client';
 
-import { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { clearAuthSession, readAuthSession } from '../../lib/auth-session';
 
 const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
-const profileDesktopWidth = 1328;
 
 type ProfileForm = {
   name: string;
@@ -64,44 +63,6 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileForm>({ name: '', email: '', phone: '', company: '', country: '' });
   const [accountId, setAccountId] = useState('');
   const [avatarDataUrl, setAvatarDataUrl] = useState('');
-  const [profileScale, setProfileScale] = useState(1);
-  const [scaledHeight, setScaledHeight] = useState<number | undefined>();
-  const scaledPageRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function syncScale() {
-      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-      setProfileScale(viewportWidth < 1024 ? viewportWidth / profileDesktopWidth : 1);
-    }
-
-    syncScale();
-    window.addEventListener('resize', syncScale);
-    return () => window.removeEventListener('resize', syncScale);
-  }, []);
-
-  useLayoutEffect(() => {
-    if (profileScale >= 1) {
-      setScaledHeight(undefined);
-      return undefined;
-    }
-
-    function syncHeight() {
-      const pageHeight = scaledPageRef.current?.scrollHeight ?? 0;
-      setScaledHeight(pageHeight ? pageHeight * profileScale : undefined);
-    }
-
-    const pageElement = scaledPageRef.current;
-    const resizeObserver = typeof ResizeObserver !== 'undefined' && pageElement ? new ResizeObserver(syncHeight) : undefined;
-
-    syncHeight();
-    resizeObserver?.observe(pageElement as Element);
-    window.addEventListener('resize', syncHeight);
-    return () => {
-      resizeObserver?.disconnect();
-      window.removeEventListener('resize', syncHeight);
-    };
-  }, [profileScale, profile.name, avatarDataUrl]);
-
   useEffect(() => {
     const storedProfile = readStoredProfile();
     const sessionProfile = readSessionProfile();
@@ -119,17 +80,11 @@ export default function ProfilePage() {
 
   const firstName = firstNameOf(profile.name || emailName(profile.email) || 'Rafale');
   const userId = formatUserId(accountId);
-  const scaleWrapperStyle = profileScale < 1 ? ({ height: scaledHeight, overflow: 'hidden' } as CSSProperties) : undefined;
-  const scaledPageStyle = profileScale < 1
-    ? ({ width: profileDesktopWidth, transform: `scale(${profileScale})`, transformOrigin: 'top left' } as CSSProperties)
-    : undefined;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f3f6fa] text-[#1f2f43]">
-      <div style={scaleWrapperStyle}>
-        <div ref={scaledPageRef} style={scaledPageStyle}>
-          <ProfileNavbar firstName={firstName} avatarDataUrl={avatarDataUrl} />
-        <div className="w-full">
+      <ProfileNavbar firstName={firstName} avatarDataUrl={avatarDataUrl} />
+      <div className="w-full">
         <div className="mx-auto grid min-w-[1328px] max-w-[1368px] grid-cols-[250px_minmax(0,1fr)] gap-4 px-5 py-4">
           <ProfileSidebar />
 
@@ -151,9 +106,7 @@ export default function ProfilePage() {
           </section>
         </div>
 
-          <Footer forceDesktop />
-          </div>
-        </div>
+        <Footer forceDesktop />
       </div>
     </main>
   );

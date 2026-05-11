@@ -1,7 +1,12 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { CookieConsentBanner } from '../components/layout/CookieConsentBanner';
 import { LanguageRuntime } from '../components/layout/LanguageRuntime';
 import './globals.css';
+
+export const viewport: Viewport = {
+  width: 1328,
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://kendronics.com'),
