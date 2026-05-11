@@ -25,6 +25,7 @@ type QuickProduct = {
 };
 
 type ProfileView =
+  | 'all-orders'
   | 'verification'
   | 'payment-pending'
   | 'production'
@@ -91,6 +92,9 @@ export default function ProfilePage() {
     });
     setAccountId(sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
     setAvatarDataUrl(window.localStorage.getItem(avatarStorageKey) ?? '');
+    if (new URLSearchParams(window.location.search).get('view') === 'orders') {
+      setActiveProfileView('all-orders');
+    }
   }, []);
 
   const firstName = firstNameOf(profile.name || emailName(profile.email) || 'Rafale');
@@ -146,7 +150,7 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
           <ProfileNavLink href="/quote" label="Assemblage PCB" />
           <ProfileNavLink href="/services" label="Impression 3D" />
           <ProfileNavLink href="/services" label="Conception PCB" />
-          <ProfileNavLink href="/orders" label="Mes commandes" />
+          <ProfileNavLink href="/profile?view=orders" label="Mes commandes" />
           <ProfileNavLink href="/profile" label="Parametres" />
         </nav>
         <a href="/cart" className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Panier">
@@ -251,6 +255,7 @@ function ProfileViewContent({
   userId: string;
   avatarDataUrl: string;
 }) {
+  if (view === 'all-orders') return <OrderReviewSection activeKey="all" title="Toutes commandes" mode="table" />;
   if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Panier / Examen de votre commande" mode="review" />;
   if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Panier / Examen de votre commande" mode="review" />;
   if (view === 'production') return <OrderReviewSection activeKey="production" title="Progrès de la Fabrication" mode="table" />;
@@ -265,9 +270,9 @@ function ProfileViewContent({
   return null;
 }
 
-type OrderStatusKey = 'verification' | 'payment-pending' | 'production' | 'delivery' | 'completed';
+type OrderStatusKey = 'all' | 'verification' | 'payment-pending' | 'production' | 'delivery' | 'completed';
 
-const orderStatuses: Array<{ key: OrderStatusKey | 'all' | 'payment-unfinished' | 'engineering' | 'comments'; label: string; icon?: string }> = [
+const orderStatuses: Array<{ key: OrderStatusKey | 'payment-unfinished' | 'engineering' | 'comments'; label: string; icon?: string }> = [
   { key: 'all', label: 'Toutes commandes' },
   { key: 'verification', label: 'Vérification en cours' },
   { key: 'payment-pending', label: 'Paiement en attente' },
