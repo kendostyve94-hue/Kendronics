@@ -538,7 +538,6 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
         ['Mot de passe', '********', 'Changer le mot de passe'],
         ['Adresse de livraison', 'Ajouter une adresse de livraison pour votre commande chez PCBWay.', 'Modifier'],
         ['Détails de facturation', 'Ajouter une adresse de facturation pour votre commande chez PCBWay.', 'Modifier'],
-        ['Notifications', 'Choisissez les notifications que vous souhaitez recevoir de PCBWay et comment être notifié.', 'Paramètres'],
       ].map(([label, value, action]) => (
         <div key={label} className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
           <h2 className="text-lg">{label}</h2>
@@ -546,6 +545,16 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
           <a href="#" className="text-right text-[#00a651]">{action}</a>
         </div>
       ))}
+      <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
+        <h2 className="text-lg">Déconnexion</h2>
+        <p className="text-[#4b5563]">Fermer la session sur cet appareil.</p>
+        <button type="button" onClick={logout} className="text-right text-[#00a651]">Se déconnecter</button>
+      </div>
+      <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm opacity-35 blur-[1px]">
+        <h2 className="text-lg">Supprimer le compte</h2>
+        <p className="text-[#4b5563]">Suppression définitive du compte et des données associées.</p>
+        <button type="button" disabled className="cursor-not-allowed text-right text-red-600">Supprimer</button>
+      </div>
     </section>
   );
 }
