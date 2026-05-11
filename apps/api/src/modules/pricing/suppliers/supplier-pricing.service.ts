@@ -59,16 +59,6 @@ export class SupplierPricingService {
 
     try {
       const accountProbe = normalizedSupplier === 'pcbway' ? await this.pcbway.testAccountConnection() : undefined;
-      if (accountProbe && !accountProbe.ok) {
-        return {
-          supplier: provider.name,
-          configured: true,
-          ok: false,
-          expectedEnv,
-          account: accountProbe,
-          message: accountProbe.message,
-        };
-      }
 
       const quote = await provider.getPcbQuote({
         productType: 'standard_pcb',
@@ -107,7 +97,9 @@ export class SupplierPricingService {
           currency: quote.currency,
           leadTimeDays: quote.leadTimeDays,
         },
-        message: `${provider.name} quote API responded successfully.`,
+        message: accountProbe && !accountProbe.ok
+          ? `${provider.name} quote API responded successfully. Account balance probe failed, but it is not required for live quotations.`
+          : `${provider.name} quote API responded successfully.`,
       };
     } catch (error) {
       return {
