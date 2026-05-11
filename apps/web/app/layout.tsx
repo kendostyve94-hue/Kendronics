@@ -5,7 +5,6 @@ import './globals.css';
 
 export const viewport: Viewport = {
   width: 1328,
-  initialScale: 1,
 };
 
 export const metadata: Metadata = {
