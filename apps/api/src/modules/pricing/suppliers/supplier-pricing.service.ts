@@ -42,6 +42,30 @@ export class SupplierPricingService {
   async testSupplierConnection(supplier = this.preferredSupplier()) {
     const normalizedSupplier = supplier.trim().toLowerCase();
     const provider = normalizedSupplier === 'pcbway' ? this.pcbway : this.jlcpcb;
+    const testDto: CreateQuoteDto = {
+      productType: 'standard_pcb',
+      gerberFileId: crypto.randomUUID(),
+      layers: 2,
+      lengthMm: 100,
+      widthMm: 100,
+      quantity: 5,
+      destinationCountryIso2: 'SN',
+      shippingMode: 'standard',
+      configSnapshot: {
+        baseMaterial: 'FR4',
+        thickness: '1.6mm',
+        solderMaskColor: 'Green',
+        silkscreenColor: 'White',
+        surfaceFinish: 'HASL lead-free',
+        viaCovering: 'Tented',
+        deliveryFormat: 'single_pcb',
+        differentDesigns: 1,
+        outerCopperWeight: '1 oz',
+        innerCopperWeight: '0.5 oz',
+        minimumViaHole: '0.3mm',
+      },
+    };
+    const diagnostics = normalizedSupplier === 'pcbway' ? this.pcbway.quoteRequestDiagnostics(testDto) : undefined;
     const expectedEnv =
       normalizedSupplier === 'pcbway'
         ? ['PCBWAY_API_KEY', 'PCBWAY_QUOTE_ENDPOINT']
@@ -53,36 +77,16 @@ export class SupplierPricingService {
         configured: false,
         ok: false,
         expectedEnv,
+        diagnostics,
         message: `${provider.name} quote API is not configured.`,
       };
     }
 
+    let accountProbe: Awaited<ReturnType<PcbWayPricingProvider['testAccountConnection']>> | undefined;
     try {
-      const accountProbe = normalizedSupplier === 'pcbway' ? await this.pcbway.testAccountConnection() : undefined;
+      accountProbe = normalizedSupplier === 'pcbway' ? await this.pcbway.testAccountConnection() : undefined;
 
-      const quote = await provider.getPcbQuote({
-        productType: 'standard_pcb',
-        gerberFileId: crypto.randomUUID(),
-        layers: 2,
-        lengthMm: 100,
-        widthMm: 100,
-        quantity: 5,
-        destinationCountryIso2: 'SN',
-        shippingMode: 'standard',
-        configSnapshot: {
-          baseMaterial: 'FR4',
-          thickness: '1.6mm',
-          solderMaskColor: 'Green',
-          silkscreenColor: 'White',
-          surfaceFinish: 'HASL lead-free',
-          viaCovering: 'Tented',
-          deliveryFormat: 'single_pcb',
-          differentDesigns: 1,
-          outerCopperWeight: '1 oz',
-          innerCopperWeight: '0.5 oz',
-          minimumViaHole: '0.3mm',
-        },
-      });
+      const quote = await provider.getPcbQuote(testDto);
 
       return {
         supplier: provider.name,
@@ -90,6 +94,7 @@ export class SupplierPricingService {
         ok: true,
         expectedEnv,
         account: accountProbe,
+        diagnostics,
         quote: {
           supplierQuoteId: quote.supplierQuoteId,
           manufacturingPrice: quote.manufacturingPrice,
@@ -107,6 +112,8 @@ export class SupplierPricingService {
         configured: true,
         ok: false,
         expectedEnv,
+        account: accountProbe,
+        diagnostics,
         message: error instanceof Error ? error.message : `${provider.name} quote API test failed.`,
       };
     }

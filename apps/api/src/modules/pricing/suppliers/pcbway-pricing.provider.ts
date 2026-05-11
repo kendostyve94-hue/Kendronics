@@ -54,6 +54,34 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
     };
   }
 
+  quoteRequestDiagnostics(dto: CreateQuoteDto): PcbWayQuoteDiagnostics {
+    const apiKey = this.configValue('PCBWAY_API_KEY');
+    const payload = this.toQuotePayload(dto);
+
+    return {
+      endpoint: this.configValue('PCBWAY_QUOTE_ENDPOINT') ?? 'https://api-partner.pcbway.com/api/Pcb/PcbQuotation',
+      method: 'POST',
+      headerNames: ['api-key', 'Accept', 'Content-Type'],
+      apiKeyFingerprint: this.apiKeyFingerprint(apiKey),
+      payloadSummary: {
+        Country: payload.Country,
+        CountryCode: payload.CountryCode,
+        ShipType: payload.ShipType,
+        BoardType: payload.BoardType,
+        Length: payload.Length,
+        Width: payload.Width,
+        Qty: payload.Qty,
+        Layers: payload.Layers,
+        Material: payload.Material,
+        Thickness: payload.Thickness,
+        SurfaceFinish: payload.SurfaceFinish,
+        SolderMask: payload.SolderMask,
+        Silkscreen: payload.Silkscreen,
+      },
+      payloadKeys: Object.keys(payload),
+    };
+  }
+
   async testAccountConnection(): Promise<PcbWayAccountProbe> {
     const apiKey = this.configValue('PCBWAY_API_KEY');
     if (!apiKey) {
@@ -193,7 +221,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
 
   private quoteErrorMessage(statusCode: number, data: PcbWayQuoteResponse | null): string {
     if (statusCode === 401) {
-      return 'PCBWay rejected the API key: http=401. Ask PCBWay to activate or regenerate the key for api-partner.pcbway.com, then replace PCBWAY_API_KEY in Render.';
+      return 'PCBWay returned http=401 on PcbQuotation. The key may be active, but the quote endpoint rejected this request. Check auth header name/value, account binding, endpoint environment, and Render env formatting.';
     }
 
     const errorText = typeof data?.ErrorText === 'string' && data.ErrorText.trim() ? data.ErrorText.trim() : undefined;
@@ -319,8 +347,14 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
   }
 
   private configValue(key: string): string | undefined {
-    const value = process.env[key]?.trim();
+    const value = stripWrappingQuotes(process.env[key]?.trim());
     return value && value !== 'not-configured' ? value : undefined;
+  }
+
+  private apiKeyFingerprint(value?: string): string {
+    if (!value) return 'missing';
+    if (value.length <= 8) return `configured:length:${value.length}`;
+    return `${value.slice(0, 4)}...${value.slice(-4)} length:${value.length}`;
   }
 }
 
@@ -367,6 +401,14 @@ export interface PcbWayAccountProbe {
   message: string;
 }
 
+export interface PcbWayQuoteDiagnostics {
+  endpoint: string;
+  method: 'POST';
+  headerNames: string[];
+  apiKeyFingerprint: string;
+  payloadSummary: Record<string, unknown>;
+  payloadKeys: string[];
+}
 const PCBWAY_COUNTRIES: Record<string, string> = {
   BJ: 'BENIN',
   BF: 'BURKINA FASO',
@@ -411,3 +453,12 @@ function numberOrUndefined(value: unknown): number | undefined {
   const numberValue = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : Number.NaN;
   return Number.isFinite(numberValue) ? round(numberValue) : undefined;
 }
+function stripWrappingQuotes(value?: string): string | undefined {
+  if (!value) return value;
+  let normalized = value.replace(/^\uFEFF/, '').trim();
+  if ((normalized.startsWith('"') && normalized.endsWith('"')) || (normalized.startsWith("'") && normalized.endsWith("'"))) {
+    normalized = normalized.slice(1, -1).trim();
+  }
+  return normalized.replace(/^\uFEFF/, '').trim();
+}
+
