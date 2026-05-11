@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { type CSSProperties, useEffect, useState } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { clearAuthSession, readAuthSession } from '../../lib/auth-session';
 
 const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
+const profileDesktopWidth = 1328;
 
 type ProfileForm = {
   name: string;
@@ -63,6 +64,18 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileForm>({ name: '', email: '', phone: '', company: '', country: '' });
   const [accountId, setAccountId] = useState('');
   const [avatarDataUrl, setAvatarDataUrl] = useState('');
+  const [profileScale, setProfileScale] = useState(1);
+
+  useEffect(() => {
+    function syncScale() {
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+      setProfileScale(viewportWidth < 1024 ? viewportWidth / profileDesktopWidth : 1);
+    }
+
+    syncScale();
+    window.addEventListener('resize', syncScale);
+    return () => window.removeEventListener('resize', syncScale);
+  }, []);
 
   useEffect(() => {
     const storedProfile = readStoredProfile();
@@ -81,10 +94,13 @@ export default function ProfilePage() {
 
   const firstName = firstNameOf(profile.name || emailName(profile.email) || 'Rafale');
   const userId = formatUserId(accountId);
+  const scaledPageStyle = profileScale < 1 ? ({ width: profileDesktopWidth, zoom: profileScale } as CSSProperties) : undefined;
+
   return (
-    <main className="min-h-screen overflow-x-auto bg-[#f3f6fa] text-[#1f2f43]">
-      <ProfileNavbar firstName={firstName} avatarDataUrl={avatarDataUrl} />
-      <div className="w-full">
+    <main className="min-h-screen overflow-x-hidden bg-[#f3f6fa] text-[#1f2f43]">
+      <div style={scaledPageStyle}>
+        <ProfileNavbar firstName={firstName} avatarDataUrl={avatarDataUrl} />
+        <div className="w-full">
         <div className="mx-auto grid min-w-[1328px] max-w-[1368px] grid-cols-[250px_minmax(0,1fr)] gap-4 px-5 py-4">
           <ProfileSidebar />
 
@@ -106,7 +122,8 @@ export default function ProfilePage() {
           </section>
         </div>
 
-        <Footer forceDesktop />
+          <Footer forceDesktop />
+        </div>
       </div>
     </main>
   );
