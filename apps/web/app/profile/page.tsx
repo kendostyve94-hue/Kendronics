@@ -599,18 +599,18 @@ function ProductQuickGrid() {
   return (
     <div className="grid grid-cols-6 gap-4">
       {quickProducts.map((product) => (
-        <a key={product.title} href={product.href} className="grid min-h-[180px] content-between bg-white p-4 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md">
-          <div className="grid gap-2">
-            <h3 className="text-[15px] font-black leading-5 text-[#111827]">{product.title}</h3>
+        <a key={product.title} href={product.href} className="grid min-h-[180px] grid-rows-[auto_minmax(0,1fr)_auto] bg-white p-3 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md">
+          <h3 className="min-h-10 text-[15px] font-black leading-5 text-[#111827]">{product.title}</h3>
+          <div className="grid min-h-0 place-items-center py-1">
             {product.image ? (
-              <img src={product.image} alt="" className="mx-auto h-20 w-24 object-contain" />
+              <img src={product.image} alt="" className="h-full max-h-[96px] w-full object-contain" />
             ) : (
-              <span className="mx-auto grid h-20 w-24 place-items-center rounded-none" style={{ backgroundColor: `${product.color}22` }}>
-                <span className="h-10 w-10 rounded-none" style={{ border: `4px solid ${product.color}` }} />
+              <span className="grid h-full max-h-[96px] min-h-[82px] w-full place-items-center rounded-none" style={{ backgroundColor: `${product.color}22` }}>
+                <span className="h-14 w-16 rounded-none" style={{ border: `4px solid ${product.color}` }} />
               </span>
             )}
           </div>
-          <p className="text-xs leading-5 text-[#64748b]">{product.subtitle} &gt;</p>
+          <p className="pt-2 text-xs leading-5 text-[#64748b]">{product.subtitle} &gt;</p>
         </a>
       ))}
     </div>
