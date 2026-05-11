@@ -75,6 +75,14 @@ export interface AdminSupplierConnectionTest {
   ok: boolean;
   expectedEnv: string[];
   message: string;
+  diagnostics?: {
+    endpoint: string;
+    method: 'POST';
+    headerNames: string[];
+    apiKeyFingerprint: string;
+    payloadSummary: Record<string, unknown>;
+    payloadKeys: string[];
+  };
   account?: {
     ok: boolean;
     statusCode: number;

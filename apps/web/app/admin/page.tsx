@@ -1307,6 +1307,15 @@ function SupplierConnectionPanel({
               {result.account.point !== undefined ? ` / points ${result.account.point}` : ''}
             </p>
           ) : null}
+          {result.diagnostics ? (
+            <div className="mt-3 grid gap-2 rounded-sm border border-amber-200 bg-white/65 p-3 text-xs">
+              <p>Endpoint: {result.diagnostics.endpoint}</p>
+              <p>Method: {result.diagnostics.method}</p>
+              <p>Headers: {result.diagnostics.headerNames.join(', ')}</p>
+              <p>API key: {result.diagnostics.apiKeyFingerprint}</p>
+              <p>Payload: {JSON.stringify(result.diagnostics.payloadSummary)}</p>
+            </div>
+          ) : null}
           {result.quote ? (
             <p className="mt-2 text-xs">
               Test quote: {formatCurrency(result.quote.manufacturingPrice)} PCB, {formatCurrency(result.quote.shippingPrice)} shipping
