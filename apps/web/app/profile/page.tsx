@@ -50,7 +50,7 @@ const quickProducts: QuickProduct[] = [
 const sidebarGroups = [
   {
     title: 'Commandes',
-    items: ['Verification en cours (2)', 'Paiement en attente (1)', 'Paiement inacheve (0)', 'Statut de production (3)', 'Livraison (1)', 'Termine (8)', 'Gerer les commentaires', 'Remboursements & Litiges (0)', 'Liste des souhaits (3)'],
+    items: ['Mon Espace', 'Verification en cours (2)', 'Paiement en attente (1)', 'Paiement inacheve (0)', 'Statut de production (3)', 'Livraison (1)', 'Termine (8)', 'Gerer les commentaires', 'Remboursements & Litiges (0)', 'Liste des souhaits (3)'],
   },
   {
     title: 'Services',
@@ -223,6 +223,7 @@ function ProfileSidebar({
 
 function viewForSidebarItem(groupTitle: string, item: string): ProfileView {
   if (groupTitle === 'Commandes') {
+    if (item === 'Mon Espace') return null;
     if (item.startsWith('Verification')) return 'verification';
     if (item.startsWith('Paiement en attente')) return 'payment-pending';
     if (item.startsWith('Statut de production')) return 'production';
