@@ -55,11 +55,19 @@ const socialLinks = [
   { name: 'TikTok', href: 'https://www.tiktok.com', src: 'https://cdn.simpleicons.org/tiktok/ffffff', bg: '#111111' },
 ];
 
-export function Footer() {
+export function Footer({ forceDesktop = false }: { forceDesktop?: boolean }) {
+  const footerClassName = (forceDesktop ? 'min-w-[1328px] ' : '') + 'border-t border-[#243447] bg-[#132234]';
+  const containerClassName = forceDesktop ? 'mx-auto max-w-[1368px] px-6 py-6' : 'mx-auto max-w-[1200px] px-4 py-6 sm:px-5 lg:px-6';
+  const mainGridClassName = forceDesktop ? 'grid grid-cols-[1.1fr_2fr] gap-5' : 'grid gap-5 lg:grid-cols-[1.1fr_2fr]';
+  const linkGridClassName = forceDesktop ? 'grid grid-cols-3 gap-6' : 'grid gap-6 sm:grid-cols-3';
+  const logoGridClassName = forceDesktop ? 'mt-6 grid grid-cols-[1fr_1.35fr_auto] items-start gap-6 border-t border-[#243447] pt-5' : 'mt-6 grid items-start gap-6 border-t border-[#243447] pt-5 md:grid-cols-[1fr_1.35fr_auto]';
+  const bottomOuterClassName = forceDesktop ? 'border-t border-[#243447] px-6 py-3' : 'border-t border-[#243447] px-4 py-3 sm:px-5 lg:px-6';
+  const bottomInnerClassName = forceDesktop ? 'mx-auto flex max-w-[1368px] flex-row items-center justify-between gap-2' : 'mx-auto flex max-w-[1200px] flex-col gap-2 sm:flex-row sm:items-center sm:justify-between';
+
   return (
-    <footer id="support" className="border-t border-[#243447] bg-[#132234]">
-      <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-5 lg:px-6">
-        <div className="grid gap-5 lg:grid-cols-[1.1fr_2fr]">
+    <footer id="support" className={footerClassName}>
+      <div className={containerClassName}>
+        <div className={mainGridClassName}>
           <div>
             <h2 className="text-lg font-black text-white">Kendronics</h2>
             <p className="mt-2 max-w-sm text-sm leading-6 text-slate-300">
@@ -78,7 +86,7 @@ export function Footer() {
             </div>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-3">
+          <div className={linkGridClassName}>
             {footerGroups.map((group) => (
               <div key={group.title}>
                 <h3 className="text-xs font-black tracking-[0.18em] text-white">{group.title}</h3>
@@ -96,15 +104,15 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-6 grid items-start gap-6 border-t border-[#243447] pt-5 md:grid-cols-[1fr_1.35fr_auto]">
+        <div className={logoGridClassName}>
           <PaymentLogoStrip />
           <DeliveryLogoStrip />
           <SocialGroup />
         </div>
       </div>
 
-      <div className="border-t border-[#243447] px-4 py-3 sm:px-5 lg:px-6">
-        <div className="mx-auto flex max-w-[1200px] flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className={bottomOuterClassName}>
+        <div className={bottomInnerClassName}>
           <span className="flex items-center gap-2 text-xs text-slate-400">
             <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-8 w-auto" />
             <span>Fabrication assuree par des partenaires externes.</span>

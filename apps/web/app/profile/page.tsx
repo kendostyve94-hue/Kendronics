@@ -106,7 +106,7 @@ export default function ProfilePage() {
           </section>
         </div>
 
-        <Footer />
+        <Footer forceDesktop />
       </div>
     </main>
   );
@@ -114,12 +114,12 @@ export default function ProfilePage() {
 
 function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatarDataUrl: string }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-[#d7d7d7] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.16)]">
-      <div className="mx-auto flex min-h-[64px] max-w-[1368px] items-center gap-3 px-3 py-2 sm:px-5 lg:h-[70px] lg:py-0">
+    <header className="sticky top-0 z-40 min-w-[1328px] border-b border-[#d7d7d7] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.16)]">
+      <div className="mx-auto flex h-[70px] max-w-[1368px] items-center gap-3 px-5">
         <a href="/" className="shrink-0 lg:mr-3" aria-label="Kendronics accueil">
-          <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-9 w-auto sm:h-11 lg:h-12" />
+          <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-12 w-auto" />
         </a>
-        <nav className="flex min-w-0 flex-1 snap-x items-center gap-1 overflow-x-auto text-[13px] text-[#111827] sm:justify-between sm:gap-2 sm:text-[15px]">
+        <nav className="flex min-w-0 flex-1 snap-x items-center justify-between gap-2 text-[15px] text-[#111827]">
           <ProfileNavLink href="/profile" label="Mon compte" />
           <ProfileNavLink href="/quote" label="Devis immediat" />
           <ProfileNavLink href="/quote" label="Assemblage PCB" />
@@ -128,11 +128,11 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
           <ProfileNavLink href="/orders" label="Mes commandes" />
           <ProfileNavLink href="/profile" label="Parametres" />
         </nav>
-        <a href="/cart" className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-10 sm:w-10" aria-label="Panier">
+        <a href="/cart" className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Panier">
           <CartIcon />
           <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-[#14c469] px-1 text-[11px] font-black leading-none text-white">0</span>
         </a>
-        <a href="/profile" className="hidden items-center gap-3 md:flex">
+        <a href="/profile" className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-[#d1d5db] bg-[#f4f4f4]">
             {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : null}
           </span>
@@ -148,7 +148,7 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
 
 function ProfileNavLink({ href, label }: { href: string; label: string }) {
   return (
-    <a href={href} className="grid min-h-[44px] min-w-[84px] snap-start place-items-center px-2 text-center leading-5 hover:text-[#00a651] sm:min-h-[54px] sm:min-w-[92px] sm:leading-6">
+    <a href={href} className="grid min-h-[54px] min-w-[92px] snap-start place-items-center px-2 text-center leading-6 hover:text-[#00a651]">
       {label}
     </a>
   );
