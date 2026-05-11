@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Footer } from '../../components/layout/Footer';
+import { Navbar } from '../../components/layout/Navbar';
 import { clearAuthSession, readAuthSession } from '../../lib/auth-session';
 
 const profileStorageKey = 'kendronics.customer.profile';
@@ -47,7 +48,7 @@ const sidebarGroups = [
   },
   {
     title: 'Mon profil',
-    items: ['Adresse de livraison', 'Parametres', 'Compte de collecte', 'Informations de facturation', 'Solde du compte', 'Reclamations des employes'],
+    items: ['Adresse de livraison', 'Compte de collecte', 'Informations de facturation', 'Solde du compte', 'Reclamations des employes'],
   },
 ];
 
@@ -83,8 +84,8 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f3f6fa] text-[#1f2f43]">
-      <ProfileNavbar firstName={firstName} avatarDataUrl={avatarDataUrl} />
-      <div className="w-full">
+      <Navbar />
+      <div className="w-full pt-[70px]">
         <div className="mx-auto grid min-w-[1328px] max-w-[1368px] grid-cols-[250px_minmax(0,1fr)] gap-4 px-5 py-4">
           <ProfileSidebar />
 
@@ -138,7 +139,7 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
           </span>
           <span className="text-xs leading-5 text-[#64748b]">
             Bonjour, {firstName}
-            <strong className="block text-sm font-black text-[#00a651]">Mon Kendronics</strong>
+            <strong className="block text-sm font-black text-[#00a651]">Mon Espace</strong>
           </span>
         </a>
       </div>

@@ -7,6 +7,7 @@ import { readAuthSession } from '../../lib/auth-session';
 import { useI18n, type TranslationKey } from './LanguageRuntime';
 const ORDER_STORAGE_KEY = 'kendronics.customer.orders';
 const AVATAR_STORAGE_KEY = 'kendronics.customer.avatar';
+const PROFILE_STORAGE_KEY = 'kendronics.customer.profile';
 const apiBaseUrl = getApiBaseUrl();
 
 type NavLabelKey = TranslationKey;
@@ -48,6 +49,15 @@ const searchItems = [
   { labelKey: 'nav.item.profile', href: '/profile', keywords: 'compte account profil utilisateur' },
 ] satisfies SearchItem[];
 
+const profileNavItems = [
+  { label: 'Mon compte', href: '/profile' },
+  { label: 'Devis immediat', href: '/quote' },
+  { label: 'Assemblage PCB', href: '/quote' },
+  { label: 'Impression 3D', href: '/services' },
+  { label: 'Conception PCB', href: '/services' },
+  { label: 'Mes commandes', href: '/orders' },
+] satisfies Array<{ label: string; href: string }>;
+
 export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -57,6 +67,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   const [orders, setOrders] = useState<string[]>([]);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [avatarDataUrl, setAvatarDataUrl] = useState('');
+  const [firstName, setFirstName] = useState('Rafale');
   const headerRef = useRef<HTMLElement | null>(null);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
@@ -90,8 +101,12 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         setOrders([]);
       }
 
-      setIsSignedIn(Boolean(readAuthSession()));
+      const session = readAuthSession();
+      const storedProfile = readStoredProfile();
+      const sessionEmail = readSessionEmail(session?.accessToken ?? '');
+      setIsSignedIn(Boolean(session));
       setAvatarDataUrl(window.localStorage.getItem(AVATAR_STORAGE_KEY) ?? '');
+      setFirstName(firstNameOf(storedProfile.name || emailName(sessionEmail || storedProfile.email || '') || 'Rafale'));
     }
 
     refreshClientState();
@@ -157,10 +172,10 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   return (
     <>
     {hideHeader ? null : <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="border-b border-slate-200 bg-white px-3 py-0 sm:px-6 lg:px-5">
-        <div className="mx-auto flex max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px] lg:max-w-none">
-          <div className="flex min-w-0 items-center gap-7">
-            <a href="/" className="-ml-3 inline-flex min-w-0 items-center sm:ml-0 lg:-ml-1" aria-label="Accueil Kendronics">
+      <div className="border-b border-[#d7d7d7] bg-white px-3 py-0 sm:px-6 lg:px-5">
+        <div className="mx-auto flex h-[70px] max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px] lg:max-w-[1368px]">
+          <div className="flex min-w-0 flex-1 items-center gap-3 lg:gap-5">
+            <a href="/" className="-ml-3 inline-flex shrink-0 items-center sm:ml-0 lg:mr-2" aria-label="Accueil Kendronics">
               <img
                 src="/images/kendronics-logo.png"
                 alt="Kendronics"
@@ -168,18 +183,27 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
               />
             </a>
 
-            <nav className="hidden items-center gap-8 text-[17px] font-normal text-slate-900 lg:flex">
-              <Dropdown label={t('nav.product')} items={productItems} t={t} />
-              <Dropdown label={t('nav.support')} items={supportItems} t={t} />
-              <Dropdown label={t('nav.about')} items={aboutItems} t={t} />
-              <a href="/tracking" className="transition hover:text-[#0f8f6b]">
-                {t('nav.tracking')}
-              </a>
+            <nav className="hidden min-w-0 flex-1 snap-x items-center justify-between gap-2 text-[15px] font-normal text-[#111827] lg:flex">
+              {profileNavItems.map((item) => (
+                <a key={`${item.href}-${item.label}`} href={item.href} className="grid min-h-[54px] min-w-[92px] snap-start place-items-center px-2 text-center leading-6 transition hover:text-[#00a651]">
+                  {item.label}
+                </a>
+              ))}
             </nav>
           </div>
 
-          <nav className="hidden items-center justify-end gap-5 text-[15px] font-normal text-slate-800 lg:flex">
-            <button type="button" className="text-slate-900 transition hover:text-[#0f8f6b]" aria-label={t('nav.search')}>
+          <nav className="hidden shrink-0 items-center justify-end gap-4 text-[15px] font-normal text-slate-800 lg:flex">
+            <button
+              type="button"
+              className="text-slate-900 transition hover:text-[#0f8f6b]"
+              aria-label={t('nav.search')}
+              aria-expanded={isSearchOpen}
+              onClick={() => {
+                setIsSearchOpen((open) => !open);
+                setIsMenuOpen(false);
+                setOpenMobileSection(null);
+              }}
+            >
               <SearchIcon />
             </button>
             <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} />
@@ -187,7 +211,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             <a href="/quote" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-white px-5 font-normal text-[#0877ff] transition hover:border-[#0068e8] hover:bg-[#eef6ff] hover:text-[#0068e8]">
               {t('nav.order')}
             </a>
-            <LoginMenu isSignedIn={isSignedIn} avatarDataUrl={avatarDataUrl} t={t} />
+            <LoginMenu isSignedIn={isSignedIn} avatarDataUrl={avatarDataUrl} firstName={firstName} t={t} />
           </nav>
 
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
@@ -206,8 +230,8 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             </button>
             <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} compact />
             {isSignedIn ? (
-              <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[#0f8f6b] bg-[#e8f7f1] text-xs font-black text-[#0f8f6b]" aria-label={t('nav.openAccount')}>
-                {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : <span>K</span>}
+              <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-sm border border-[#d1d5db] bg-[#0b1724] text-xs font-black text-white" aria-label={t('nav.openAccount')}>
+                <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
               </a>
             ) : (
               <a href="/login" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-[#0877ff] px-3 text-sm font-normal text-white transition hover:border-[#0068e8] hover:bg-[#0068e8]">
@@ -236,7 +260,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         </div>
 
         {isSearchOpen ? (
-          <div className="mx-auto mt-2 max-w-[21.5rem] border-t border-slate-200 pt-2 sm:max-w-[1180px] lg:hidden">
+          <div className="mx-auto max-w-[21.5rem] border-t border-slate-200 py-2 sm:max-w-[1180px] lg:max-w-[1368px]">
             <form
               role="search"
               onSubmit={(event) => {
@@ -402,15 +426,16 @@ function Dropdown({ label, items, t }: { label: string; items: NavItem[]; t: (ke
   );
 }
 
-function LoginMenu({ isSignedIn, avatarDataUrl, t }: { isSignedIn: boolean; avatarDataUrl: string; t: (key: NavLabelKey) => string }) {
+function LoginMenu({ isSignedIn, avatarDataUrl, firstName, t }: { isSignedIn: boolean; avatarDataUrl: string; firstName: string; t: (key: NavLabelKey) => string }) {
   if (isSignedIn) {
     return (
-      <div className="flex items-center gap-2">
-        <a href="/profile" className="inline-flex h-9 items-center rounded-sm border border-[#0f8f6b] bg-[#0f8f6b] px-5 font-normal text-white transition hover:border-[#0b7558] hover:bg-[#0b7558]">
-          {t('nav.connected')}
+      <div className="flex items-center gap-2.5">
+        <a href="/profile" className="grid h-10 w-10 place-items-center overflow-hidden rounded-sm border border-[#d1d5db] bg-[#0b1724]" aria-label={t('nav.openAccount')}>
+          <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
         </a>
-        <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[#0f8f6b] bg-[#e8f7f1] text-xs font-black text-[#0f8f6b]" aria-label={t('nav.openAccount')}>
-          {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : <span>K</span>}
+        <a href="/profile" className="text-xs leading-5 text-[#64748b] transition hover:text-[#0f8f6b]" aria-label={t('nav.openAccount')}>
+          Bonjour, {firstName}
+          <strong className="block text-sm font-black text-[#00a651]">Mon Espace</strong>
         </a>
       </div>
     );
@@ -488,6 +513,33 @@ function CartIcon() {
       <path d="M3 4h2l2.3 11.2a2 2 0 0 0 2 1.6h8.5a2 2 0 0 0 1.9-1.4L21 8H6.2" />
     </svg>
   );
+}
+
+function readStoredProfile(): { name?: string; email?: string } {
+  try {
+    return JSON.parse(window.localStorage.getItem(PROFILE_STORAGE_KEY) ?? '{}') as { name?: string; email?: string };
+  } catch {
+    return {};
+  }
+}
+
+function readSessionEmail(accessToken: string) {
+  if (!accessToken) return '';
+
+  try {
+    const payload = JSON.parse(window.atob(accessToken.split('.')[1] ?? '')) as { email?: string };
+    return payload.email ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function emailName(email: string) {
+  return email.includes('@') ? email.split('@')[0] : '';
+}
+
+function firstNameOf(value: string) {
+  return value.trim().split(/[\s._-]+/).filter(Boolean)[0] || 'Rafale';
 }
 
 function SearchIcon({ small = false }: { small?: boolean }) {
