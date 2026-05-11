@@ -64,6 +64,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileForm>({ name: '', email: '', phone: '', company: '', country: '' });
   const [accountId, setAccountId] = useState('');
   const [avatarDataUrl, setAvatarDataUrl] = useState('');
+  const [activeCommandView, setActiveCommandView] = useState<'verification' | null>(null);
   useEffect(() => {
     const storedProfile = readStoredProfile();
     const sessionProfile = readSessionProfile();
@@ -87,23 +88,29 @@ export default function ProfilePage() {
       <Navbar />
       <div className="w-full pt-[70px]">
         <div className="mx-auto grid min-w-[1328px] max-w-[1368px] grid-cols-[250px_minmax(0,1fr)] gap-4 px-5 py-4">
-          <ProfileSidebar />
+          <ProfileSidebar activeCommandView={activeCommandView} onOpenVerification={() => setActiveCommandView('verification')} />
 
           <section className="min-w-0">
-            <ProductQuickGrid />
+            {activeCommandView === 'verification' ? (
+              <VerificationOrdersSection />
+            ) : (
+              <>
+                <ProductQuickGrid />
 
-            <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_330px] gap-4">
-              <div className="min-w-0">
-                <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} />
-                <ReferralBanner />
-                <StatusStrip />
-                <OrdersTable />
-                <GiftExchange />
-                <ReviewsPanel />
-              </div>
+                <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_330px] gap-4">
+                  <div className="min-w-0">
+                    <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} />
+                    <ReferralBanner />
+                    <StatusStrip />
+                    <OrdersTable />
+                    <GiftExchange />
+                    <ReviewsPanel />
+                  </div>
 
-              <RightRail />
-            </div>
+                  <RightRail />
+                </div>
+              </>
+            )}
           </section>
         </div>
 
@@ -155,7 +162,13 @@ function ProfileNavLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-function ProfileSidebar() {
+function ProfileSidebar({
+  activeCommandView,
+  onOpenVerification,
+}: {
+  activeCommandView: 'verification' | null;
+  onOpenVerification: () => void;
+}) {
   return (
     <aside className="sticky top-[86px] block self-start bg-white shadow-sm ring-1 ring-slate-200">
       {sidebarGroups.map((group) => (
@@ -163,16 +176,96 @@ function ProfileSidebar() {
           <h2 className="px-4 pb-2 pt-5 text-[12px] font-black uppercase text-[#1f2f43]">{group.title}</h2>
           <div className="block px-0 pb-4">
             {group.items.map((item, index) => (
-              <a key={item} href="#" className="flex min-h-[34px] items-center gap-3 rounded-none bg-transparent px-4 text-[13px] text-[#475569] hover:bg-[#f1f8f4] hover:text-[#0f9f6e]">
-                <span className="grid h-4 w-4 shrink-0 place-items-center rounded border border-slate-300 text-[9px] text-slate-400">{index + 1}</span>
+              <button
+                key={item}
+                type="button"
+                onClick={group.title === 'Commandes' && index === 0 ? onOpenVerification : undefined}
+                className={`relative flex min-h-[34px] w-full items-center gap-3 rounded-none bg-transparent px-4 text-left text-[13px] hover:bg-[#f1f8f4] hover:text-[#0f9f6e] ${
+                  group.title === 'Commandes' && index === 0 && activeCommandView === 'verification'
+                    ? 'font-black text-[#009a38]'
+                    : 'text-[#475569]'
+                }`}
+              >
+                <span className={`grid h-4 w-4 shrink-0 place-items-center rounded border text-[9px] ${
+                  group.title === 'Commandes' && index === 0 && activeCommandView === 'verification'
+                    ? 'border-[#24ad5d] text-[#24ad5d]'
+                    : 'border-slate-300 text-slate-400'
+                }`}>{index + 1}</span>
                 <span className="min-w-0 truncate">{item}</span>
                 {index === 0 && group.title === 'Promotions' ? <span className="ml-auto rounded bg-red-500 px-1.5 text-[10px] font-black text-white">2</span> : null}
-              </a>
+                {group.title === 'Commandes' && index === 0 && activeCommandView === 'verification' ? <span className="absolute right-0 top-0 h-full w-[5px] bg-[#27a35a]" /> : null}
+              </button>
             ))}
           </div>
         </section>
       ))}
     </aside>
+  );
+}
+
+function VerificationOrdersSection() {
+  return (
+    <section className="min-h-[690px] bg-white text-[#111827] shadow-sm ring-1 ring-slate-200">
+      <div className="px-6 pt-4">
+        <div className="flex h-11 items-center gap-3 border-b border-[#e5e7eb]">
+          <span className="grid h-6 w-6 place-items-center text-xl text-[#b8b8b8]">▤</span>
+          <h1 className="text-xl font-normal">Mes commandes</h1>
+        </div>
+        <div className="grid h-[112px] grid-cols-8 items-start px-1 pt-6">
+          {[
+            ['0', 'Toutes commandes', false, ''],
+            ['0', 'Vérification en cours', true, ''],
+            ['0', 'Paiement en attente', false, ''],
+            ['0', 'Paiement inachevé', false, ''],
+            ['0', 'Statut de production', false, ''],
+            ['0', "Questions d'ingénierie", false, '▣'],
+            ['0', 'Livraison', false, ''],
+            ['0', 'Commentaires en attente', false, ''],
+          ].map(([count, label, active, icon]) => (
+            <div key={String(label)} className="grid min-h-[72px] place-items-center border-r border-[#e5e7eb] px-3 text-center last:border-r-0">
+              <span className={`text-[28px] font-black leading-7 ${active ? 'text-[#ff5a00]' : 'text-[#1f2937]'}`}>
+                {count}
+                {icon ? <span className="ml-1 align-middle text-[20px] text-[#20b99a]">{icon}</span> : null}
+              </span>
+              <span className={`mt-1 text-[14px] leading-4 ${active ? 'text-[#ff5a00]' : 'text-[#8a8f98]'}`}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t-[16px] border-[#eef0f3] px-6 pb-24 pt-5">
+        <div className="flex h-12 items-center gap-2 border-b border-[#e5e7eb]">
+          <span className="grid h-[22px] w-[22px] place-items-center bg-[#61bd00] text-[18px] font-black leading-none text-white">✓</span>
+          <h2 className="text-xl font-normal text-black">Panier / Examen de votre commande</h2>
+        </div>
+        <div className="flex items-center justify-between py-8 text-xs text-[#8a8f98]">
+          <a href="/quote" className="text-sm text-[#8a8f98] hover:text-[#009a38]">&lt; Ajouter un nouvel article</a>
+          <p>Fuseau horaire de Chine (GMT+8):&nbsp; 11/05/2026 23:50:10(Mise à jour dans 5 mins)</p>
+        </div>
+        <form className="border border-[#e1e1e1] bg-white px-4 py-3">
+          <div className="flex items-center gap-5 text-[13px] text-black">
+            <label className="flex items-center gap-2">
+              <span>Numéro de produit:</span>
+              <input className="h-6 w-[142px] border border-[#cfcfcf] bg-white px-2 outline-none focus:border-[#ff8a00]" />
+            </label>
+            <label className="flex items-center gap-2">
+              <span>Nom du fichier PCB:</span>
+              <input className="h-6 w-[142px] border border-[#cfcfcf] bg-white px-2 outline-none focus:border-[#ff8a00]" />
+            </label>
+            <label className="flex items-center gap-2">
+              <span>Numéros de PO:</span>
+              <input className="h-6 w-[142px] border border-[#cfcfcf] bg-white px-2 outline-none focus:border-[#ff8a00]" />
+            </label>
+            <button type="submit" className="ml-auto h-[27px] min-w-[108px] bg-[#ff8a13] px-5 text-sm font-black text-white ring-1 ring-[#f07800] transition hover:bg-[#f07800]">
+              Recherche
+            </button>
+          </div>
+        </form>
+        <p className="pt-14 text-center text-base font-black text-[#92979d]">
+          Votre recherche ne correspond à aucune liste.
+        </p>
+      </div>
+    </section>
   );
 }
 
