@@ -550,10 +550,10 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
         <p className="text-[#4b5563]">Fermer la session sur cet appareil.</p>
         <button type="button" onClick={logout} className="text-right text-[#00a651]">Se déconnecter</button>
       </div>
-      <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm opacity-35 blur-[1px]">
+      <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
         <h2 className="text-lg">Supprimer le compte</h2>
         <p className="text-[#4b5563]">Suppression définitive du compte et des données associées.</p>
-        <button type="button" disabled className="cursor-not-allowed text-right text-red-600">Supprimer</button>
+        <button type="button" className="text-right text-red-300 transition hover:text-red-600 active:text-red-700">Supprimer</button>
       </div>
     </section>
   );
