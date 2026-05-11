@@ -151,10 +151,10 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
         </nav>
         <a href="/cart" className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Panier">
           <CartIcon />
-          <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-[#14c469] px-1 text-[11px] font-black leading-none text-white">0</span>
+          <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-none bg-[#14c469] px-1 text-[11px] font-black leading-none text-white">0</span>
         </a>
         <a href="/profile" className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-[#d1d5db] bg-[#f4f4f4]">
+          <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-none border border-[#d1d5db] bg-[#f4f4f4]">
             {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : null}
           </span>
           <span className="text-xs leading-5 text-[#64748b]">
@@ -201,11 +201,11 @@ function ProfileSidebar({
                     isActive ? 'font-black text-[#009a38]' : 'text-[#475569]'
                   }`}
                 >
-                  <span className={`grid h-4 w-4 shrink-0 place-items-center rounded border text-[9px] ${
+                  <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-none border text-[9px] ${
                     isActive ? 'border-[#24ad5d] text-[#24ad5d]' : 'border-slate-300 text-slate-400'
                   }`}>{index + 1}</span>
                   <span className="min-w-0 truncate">{item}</span>
-                  {index === 0 && group.title === 'Promotions' ? <span className="ml-auto rounded bg-red-500 px-1.5 text-[10px] font-black text-white">2</span> : null}
+                  {index === 0 && group.title === 'Promotions' ? <span className="ml-auto rounded-none bg-red-500 px-1.5 text-[10px] font-black text-white">2</span> : null}
                   {isActive ? <span className="absolute right-0 top-0 h-full w-[5px] bg-[#27a35a]" /> : null}
                 </button>
               );
@@ -391,7 +391,7 @@ function NotificationsSection() {
           <button className="border-r border-[#b8b8b8] pr-5" type="button">Not. Help center</button>
           <button type="button">Not. Product</button>
         </div>
-        <button type="button" className="rounded border border-[#b8b8b8] px-3 py-2 text-xs">Tout marquer comme lu</button>
+        <button type="button" className="rounded-none border border-[#b8b8b8] px-3 py-2 text-xs">Tout marquer comme lu</button>
       </div>
       <div className="mt-5 bg-white px-5 py-4">
         <div className="grid grid-cols-[1fr_1fr_160px] bg-[#f0f0f0] px-5 py-4 text-xs font-black">
@@ -400,7 +400,7 @@ function NotificationsSection() {
           <span>Heure(GMT+8)</span>
         </div>
         <div className="grid min-h-[136px] place-items-center text-sm text-[#92979d]">
-          <p><span className="mr-3 inline-grid h-6 w-6 place-items-center rounded-full bg-yellow-300 text-white">−</span>Votre liste de notifications est vide.</p>
+          <p><span className="mr-3 inline-grid h-6 w-6 place-items-center rounded-none bg-yellow-300 text-white">−</span>Votre liste de notifications est vide.</p>
         </div>
       </div>
     </section>
@@ -447,7 +447,7 @@ function AddressFields() {
 function ChoiceBox({ label, active }: { label: string; active?: boolean }) {
   return (
     <button type="button" className={`flex h-10 items-center gap-4 border px-4 text-sm font-black ${active ? 'border-[#11b957] bg-[#eefbf4]' : 'border-[#d6d6d6]'}`}>
-      <span className={`h-5 w-5 rounded-full border ${active ? 'border-[#11b957] bg-[#11b957]' : 'border-[#cfd3d8]'}`} />
+      <span className={`h-5 w-5 rounded-none border ${active ? 'border-[#11b957] bg-[#11b957]' : 'border-[#cfd3d8]'}`} />
       {label}
     </button>
   );
@@ -463,7 +463,7 @@ function InviteSection() {
           <div className="mx-auto mt-12 grid max-w-[760px] grid-cols-3 gap-16 text-left text-[#92979d]">
             {['Parrainer un ami sur PCBWay', 'Des amis ont prépayé, vous gagnez un coupon de réduction de 10 $', "Lorsqu'un ami dépense de l'argent, vous gagnez 5% des dépenses"].map((text, index) => (
               <div key={text}>
-                <span className={`mx-auto block h-[96px] w-[96px] rounded-full ${index === 0 ? 'bg-[#2cc9bb]' : index === 1 ? 'bg-[#53c7d8]' : 'bg-[#8d79b9]'}`} />
+                <span className={`mx-auto block h-[96px] w-[96px] rounded-none ${index === 0 ? 'bg-[#2cc9bb]' : index === 1 ? 'bg-[#53c7d8]' : 'bg-[#8d79b9]'}`} />
                 <p className="mt-5 text-base leading-5">{text}</p>
               </div>
             ))}
@@ -498,7 +498,7 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
       <div className="grid grid-cols-[140px_1fr_160px] gap-6 border-b border-[#e5e7eb] py-6">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div className="grid gap-4 text-sm">
-          <p className="text-base">{profile.name || 'Loïc NIANZE KENDONG'} <span className="rounded bg-[#a08d70] px-2 py-1 text-xs font-black text-white">Société</span></p>
+          <p className="text-base">{profile.name || 'Loïc NIANZE KENDONG'} <span className="rounded-none bg-[#a08d70] px-2 py-1 text-xs font-black text-white">Société</span></p>
           <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
           <p className="text-[#6b7280]">Pays/Région <span className="ml-20 text-black">FRANCE</span></p>
           <p className="text-[#6b7280]">No de téléphone <span className="ml-16 text-black">{profile.phone || '+33753970427'}</span></p>
@@ -605,8 +605,8 @@ function ProductQuickGrid() {
             {product.image ? (
               <img src={product.image} alt="" className="mx-auto h-20 w-24 object-contain" />
             ) : (
-              <span className="mx-auto grid h-20 w-24 place-items-center rounded-full" style={{ backgroundColor: `${product.color}22` }}>
-                <span className="h-10 w-10 rounded-full" style={{ border: `4px solid ${product.color}` }} />
+              <span className="mx-auto grid h-20 w-24 place-items-center rounded-none" style={{ backgroundColor: `${product.color}22` }}>
+                <span className="h-10 w-10 rounded-none" style={{ border: `4px solid ${product.color}` }} />
               </span>
             )}
           </div>
@@ -663,7 +663,7 @@ function SmallInfo({ label, value, action, danger }: { label: string; value: str
   return (
     <div className="flex min-h-[48px] items-center justify-between bg-[#f8fafc] px-4 text-xs text-[#475569]">
       <span>{label}</span>
-      <span className={danger ? 'rounded bg-red-500 px-1.5 py-0.5 font-black text-white' : 'font-black text-[#ff5a00]'}>{value}</span>
+      <span className={danger ? 'rounded-none bg-red-500 px-1.5 py-0.5 font-black text-white' : 'font-black text-[#ff5a00]'}>{value}</span>
       {action ? <a href="#" className="text-[#475569]">{action}</a> : null}
     </div>
   );
@@ -676,7 +676,7 @@ function ReferralBanner() {
         <p className="text-2xl font-black italic leading-none">Looking For New Referral Opportunities?</p>
         <p className="mt-2 text-xs">Refer others and explore the benefits of sharing our services.</p>
       </div>
-      <a href="#" className="shrink-0 rounded-full bg-white px-6 py-3 text-xs font-black text-[#ff5a00]">Sign Up Now</a>
+      <a href="#" className="shrink-0 rounded-none bg-white px-6 py-3 text-xs font-black text-[#ff5a00]">Sign Up Now</a>
     </section>
   );
 }
@@ -729,7 +729,7 @@ function OrdersTable() {
               {row.map((cell, index) => (
                 <td key={`${row[0]}-${cell}`} className={`py-3 ${index === 4 ? statusColor(cell) : ''}`}>{cell}</td>
               ))}
-              <td className="py-3"><a href="/orders" className="rounded-full border border-blue-400 px-3 py-1 text-blue-600">Voir</a></td>
+              <td className="py-3"><a href="/orders" className="rounded-none border border-blue-400 px-3 py-1 text-blue-600">Voir</a></td>
             </tr>
           ))}
         </tbody>
@@ -750,7 +750,7 @@ function GiftExchange() {
       <div className="mt-4 grid grid-cols-5 gap-4">
         {gifts.map((gift, index) => (
           <div key={gift} className="text-center">
-            <div className="mx-auto h-16 w-24 rounded bg-gradient-to-br from-[#0f9f6e] to-[#07182c]" />
+            <div className="mx-auto h-16 w-24 rounded-none bg-gradient-to-br from-[#0f9f6e] to-[#07182c]" />
             <p className="mt-2 text-xs text-[#475569]">{gift}</p>
           </div>
         ))}
@@ -767,11 +767,11 @@ function ReviewsPanel() {
           <span className="border-b-2 border-[#22c55e] pb-2 text-[#16a34a]">Show client</span>
           <span>Programme Partenaire</span>
         </div>
-        <a href="#" className="rounded bg-[#0f9f6e] px-5 py-2 text-xs font-black text-white">Laisser un commentaire</a>
+        <a href="#" className="rounded-none bg-[#0f9f6e] px-5 py-2 text-xs font-black text-white">Laisser un commentaire</a>
       </div>
       <div className="mt-5 grid grid-cols-3 gap-4">
         {['Engineer', 'Kain', 'COSTA'].map((name) => (
-          <article key={name} className="min-h-[150px] rounded bg-[#f8fafc] p-4">
+          <article key={name} className="min-h-[150px] rounded-none bg-[#f8fafc] p-4">
             <p className="text-xs font-black">{name}</p>
             <p className="mt-2 text-[#0f9f6e]">★★★★★</p>
             <p className="mt-3 text-xs leading-5 text-[#475569]">Tres bon suivi, devis clair et progression de commande facile a comprendre.</p>
@@ -800,7 +800,7 @@ function PromoBanner({ title, price, dark }: { title: string; price: string; dar
     <article className={`${dark ? 'bg-[#07184a] text-white' : 'bg-white text-[#1f2937]'} min-h-[112px] overflow-hidden p-4 shadow-sm ring-1 ring-slate-200`}>
       <p className="text-lg font-black">{title}</p>
       <p className="mt-2 text-sm">ONLY <span className="text-3xl font-black text-[#ff9f00]">{price}</span> IN TOTAL</p>
-      <div className="mt-3 h-8 rounded bg-gradient-to-r from-[#0fe36f] to-[#03b7e8]" />
+      <div className="mt-3 h-8 rounded-none bg-gradient-to-r from-[#0fe36f] to-[#03b7e8]" />
     </article>
   );
 }
@@ -828,7 +828,7 @@ function Avatar({ avatarDataUrl, size }: { avatarDataUrl: string; size: 'medium'
   const className = size === 'large' ? 'h-16 w-16 border-2 border-[#d89b2b]' : 'h-20 w-20 border border-slate-200';
 
   return (
-    <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-slate-200 ${className}`}>
+    <span className={`grid shrink-0 place-items-center overflow-hidden rounded-none bg-slate-200 ${className}`}>
       {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : <span className="h-full w-full bg-gradient-to-br from-slate-200 to-slate-400" />}
     </span>
   );
