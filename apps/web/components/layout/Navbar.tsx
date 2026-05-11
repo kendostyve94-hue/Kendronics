@@ -50,7 +50,6 @@ const searchItems = [
 ] satisfies SearchItem[];
 
 const profileNavItems = [
-  { label: 'Mon compte', href: '/profile' },
   { label: 'Devis immediat', href: '/quote' },
   { label: 'Assemblage PCB', href: '/quote' },
   { label: 'Impression 3D', href: '/services' },
@@ -183,16 +182,16 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
               />
             </a>
 
-            <nav className="hidden min-w-0 flex-1 snap-x items-center justify-between gap-2 text-[15px] font-normal text-[#111827] lg:flex">
+            <nav className="hidden min-w-0 flex-1 snap-x items-center justify-between gap-1 text-[14px] font-normal text-[#111827] xl:gap-2 xl:text-[15px] lg:flex">
               {profileNavItems.map((item) => (
-                <a key={`${item.href}-${item.label}`} href={item.href} className="grid min-h-[54px] min-w-[92px] snap-start place-items-center px-2 text-center leading-6 transition hover:text-[#00a651]">
+                <a key={`${item.href}-${item.label}`} href={item.href} className="grid min-h-[54px] min-w-[84px] snap-start place-items-center px-1 text-center leading-6 transition hover:text-[#00a651] xl:min-w-[92px] xl:px-2">
                   {item.label}
                 </a>
               ))}
             </nav>
           </div>
 
-          <nav className="hidden shrink-0 items-center justify-end gap-4 text-[15px] font-normal text-slate-800 lg:flex">
+          <nav className="hidden shrink-0 items-center justify-end gap-3 text-[15px] font-normal text-slate-800 xl:gap-4 lg:flex">
             <button
               type="button"
               className="text-slate-900 transition hover:text-[#0f8f6b]"
@@ -208,9 +207,6 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             </button>
             <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} />
             <CartLink href={cartHref} count={orders.length} />
-            <a href="/quote" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-white px-5 font-normal text-[#0877ff] transition hover:border-[#0068e8] hover:bg-[#eef6ff] hover:text-[#0068e8]">
-              {t('nav.order')}
-            </a>
             <LoginMenu isSignedIn={isSignedIn} avatarDataUrl={avatarDataUrl} firstName={firstName} t={t} />
           </nav>
 
@@ -429,13 +425,13 @@ function Dropdown({ label, items, t }: { label: string; items: NavItem[]; t: (ke
 function LoginMenu({ isSignedIn, avatarDataUrl, firstName, t }: { isSignedIn: boolean; avatarDataUrl: string; firstName: string; t: (key: NavLabelKey) => string }) {
   if (isSignedIn) {
     return (
-      <div className="flex items-center gap-2.5">
+      <div className="flex min-w-0 items-center gap-2.5">
         <a href="/profile" className="grid h-10 w-10 place-items-center overflow-hidden rounded-sm border border-[#d1d5db] bg-[#0b1724]" aria-label={t('nav.openAccount')}>
           <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
         </a>
-        <a href="/profile" className="text-xs leading-5 text-[#64748b] transition hover:text-[#0f8f6b]" aria-label={t('nav.openAccount')}>
-          Bonjour, {firstName}
-          <strong className="block text-sm font-black text-[#00a651]">Mon Espace</strong>
+        <a href="/profile" className="min-w-0 max-w-[8.5rem] text-xs leading-5 text-[#64748b] transition hover:text-[#0f8f6b] xl:max-w-[9.5rem]" aria-label={t('nav.openAccount')}>
+          <span className="block truncate">Bonjour, {firstName}</span>
+          <strong className="block truncate text-sm font-black text-[#00a651]">Mon Espace</strong>
         </a>
       </div>
     );
