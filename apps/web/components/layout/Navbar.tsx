@@ -230,8 +230,9 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
                 <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
               </a>
             ) : (
-              <a href="/login" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-[#0877ff] px-3 text-sm font-normal text-white transition hover:border-[#0068e8] hover:bg-[#0068e8]">
-                {t('nav.login')}
+              <a href="/login" className="inline-flex h-9 items-center gap-1.5 px-1 text-xs font-semibold text-[#111827] transition hover:text-[#0f8f6b]" aria-label={t('nav.login')}>
+                <UserIcon />
+                <span>Connexion</span>
               </a>
             )}
             <button
@@ -439,9 +440,21 @@ function LoginMenu({ isSignedIn, avatarDataUrl, firstName, t }: { isSignedIn: bo
 
   return (
     <div className="group relative">
-      <a href="/login" className="inline-flex h-9 items-center rounded-sm border border-[#0877ff] bg-[#0877ff] px-5 font-normal text-white transition hover:border-[#0068e8] hover:bg-[#0068e8]">
-        {t('nav.login')}
-      </a>
+      <div className="flex min-w-[170px] items-center gap-2 text-[#111827]">
+        <a href="/login" className="grid h-9 w-9 place-items-center text-[#111827] transition hover:text-[#0f8f6b]" aria-label={t('nav.login')}>
+          <UserIcon />
+        </a>
+        <div className="min-w-0 text-[13px] leading-5">
+          <p className="whitespace-nowrap font-semibold">
+            <a href="/login" className="transition hover:text-[#0f8f6b]">Se connecter</a>
+            <span className="px-1 text-[#6b7280]">|</span>
+            <a href="/register" className="transition hover:text-[#0f8f6b]">S’inscrire</a>
+          </p>
+          <a href="/profile" className="block whitespace-nowrap transition hover:text-[#0f8f6b]">
+            Mon PCBWay <span className="text-[#8a8f98]">(0)</span>
+          </a>
+        </div>
+      </div>
       <div className="invisible absolute right-0 top-full min-w-60 translate-y-2 border border-slate-200 bg-[#edf3f8] p-4 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
         <span className="absolute -top-2 right-8 h-4 w-4 rotate-45 border-l border-t border-slate-200 bg-[#edf3f8]" />
         <a href="/login" className="flex h-10 items-center justify-center rounded-sm bg-[#0877ff] text-sm font-semibold text-white hover:bg-[#0068e8]">
