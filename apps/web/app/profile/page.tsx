@@ -31,6 +31,7 @@ type ProfileView =
   | 'production'
   | 'delivery'
   | 'completed'
+  | 'comments'
   | 'notifications'
   | 'shipping-address'
   | 'invite'
@@ -229,6 +230,7 @@ function viewForSidebarItem(groupTitle: string, item: string): ProfileView {
     if (item.startsWith('Statut de production')) return 'production';
     if (item.startsWith('Livraison')) return 'delivery';
     if (item.startsWith('Termine')) return 'completed';
+    if (item === 'Gerer les commentaires') return 'comments';
   }
 
   if (groupTitle === 'Promotions') {
@@ -262,6 +264,7 @@ function ProfileViewContent({
   if (view === 'production') return <OrderReviewSection activeKey="production" title="Progrès de la Fabrication" mode="table" />;
   if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="table" />;
   if (view === 'completed') return <OrderReviewSection activeKey="completed" title="Commande complétée" mode="table" />;
+  if (view === 'comments') return <CommentsManagementSection />;
   if (view === 'notifications') return <NotificationsSection />;
   if (view === 'shipping-address') return <AddressFormSection title="Adresse de livraison" note="Veuillez entrer votre nouveau contact/adresse" />;
   if (view === 'invite') return <InviteSection />;
@@ -271,7 +274,7 @@ function ProfileViewContent({
   return null;
 }
 
-type OrderStatusKey = 'all' | 'verification' | 'payment-pending' | 'production' | 'delivery' | 'completed';
+type OrderStatusKey = 'all' | 'verification' | 'payment-pending' | 'production' | 'delivery' | 'completed' | 'comments';
 
 const orderStatuses: Array<{ key: OrderStatusKey | 'payment-unfinished' | 'engineering' | 'comments'; label: string; icon?: string }> = [
   { key: 'all', label: 'Toutes commandes' },
@@ -385,6 +388,24 @@ function SearchField({ label }: { label: string }) {
 
 function EmptyResult() {
   return <p className="pt-14 text-center text-base font-black text-[#92979d]">Votre recherche ne correspond à aucune liste.</p>;
+}
+
+function CommentsManagementSection() {
+  return (
+    <section className="min-h-[690px] bg-white text-[#111827] shadow-sm ring-1 ring-slate-200">
+      <OrderStatusHeader activeKey="comments" />
+      <div className="border-t-[16px] border-[#eef0f3] px-6 pb-24 pt-5">
+        <h2 className="text-xl font-normal text-black">Gérer les commentaires</h2>
+        <div className="mt-3 grid max-w-[906px] grid-cols-[1.2fr_1.2fr_0.6fr] bg-[#f0f0f0] px-3 py-3 text-xs text-black">
+          <span>Produit</span>
+          <span>Avis</span>
+          <span>Action</span>
+        </div>
+        <EmptyResult />
+        <div className="mt-20 h-10 max-w-[906px] bg-[#f7f7f7]" />
+      </div>
+    </section>
+  );
 }
 
 function NotificationsSection() {
