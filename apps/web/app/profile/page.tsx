@@ -24,6 +24,19 @@ type QuickProduct = {
   color: string;
 };
 
+type ProfileView =
+  | 'verification'
+  | 'payment-pending'
+  | 'production'
+  | 'delivery'
+  | 'completed'
+  | 'notifications'
+  | 'shipping-address'
+  | 'invite'
+  | 'billing'
+  | 'settings'
+  | null;
+
 const quickProducts: QuickProduct[] = [
   { title: 'Prototype PCB', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-standard-pcb.png', color: '#22c55e' },
   { title: 'FPC/Rigid-Flex', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-fpc-rigid-flex.png', color: '#ff7a1a' },
@@ -48,7 +61,7 @@ const sidebarGroups = [
   },
   {
     title: 'Mon profil',
-    items: ['Adresse de livraison', 'Compte de collecte', 'Informations de facturation', 'Solde du compte', 'Reclamations des employes'],
+    items: ['Adresse de livraison', 'Compte de collecte', 'Informations de facturation', 'Solde du compte', 'Reclamations des employes', 'Parametres'],
   },
 ];
 
@@ -64,7 +77,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileForm>({ name: '', email: '', phone: '', company: '', country: '' });
   const [accountId, setAccountId] = useState('');
   const [avatarDataUrl, setAvatarDataUrl] = useState('');
-  const [activeCommandView, setActiveCommandView] = useState<'verification' | null>(null);
+  const [activeProfileView, setActiveProfileView] = useState<ProfileView>(null);
   useEffect(() => {
     const storedProfile = readStoredProfile();
     const sessionProfile = readSessionProfile();
@@ -88,11 +101,11 @@ export default function ProfilePage() {
       <Navbar />
       <div className="w-full pt-[70px]">
         <div className="mx-auto grid min-w-[1328px] max-w-[1368px] grid-cols-[250px_minmax(0,1fr)] gap-4 px-5 py-4">
-          <ProfileSidebar activeCommandView={activeCommandView} onOpenVerification={() => setActiveCommandView('verification')} />
+          <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} />
 
           <section className="min-w-0">
-            {activeCommandView === 'verification' ? (
-              <VerificationOrdersSection />
+            {activeProfileView ? (
+              <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} />
             ) : (
               <>
                 <ProductQuickGrid />
@@ -163,11 +176,11 @@ function ProfileNavLink({ href, label }: { href: string; label: string }) {
 }
 
 function ProfileSidebar({
-  activeCommandView,
-  onOpenVerification,
+  activeProfileView,
+  onSelectView,
 }: {
-  activeCommandView: 'verification' | null;
-  onOpenVerification: () => void;
+  activeProfileView: ProfileView;
+  onSelectView: (view: ProfileView) => void;
 }) {
   return (
     <aside className="sticky top-[86px] block self-start bg-white shadow-sm ring-1 ring-slate-200">
@@ -175,32 +188,345 @@ function ProfileSidebar({
         <section key={group.title} className="border-b border-slate-200 last:border-b-0">
           <h2 className="px-4 pb-2 pt-5 text-[12px] font-black uppercase text-[#1f2f43]">{group.title}</h2>
           <div className="block px-0 pb-4">
-            {group.items.map((item, index) => (
-              <button
-                key={item}
-                type="button"
-                onClick={group.title === 'Commandes' && index === 0 ? onOpenVerification : undefined}
-                className={`relative flex min-h-[34px] w-full items-center gap-3 rounded-none bg-transparent px-4 text-left text-[13px] hover:bg-[#f1f8f4] hover:text-[#0f9f6e] ${
-                  group.title === 'Commandes' && index === 0 && activeCommandView === 'verification'
-                    ? 'font-black text-[#009a38]'
-                    : 'text-[#475569]'
-                }`}
-              >
-                <span className={`grid h-4 w-4 shrink-0 place-items-center rounded border text-[9px] ${
-                  group.title === 'Commandes' && index === 0 && activeCommandView === 'verification'
-                    ? 'border-[#24ad5d] text-[#24ad5d]'
-                    : 'border-slate-300 text-slate-400'
-                }`}>{index + 1}</span>
-                <span className="min-w-0 truncate">{item}</span>
-                {index === 0 && group.title === 'Promotions' ? <span className="ml-auto rounded bg-red-500 px-1.5 text-[10px] font-black text-white">2</span> : null}
-                {group.title === 'Commandes' && index === 0 && activeCommandView === 'verification' ? <span className="absolute right-0 top-0 h-full w-[5px] bg-[#27a35a]" /> : null}
-              </button>
-            ))}
+            {group.items.map((item, index) => {
+              const view = viewForSidebarItem(group.title, item);
+              const isActive = view !== null && view === activeProfileView;
+
+              return (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => onSelectView(view)}
+                  className={`relative flex min-h-[34px] w-full items-center gap-3 rounded-none bg-transparent px-4 text-left text-[13px] hover:bg-[#f1f8f4] hover:text-[#0f9f6e] ${
+                    isActive ? 'font-black text-[#009a38]' : 'text-[#475569]'
+                  }`}
+                >
+                  <span className={`grid h-4 w-4 shrink-0 place-items-center rounded border text-[9px] ${
+                    isActive ? 'border-[#24ad5d] text-[#24ad5d]' : 'border-slate-300 text-slate-400'
+                  }`}>{index + 1}</span>
+                  <span className="min-w-0 truncate">{item}</span>
+                  {index === 0 && group.title === 'Promotions' ? <span className="ml-auto rounded bg-red-500 px-1.5 text-[10px] font-black text-white">2</span> : null}
+                  {isActive ? <span className="absolute right-0 top-0 h-full w-[5px] bg-[#27a35a]" /> : null}
+                </button>
+              );
+            })}
           </div>
         </section>
       ))}
     </aside>
   );
+}
+
+function viewForSidebarItem(groupTitle: string, item: string): ProfileView {
+  if (groupTitle === 'Commandes') {
+    if (item.startsWith('Verification')) return 'verification';
+    if (item.startsWith('Paiement en attente')) return 'payment-pending';
+    if (item.startsWith('Statut de production')) return 'production';
+    if (item.startsWith('Livraison')) return 'delivery';
+    if (item.startsWith('Termine')) return 'completed';
+  }
+
+  if (groupTitle === 'Promotions') {
+    if (item === 'Notifications') return 'notifications';
+    if (item === 'Inviter') return 'invite';
+  }
+
+  if (groupTitle === 'Mon profil') {
+    if (item === 'Adresse de livraison') return 'shipping-address';
+    if (item === 'Informations de facturation') return 'billing';
+    if (item === 'Parametres') return 'settings';
+  }
+
+  return null;
+}
+
+function ProfileViewContent({
+  view,
+  profile,
+  userId,
+  avatarDataUrl,
+}: {
+  view: Exclude<ProfileView, null>;
+  profile: ProfileForm;
+  userId: string;
+  avatarDataUrl: string;
+}) {
+  if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Panier / Examen de votre commande" mode="review" />;
+  if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Panier / Examen de votre commande" mode="review" />;
+  if (view === 'production') return <OrderReviewSection activeKey="production" title="Progrès de la Fabrication" mode="table" />;
+  if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="table" />;
+  if (view === 'completed') return <OrderReviewSection activeKey="completed" title="Commande complétée" mode="table" />;
+  if (view === 'notifications') return <NotificationsSection />;
+  if (view === 'shipping-address') return <AddressFormSection title="Adresse de livraison" note="Veuillez entrer votre nouveau contact/adresse" />;
+  if (view === 'invite') return <InviteSection />;
+  if (view === 'billing') return <AddressFormSection title="Informations de facturation" billing />;
+  if (view === 'settings') return <SettingsSection profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} />;
+
+  return null;
+}
+
+type OrderStatusKey = 'verification' | 'payment-pending' | 'production' | 'delivery' | 'completed';
+
+const orderStatuses: Array<{ key: OrderStatusKey | 'all' | 'payment-unfinished' | 'engineering' | 'comments'; label: string; icon?: string }> = [
+  { key: 'all', label: 'Toutes commandes' },
+  { key: 'verification', label: 'Vérification en cours' },
+  { key: 'payment-pending', label: 'Paiement en attente' },
+  { key: 'payment-unfinished', label: 'Paiement inachevé' },
+  { key: 'production', label: 'Statut de production' },
+  { key: 'engineering', label: "Questions d'ingénierie", icon: '▣' },
+  { key: 'delivery', label: 'Livraison' },
+  { key: 'comments', label: 'Commentaires en attente' },
+];
+
+function OrderReviewSection({ activeKey, title, mode }: { activeKey: OrderStatusKey; title: string; mode: 'review' | 'table' }) {
+  return (
+    <section className="min-h-[690px] bg-white text-[#111827] shadow-sm ring-1 ring-slate-200">
+      <OrderStatusHeader activeKey={activeKey} />
+
+      <div className="border-t-[16px] border-[#eef0f3] px-6 pb-24 pt-5">
+        <div className={`${mode === 'review' ? 'flex h-12 items-center gap-2 border-b border-[#e5e7eb]' : 'flex h-10 items-center gap-2'}`}>
+          <span className="grid h-[22px] w-[22px] place-items-center bg-[#61bd00] text-[18px] font-black leading-none text-white">{mode === 'review' ? '✓' : '⚙'}</span>
+          <h2 className="text-xl font-normal text-black">{title}</h2>
+        </div>
+
+        {mode === 'review' ? <ReviewSearchPanel /> : <OrderTableSearchPanel />}
+      </div>
+    </section>
+  );
+}
+
+function OrderStatusHeader({ activeKey }: { activeKey: OrderStatusKey }) {
+  return (
+    <div className="px-6 pt-4">
+      <div className="flex h-11 items-center gap-3 border-b border-[#e5e7eb]">
+        <span className="grid h-6 w-6 place-items-center text-xl text-[#b8b8b8]">▤</span>
+        <h1 className="text-xl font-normal">Mes commandes</h1>
+      </div>
+      <div className="grid h-[112px] grid-cols-8 items-start px-1 pt-6">
+        {orderStatuses.map((status) => {
+          const active = status.key === activeKey;
+
+          return (
+            <div key={status.key} className="grid min-h-[72px] place-items-center border-r border-[#e5e7eb] px-3 text-center last:border-r-0">
+              <span className={`text-[28px] font-black leading-7 ${active ? 'text-[#ff5a00]' : 'text-[#1f2937]'}`}>
+                0
+                {status.icon ? <span className="ml-1 align-middle text-[20px] text-[#20b99a]">{status.icon}</span> : null}
+              </span>
+              <span className={`mt-1 text-[14px] leading-4 ${active ? 'text-[#ff5a00]' : 'text-[#8a8f98]'}`}>{status.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ReviewSearchPanel() {
+  return (
+    <>
+      <div className="flex items-center justify-between py-8 text-xs text-[#8a8f98]">
+        <a href="/quote" className="text-sm text-[#8a8f98] hover:text-[#009a38]">&lt; Ajouter un nouvel article</a>
+        <p>Fuseau horaire de Chine (GMT+8):&nbsp; 12/05/2026 00:12:46(Mise à jour dans 5 mins)</p>
+      </div>
+      <form className="border border-[#e1e1e1] bg-white px-4 py-3" onSubmit={(event) => event.preventDefault()}>
+        <div className="flex items-center gap-5 text-[13px] text-black">
+          <SearchField label="Numéro de produit:" />
+          <SearchField label="Nom du fichier PCB:" />
+          <SearchField label="Numéros de PO:" />
+          <button type="submit" className="ml-auto h-[27px] min-w-[108px] bg-[#ff8a13] px-5 text-sm font-black text-white ring-1 ring-[#f07800] transition hover:bg-[#f07800]">
+            Recherche
+          </button>
+        </div>
+      </form>
+      <EmptyResult />
+    </>
+  );
+}
+
+function OrderTableSearchPanel() {
+  return (
+    <>
+      <form className="mt-4 max-w-[906px] border border-[#e1e1e1] bg-white px-4 py-3" onSubmit={(event) => event.preventDefault()}>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-black">
+          <SearchField label="ID Commande:" />
+          <SearchField label="Nom du fichier PCB:" />
+          <SearchField label="Numéros de PO:" />
+          <button type="submit" className="ml-4 h-[27px] min-w-[108px] bg-[#ff8a13] px-5 text-sm font-black text-white ring-1 ring-[#f07800] transition hover:bg-[#f07800]">
+            Recherche
+          </button>
+        </div>
+      </form>
+      <div className="mt-3 grid max-w-[906px] grid-cols-4 bg-[#f0f0f0] px-3 py-3 text-xs text-black">
+        <span>Produit</span>
+        <span>Action du Produit</span>
+        <span>Status de la commande</span>
+        <span>Action de la commande</span>
+      </div>
+      <EmptyResult />
+      <div className="mt-20 h-10 max-w-[906px] bg-[#f7f7f7]" />
+    </>
+  );
+}
+
+function SearchField({ label }: { label: string }) {
+  return (
+    <label className="flex items-center gap-2">
+      <span>{label}</span>
+      <input className="h-6 w-[142px] border border-[#cfcfcf] bg-white px-2 outline-none focus:border-[#ff8a00]" />
+    </label>
+  );
+}
+
+function EmptyResult() {
+  return <p className="pt-14 text-center text-base font-black text-[#92979d]">Votre recherche ne correspond à aucune liste.</p>;
+}
+
+function NotificationsSection() {
+  return (
+    <section className="min-h-[690px] bg-[#eef0f3] p-5 text-black shadow-sm ring-1 ring-slate-200">
+      <h1 className="text-xl font-normal">Notifications</h1>
+      <div className="mt-5 flex h-[58px] items-center justify-between bg-white px-5 ring-1 ring-[#e5e7eb]">
+        <div className="flex items-center gap-5 text-sm">
+          <button className="border-r border-[#b8b8b8] pr-5 text-[#ff5a00]" type="button">Tout</button>
+          <button className="border-r border-[#b8b8b8] pr-5" type="button">Not. Help center</button>
+          <button type="button">Not. Product</button>
+        </div>
+        <button type="button" className="rounded border border-[#b8b8b8] px-3 py-2 text-xs">Tout marquer comme lu</button>
+      </div>
+      <div className="mt-5 bg-white px-5 py-4">
+        <div className="grid grid-cols-[1fr_1fr_160px] bg-[#f0f0f0] px-5 py-4 text-xs font-black">
+          <span>Notifications</span>
+          <span>Article</span>
+          <span>Heure(GMT+8)</span>
+        </div>
+        <div className="grid min-h-[136px] place-items-center text-sm text-[#92979d]">
+          <p><span className="mr-3 inline-grid h-6 w-6 place-items-center rounded-full bg-yellow-300 text-white">−</span>Votre liste de notifications est vide.</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AddressFormSection({ title, note, billing }: { title: string; note?: string; billing?: boolean }) {
+  return (
+    <section className="min-h-[690px] bg-white p-5 text-black shadow-sm ring-1 ring-slate-200">
+      <div className="flex items-end gap-3">
+        <h1 className="text-xl font-normal">{title}</h1>
+        {note ? <span className="text-xs text-[#9ca3af]">{note}</span> : null}
+      </div>
+      <div className="mt-3 bg-[#fff8e8] px-3 py-2 text-xs ring-1 ring-[#f4dfb4]">
+        <span className="mr-2 text-lg text-[#ff8a00]">▲</span>
+        {billing
+          ? "La mise à jour de l'adresse postale ne s'applique pas aux commandes confirmées (payées), cela inclus également les commandes ayant le statut « paiement incomplet »."
+          : "La mise à jour des informations d'adresse ne s'applique pas aux commandes déjà générées. Veuillez contacter votre attaché commercial pour mettre à jour les informations d'adresse."}
+      </div>
+      {billing ? <p className="mt-5 text-xs text-[#6b7280]">Veuillez-vous assurer que tous les détails de facturation sont exacts et complets. Ils apparaîtront sur les factures officielles de vos achats.</p> : null}
+      <AddressFields />
+      <p className="mt-2 text-xs text-[#6b7280]">
+        {billing
+          ? "Si votre adresse de facturation n’est pas enregistrée, veuillez contacter fr-sales03@pcbway.com pour assistance."
+          : "Si vous n’arrivez pas à enregistrer votre adresse postale, veuillez contacter fr-sales03@pcbway.com."}
+      </p>
+      <button type="button" className="mt-5 bg-[#1baa4f] px-6 py-2 text-sm font-black text-white">Soumettre</button>
+    </section>
+  );
+}
+
+function AddressFields() {
+  return (
+    <form className="mt-8 grid max-w-[720px] grid-cols-2 gap-x-7 gap-y-4">
+      <ChoiceBox label="Société" />
+      <ChoiceBox label="Particulier" active />
+      {['Prénom *', 'Nom de famille *', 'Adresse de la rue *', 'Appartement, chambre, département, bâtiment, étage, etc. (facultatif)', 'Pays/Région *', 'État/Province/Région', 'Ville *', 'Zip/Code postal', "Numéro TVA/d'identification fiscale", 'Téléphone mobile *'].map((placeholder) => (
+        <input key={placeholder} placeholder={placeholder} className="h-[46px] border border-[#d6d6d6] px-5 text-sm outline-none placeholder:text-[#b8bec8] focus:border-[#18b75b]" />
+      ))}
+    </form>
+  );
+}
+
+function ChoiceBox({ label, active }: { label: string; active?: boolean }) {
+  return (
+    <button type="button" className={`flex h-10 items-center gap-4 border px-4 text-sm font-black ${active ? 'border-[#11b957] bg-[#eefbf4]' : 'border-[#d6d6d6]'}`}>
+      <span className={`h-5 w-5 rounded-full border ${active ? 'border-[#11b957] bg-[#11b957]' : 'border-[#cfd3d8]'}`} />
+      {label}
+    </button>
+  );
+}
+
+function InviteSection() {
+  return (
+    <section className="min-h-[690px] bg-[#eef0f3] text-black shadow-sm ring-1 ring-slate-200">
+      <div className="bg-white">
+        <h1 className="border-b border-[#e5e7eb] px-8 py-4 text-xl font-normal">Parrainer des amis et gagner de l'argent</h1>
+        <div className="px-8 py-5 text-center">
+          <p className="text-base leading-5">Envoyez le lien de parrainage à vos amis et ils pourront recevoir 5 $ de crédit gratuit en tant que nouvel utilisateur.<br />Vous recevrez un <strong>coupon-rabais de 10 $</strong> pour chaque ami qui a prépayé.<br />Vous pourrez gagner également <strong>5% de ce qu'ils dépensent en argent (1er ordre).</strong></p>
+          <div className="mx-auto mt-12 grid max-w-[760px] grid-cols-3 gap-16 text-left text-[#92979d]">
+            {['Parrainer un ami sur PCBWay', 'Des amis ont prépayé, vous gagnez un coupon de réduction de 10 $', "Lorsqu'un ami dépense de l'argent, vous gagnez 5% des dépenses"].map((text, index) => (
+              <div key={text}>
+                <span className={`mx-auto block h-[96px] w-[96px] rounded-full ${index === 0 ? 'bg-[#2cc9bb]' : index === 1 ? 'bg-[#53c7d8]' : 'bg-[#8d79b9]'}`} />
+                <p className="mt-5 text-base leading-5">{text}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mx-auto mt-12 max-w-[992px] bg-[#f5f5f5] p-6">
+            <p className="font-black">Copiez le lien suivant et partagez plus, gagnez plus :</p>
+            <div className="mx-auto mt-3 flex max-w-[590px] items-center justify-between border border-dashed border-[#c9c9c9] bg-white pl-8 text-xl font-black">
+              <span>https://www.pcbway.fr/gt/S1t6V</span>
+              <button type="button" className="bg-[#06b34f] px-6 py-4 text-sm text-white">Copiez le lien</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 bg-white px-8 py-5">
+        <h2 className="text-xl font-normal">Statistiques de références</h2>
+        <div className="mt-5 grid grid-cols-4 gap-6">
+          {['0 INSCRIPTIONS', '0 PRÉPAYEMENTS', '$0.00 COUPON DE RÉDUCTION', '$0.00 GAINS'].map((item) => (
+            <div key={item} className="grid h-[122px] place-items-center border border-[#e5e7eb] text-center text-[#92979d]">
+              <strong className="block text-3xl text-[#1f2937]">{item.split(' ')[0]}</strong>{item.substring(item.indexOf(' ') + 1)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileForm; userId: string; avatarDataUrl: string }) {
+  return (
+    <section className="min-h-[690px] bg-white p-6 text-black shadow-sm ring-1 ring-slate-200">
+      <h1 className="border-b border-[#e5e7eb] pb-4 text-xl font-normal">Paramètres du compte</h1>
+      <div className="grid grid-cols-[140px_1fr_160px] gap-6 border-b border-[#e5e7eb] py-6">
+        <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
+        <div className="grid gap-4 text-sm">
+          <p className="text-base">{profile.name || 'Loïc NIANZE KENDONG'} <span className="rounded bg-[#a08d70] px-2 py-1 text-xs font-black text-white">Société</span></p>
+          <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
+          <p className="text-[#6b7280]">Pays/Région <span className="ml-20 text-black">FRANCE</span></p>
+          <p className="text-[#6b7280]">No de téléphone <span className="ml-16 text-black">{profile.phone || '+33753970427'}</span></p>
+          <p className="text-[#6b7280]">Catégorie de client <span className="ml-12 text-black">Design/Research/Development - PCB Designer</span></p>
+        </div>
+        <a href="#" className="pt-12 text-sm text-[#00a651]">Modifier le profil</a>
+      </div>
+      {[
+        ['E-mail', maskEmail(profile.email || 'contact@gmail.com'), 'Changer l’e-mail'],
+        ['Mot de passe', '********', 'Changer le mot de passe'],
+        ['Adresse de livraison', 'Ajouter une adresse de livraison pour votre commande chez PCBWay.', 'Modifier'],
+        ['Détails de facturation', 'Ajouter une adresse de facturation pour votre commande chez PCBWay.', 'Modifier'],
+        ['Notifications', 'Choisissez les notifications que vous souhaitez recevoir de PCBWay et comment être notifié.', 'Paramètres'],
+      ].map(([label, value, action]) => (
+        <div key={label} className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
+          <h2 className="text-lg">{label}</h2>
+          <p className="text-[#4b5563]">{value}</p>
+          <a href="#" className="text-right text-[#00a651]">{action}</a>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function maskEmail(email: string) {
+  const [name, domain] = email.split('@');
+  if (!domain) return email;
+  return `${name.slice(0, 4)}***********@${domain}`;
 }
 
 function VerificationOrdersSection() {
