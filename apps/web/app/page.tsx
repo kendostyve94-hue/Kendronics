@@ -370,10 +370,11 @@ function Hero() {
         ))}
       </div>
 
-      <div className="relative mx-auto grid min-h-[27rem] max-w-[1180px] gap-3 px-4 pb-6 pt-4 sm:px-6 lg:min-h-[25rem] lg:grid-cols-[minmax(0,45rem)_13rem] lg:items-center lg:px-8">
+      <div className="relative mx-auto grid min-h-[27rem] max-w-[1180px] gap-3 px-4 pb-6 pt-4 sm:px-6 lg:min-h-[25rem] lg:grid-cols-[minmax(0,43rem)_minmax(8rem,1fr)_12.5rem] lg:items-center lg:px-8">
         <div className="w-full">
           <HeroQuickQuote />
         </div>
+        <div className="hidden min-h-[18rem] lg:block" aria-hidden="true" />
         <HeroPromoPanels />
       </div>
     </section>
@@ -383,16 +384,16 @@ function Hero() {
 function HeroPromoPanels() {
   return (
     <aside className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1" aria-label="Offres PCB">
-      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=10&thickness=1.6mm" className="relative min-h-[9.5rem] overflow-hidden border border-[#e5b75a] bg-white/92 p-3 text-center transition hover:border-[#0f8f6b]">
-        <div className="absolute inset-x-0 top-0 h-1 bg-[#f0a000]" />
-        <p className="text-2xl font-normal leading-none text-[#ff6a00]">$ 5.00</p>
+      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=10&thickness=1.6mm" className="relative min-h-[9.5rem] overflow-hidden border border-[#0f8f6b]/45 bg-white/82 p-3 text-center backdrop-blur-[1px] transition hover:border-[#0f8f6b]">
+        <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
+        <p className="text-2xl font-normal leading-none text-[#0f8f6b]">$ 5.00</p>
         <p className="mt-2 text-xs leading-4 text-slate-600">10 pièces 1-2 couche(s)</p>
         <p className="text-xs leading-4 text-slate-600">Temps de production:24 heures</p>
         <img src="/images/product-pcb-standard-transparent.png" alt="" className="mx-auto mt-2 h-16 w-full object-contain" />
       </a>
-      <a href="/quote?productType=pcb_assembly&layers=2&length=100&width=100&quantity=20&thickness=1.6mm" className="relative min-h-[9.5rem] overflow-hidden border border-[#e5b75a] bg-white/92 p-3 text-center transition hover:border-[#0f8f6b]">
-        <div className="absolute inset-x-0 top-0 h-1 bg-[#f0a000]" />
-        <p className="text-2xl font-normal leading-none text-[#ff6a00]">$ 29</p>
+      <a href="/quote?productType=pcb_assembly&layers=2&length=100&width=100&quantity=20&thickness=1.6mm" className="relative min-h-[9.5rem] overflow-hidden border border-[#0f8f6b]/45 bg-white/82 p-3 text-center backdrop-blur-[1px] transition hover:border-[#0f8f6b]">
+        <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
+        <p className="text-2xl font-normal leading-none text-[#0f8f6b]">$ 29</p>
         <p className="mt-2 text-xs leading-4 text-slate-600">Livraison gratuite</p>
         <p className="text-xs leading-4 text-slate-600">Pour 1-20 pièce(s)</p>
         <img src="/images/product-pcba-assembly.png" alt="" className="mx-auto mt-2 h-16 w-full object-contain" />
