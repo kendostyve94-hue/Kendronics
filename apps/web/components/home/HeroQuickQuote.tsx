@@ -1,156 +1,152 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { QuoteConfig } from '../../lib/quote-types';
 
-const baseConfig: QuoteConfig = {
-  productType: 'standard_pcb',
-  baseMaterial: 'FR4',
-  layers: 2,
-  length: 100,
-  width: 100,
-  unit: 'mm',
-  quantity: 5,
-  differentDesigns: 1,
-  usageType: 'consumer_industrial',
-  deliveryFormat: 'single_pcb',
-  thickness: '1.6mm',
-  solderMaskColor: 'Green',
-  silkscreenColor: 'White',
-  surfaceFinish: 'HASL lead-free',
-  viaCovering: 'Tented',
-  productionSpeed: 'standard',
-  outerCopperWeight: '1 oz',
-  innerCopperWeight: '0.5 oz',
-  impedanceControl: false,
-  minimumViaHole: '0.3mm',
-  viaDiameter: '0.6mm',
-  goldFingers: false,
-  castellatedHoles: false,
-  edgePlating: false,
-  blindBuriedVias: false,
-  viaInPad: false,
-  peelableMask: false,
-  carbonInk: false,
-  countersink: false,
-  pressFitHoles: false,
-  coverlayThickness: '',
-  stiffenerType: '',
-  stiffenerThickness: '',
-  emiShieldingFilm: false,
-  cuttingMethod: 'CNC',
-  adhesiveType: '',
-  orderNumberMarking: true,
-  markingLocationSpecified: false,
-  removeMarking: false,
-  twoDBarcode: false,
-  serialNumber: false,
-  flyingProbe: true,
-  fullElectricalTest: false,
-  randomElectricalTest: false,
-  fourWireKelvinTest: false,
-  aoi: false,
-  assemblyRequired: false,
-  assemblySide: 'top',
-  componentSourcing: 'partner_sourced',
-  confirmPartsPlacement: false,
-  stencilRequired: false,
-  stencilType: '',
-  stencilSize: '280x380mm',
-  stencilThickness: '0.12mm',
-  stencilFrame: false,
-  electroPolishing: false,
-  engraving: false,
-  destinationCountry: 'SN',
-  shippingMode: 'standard',
-  insuranceRequired: false,
+type ProductOption = {
+  label: string;
+  value: QuoteConfig['productType'];
 };
 
-export function HeroQuickQuote() {
-  const [config, setConfig] = useState<QuoteConfig>(baseConfig);
-  const quoteHref = `/quote?layers=${config.layers}&length=${config.length}&width=${config.width}&quantity=${config.quantity}`;
+const productOptions: ProductOption[] = [
+  { label: 'Circuits imprimés', value: 'standard_pcb' },
+  { label: 'Assemblage (PCBA)', value: 'pcb_assembly' },
+  { label: 'FPC/Rigide-Flex', value: 'fpc_rigid_flex' },
+  { label: 'PCB Avancé', value: 'advanced_pcb' },
+  { label: 'CNC | Impression 3D', value: 'cnc_3d' },
+  { label: 'Pochoirs CMS', value: 'smt_stencil' },
+];
 
-  function update<K extends keyof QuoteConfig>(key: K, value: QuoteConfig[K]) {
-    setConfig((current) => ({ ...current, [key]: value }));
-  }
+export function HeroQuickQuote() {
+  const [productType, setProductType] = useState<QuoteConfig['productType']>('standard_pcb');
+  const [layers, setLayers] = useState(2);
+  const [length, setLength] = useState(100);
+  const [width, setWidth] = useState(100);
+  const [quantity, setQuantity] = useState(10);
+  const [thickness, setThickness] = useState('1.6mm');
+
+  const quoteHref = useMemo(() => {
+    const params = new URLSearchParams({
+      productType,
+      layers: String(layers),
+      length: String(length),
+      width: String(width),
+      quantity: String(quantity),
+      thickness,
+    });
+
+    return `/quote?${params.toString()}`;
+  }, [layers, length, productType, quantity, thickness, width]);
 
   return (
-    <aside className="hidden h-[3.35rem] items-center gap-3 bg-white/90 p-1 text-ink backdrop-blur-sm lg:flex">
-      <SelectField
-        label="Couches"
-        value={config.layers}
-        onChange={(value) => update('layers', Number(value))}
-        options={[
-          [1, '1 Couche'],
-          [2, '2 Couches'],
-          [4, '4 Couches'],
-          [6, '6 Couches'],
-          [8, '8 Couches'],
-          [10, '10 Couches'],
-          [12, '12 Couches'],
-        ]}
-      />
-      <DimensionField
-        length={config.length}
-        width={config.width}
-        onLengthChange={(value) => update('length', value)}
-        onWidthChange={(value) => update('width', value)}
-      />
-      <SelectField
-        label="Quantite"
-        value={config.quantity}
-        onChange={(value) => update('quantity', Number(value))}
-        options={[
-          [5, '5 pcs'],
-          [10, '10 pcs'],
-          [20, '20 pcs'],
-          [50, '50 pcs'],
-          [100, '100 pcs'],
-        ]}
-      />
-      <a href={quoteHref} className="inline-flex h-full min-w-[10rem] items-center justify-center bg-[#0f8f6b] px-7 text-base font-black text-white transition duration-300 hover:bg-[#0b7558]">
-        Finaliser
-      </a>
+    <aside className="w-full max-w-[45rem] border border-[#d8e2ea] bg-white text-ink">
+      <div className="grid lg:grid-cols-[12.5rem_1fr]">
+        <nav className="grid border-b border-[#d8e2ea] bg-[#009a43] text-white lg:border-b-0 lg:border-r">
+          {productOptions.map((option) => {
+            const isActive = option.value === productType;
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setProductType(option.value)}
+                className={`min-h-12 border-b border-white/20 px-4 text-left text-sm font-semibold transition last:border-b-0 ${
+                  isActive ? 'bg-white text-ink' : 'bg-[#00a843] hover:bg-[#00953d]'
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="bg-[#f4f7fa] p-5 sm:p-6">
+          <div className="mb-4">
+            <h1 className="text-2xl font-black leading-tight text-[#00a651] sm:text-3xl">Devis immédiat</h1>
+            <p className="mt-1 text-sm text-slate-500">Vos circuits imprimés au meilleur prix.</p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <p className="mb-2 text-sm font-black text-ink">Dimension</p>
+              <div className="grid grid-cols-[1fr_auto_1fr_auto] border border-[#aeb8c2] bg-white">
+                <NumberInput label="Longueur" value={length} onChange={setLength} />
+                <span className="grid w-8 place-items-center border-l border-r border-[#aeb8c2] text-sm font-bold text-slate-600">x</span>
+                <NumberInput label="Largeur" value={width} onChange={setWidth} />
+                <span className="grid w-10 place-items-center border-l border-[#aeb8c2] text-xs font-black text-ink">mm</span>
+              </div>
+            </div>
+
+            <SelectField
+              label="Quantité"
+              value={quantity}
+              onChange={(value) => setQuantity(Number(value))}
+              options={[
+                [5, '5 pieces'],
+                [10, '10 pieces'],
+                [20, '20 pieces'],
+                [50, '50 pieces'],
+                [100, '100 pieces'],
+                [200, '200 pieces'],
+              ]}
+            />
+
+            <SelectField
+              label="Couche(s)"
+              value={layers}
+              onChange={(value) => setLayers(Number(value))}
+              options={[
+                [1, '1 Couche'],
+                [2, '2 Couches'],
+                [4, '4 Couches'],
+                [6, '6 Couches'],
+                [8, '8 Couches'],
+                [10, '10 Couches'],
+                [12, '12 Couches'],
+              ]}
+            />
+
+            <SelectField
+              label="Épaisseur"
+              value={thickness}
+              onChange={setThickness}
+              options={[
+                ['0.8mm', '0.8mm'],
+                ['1.0mm', '1.0mm'],
+                ['1.2mm', '1.2mm'],
+                ['1.6mm', '1.6mm'],
+                ['2.0mm', '2.0mm'],
+              ]}
+            />
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <a href={quoteHref} className="inline-flex min-h-12 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
+              Finaliser
+            </a>
+            <a href="/capabilities" className="inline-flex min-h-12 items-center justify-center border border-[#aeb8c2] bg-white px-5 text-sm font-black text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+              Capacités
+            </a>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }
 
-function DimensionField({
-  length,
-  width,
-  onLengthChange,
-  onWidthChange,
-}: {
-  length: number;
-  width: number;
-  onLengthChange: (value: number) => void;
-  onWidthChange: (value: number) => void;
-}) {
+function NumberInput({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
   return (
-    <div className="flex h-11 w-[12rem] items-center justify-center gap-2 bg-slate-100 px-4 text-sm">
-      <label className="min-w-0 flex-1">
-        <span className="sr-only">Longueur</span>
-        <input
-          type="number"
-          min={1}
-          value={length}
-          onChange={(event) => onLengthChange(Number(event.target.value))}
-          className="h-full w-full border-0 bg-transparent px-0 text-center text-sm font-normal text-ink outline-none"
-        />
-      </label>
-      <span className="text-slate-500">x</span>
-      <label className="min-w-0 flex-1">
-        <span className="sr-only">Largeur</span>
-        <input
-          type="number"
-          min={1}
-          value={width}
-          onChange={(event) => onWidthChange(Number(event.target.value))}
-          className="h-full w-full border-0 bg-transparent px-0 text-center text-sm font-normal text-ink outline-none"
-        />
-      </label>
-      <span className="shrink-0 text-slate-500">mm</span>
-    </div>
+    <label className="block min-w-0">
+      <span className="sr-only">{label}</span>
+      <input
+        type="number"
+        min={1}
+        value={value}
+        placeholder={label}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="h-11 w-full border-0 bg-white px-3 text-sm text-ink outline-none placeholder:text-slate-400"
+      />
+    </label>
   );
 }
 
@@ -162,26 +158,22 @@ function SelectField({
 }: {
   label: string;
   value: string | number;
-  options: Array<string | number | [string | number, string]>;
+  options: Array<[string | number, string]>;
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="flex h-11 w-[8.5rem] items-center bg-slate-100 px-4">
-      <span className="sr-only">{label}</span>
+    <label className="block">
+      <span className="mb-2 block text-sm font-black text-ink">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-full w-full border-0 bg-transparent px-0 text-sm font-normal text-ink outline-none"
+        className="h-11 w-full border border-[#aeb8c2] bg-white px-3 text-sm text-ink outline-none"
       >
-        {options.map((option) => {
-          const optionValue = Array.isArray(option) ? option[0] : option;
-          const labelText = Array.isArray(option) ? option[1] : option;
-          return (
-            <option key={String(optionValue)} value={optionValue}>
-              {labelText}
-            </option>
-          );
-        })}
+        {options.map(([optionValue, labelText]) => (
+          <option key={String(optionValue)} value={optionValue}>
+            {labelText}
+          </option>
+        ))}
       </select>
     </label>
   );

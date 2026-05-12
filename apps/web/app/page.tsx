@@ -353,10 +353,10 @@ function OperationalProofs() {
 
 function Hero() {
   return (
-    <section className="relative min-h-[31.5rem] overflow-hidden bg-[#dcecf8] pt-20 text-ink sm:min-h-[40rem] sm:pt-28 lg:min-h-[29rem] lg:pt-20">
+    <section className="relative overflow-hidden bg-[#dcecf8] pt-20 text-ink sm:pt-24 lg:pt-20">
       <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#dbeefa] to-[#c7dced]" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#eef7ff]/82 to-[#eef7ff]/14" />
-      <div className="absolute inset-x-0 bottom-[5.75rem] top-[17rem] overflow-hidden sm:inset-0 lg:left-[48%] lg:right-0 lg:top-0 lg:bottom-0">
+      <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#eef7ff]/78 to-[#eef7ff]/16" />
+      <div className="absolute inset-x-0 bottom-0 top-[19rem] overflow-hidden sm:inset-y-0 sm:left-[42%] sm:right-0">
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className="home-hero-slide absolute inset-0" style={{ animationDelay: `${index * 5}s` }}>
             {slide.type === 'video' ? (
@@ -370,31 +370,9 @@ function Hero() {
         ))}
       </div>
 
-      <div className="relative mx-auto flex max-w-[1180px] flex-col justify-start px-4 pb-5 pt-5 sm:px-6 sm:pb-10 sm:pt-10 lg:min-h-[430px] lg:justify-center lg:px-8">
-        <div className="relative min-h-[12.75rem] max-w-[42rem] sm:min-h-[20rem] lg:min-h-[17rem]">
-          {heroSlides.map((slide, index) => (
-            <div key={slide.title} className="home-hero-copy absolute inset-0 flex flex-col justify-start sm:justify-center" style={{ animationDelay: `${index * 5}s` }}>
-              <p className="label-caps text-[#0f8f6b]">{slide.eyebrow}</p>
-              <h1 className="mt-2 max-w-2xl text-[1.45rem] font-black leading-tight tracking-tight text-ink sm:mt-4 sm:text-5xl lg:text-[3.2rem]">
-                {slide.title}
-              </h1>
-              <p className="mt-3 max-w-xl text-xs leading-5 text-slate-600 sm:mt-5 sm:text-base sm:leading-7">
-                {slide.body}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="relative mt-[10.25rem] grid grid-cols-2 gap-2 sm:mt-7 sm:flex sm:items-center sm:gap-3">
-          <Button href="/quote" className="h-11 whitespace-nowrap px-2 text-xs !font-normal sm:h-12 sm:px-7 sm:text-sm">Demander un devis</Button>
-          <Button href="/services" variant="secondary" className="h-11 whitespace-nowrap px-2 text-xs !font-normal sm:h-12 sm:px-7 sm:text-sm">Voir les services</Button>
+      <div className="relative mx-auto flex min-h-[33rem] max-w-[1180px] items-start px-4 pb-10 pt-6 sm:min-h-[36rem] sm:px-6 sm:pt-10 lg:min-h-[33rem] lg:items-center lg:px-8">
+        <div className="w-full max-w-[45rem]">
           <HeroQuickQuote />
-        </div>
-
-        <div className="relative mt-4 flex gap-2 sm:hidden" aria-hidden="true">
-          {heroSlides.map((slide, index) => (
-            <span key={slide.title} className="home-hero-dot h-1.5 w-6 bg-ink" style={{ animationDelay: `${index * 5}s` }} />
-          ))}
         </div>
       </div>
     </section>

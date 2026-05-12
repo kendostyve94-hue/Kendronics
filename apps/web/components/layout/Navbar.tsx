@@ -450,12 +450,12 @@ function LoginMenu({ isSignedIn, avatarDataUrl, firstName, t }: { isSignedIn: bo
             <span className="px-1 text-[#6b7280]">|</span>
             <a href="/register" className="transition hover:text-[#0f8f6b]">S’inscrire</a>
           </p>
-          <a href="/profile" className="block whitespace-nowrap transition hover:text-[#0f8f6b]">
-            Mon PCBWay <span className="text-[#8a8f98]">(0)</span>
+          <a href="/login" className="block whitespace-nowrap font-black text-[#00a651] transition hover:text-[#0f8f6b]">
+            Mon Espace
           </a>
         </div>
       </div>
-      <div className="invisible absolute right-0 top-full min-w-60 translate-y-2 border border-slate-200 bg-[#edf3f8] p-4 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+      <div className="hidden">
         <span className="absolute -top-2 right-8 h-4 w-4 rotate-45 border-l border-t border-slate-200 bg-[#edf3f8]" />
         <a href="/login" className="flex h-10 items-center justify-center rounded-sm bg-[#0877ff] text-sm font-semibold text-white hover:bg-[#0068e8]">
           {t('nav.login')}

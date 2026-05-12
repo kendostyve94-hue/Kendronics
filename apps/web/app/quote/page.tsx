@@ -279,31 +279,42 @@ function readNumberParam(params: URLSearchParams, key: string, fallback: number)
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
+function readProductTypeParam(params: URLSearchParams): QuoteConfig['productType'] {
+  const value = params.get('productType');
+  return productCards.some((product) => product.value === value) ? (value as QuoteConfig['productType']) : initialConfig.productType;
+}
+
 function getInitialConfigFromUrl(): QuoteConfig {
   if (typeof window === 'undefined') return initialConfig;
 
   const params = new URLSearchParams(window.location.search);
-  if (!params.has('layers') && !params.has('length') && !params.has('width') && !params.has('quantity')) {
+  if (!params.has('productType') && !params.has('layers') && !params.has('length') && !params.has('width') && !params.has('quantity') && !params.has('thickness')) {
     return initialConfig;
   }
 
+  const productType = readProductTypeParam(params);
+
   return {
     ...initialConfig,
+    ...productDefaults[productType],
+    productType,
     layers: readNumberParam(params, 'layers', initialConfig.layers),
     length: readNumberParam(params, 'length', initialConfig.length),
     width: readNumberParam(params, 'width', initialConfig.width),
     quantity: readNumberParam(params, 'quantity', initialConfig.quantity),
+    thickness: params.get('thickness') || initialConfig.thickness,
   };
 }
 
 export default function QuotePage() {
-  const [config, setConfig] = useState<QuoteConfig>(() => getInitialConfigFromUrl());
+  const initialQuoteConfig = useMemo(() => getInitialConfigFromUrl(), []);
+  const [config, setConfig] = useState<QuoteConfig>(() => initialQuoteConfig);
   const [saved, setSaved] = useState(false);
   const [gerberUpload, setGerberUpload] = useState<UploadState>({ status: 'idle' });
   const [quoteSave, setQuoteSave] = useState<QuoteSaveState>({ status: 'idle' });
   const [openPanel, setOpenPanel] = useState<QuotePanelId>('base');
   const [mobileSheet, setMobileSheet] = useState<MobileSheetId | null>(null);
-  const [selectedProductTitle, setSelectedProductTitle] = useState(productCards[0].title);
+  const [selectedProductTitle, setSelectedProductTitle] = useState(productCards.find((product) => product.value === initialQuoteConfig.productType)?.title ?? productCards[0].title);
   const [apiPricing, setApiPricing] = useState<PricingBreakdown | null>(null);
 
   const selectedCountry = useMemo(
