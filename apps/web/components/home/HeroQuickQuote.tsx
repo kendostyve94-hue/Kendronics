@@ -124,7 +124,7 @@ export function HeroQuickQuote() {
             <a href={quoteHref} className="inline-flex min-h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
               Finaliser
             </a>
-            <a href="/capabilities" className="inline-flex min-h-10 items-center justify-center border border-[#aeb8c2] bg-white px-5 text-sm font-black text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+            <a href="/capabilities" className="inline-flex min-h-10 items-center justify-center border border-[#0f8f6b] bg-white px-5 text-sm font-black text-ink transition hover:bg-[#f4fbf8] hover:text-[#0f8f6b]">
               Capacités
             </a>
           </div>
