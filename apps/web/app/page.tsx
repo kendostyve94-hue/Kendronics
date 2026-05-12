@@ -353,10 +353,10 @@ function OperationalProofs() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[#dcecf8] pt-20 text-ink sm:pt-24 lg:pt-20">
+    <section className="relative overflow-hidden bg-[#dcecf8] pt-20 text-ink lg:pt-20">
       <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#dbeefa] to-[#c7dced]" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#eef7ff]/78 to-[#eef7ff]/16" />
-      <div className="absolute inset-x-0 bottom-0 top-[19rem] overflow-hidden sm:inset-y-0 sm:left-[42%] sm:right-0">
+      <div className="absolute inset-x-0 bottom-0 top-[16rem] overflow-hidden sm:inset-y-0 sm:left-[45%] sm:right-0">
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className="home-hero-slide absolute inset-0" style={{ animationDelay: `${index * 5}s` }}>
             {slide.type === 'video' ? (
@@ -370,12 +370,34 @@ function Hero() {
         ))}
       </div>
 
-      <div className="relative mx-auto flex min-h-[33rem] max-w-[1180px] items-start px-4 pb-10 pt-6 sm:min-h-[36rem] sm:px-6 sm:pt-10 lg:min-h-[33rem] lg:items-center lg:px-8">
-        <div className="w-full max-w-[45rem]">
+      <div className="relative mx-auto grid min-h-[27rem] max-w-[1180px] gap-3 px-4 pb-6 pt-4 sm:px-6 lg:min-h-[25rem] lg:grid-cols-[minmax(0,45rem)_13rem] lg:items-center lg:px-8">
+        <div className="w-full">
           <HeroQuickQuote />
         </div>
+        <HeroPromoPanels />
       </div>
     </section>
+  );
+}
+
+function HeroPromoPanels() {
+  return (
+    <aside className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1" aria-label="Offres PCB">
+      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=10&thickness=1.6mm" className="relative min-h-[9.5rem] overflow-hidden border border-[#e5b75a] bg-white/92 p-3 text-center transition hover:border-[#0f8f6b]">
+        <div className="absolute inset-x-0 top-0 h-1 bg-[#f0a000]" />
+        <p className="text-2xl font-normal leading-none text-[#ff6a00]">$ 5.00</p>
+        <p className="mt-2 text-xs leading-4 text-slate-600">10 pièces 1-2 couche(s)</p>
+        <p className="text-xs leading-4 text-slate-600">Temps de production:24 heures</p>
+        <img src="/images/product-pcb-standard-transparent.png" alt="" className="mx-auto mt-2 h-16 w-full object-contain" />
+      </a>
+      <a href="/quote?productType=pcb_assembly&layers=2&length=100&width=100&quantity=20&thickness=1.6mm" className="relative min-h-[9.5rem] overflow-hidden border border-[#e5b75a] bg-white/92 p-3 text-center transition hover:border-[#0f8f6b]">
+        <div className="absolute inset-x-0 top-0 h-1 bg-[#f0a000]" />
+        <p className="text-2xl font-normal leading-none text-[#ff6a00]">$ 29</p>
+        <p className="mt-2 text-xs leading-4 text-slate-600">Livraison gratuite</p>
+        <p className="text-xs leading-4 text-slate-600">Pour 1-20 pièce(s)</p>
+        <img src="/images/product-pcba-assembly.png" alt="" className="mx-auto mt-2 h-16 w-full object-contain" />
+      </a>
+    </aside>
   );
 }
 

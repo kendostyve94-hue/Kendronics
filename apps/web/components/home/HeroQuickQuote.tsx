@@ -39,8 +39,8 @@ export function HeroQuickQuote() {
   }, [layers, length, productType, quantity, thickness, width]);
 
   return (
-    <aside className="w-full max-w-[45rem] border border-[#d8e2ea] bg-white text-ink">
-      <div className="grid lg:grid-cols-[12.5rem_1fr]">
+    <aside className="w-full border border-[#d8e2ea] bg-white text-ink">
+      <div className="grid lg:grid-cols-[11.5rem_1fr]">
         <nav className="grid border-b border-[#d8e2ea] bg-[#009a43] text-white lg:border-b-0 lg:border-r">
           {productOptions.map((option) => {
             const isActive = option.value === productType;
@@ -50,7 +50,7 @@ export function HeroQuickQuote() {
                 key={option.value}
                 type="button"
                 onClick={() => setProductType(option.value)}
-                className={`min-h-12 border-b border-white/20 px-4 text-left text-sm font-semibold transition last:border-b-0 ${
+                className={`min-h-10 border-b border-white/20 px-4 text-left text-sm font-normal transition last:border-b-0 ${
                   isActive ? 'bg-white text-ink' : 'bg-[#00a843] hover:bg-[#00953d]'
                 }`}
               >
@@ -60,20 +60,20 @@ export function HeroQuickQuote() {
           })}
         </nav>
 
-        <div className="bg-[#f4f7fa] p-5 sm:p-6">
-          <div className="mb-4">
-            <h1 className="text-2xl font-black leading-tight text-[#00a651] sm:text-3xl">Devis immédiat</h1>
+        <div className="bg-[#f4f7fa] p-4 sm:p-5">
+          <div className="mb-3">
+            <h1 className="text-2xl font-black leading-tight text-[#00a651]">Devis immédiat</h1>
             <p className="mt-1 text-sm text-slate-500">Vos circuits imprimés au meilleur prix.</p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <p className="mb-2 text-sm font-black text-ink">Dimension</p>
+              <p className="mb-1.5 text-sm font-normal text-ink">Dimension</p>
               <div className="grid grid-cols-[1fr_auto_1fr_auto] border border-[#aeb8c2] bg-white">
                 <NumberInput label="Longueur" value={length} onChange={setLength} />
-                <span className="grid w-8 place-items-center border-l border-r border-[#aeb8c2] text-sm font-bold text-slate-600">x</span>
+                <span className="grid w-8 place-items-center border-l border-r border-[#aeb8c2] text-sm font-normal text-slate-600">x</span>
                 <NumberInput label="Largeur" value={width} onChange={setWidth} />
-                <span className="grid w-10 place-items-center border-l border-[#aeb8c2] text-xs font-black text-ink">mm</span>
+                <span className="grid w-10 place-items-center border-l border-[#aeb8c2] text-xs font-normal text-ink">mm</span>
               </div>
             </div>
 
@@ -120,11 +120,11 @@ export function HeroQuickQuote() {
             />
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <a href={quoteHref} className="inline-flex min-h-12 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <a href={quoteHref} className="inline-flex min-h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
               Finaliser
             </a>
-            <a href="/capabilities" className="inline-flex min-h-12 items-center justify-center border border-[#aeb8c2] bg-white px-5 text-sm font-black text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+            <a href="/capabilities" className="inline-flex min-h-10 items-center justify-center border border-[#aeb8c2] bg-white px-5 text-sm font-black text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
               Capacités
             </a>
           </div>
@@ -144,7 +144,7 @@ function NumberInput({ label, value, onChange }: { label: string; value: number;
         value={value}
         placeholder={label}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-11 w-full border-0 bg-white px-3 text-sm text-ink outline-none placeholder:text-slate-400"
+        className="h-10 w-full border-0 bg-white px-3 text-sm text-ink outline-none placeholder:text-slate-400"
       />
     </label>
   );
@@ -163,11 +163,11 @@ function SelectField({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-black text-ink">{label}</span>
+      <span className="mb-1.5 block text-sm font-normal text-ink">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full border border-[#aeb8c2] bg-white px-3 text-sm text-ink outline-none"
+        className="h-10 w-full border border-[#aeb8c2] bg-white px-3 text-sm text-ink outline-none"
       >
         {options.map(([optionValue, labelText]) => (
           <option key={String(optionValue)} value={optionValue}>
