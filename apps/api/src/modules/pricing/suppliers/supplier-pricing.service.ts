@@ -82,10 +82,7 @@ export class SupplierPricingService {
       };
     }
 
-    let accountProbe: Awaited<ReturnType<PcbWayPricingProvider['testAccountConnection']>> | undefined;
     try {
-      accountProbe = normalizedSupplier === 'pcbway' ? await this.pcbway.testAccountConnection() : undefined;
-
       const quote = await provider.getPcbQuote(testDto);
 
       return {
@@ -93,7 +90,6 @@ export class SupplierPricingService {
         configured: true,
         ok: true,
         expectedEnv,
-        account: accountProbe,
         diagnostics,
         quote: {
           supplierQuoteId: quote.supplierQuoteId,
@@ -102,9 +98,7 @@ export class SupplierPricingService {
           currency: quote.currency,
           leadTimeDays: quote.leadTimeDays,
         },
-        message: accountProbe && !accountProbe.ok
-          ? `${provider.name} quote API responded successfully. Account balance probe failed, but it is not required for live quotations.`
-          : `${provider.name} quote API responded successfully.`,
+        message: `${provider.name} quote API responded successfully. No real supplier order was created.`,
       };
     } catch (error) {
       return {
@@ -112,7 +106,6 @@ export class SupplierPricingService {
         configured: true,
         ok: false,
         expectedEnv,
-        account: accountProbe,
         diagnostics,
         message: error instanceof Error ? error.message : `${provider.name} quote API test failed.`,
       };
