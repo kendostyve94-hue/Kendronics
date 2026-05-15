@@ -590,7 +590,7 @@ function AdminSidebar({ activeTab, onSelect }: { activeTab: AdminTab; onSelect: 
   const currentGroup = getPrimaryAdminTab(activeTab);
 
   return (
-    <aside className="hidden bg-[#0e6389] text-white lg:sticky lg:top-0 lg:block lg:h-screen lg:overflow-y-auto">
+    <aside className="hidden bg-[#0e6389] text-white lg:sticky lg:top-[71px] lg:block lg:h-[calc(100vh-71px)] lg:overflow-y-auto">
       <div className="border-b border-white/10 px-6 py-7">
         <h2 className="text-3xl font-black tracking-tight">Kendronics</h2>
         <p className="mt-3 text-xs font-bold uppercase tracking-[0.08em] text-white/85">ERP PCB & Logistique</p>
@@ -624,7 +624,7 @@ function AdminTopbar({ activeTab, onSelect }: { activeTab: AdminTab; onSelect: (
   const activeGroup = getPrimaryAdminTab(activeTab);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#0a4f6f] bg-[#0e6389] px-4 text-white shadow-[0_2px_8px_rgba(6,54,77,0.22)] sm:px-6 lg:px-8">
+    <header className="sticky top-[71px] z-30 flex h-14 items-center justify-between border-b border-[#0a4f6f] bg-[#0e6389] px-4 text-white shadow-[0_2px_8px_rgba(6,54,77,0.22)] sm:px-6 lg:px-8">
       <nav className="flex min-w-0 items-center gap-2 overflow-x-auto pr-4 text-sm font-medium sm:gap-5">
         {items.map((item) => (
           <button
