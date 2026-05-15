@@ -1125,7 +1125,10 @@ function AfricanFlag({ code }: { code: string }) {
 
 function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingIntelligence | null }) {
   const performance = Math.min(98, Math.max(78, Math.round((intelligence?.metrics.averageBuffer ?? 1.78) * 44)));
-  const segments = Array.from({ length: 42 }, (_, index) => index);
+  const segments = Array.from({ length: 38 }, (_, index) => index);
+  const activeSegments = Math.round((performance / 100) * segments.length);
+  const startAngle = 138;
+  const sweepAngle = 282;
 
   return (
     <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
@@ -1133,18 +1136,34 @@ function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingInt
         <h2 className="max-w-[10rem] text-base font-semibold leading-5 text-slate-950">Your Recent Performance</h2>
       </div>
       <div className="grid h-[285px] place-items-center p-5">
-        <div className="relative h-48 w-48">
-          {segments.map((segment) => {
-            const active = segment < Math.round((performance / 100) * segments.length);
-            return (
-              <span
-                key={segment}
-                className={`absolute left-1/2 top-1/2 h-8 w-2 origin-[50%_6rem] rounded-full ${active ? 'bg-[#6fbc53]' : 'bg-[#f1f2f8]'}`}
-                style={{ transform: `translate(-50%, -6rem) rotate(${segment * 6.7 - 138}deg)` }}
-              />
-            );
-          })}
-          <div className="absolute inset-10 grid place-items-center rounded-full bg-white">
+        <div className="relative h-52 w-52">
+          <svg aria-hidden="true" viewBox="0 0 220 220" className="h-full w-full">
+            {segments.map((segment) => {
+              const angle = startAngle + (segment * sweepAngle) / (segments.length - 1);
+              const radians = (angle * Math.PI) / 180;
+              const innerRadius = 68;
+              const outerRadius = 97;
+              const x1 = 110 + Math.cos(radians) * innerRadius;
+              const y1 = 110 + Math.sin(radians) * innerRadius;
+              const x2 = 110 + Math.cos(radians) * outerRadius;
+              const y2 = 110 + Math.sin(radians) * outerRadius;
+              const active = segment < activeSegments;
+
+              return (
+                <line
+                  key={segment}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke={active ? '#6fbc53' : '#f2f3fa'}
+                  strokeWidth="7"
+                  strokeLinecap="butt"
+                />
+              );
+            })}
+          </svg>
+          <div className="absolute inset-[3.4rem] grid place-items-center rounded-full bg-white">
             <div className="text-center">
               <p className="text-[26px] font-medium text-[#343a40]">{performance}%</p>
               <p className="mt-1 text-sm text-[#62b447]">Growth</p>
@@ -1155,7 +1174,6 @@ function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingInt
     </section>
   );
 }
-
 function DashboardPanel({
   orders,
   tickets,
