@@ -910,7 +910,7 @@ function ModernDashboardPanel({
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(14rem,0.48fr)_minmax(14rem,0.48fr)]">
         <LatestTransactionsCard transactions={buildDashboardTransactions(orders)} />
-        <CountrySalesCard orders={orders} />
+        <CompactSalesCard />
         <RecentPerformanceCard intelligence={intelligence} />
       </div>
 
@@ -1083,6 +1083,35 @@ const countrySalesFallback = [
   { code: 'US', country: 'United Kingdom', value: '$855K', percent: 68, color: '#7147ff' },
   { code: 'CN', country: 'China', value: '$983K', percent: 61, color: '#6d35ff' },
 ];
+
+function CompactSalesCard() {
+  const rows = [
+    { label: 'SN', color: '#ff2f8b', width: 88 },
+    { label: 'TD', color: '#3fe345', width: 72 },
+  ];
+
+  return (
+    <section className="h-[345px] overflow-hidden border border-[#142144] bg-white shadow-[0_22px_42px_rgba(20,43,92,0.18)]">
+      <div className="h-16 bg-white" />
+      <div className="h-[281px] bg-[#080d2b] px-4 py-5 text-white">
+        <div className="space-y-7">
+          {rows.map((row) => (
+            <div key={row.label} className="grid grid-cols-[2.75rem_minmax(4rem,1fr)_3.75rem] items-center gap-3">
+              <CountryFlag code="US" />
+              <div>
+                <p className="text-xl font-semibold leading-none text-white">$0K</p>
+                <p className="mt-1 text-base font-medium leading-none text-white">{row.label}</p>
+              </div>
+              <div className="h-1 rounded-full bg-white/10">
+                <span className="block h-full rounded-full" style={{ width: `${row.width}%`, backgroundColor: row.color }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function CountrySalesCard({ orders }: { orders: AdminOrderRow[] }) {
   const countryTotals = orders.reduce<Record<string, number>>((totals, order) => {
