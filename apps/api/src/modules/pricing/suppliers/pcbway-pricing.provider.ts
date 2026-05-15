@@ -21,16 +21,10 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
     }
 
     const endpoint = this.configValue('PCBWAY_QUOTE_ENDPOINT') ?? 'https://api-partner.pcbway.com/api/Pcb/PcbQuotation';
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'api-key': apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(this.toQuotePayload(dto)),
-    });
+    const payload = this.toQuotePayload(dto);
+    const quoteResponse = await this.requestQuoteWithShippingFallback(endpoint, apiKey, payload);
+    const { response, data } = quoteResponse;
 
-    const data = (await response.json().catch(() => null)) as PcbWayQuoteResponse | null;
     if (!response.ok || !data || this.isErrorResponse(data)) {
       throw new ServiceUnavailableException(this.quoteErrorMessage(response.status, data));
     }
@@ -66,6 +60,8 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
         Country: payload.Country,
         CountryCode: payload.CountryCode,
         ShipType: payload.ShipType,
+        Postalcode: payload.Postalcode,
+        City: payload.City,
         BoardType: payload.BoardType,
         Length: payload.Length,
         Width: payload.Width,
@@ -134,8 +130,8 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
       Country: this.countryName(payload.destinationCountryIso2),
       CountryCode: payload.destinationCountryIso2.toUpperCase(),
       ShipType: this.shipType(payload.shippingMode),
-      Postalcode: '',
-      City: '',
+      Postalcode: this.postalCode(payload.destinationCountryIso2),
+      City: this.shippingCity(payload.destinationCountryIso2),
       BoardType: this.boardType(payload.boardType),
       XoutAllowance: payload.boardType === 'single_pcb' ? null : 'Yes',
       EdgeRails: payload.boardType === 'panel_by_supplier' ? 'Yes' : null,
@@ -190,6 +186,48 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
     };
   }
 
+  private async requestQuoteWithShippingFallback(
+    endpoint: string,
+    apiKey: string,
+    payload: Record<string, unknown>,
+  ): Promise<{ response: Response; data: PcbWayQuoteResponse | null }> {
+    const firstAttempt = await this.requestQuote(endpoint, apiKey, payload);
+    if (!this.isShippingFeeError(firstAttempt.data)) return firstAttempt;
+
+    for (const shipType of this.shippingFallbacks(Number(payload.ShipType))) {
+      const retryPayload = { ...payload, ShipType: shipType };
+      const retry = await this.requestQuote(endpoint, apiKey, retryPayload);
+      if (!this.isShippingFeeError(retry.data)) return retry;
+    }
+
+    return firstAttempt;
+  }
+
+  private async requestQuote(
+    endpoint: string,
+    apiKey: string,
+    payload: Record<string, unknown>,
+  ): Promise<{ response: Response; data: PcbWayQuoteResponse | null }> {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = (await response.json().catch(() => null)) as PcbWayQuoteResponse | null;
+    return { response, data };
+  }
+
+  private isShippingFeeError(data: PcbWayQuoteResponse | null): boolean {
+    return String(data?.ErrorText ?? data?.errorText ?? '').toLowerCase().includes('shipping fee');
+  }
+
+  private shippingFallbacks(primaryShipType: number): number[] {
+    return [1, 35, 2, 3, 4, 5, 6, 7, 8].filter((shipType, index, values) => shipType !== primaryShipType && values.indexOf(shipType) === index);
+  }
+
   private selectPriceItem(items: PcbWayPriceItem[], dto: CreateQuoteDto): PcbWayPriceItem | undefined {
     if (items.length === 0) return undefined;
     if (dto.configSnapshot?.productionSpeed === 'rush') return items.find((item) => item.Express) ?? items[0];
@@ -209,6 +247,14 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
   private countryName(countryCode: string): string {
     const code = countryCode.toUpperCase();
     return PCBWAY_COUNTRIES[code] ?? code;
+  }
+
+  private shippingCity(countryCode: string): string {
+    return PCBWAY_SHIPPING_DEFAULTS[countryCode.toUpperCase()]?.city ?? '';
+  }
+
+  private postalCode(countryCode: string): string {
+    return PCBWAY_SHIPPING_DEFAULTS[countryCode.toUpperCase()]?.postalCode ?? '';
   }
 
   private shipType(shippingMode: string): number {
@@ -381,6 +427,7 @@ interface PcbWayQuoteResponse extends Record<string, unknown> {
   };
   Status?: string;
   ErrorText?: string;
+  errorText?: string;
   Code?: number;
   Price?: number;
   BuildDays?: number;
@@ -428,6 +475,22 @@ const PCBWAY_COUNTRIES: Record<string, string> = {
   TG: 'TOGO',
   TD: 'CHAD',
   US: 'UNITED STATES OF AMERICA',
+};
+
+const PCBWAY_SHIPPING_DEFAULTS: Record<string, { city: string; postalCode: string }> = {
+  BJ: { city: 'Cotonou', postalCode: '01BP' },
+  BF: { city: 'Ouagadougou', postalCode: '01' },
+  CM: { city: 'Douala', postalCode: '00237' },
+  CI: { city: 'Abidjan', postalCode: '01' },
+  FR: { city: 'Paris', postalCode: '75001' },
+  GA: { city: 'Libreville', postalCode: '00000' },
+  GN: { city: 'Conakry', postalCode: '001' },
+  ML: { city: 'Bamako', postalCode: '00000' },
+  NE: { city: 'Niamey', postalCode: '8000' },
+  SN: { city: 'Dakar', postalCode: '11000' },
+  TG: { city: 'Lome', postalCode: '01' },
+  TD: { city: 'N Djamena', postalCode: '00000' },
+  US: { city: 'New York', postalCode: '10001' },
 };
 
 function yesNo(value: boolean): 'Yes' | 'No' {
