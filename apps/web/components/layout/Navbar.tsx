@@ -55,6 +55,7 @@ const profileNavItems = [
   { label: 'Impression 3D', href: '/services' },
   { label: 'Conception PCB', href: '/services' },
   { label: 'Mes commandes', href: '/profile?view=orders' },
+  { label: 'Admin', href: '/admin' },
 ] satisfies Array<{ label: string; href: string }>;
 
 export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
