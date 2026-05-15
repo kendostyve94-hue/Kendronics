@@ -19,6 +19,7 @@ export interface MobileMoneyInitiationInput {
 
 export interface MobileMoneyInitiationResult {
   providerReference: string;
+  checkoutUrl?: string;
   status: 'pending' | 'confirmed' | 'failed';
 }
 
@@ -28,4 +29,10 @@ export interface VerifiedStripePaymentEvent {
   paymentStatus: 'pending' | 'succeeded' | 'failed' | 'ignored';
   providerPaymentId: string;
   raw: unknown;
+}
+
+export interface VerifiedMobileMoneyPaymentEvent {
+  providerEventId: string;
+  providerReference: string;
+  status: 'pending' | 'confirmed' | 'failed';
 }

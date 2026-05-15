@@ -5,7 +5,9 @@ import { CreateMobileMoneyPaymentDto } from './dto/create-mobile-money-payment.d
 import { MobileMoneyCallbackDto } from './dto/mobile-money-callback.dto';
 import { CheckoutSession } from './entities/checkout-session.entity';
 import { Payment } from './entities/payment.entity';
+import { CinetPayMobileMoneyProvider } from './providers/cinetpay-mobile-money.provider';
 import { MobileMoneyProvider } from './providers/mobile-money.provider';
+import { PayDunyaMobileMoneyProvider } from './providers/paydunya-mobile-money.provider';
 import { StripePaymentProvider } from './providers/stripe-payment.provider';
 import { PaymentsRepository } from './repositories/payments.repository';
 import { PaymentWebhookHandler } from './webhooks/payment-webhook.handler';
@@ -17,6 +19,8 @@ export class PaymentsService {
     private readonly ordersService: OrdersService,
     private readonly stripeProvider: StripePaymentProvider,
     private readonly mobileMoneyProvider: MobileMoneyProvider,
+    private readonly cinetPayProvider: CinetPayMobileMoneyProvider,
+    private readonly payDunyaProvider: PayDunyaMobileMoneyProvider,
     private readonly webhookHandler: PaymentWebhookHandler,
   ) {}
 
@@ -48,7 +52,7 @@ export class PaymentsService {
     return checkout;
   }
 
-  async initiateMobileMoneyPayment(userId: string, dto: CreateMobileMoneyPaymentDto): Promise<Payment> {
+  async initiateMobileMoneyPayment(userId: string, dto: CreateMobileMoneyPaymentDto): Promise<Payment & { checkoutUrl?: string }> {
     const order = await this.ordersService.findOwnedOrder(userId, dto.orderId);
     if (!order.totalPrice || order.totalPrice < 0.5) {
       throw new BadRequestException('Order quote amount is unavailable for Mobile Money payment.');
@@ -71,7 +75,11 @@ export class PaymentsService {
       countryIso2: dto.countryIso2,
     });
 
-    return this.paymentsRepository.attachProviderReference(payment.id, providerResult.providerReference);
+    const updatedPayment = await this.paymentsRepository.attachProviderReference(payment.id, providerResult.providerReference);
+    return {
+      ...updatedPayment,
+      checkoutUrl: providerResult.checkoutUrl,
+    };
   }
 
   async handleStripeWebhook(signature: string | undefined, rawBody: Buffer | undefined, parsedBody: unknown) {
@@ -86,4 +94,18 @@ export class PaymentsService {
   handleMobileMoneyCallback(dto: MobileMoneyCallbackDto) {
     return this.webhookHandler.handleMobileMoneyEvent(dto);
   }
+
+  async handleCinetPayWebhook(body: Record<string, unknown>) {
+    const event = await this.cinetPayProvider.verifyNotification(body);
+    return this.webhookHandler.handleMobileMoneyEvent(event);
+  }
+
+  async handlePayDunyaWebhook(body: unknown, query: Record<string, unknown>) {
+    const event = await this.payDunyaProvider.verifyNotification({ ...objectValue(body), ...query });
+    return this.webhookHandler.handleMobileMoneyEvent(event);
+  }
+}
+
+function objectValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' ? value as Record<string, unknown> : {};
 }

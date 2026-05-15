@@ -171,6 +171,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
         throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Impossible de lancer le paiement Mobile Money.');
       }
 
+      const payment = (await response.json()) as { checkoutUrl?: string };
+      if (payment.checkoutUrl) {
+        window.location.assign(payment.checkoutUrl);
+        return;
+      }
+
       setMobileMoneyStatus('pending');
     } catch (error) {
       setMobileMoneyStatus('error');

@@ -1,4 +1,4 @@
-import { Body, Controller, Headers, NotFoundException, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, NotFoundException, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
@@ -35,5 +35,20 @@ export class PaymentsController {
   @Post('webhooks/stripe')
   stripeWebhook(@Headers('stripe-signature') signature: string, @Req() request: { body: unknown; rawBody?: Buffer }) {
     return this.paymentsService.handleStripeWebhook(signature, request.rawBody, request.body);
+  }
+
+  @Get('webhooks/cinetpay')
+  cinetPayWebhookAvailability() {
+    return { received: true };
+  }
+
+  @Post('webhooks/cinetpay')
+  cinetPayWebhook(@Body() body: Record<string, unknown>) {
+    return this.paymentsService.handleCinetPayWebhook(body);
+  }
+
+  @Post('webhooks/paydunya')
+  payDunyaWebhook(@Body() body: unknown, @Query() query: Record<string, unknown>) {
+    return this.paymentsService.handlePayDunyaWebhook(body, query);
   }
 }

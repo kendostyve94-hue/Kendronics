@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { OrdersModule } from '../orders/orders.module';
 import { TrackingModule } from '../tracking/tracking.module';
+import { CinetPayMobileMoneyProvider } from './providers/cinetpay-mobile-money.provider';
 import { MobileMoneyProvider } from './providers/mobile-money.provider';
+import { PayDunyaMobileMoneyProvider } from './providers/paydunya-mobile-money.provider';
 import { SimulatedMobileMoneyProvider } from './providers/simulated-mobile-money.provider';
 import { StripePaymentProvider } from './providers/stripe-payment.provider';
 import { PaymentsController } from './payments.controller';
@@ -18,9 +20,26 @@ import { PaymentWebhookHandler } from './webhooks/payment-webhook.handler';
     PaymentsRepository,
     StripePaymentProvider,
     PaymentWebhookHandler,
+    CinetPayMobileMoneyProvider,
+    PayDunyaMobileMoneyProvider,
+    SimulatedMobileMoneyProvider,
     {
       provide: MobileMoneyProvider,
-      useClass: SimulatedMobileMoneyProvider,
+      useFactory: (
+        cinetPayProvider: CinetPayMobileMoneyProvider,
+        payDunyaProvider: PayDunyaMobileMoneyProvider,
+        simulatedProvider: SimulatedMobileMoneyProvider,
+      ) => {
+        if (process.env.MOBILE_MONEY_PROVIDER === 'cinetpay') {
+          return cinetPayProvider;
+        }
+        if (process.env.MOBILE_MONEY_PROVIDER === 'paydunya') {
+          return payDunyaProvider;
+        }
+
+        return simulatedProvider;
+      },
+      inject: [CinetPayMobileMoneyProvider, PayDunyaMobileMoneyProvider, SimulatedMobileMoneyProvider],
     },
   ],
   exports: [PaymentsService],
