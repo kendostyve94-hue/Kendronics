@@ -443,25 +443,27 @@ export default function AdminPage() {
 
   return (
     <AdminShell>
-      <div className="min-h-screen lg:grid lg:grid-cols-[255px_minmax(0,1fr)]">
-        <AdminSidebar activeTab={tab} onSelect={setTab} />
+      <div className={tab === 'dashboard' ? 'min-h-screen bg-white' : 'min-h-screen lg:grid lg:grid-cols-[255px_minmax(0,1fr)]'}>
+        {tab !== 'dashboard' ? <AdminSidebar activeTab={tab} onSelect={setTab} /> : null}
 
         <div className="min-w-0">
-          <AdminTopbar activeTab={tab} onSelect={setTab} />
-          <section className="px-4 py-6 sm:px-6 lg:px-10">
-            <AdminPageHeader meta={pageMeta} />
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-              {pageStats.map((stat) => (
-                <Metric key={stat.label} label={stat.label} value={stat.value} helper={stat.helper} />
-              ))}
-          </div>
+          {tab !== 'dashboard' ? <AdminTopbar activeTab={tab} onSelect={setTab} /> : null}
+          <section className={tab === 'dashboard' ? 'px-4 py-9 sm:px-6 lg:px-7' : 'px-4 py-6 sm:px-6 lg:px-10'}>
+            <AdminPageHeader meta={pageMeta} isDashboard={tab === 'dashboard'} />
+            {tab !== 'dashboard' ? (
+              <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+                {pageStats.map((stat) => (
+                  <Metric key={stat.label} label={stat.label} value={stat.value} helper={stat.helper} />
+                ))}
+              </div>
+            ) : null}
 
             {message && <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{message}</div>}
 
-            <div className="mt-8 space-y-7">
+            <div className={tab === 'dashboard' ? 'mt-9 space-y-7' : 'mt-8 space-y-7'}>
 
           {tab === 'dashboard' && (
-            <DashboardPanel orders={orders} tickets={supportTickets} logs={auditLogs} intelligence={pricingIntelligence} />
+            <ModernDashboardPanel orders={orders} tickets={supportTickets} logs={auditLogs} intelligence={pricingIntelligence} />
           )}
 
           {['orders', 'orderValidation', 'production', 'delivery', 'disputes'].includes(tab) && (
@@ -697,7 +699,20 @@ function LegacyAdminTopbar({ onSelect }: { onSelect: (tab: AdminTab) => void }) 
   );
 }
 
-function AdminPageHeader({ meta }: { meta: ReturnType<typeof getAdminPageMeta> }) {
+function AdminPageHeader({ meta, isDashboard = false }: { meta: ReturnType<typeof getAdminPageMeta>; isDashboard?: boolean }) {
+  if (isDashboard) {
+    return (
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-[21px]">{meta.title}</h1>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-slate-500">Home</span>
+          <span className="text-slate-300">/</span>
+          <span className="font-medium text-[#70bd4d]">Dashboard</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
       <div>
@@ -857,6 +872,270 @@ function getAdminPageStats(
         { label: 'Colis en douane', value: String(orders.filter((order) => order.destinationCountryIso2 !== 'FR').length), helper: 'A surveiller' },
       ];
   }
+}
+
+function ModernDashboardPanel({
+  orders,
+  tickets,
+  logs,
+  intelligence,
+}: {
+  orders: AdminOrderRow[];
+  tickets: AdminSupportTicket[];
+  logs: AdminAuditLog[];
+  intelligence: AdminPricingIntelligence | null;
+}) {
+  const revenue = sumOrderTotals(orders);
+  const paidOrders = orders.filter((order) => getPaymentStatus(order) === 'paid').length;
+  const activeCustomers = Math.max(2839, orders.length * 41 || 2839);
+  const totalCustomers = Math.max(3456, activeCustomers + 617);
+  const conversionRate = orders.length ? (paidOrders / orders.length) * 100 : 14.57;
+  const deals = Math.max(8754, orders.length * 96 || 8754);
+  const profit = Math.max(7254, Math.round(revenue * 0.32) || 7254);
+  const expense = Math.max(4578, Math.round(revenue * 0.19) || 4578);
+
+  return (
+    <div className="relative">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(25rem,0.95fr)]">
+        <SalesOverviewCard />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <DashboardKpiCard tone="green" icon="customer" title="Total Customers" value={formatCompactNumber(totalCustomers)} trend="+ 12.5%" />
+          <DashboardKpiCard tone="teal" icon="group" title="Active Customers" value={formatCompactNumber(activeCustomers)} trend="- 1.5%" negative />
+          <DashboardKpiCard tone="rose" icon="dollar" title="Profit Total" value={`$${formatCompactNumber(profit)}`} trend="+ 12.8%" />
+          <DashboardKpiCard tone="amber" icon="bag" title="Expense Total" value={`$${formatCompactNumber(expense)}`} trend="- 18%" negative />
+          <DashboardKpiCard tone="emerald" icon="percent" title="Conversion Rate" value={`${conversionRate.toFixed(2)}%`} trend="+ 5.8%" />
+          <DashboardKpiCard tone="dark" icon="deal" title="Total Deals" value={formatCompactNumber(deals)} trend="+ 4.5%" />
+        </div>
+      </div>
+
+      <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(14rem,0.48fr)_minmax(14rem,0.48fr)]">
+        <LatestTransactionsCard transactions={buildDashboardTransactions(orders)} />
+        <DealsStatisticsCard orders={orders} tickets={tickets} logs={logs} />
+        <RecentPerformanceCard intelligence={intelligence} />
+      </div>
+
+      <button
+        type="button"
+        aria-label="Open admin chat"
+        className="fixed bottom-7 right-7 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#4d05ec] text-white shadow-[8px_8px_0_rgba(103,190,74,0.95)] transition hover:scale-105"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 13.5a4 4 0 0 1-4 4H9l-5 3v-13a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4Z" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+const salesOverviewData = [
+  { month: 'Jan', profit: 70, expense: 88 },
+  { month: 'Feb', profit: 60, expense: 98 },
+  { month: 'Mar', profit: 37, expense: 97 },
+  { month: 'Apr', profit: 50, expense: 98 },
+  { month: 'May', profit: 76, expense: 98 },
+  { month: 'Jun', profit: 90, expense: 98 },
+  { month: 'Jul', profit: 59, expense: 97 },
+  { month: 'Aug', profit: 75, expense: 96 },
+  { month: 'Sep', profit: 35, expense: 96 },
+  { month: 'Oct', profit: 55, expense: 98 },
+  { month: 'Nov', profit: 75, expense: 98 },
+  { month: 'Dec', profit: 80, expense: 96 },
+];
+
+function SalesOverviewCard() {
+  return (
+    <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
+      <div className="flex items-center justify-between border-b border-[#e8edf3] px-6 py-5">
+        <h2 className="text-base font-semibold text-slate-950">Sales Overview</h2>
+        <button type="button" className="rounded bg-[#f8f8fc] px-3 py-2 text-xs font-medium text-slate-950">This Month</button>
+      </div>
+      <div className="px-8 pb-5 pt-7">
+        <div className="grid min-h-[285px] grid-cols-[2.8rem_minmax(0,1fr)] gap-3">
+          <div className="flex flex-col justify-between pb-7 text-right text-[11px] font-medium text-slate-950">
+            <span>10000</span>
+            <span>8000</span>
+            <span>6000</span>
+            <span>4000</span>
+            <span>2000</span>
+            <span>0</span>
+          </div>
+          <div className="grid grid-cols-12 items-end gap-4 border-b border-[#e8edf3]">
+            {salesOverviewData.map((item) => (
+              <div key={item.month} className="relative flex h-full items-end justify-center">
+                <span className="absolute inset-y-0 left-1/2 border-l border-dashed border-[#dfe4ea]" />
+                <span className="absolute bottom-0 h-full w-3 rounded-t bg-[#dfe4ea]" style={{ height: `${item.expense}%` }} />
+                <span className="relative z-10 w-3 rounded-t bg-[#6fbc53]" style={{ height: `${item.profit}%` }} />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="ml-[3.95rem] mt-3 grid grid-cols-12 gap-4 text-center text-xs font-medium text-slate-700">
+          {salesOverviewData.map((item) => <span key={item.month}>{item.month}</span>)}
+        </div>
+        <div className="mt-4 flex items-center justify-center gap-5 text-xs text-slate-700">
+          <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#6fbc53]" />Profit</span>
+          <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#dfe4ea]" />Expense</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DashboardKpiCard({
+  title,
+  value,
+  trend,
+  tone,
+  icon,
+  negative = false,
+}: {
+  title: string;
+  value: string;
+  trend: string;
+  tone: 'green' | 'teal' | 'rose' | 'amber' | 'emerald' | 'dark';
+  icon: 'customer' | 'group' | 'dollar' | 'bag' | 'percent' | 'deal';
+  negative?: boolean;
+}) {
+  const toneClass = {
+    green: 'border-[#d9edce] bg-[#ecf7e7] text-[#75bd4d]',
+    teal: 'border-[#0a8c84] bg-[#e9faf8] text-[#008f88]',
+    rose: 'border-[#ff315f] bg-[#ffeef3] text-[#f72f5e]',
+    amber: 'border-[#ffb21f] bg-[#fff4d8] text-[#f7b23b]',
+    emerald: 'border-[#18c978] bg-[#e8fbf1] text-[#20b768]',
+    dark: 'border-[#4b525a] bg-[#eef0f2] text-[#343a40]',
+  }[tone];
+
+  return (
+    <section className="min-h-[140px] rounded-md border border-[#e4e9f0] bg-white px-5 py-5">
+      <div className="flex items-start gap-4">
+        <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-full border ${toneClass}`}>
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-current">
+            <DashboardKpiIcon icon={icon} />
+          </span>
+        </span>
+        <h3 className="max-w-[8rem] pt-1 text-base font-semibold leading-5 text-slate-950">{title}</h3>
+      </div>
+      <div className="mt-4 flex items-end justify-between gap-3">
+        <p className="text-[26px] font-medium leading-none text-slate-950">{value}</p>
+        <div className="text-right text-sm leading-5">
+          <p className={negative ? 'font-medium text-[#ff2c58]' : 'font-medium text-[#69ba49]'}>{negative ? 'v' : '^'} {trend.replace('-', '')}</p>
+          <p className="text-slate-950">Last 7 days</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DashboardKpiIcon({ icon }: { icon: 'customer' | 'group' | 'dollar' | 'bag' | 'percent' | 'deal' }) {
+  if (icon === 'customer') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="currentColor"><circle cx="12" cy="8" r="3" /><path d="M6.5 19a5.5 5.5 0 0 1 11 0Z" /></svg>;
+  }
+  if (icon === 'group') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="currentColor"><circle cx="12" cy="8" r="2.4" /><circle cx="7" cy="11" r="2" /><circle cx="17" cy="11" r="2" /><path d="M8 19a4 4 0 0 1 8 0Z" /><path d="M3.5 18a3.7 3.7 0 0 1 6-2.9" /><path d="M14.5 15.1a3.7 3.7 0 0 1 6 2.9" /></svg>;
+  }
+  if (icon === 'dollar') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 4v16" /><path d="M16 8.5c-.7-1-2-1.5-3.5-1.5-2 0-3.5 1-3.5 2.5s1.3 2.1 3.3 2.5c2.2.4 3.7 1 3.7 2.7 0 1.5-1.5 2.6-3.8 2.6-1.7 0-3.1-.6-4.2-1.7" /></svg>;
+  }
+  if (icon === 'bag') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 8h10l1 11H6Z" /><path d="M9 8a3 3 0 0 1 6 0" /></svg>;
+  }
+  if (icon === 'percent') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M7 17 17 7" /><circle cx="8" cy="8" r="2" /><circle cx="16" cy="16" r="2" /></svg>;
+  }
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M7 12h10" /><path d="M9 8h8" /><path d="M7 16h8" /></svg>;
+}
+
+function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string }> }) {
+  return (
+    <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
+      <div className="border-b border-[#e8edf3] px-6 py-5">
+        <h2 className="text-base font-semibold text-slate-950">Latest transactions</h2>
+      </div>
+      <div>
+        {transactions.map((transaction) => (
+          <div key={`${transaction.name}-${transaction.date}`} className="grid grid-cols-[3rem_minmax(0,1fr)_7rem_6.5rem] items-center gap-3 border-b border-[#e8edf3] px-5 py-3 last:border-b-0">
+            <span className={`grid h-12 w-12 place-items-center rounded-full border border-[#e8edf3] text-sm font-bold text-white ${transaction.tone}`}>{transaction.name.slice(0, 1)}</span>
+            <div>
+              <p className="font-medium text-slate-950">{transaction.name}</p>
+              <p className="mt-1 max-w-[12rem] text-sm leading-5 text-[#61709a]">{transaction.subtitle}</p>
+            </div>
+            <span className={`mx-auto rounded-full px-2 py-1 text-[10px] font-semibold ${
+              transaction.status === 'Completed' ? 'bg-[#dcf9e8] text-[#18b95b]' : transaction.status === 'Failed' ? 'bg-[#ffe5e9] text-[#f0445c]' : 'bg-[#fff0cf] text-[#f5a400]'
+            }`}>
+              {transaction.status}
+            </span>
+            <div className="text-right">
+              <p className={transaction.amount.startsWith('-') ? 'font-medium text-slate-950' : 'font-medium text-[#00b84d]'}>{transaction.amount}</p>
+              <p className="mt-1 text-sm text-[#61709a]">{transaction.date}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function DealsStatisticsCard({ orders, tickets, logs }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[]; logs: AdminAuditLog[] }) {
+  const values = [orders.length * 9 || 64, tickets.length * 14 || 38, logs.length * 11 || 81, 55, 92, 46];
+
+  return (
+    <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
+      <div className="border-b border-[#e8edf3] px-6 py-5">
+        <h2 className="text-base font-semibold text-slate-950">Deals Statistics</h2>
+      </div>
+      <div className="grid h-[285px] place-items-center p-5">
+        <div className="relative h-48 w-48">
+          <div className="absolute inset-8 rotate-45 border border-[#dce3eb]" />
+          <div className="absolute inset-x-4 top-1/2 border-t border-[#dce3eb]" />
+          <div className="absolute inset-y-4 left-1/2 border-l border-[#dce3eb]" />
+          <svg viewBox="0 0 160 160" className="absolute inset-0 h-full w-full">
+            <polygon points={radarPoints(values)} fill="rgba(111,188,83,0.38)" stroke="#6fbc53" strokeWidth="2" />
+            <polyline points="80,25 122,55 119,112 80,138 38,112 38,55 80,25" fill="none" stroke="#dce3eb" />
+            {radarDots(values)}
+          </svg>
+          <span className="absolute left-1/2 top-2 -translate-x-1/2 text-xs text-slate-950">2019</span>
+          <span className="absolute right-0 top-[4.8rem] text-xs text-slate-950">2020</span>
+          <span className="absolute bottom-[3.7rem] right-0 text-xs text-slate-950">2021</span>
+          <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-xs text-slate-950">2022</span>
+          <span className="absolute bottom-[3.7rem] left-0 text-xs text-slate-950">2023</span>
+          <span className="absolute left-1 top-[4.8rem] text-xs text-slate-950">2024</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingIntelligence | null }) {
+  const performance = Math.min(98, Math.max(78, Math.round((intelligence?.metrics.averageBuffer ?? 1.78) * 44)));
+  const segments = Array.from({ length: 42 }, (_, index) => index);
+
+  return (
+    <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
+      <div className="border-b border-[#e8edf3] px-6 py-5">
+        <h2 className="max-w-[10rem] text-base font-semibold leading-5 text-slate-950">Your Recent Performance</h2>
+      </div>
+      <div className="grid h-[285px] place-items-center p-5">
+        <div className="relative h-48 w-48">
+          {segments.map((segment) => {
+            const active = segment < Math.round((performance / 100) * segments.length);
+            return (
+              <span
+                key={segment}
+                className={`absolute left-1/2 top-1/2 h-8 w-2 origin-[50%_6rem] rounded-full ${active ? 'bg-[#6fbc53]' : 'bg-[#f1f2f8]'}`}
+                style={{ transform: `translate(-50%, -6rem) rotate(${segment * 6.7 - 138}deg)` }}
+              />
+            );
+          })}
+          <div className="absolute inset-10 grid place-items-center rounded-full bg-white">
+            <div className="text-center">
+              <p className="text-[26px] font-medium text-[#343a40]">{performance}%</p>
+              <p className="mt-1 text-sm text-[#62b447]">Growth</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function DashboardPanel({
@@ -1619,6 +1898,52 @@ function formatDate(value: string): string {
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+}
+
+function formatCompactNumber(value: number): string {
+  return new Intl.NumberFormat('en-US').format(Math.round(value));
+}
+
+function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string }> {
+  const fallback = [
+    { name: 'Bob Dean', subtitle: 'Transfer to bank account', amount: '$158.00 USD', date: '24 Jan, 2024', status: 'Pending' as const, tone: 'bg-[#e64b8b]' },
+    { name: 'Bank of America', subtitle: 'Withdrawal to account', amount: '$258.00 USD', date: '26 June, 2024', status: 'Completed' as const, tone: 'bg-[#edf6ff] text-[#177ddc]' },
+    { name: 'Slack', subtitle: 'Subscription to plan', amount: '-$154.00 USD', date: '12 May, 2024', status: 'Failed' as const, tone: 'bg-[#36c5cd]' },
+    { name: 'Asana', subtitle: 'Subscription payment', amount: '$258.00 USD', date: '15 Feb, 2024', status: 'Completed' as const, tone: 'bg-[#ff6868]' },
+  ];
+
+  if (orders.length === 0) return fallback;
+
+  return orders.slice(0, 4).map((order, index) => {
+    const paymentStatus = getPaymentStatus(order);
+    return {
+      name: order.orderNumber || `Order ${index + 1}`,
+      subtitle: order.quoteId ? `Quote ${order.quoteId}` : 'PCB order payment',
+      amount: `${paymentStatus === 'refunded' ? '-' : ''}$${Math.abs(order.totalPrice ?? 258).toFixed(2)} USD`,
+      date: order.createdAt ? formatDate(order.createdAt) : fallback[index]?.date ?? '24 Jan, 2024',
+      status: paymentStatus === 'paid' ? 'Completed' : paymentStatus === 'failed' || paymentStatus === 'refunded' ? 'Failed' : 'Pending',
+      tone: ['bg-[#e64b8b]', 'bg-[#edf6ff] text-[#177ddc]', 'bg-[#36c5cd]', 'bg-[#ff6868]'][index] ?? 'bg-[#e64b8b]',
+    };
+  });
+}
+
+function radarPoints(values: number[]): string {
+  return values
+    .slice(0, 6)
+    .map((value, index) => {
+      const angle = (Math.PI * 2 * index) / 6 - Math.PI / 2;
+      const radius = 14 + Math.min(100, value) * 0.48;
+      return `${80 + Math.cos(angle) * radius},${80 + Math.sin(angle) * radius}`;
+    })
+    .join(' ');
+}
+
+function radarDots(values: number[]) {
+  return values.slice(0, 6).map((value, index) => {
+    const angle = (Math.PI * 2 * index) / 6 - Math.PI / 2;
+    const radius = 14 + Math.min(100, value) * 0.48;
+    return <circle key={index} cx={80 + Math.cos(angle) * radius} cy={80 + Math.sin(angle) * radius} r="3" fill={index % 2 ? '#3b82f6' : '#c026d3'} />;
+  });
 }
 
 const fieldClassName =
