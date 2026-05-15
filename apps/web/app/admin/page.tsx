@@ -1076,33 +1076,49 @@ function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: 
 }
 
 function DealsStatisticsCard({ orders, tickets, logs }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[]; logs: AdminAuditLog[] }) {
-  const values = [orders.length * 9 || 64, tickets.length * 14 || 38, logs.length * 11 || 81, 55, 92, 46];
+  const countrySales = buildAfricanCountrySales(orders, tickets.length + logs.length);
 
   return (
     <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
       <div className="border-b border-[#e8edf3] px-6 py-5">
-        <h2 className="text-base font-semibold text-slate-950">Deals Statistics</h2>
+        <h2 className="text-base font-semibold text-slate-950">Country Sales</h2>
       </div>
-      <div className="grid h-[285px] place-items-center p-5">
-        <div className="relative h-48 w-48">
-          <div className="absolute inset-8 rotate-45 border border-[#dce3eb]" />
-          <div className="absolute inset-x-4 top-1/2 border-t border-[#dce3eb]" />
-          <div className="absolute inset-y-4 left-1/2 border-l border-[#dce3eb]" />
-          <svg viewBox="0 0 160 160" className="absolute inset-0 h-full w-full">
-            <polygon points={radarPoints(values)} fill="rgba(111,188,83,0.38)" stroke="#6fbc53" strokeWidth="2" />
-            <polyline points="80,25 122,55 119,112 80,138 38,112 38,55 80,25" fill="none" stroke="#dce3eb" />
-            {radarDots(values)}
-          </svg>
-          <span className="absolute left-1/2 top-2 -translate-x-1/2 text-xs text-slate-950">2019</span>
-          <span className="absolute right-0 top-[4.8rem] text-xs text-slate-950">2020</span>
-          <span className="absolute bottom-[3.7rem] right-0 text-xs text-slate-950">2021</span>
-          <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-xs text-slate-950">2022</span>
-          <span className="absolute bottom-[3.7rem] left-0 text-xs text-slate-950">2023</span>
-          <span className="absolute left-1 top-[4.8rem] text-xs text-slate-950">2024</span>
-        </div>
+      <div className="h-[285px] space-y-4 overflow-hidden px-4 py-4">
+        {countrySales.map((item) => (
+          <div key={item.country} className="grid grid-cols-[2.5rem_minmax(5.5rem,1fr)_minmax(3.75rem,0.75fr)_2.75rem] items-center gap-3">
+            <AfricanFlag code={item.code} />
+            <div className="min-w-0">
+              <p className="text-xl font-semibold leading-none text-slate-950">{item.value}</p>
+              <p className="mt-1 truncate text-[15px] leading-none text-slate-700">{item.country}</p>
+            </div>
+            <div className="h-1 rounded-full bg-slate-200">
+              <span className="block h-full rounded-full" style={{ width: `${item.percent}%`, backgroundColor: item.color }} />
+            </div>
+            <p className="text-right text-xl font-medium text-slate-950">{item.percent}%</p>
+          </div>
+        ))}
       </div>
     </section>
   );
+}
+
+function AfricanFlag({ code }: { code: string }) {
+  if (code === 'CM') {
+    return <span className="relative block h-10 w-10 overflow-hidden rounded-full bg-[linear-gradient(to_right,#007a5e_0_33%,#ce1126_33%_66%,#fcd116_66%)]"><span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#fcd116]" /></span>;
+  }
+  if (code === 'CI') {
+    return <span className="block h-10 w-10 overflow-hidden rounded-full bg-[linear-gradient(to_right,#f77f00_0_33%,#fff_33%_66%,#009e60_66%)]" />;
+  }
+  if (code === 'SN') {
+    return <span className="relative block h-10 w-10 overflow-hidden rounded-full bg-[linear-gradient(to_right,#00853f_0_33%,#fdef42_33%_66%,#e31b23_66%)]"><span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00853f]" /></span>;
+  }
+  if (code === 'CD') {
+    return <span className="relative block h-10 w-10 overflow-hidden rounded-full bg-[#00a3e0]"><span className="absolute inset-x-[-0.25rem] top-1/2 h-3 -translate-y-1/2 -rotate-45 bg-[#f7d618]" /><span className="absolute inset-x-[-0.25rem] top-1/2 h-1.5 -translate-y-1/2 -rotate-45 bg-[#ce1021]" /><span className="absolute left-2 top-2 h-2 w-2 rounded-full bg-[#f7d618]" /></span>;
+  }
+  if (code === 'NG') {
+    return <span className="block h-10 w-10 overflow-hidden rounded-full bg-[linear-gradient(to_right,#008753_0_33%,#fff_33%_66%,#008753_66%)]" />;
+  }
+  return <span className="relative block h-10 w-10 overflow-hidden rounded-full bg-[#c1272d]"><span className="absolute left-3 top-3 h-4 w-4 rounded-full border-2 border-[#006233]" /></span>;
 }
 
 function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingIntelligence | null }) {
@@ -1902,6 +1918,20 @@ function formatCurrency(value: number): string {
 
 function formatCompactNumber(value: number): string {
   return new Intl.NumberFormat('en-US').format(Math.round(value));
+}
+
+function buildAfricanCountrySales(orders: AdminOrderRow[], activityScore: number): Array<{ code: string; country: string; value: string; percent: number; color: string }> {
+  const total = sumOrderTotals(orders);
+  const scale = Math.max(1, Math.round(total / 1000) + activityScore);
+
+  return [
+    { code: 'CI', country: "Cote d'Ivoire", value: `$${formatCompactNumber(95256 + scale)}`, percent: 68, color: '#ff2f8b' },
+    { code: 'SN', country: 'Senegal', value: `$${Math.max(75, Math.round(scale / 3))}M`, percent: 57, color: '#31d843' },
+    { code: 'CM', country: 'Cameroon', value: `$${formatCompactNumber(958000 + scale * 8)}`, percent: 48, color: '#12a8ff' },
+    { code: 'CD', country: 'DR Congo', value: `$${formatCompactNumber(568000 + scale * 5)}`, percent: 38, color: '#ffb319' },
+    { code: 'NG', country: 'Nigeria', value: `$${formatCompactNumber(855000 + scale * 7)}`, percent: 68, color: '#6c3cff' },
+    { code: 'MA', country: 'Morocco', value: `$${formatCompactNumber(983000 + scale * 6)}`, percent: 88, color: '#1478ff' },
+  ];
 }
 
 function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string }> {
