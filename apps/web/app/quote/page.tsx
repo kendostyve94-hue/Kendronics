@@ -252,6 +252,11 @@ type ApiPricingPreview = {
   smartBufferBucketKey?: string;
 };
 
+type PricingPreviewState = {
+  status: 'local' | 'loading' | 'live' | 'error';
+  message: string;
+};
+
 type QuotePanelId = 'base' | 'specs' | 'highSpec' | 'advanced';
 type MobileSheetId =
   | 'baseMaterial'
@@ -316,6 +321,10 @@ export default function QuotePage() {
   const [mobileSheet, setMobileSheet] = useState<MobileSheetId | null>(null);
   const [selectedProductTitle, setSelectedProductTitle] = useState(productCards.find((product) => product.value === initialQuoteConfig.productType)?.title ?? productCards[0].title);
   const [apiPricing, setApiPricing] = useState<PricingBreakdown | null>(null);
+  const [pricingPreview, setPricingPreview] = useState<PricingPreviewState>({
+    status: 'local',
+    message: 'Connectez-vous pour afficher le prix live PCBWay.',
+  });
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === config.destinationCountry) ?? africanCountries[0],
@@ -334,8 +343,17 @@ export default function QuotePage() {
         const session = await readFreshAuthSession();
         if (!session || cancelled) {
           setApiPricing(null);
+          setPricingPreview({
+            status: 'local',
+            message: 'Connectez-vous pour afficher le prix live PCBWay.',
+          });
           return;
         }
+
+        setPricingPreview({
+          status: 'loading',
+          message: 'Calcul du prix live PCBWay en cours...',
+        });
 
         const response = await fetch(`${apiBaseUrl}/api/pricing/preview`, {
           method: 'POST',
@@ -353,11 +371,23 @@ export default function QuotePage() {
 
         const data = (await response.json()) as ApiPricingPreview;
         if (!cancelled) {
-          setApiPricing(normalizeApiPricingPreview(data, localPricing));
+          const normalizedPricing = normalizeApiPricingPreview(data, localPricing);
+          setApiPricing(normalizedPricing);
+          setPricingPreview({
+            status: normalizedPricing.pricingSource === 'supplier_api' ? 'live' : 'local',
+            message:
+              normalizedPricing.pricingSource === 'supplier_api'
+                ? `Prix live ${data.supplier ?? 'fournisseur'} applique. Aucune commande fournisseur creee.`
+                : "Prix local affiche: le fournisseur live n'a pas ete utilise pour cet apercu.",
+          });
         }
       } catch (error) {
         if (!cancelled && !(error instanceof DOMException && error.name === 'AbortError')) {
           setApiPricing(null);
+          setPricingPreview({
+            status: 'error',
+            message: 'Apercu PCBWay indisponible. Le prix local reste visible, mais la sauvegarde retentera le devis live.',
+          });
         }
       }
     }, 450);
@@ -602,7 +632,7 @@ export default function QuotePage() {
         throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Impossible de sauvegarder le devis.');
       }
 
-      const quote = (await response.json()) as { id: string };
+      const quote = (await response.json()) as { id: string; breakdown?: { supplier?: string } };
       const orderResponse = await fetch(`${apiBaseUrl}/api/orders`, {
         method: 'POST',
         headers: {
@@ -627,7 +657,10 @@ export default function QuotePage() {
         status: 'saved',
         quoteId: quote.id,
         orderId: order.id,
-        message: `Commande ouverte: ${order.orderNumber}`,
+        message:
+          quote.breakdown?.supplier && quote.breakdown.supplier !== 'local_calibrated_supplier_estimate'
+            ? `Commande ouverte sans paiement reel: ${order.orderNumber}. Le devis live ${quote.breakdown.supplier} a ete enregistre.`
+            : `Commande ouverte sans paiement reel: ${order.orderNumber}. Le devis a ete enregistre et reste a valider avant paiement.`,
       });
     } catch (error) {
       setQuoteSave({
@@ -921,6 +954,7 @@ export default function QuotePage() {
             onShippingModeChange={updateShippingMode}
             selectedLiveShippingRateId={config.liveShippingRateId}
             onLiveShippingRateSelect={selectLiveShippingRate}
+            pricingPreview={pricingPreview}
           />
         </div>
       </section>

@@ -24,6 +24,11 @@ type ShippingRateSelection = {
   transitTime?: string;
 };
 
+type PricingPreviewState = {
+  status: 'local' | 'loading' | 'live' | 'error';
+  message: string;
+};
+
 export function PricingSummary({
   pricing,
   errors,
@@ -38,6 +43,7 @@ export function PricingSummary({
   onShippingModeChange,
   selectedLiveShippingRateId,
   onLiveShippingRateSelect,
+  pricingPreview,
 }: {
   pricing: PricingBreakdown;
   errors: string[];
@@ -52,6 +58,7 @@ export function PricingSummary({
   onShippingModeChange: (value: QuoteConfig['shippingMode']) => void;
   selectedLiveShippingRateId?: string;
   onLiveShippingRateSelect: (rate: ShippingRateSelection) => void;
+  pricingPreview: PricingPreviewState;
 }) {
   const [deliveryOpen, setDeliveryOpen] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
@@ -120,8 +127,29 @@ export function PricingSummary({
       <div className="hidden rounded-sm border border-slate-200 bg-[#f4f7fa] p-5 lg:block">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-black text-slate-950 sm:text-base">Pricing</h2>
-          <span className="sr-only">Pricing status</span>
+          <span className={`rounded-sm border px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${
+            pricingPreview.status === 'live'
+              ? 'border-[#b9ebda] bg-[#eefbf6] text-[#0f8f6b]'
+              : pricingPreview.status === 'loading'
+                ? 'border-[#bcd7f5] bg-[#eef6ff] text-[#0877ff]'
+                : pricingPreview.status === 'error'
+                  ? 'border-[#ffd5b8] bg-[#fff4e8] text-[#c45100]'
+                  : 'border-slate-200 bg-white text-slate-500'
+          }`}>
+            {pricingPreview.status === 'live' ? 'PCBWay live' : pricingPreview.status === 'loading' ? 'Live...' : pricingPreview.status === 'error' ? 'A verifier' : 'Local'}
+          </span>
         </div>
+        <p className={`mt-3 border px-3 py-2 text-xs font-bold leading-5 ${
+          pricingPreview.status === 'live'
+            ? 'border-[#b9ebda] bg-[#eefbf6] text-[#0f8f6b]'
+            : pricingPreview.status === 'loading'
+              ? 'border-[#bcd7f5] bg-[#eef6ff] text-[#0877ff]'
+              : pricingPreview.status === 'error'
+                ? 'border-[#ffd5b8] bg-[#fff4e8] text-[#c45100]'
+                : 'border-slate-200 bg-white text-slate-600'
+        }`}>
+          {pricingPreview.message}
+        </p>
 
         <div className="mt-4 mb-4">
           <p className="mb-2 text-sm font-semibold text-slate-700">PCB Price</p>
@@ -206,6 +234,11 @@ export function PricingSummary({
           <div className="flex items-center gap-3">
             <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Afficher le détail du prix" aria-expanded={priceDetailsOpen}>
               <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estimé</p>
+              <p className={`mt-0.5 text-[10px] font-black uppercase tracking-[0.1em] ${
+                pricingPreview.status === 'live' ? 'text-[#0f8f6b]' : pricingPreview.status === 'error' ? 'text-[#c45100]' : 'text-slate-500'
+              }`}>
+                {pricingPreview.status === 'live' ? 'PCBWay live' : pricingPreview.status === 'loading' ? 'Live...' : pricingPreview.status === 'error' ? 'A verifier' : 'Local'}
+              </p>
               <p className="mt-0.5 text-lg font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
             </button>
             <button
