@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { Navbar } from '../../components/layout/Navbar';
-import { clearAuthSession, readAuthSession } from '../../lib/auth-session';
+import { getApiBaseUrl } from '../../lib/api-base-url';
+import { clearAuthSession, readAuthSession, readFreshAuthSession } from '../../lib/auth-session';
 
 const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
@@ -22,6 +23,59 @@ type QuickProduct = {
   href: string;
   image: string;
   color: string;
+};
+
+type ProfileOrderStatus =
+  | 'draft'
+  | 'quoted'
+  | 'awaiting_payment'
+  | 'paid'
+  | 'supplier_order_pending'
+  | 'supplier_ordered'
+  | 'supplier_in_production'
+  | 'received_at_france_hub'
+  | 'shipped_to_africa'
+  | 'customs_processing'
+  | 'out_for_delivery'
+  | 'delivered'
+  | 'cancelled'
+  | 'refunded';
+
+type ProfileOrder = {
+  id: string;
+  orderNumber: string;
+  status: ProfileOrderStatus;
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
+  totalPrice?: number;
+  currency?: 'EUR';
+  carrierName?: string;
+  trackingNumber?: string;
+  createdAt: string;
+  quoteSnapshot?: {
+    productType: string;
+    gerberFileId: string;
+    quantity: number;
+    finalTotal: number;
+    currency: 'EUR';
+  };
+};
+
+type ProfileNotification = {
+  id: string;
+  type: string;
+  title: string;
+  body?: string;
+  readAt?: string;
+  createdAt: string;
+};
+
+type ProfileUser = {
+  id: string;
+  email: string;
+  fullName: string;
+  companyName?: string;
+  emailVerifiedAt?: string;
+  createdAt: string;
 };
 
 type ProfileView =
@@ -50,10 +104,6 @@ const quickProducts: QuickProduct[] = [
 
 const sidebarGroups = [
   {
-    title: 'Commandes',
-    items: ['Mon Espace', 'Verification en cours (2)', 'Paiement en attente (1)', 'Paiement inacheve (0)', 'Statut de production (3)', 'Livraison (1)', 'Termine (8)', 'Gerer les commentaires', 'Remboursements & Litiges (0)', 'Liste des souhaits (3)'],
-  },
-  {
     title: 'Services',
     items: ['Prototype PCB', 'Petites series', 'PCB avance', 'Assemblage PCB', 'CNC | Impression 3D', 'Conception PCB', 'Assistance Gerber'],
   },
@@ -67,19 +117,14 @@ const sidebarGroups = [
   },
 ];
 
-const orderRows = [
-  ['KD-250516-001', 'PCB Prototype', '2025-05-16', '5 pcs', 'Verification', '$23.50'],
-  ['KD-250515-008', 'PCB Assembly', '2025-05-15', '10 pcs', 'Production', '$129.00'],
-  ['KD-250514-002', 'FPC Flexible PCB', '2025-05-14', '5 pcs', 'Production', '$85.40'],
-  ['KD-250513-011', 'PCB Prototype', '2025-05-13', '5 pcs', 'Livraison', '$23.50'],
-  ['KD-250511-007', 'CNC Machining', '2025-05-11', '1 pcs', 'Termine', '$56.00'],
-];
-
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileForm>({ name: '', email: '', phone: '', company: '', country: '' });
   const [accountId, setAccountId] = useState('');
   const [avatarDataUrl, setAvatarDataUrl] = useState('');
   const [activeProfileView, setActiveProfileView] = useState<ProfileView>(null);
+  const [orders, setOrders] = useState<ProfileOrder[]>([]);
+  const [notifications, setNotifications] = useState<ProfileNotification[]>([]);
+  const [dataStatus, setDataStatus] = useState<'loading' | 'ready' | 'signed-out' | 'error'>('loading');
   useEffect(() => {
     const storedProfile = readStoredProfile();
     const sessionProfile = readSessionProfile();
@@ -96,6 +141,45 @@ export default function ProfilePage() {
     if (new URLSearchParams(window.location.search).get('view') === 'orders') {
       setActiveProfileView('all-orders');
     }
+
+    let cancelled = false;
+    async function loadProductionProfileData() {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        if (!cancelled) setDataStatus('signed-out');
+        return;
+      }
+
+      try {
+        const [userResponse, ordersResponse, notificationsResponse] = await Promise.all([
+          authenticatedFetch<ProfileUser>('/api/users/me', session.accessToken),
+          authenticatedFetch<ProfileOrder[]>('/api/orders', session.accessToken),
+          authenticatedFetch<ProfileNotification[]>('/api/notifications', session.accessToken),
+        ]);
+
+        if (cancelled) return;
+
+        setProfile((current) => ({
+          name: userResponse.fullName || current.name,
+          email: userResponse.email || current.email,
+          phone: current.phone,
+          company: userResponse.companyName || current.company,
+          country: current.country,
+        }));
+        setAccountId(userResponse.id || sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
+        setOrders(ordersResponse);
+        setNotifications(notificationsResponse);
+        setDataStatus('ready');
+      } catch {
+        if (!cancelled) setDataStatus('error');
+      }
+    }
+
+    void loadProductionProfileData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const firstName = firstNameOf(profile.name || emailName(profile.email) || 'Rafale');
@@ -106,26 +190,26 @@ export default function ProfilePage() {
       <Navbar />
       <div className="w-full pt-[70px]">
         <div className="mx-auto grid min-w-[1328px] max-w-[1368px] grid-cols-[250px_minmax(0,1fr)] gap-4 px-5 py-4">
-          <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} />
+          <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} counts={orderCounts(orders)} unreadNotifications={unreadNotifications(notifications)} />
 
           <section className="min-w-0">
             {activeProfileView ? (
-              <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} />
+              <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onNotificationsChange={setNotifications} />
             ) : (
               <>
                 <ProductQuickGrid />
 
                 <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_330px] gap-4">
                   <div className="min-w-0">
-                    <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} />
+                    <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
                     <ReferralBanner />
-                    <StatusStrip />
-                    <OrdersTable />
+                    <StatusStrip counts={orderCounts(orders)} />
+                    <OrdersTable orders={orders} dataStatus={dataStatus} />
                     <GiftExchange />
                     <ReviewsPanel />
                   </div>
 
-                  <RightRail />
+                  <RightRail orders={orders} notifications={notifications} dataStatus={dataStatus} />
                 </div>
               </>
             )}
@@ -183,13 +267,31 @@ function ProfileNavLink({ href, label }: { href: string; label: string }) {
 function ProfileSidebar({
   activeProfileView,
   onSelectView,
+  counts,
+  unreadNotifications,
 }: {
   activeProfileView: ProfileView;
   onSelectView: (view: ProfileView) => void;
+  counts: ReturnType<typeof orderCounts>;
+  unreadNotifications: number;
 }) {
+  const commandItems = [
+    'Mon Espace',
+    `Verification en cours (${counts.verification})`,
+    `Paiement en attente (${counts.paymentPending})`,
+    'Paiement inacheve (0)',
+    `Statut de production (${counts.production})`,
+    `Livraison (${counts.delivery})`,
+    `Termine (${counts.completed})`,
+    `Gerer les commentaires (${counts.comments})`,
+    'Remboursements & Litiges (0)',
+    'Liste des souhaits (0)',
+  ];
+  const groups = [{ title: 'Commandes', items: commandItems }, ...sidebarGroups];
+
   return (
     <aside className="sticky top-[86px] block self-start bg-white shadow-sm ring-1 ring-slate-200">
-      {sidebarGroups.map((group) => (
+      {groups.map((group) => (
         <section key={group.title} className="border-b border-slate-200 last:border-b-0">
           <h2 className="px-4 pb-2 pt-5 text-[12px] font-black uppercase text-[#1f2f43]">{group.title}</h2>
           <div className="block px-0 pb-4">
@@ -210,7 +312,7 @@ function ProfileSidebar({
                     isActive ? 'border-[#24ad5d] text-[#24ad5d]' : 'border-slate-300 text-slate-400'
                   }`}>{index + 1}</span>
                   <span className="min-w-0 truncate">{item}</span>
-                  {index === 0 && group.title === 'Promotions' ? <span className="ml-auto rounded-none bg-red-500 px-1.5 text-[10px] font-black text-white">2</span> : null}
+                  {item === 'Notifications' && unreadNotifications > 0 ? <span className="ml-auto rounded-none bg-red-500 px-1.5 text-[10px] font-black text-white">{unreadNotifications}</span> : null}
                   {isActive ? <span className="absolute right-0 top-0 h-full w-[5px] bg-[#27a35a]" /> : null}
                 </button>
               );
@@ -252,20 +354,28 @@ function ProfileViewContent({
   profile,
   userId,
   avatarDataUrl,
+  orders,
+  notifications,
+  dataStatus,
+  onNotificationsChange,
 }: {
   view: Exclude<ProfileView, null>;
   profile: ProfileForm;
   userId: string;
   avatarDataUrl: string;
+  orders: ProfileOrder[];
+  notifications: ProfileNotification[];
+  dataStatus: 'loading' | 'ready' | 'signed-out' | 'error';
+  onNotificationsChange: (notifications: ProfileNotification[]) => void;
 }) {
-  if (view === 'all-orders') return <OrderReviewSection activeKey="all" title="Toutes commandes" mode="table" />;
-  if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Panier / Examen de votre commande" mode="review" />;
-  if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Panier / Examen de votre commande" mode="review" />;
-  if (view === 'production') return <OrderReviewSection activeKey="production" title="Progrès de la Fabrication" mode="table" />;
-  if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="table" />;
-  if (view === 'completed') return <OrderReviewSection activeKey="completed" title="Commande complétée" mode="table" />;
-  if (view === 'comments') return <CommentsManagementSection />;
-  if (view === 'notifications') return <NotificationsSection />;
+  if (view === 'all-orders') return <OrderReviewSection activeKey="all" title="Toutes commandes" mode="table" orders={orders} dataStatus={dataStatus} />;
+  if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Panier / Examen de votre commande" mode="review" orders={orders} dataStatus={dataStatus} />;
+  if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Panier / Examen de votre commande" mode="review" orders={orders} dataStatus={dataStatus} />;
+  if (view === 'production') return <OrderReviewSection activeKey="production" title="Progres de la Fabrication" mode="table" orders={orders} dataStatus={dataStatus} />;
+  if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="table" orders={orders} dataStatus={dataStatus} />;
+  if (view === 'completed') return <OrderReviewSection activeKey="completed" title="Commande completee" mode="table" orders={orders} dataStatus={dataStatus} />;
+  if (view === 'comments') return <CommentsManagementSection orders={orders} dataStatus={dataStatus} />;
+  if (view === 'notifications') return <NotificationsSection notifications={notifications} dataStatus={dataStatus} onNotificationsChange={onNotificationsChange} />;
   if (view === 'shipping-address') return <AddressFormSection title="Adresse de livraison" note="Veuillez entrer votre nouveau contact/adresse" />;
   if (view === 'invite') return <InviteSection />;
   if (view === 'billing') return <AddressFormSection title="Informations de facturation" billing />;
@@ -287,10 +397,24 @@ const orderStatuses: Array<{ key: OrderStatusKey | 'payment-unfinished' | 'engin
   { key: 'comments', label: 'Commentaires en attente' },
 ];
 
-function OrderReviewSection({ activeKey, title, mode }: { activeKey: OrderStatusKey; title: string; mode: 'review' | 'table' }) {
+function OrderReviewSection({
+  activeKey,
+  title,
+  mode,
+  orders = [],
+  dataStatus = 'ready',
+}: {
+  activeKey: OrderStatusKey;
+  title: string;
+  mode: 'review' | 'table';
+  orders?: ProfileOrder[];
+  dataStatus?: 'loading' | 'ready' | 'signed-out' | 'error';
+}) {
+  const visibleOrders = orders.filter((order) => orderMatchesStatus(order, activeKey));
+
   return (
     <section className="min-h-[690px] bg-white text-[#111827] shadow-sm ring-1 ring-slate-200">
-      <OrderStatusHeader activeKey={activeKey} />
+      <OrderStatusHeader activeKey={activeKey} counts={orderCounts(orders)} />
 
       <div className="border-t-[16px] border-[#eef0f3] px-6 pb-24 pt-5">
         <div className={`${mode === 'review' ? 'flex h-12 items-center gap-2 border-b border-[#e5e7eb]' : 'flex h-10 items-center gap-2'}`}>
@@ -298,13 +422,13 @@ function OrderReviewSection({ activeKey, title, mode }: { activeKey: OrderStatus
           <h2 className="text-xl font-normal text-black">{title}</h2>
         </div>
 
-        {mode === 'review' ? <ReviewSearchPanel /> : <OrderTableSearchPanel />}
+        {mode === 'review' ? <ReviewSearchPanel orders={visibleOrders} dataStatus={dataStatus} /> : <OrderTableSearchPanel orders={visibleOrders} dataStatus={dataStatus} />}
       </div>
     </section>
   );
 }
 
-function OrderStatusHeader({ activeKey }: { activeKey: OrderStatusKey }) {
+function OrderStatusHeader({ activeKey, counts }: { activeKey: OrderStatusKey; counts: ReturnType<typeof orderCounts> }) {
   return (
     <div className="px-6 pt-4">
       <div className="flex h-11 items-center gap-3 border-b border-[#e5e7eb]">
@@ -318,7 +442,7 @@ function OrderStatusHeader({ activeKey }: { activeKey: OrderStatusKey }) {
           return (
             <div key={status.key} className="grid min-h-[72px] place-items-center border-r border-[#e5e7eb] px-3 text-center last:border-r-0">
               <span className={`text-[28px] font-black leading-7 ${active ? 'text-[#ff5a00]' : 'text-[#1f2937]'}`}>
-                0
+                {countForStatus(status.key, counts)}
                 {status.icon ? <span className="ml-1 align-middle text-[20px] text-[#20b99a]">{status.icon}</span> : null}
               </span>
               <span className={`mt-1 text-[14px] leading-4 ${active ? 'text-[#ff5a00]' : 'text-[#8a8f98]'}`}>{status.label}</span>
@@ -330,7 +454,7 @@ function OrderStatusHeader({ activeKey }: { activeKey: OrderStatusKey }) {
   );
 }
 
-function ReviewSearchPanel() {
+function ReviewSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
   return (
     <>
       <div className="flex items-center justify-between py-8 text-xs text-[#8a8f98]">
@@ -347,12 +471,12 @@ function ReviewSearchPanel() {
           </button>
         </div>
       </form>
-      <EmptyResult />
+      <OrdersListRows orders={orders} dataStatus={dataStatus} compact />
     </>
   );
 }
 
-function OrderTableSearchPanel() {
+function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
   return (
     <>
       <form className="mt-4 max-w-[906px] border border-[#e1e1e1] bg-white px-4 py-3" onSubmit={(event) => event.preventDefault()}>
@@ -371,7 +495,7 @@ function OrderTableSearchPanel() {
         <span>Status de la commande</span>
         <span>Action de la commande</span>
       </div>
-      <EmptyResult />
+      <OrdersListRows orders={orders} dataStatus={dataStatus} />
       <div className="mt-20 h-10 max-w-[906px] bg-[#f7f7f7]" />
     </>
   );
@@ -390,10 +514,30 @@ function EmptyResult() {
   return <p className="pt-14 text-center text-base font-black text-[#92979d]">Votre recherche ne correspond à aucune liste.</p>;
 }
 
-function CommentsManagementSection() {
+function OrdersListRows({ orders, dataStatus, compact }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error'; compact?: boolean }) {
+  if (dataStatus === 'loading') return <p className="pt-14 text-center text-base font-black text-[#92979d]">Chargement des commandes...</p>;
+  if (dataStatus === 'signed-out') return <p className="pt-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher vos commandes.</p>;
+  if (dataStatus === 'error') return <p className="pt-14 text-center text-base font-black text-red-600">Impossible de charger les commandes.</p>;
+  if (orders.length === 0) return <EmptyResult />;
+
+  return (
+    <div className="max-w-[906px] divide-y divide-slate-200 border-x border-b border-[#e5e7eb] text-xs">
+      {orders.map((order) => (
+        <div key={order.id} className={`${compact ? 'grid-cols-[1fr_1fr_1fr_110px]' : 'grid-cols-4'} grid px-3 py-3`}>
+          <span>{orderProductLabel(order)}</span>
+          <span>{order.quoteSnapshot ? `${order.quoteSnapshot.quantity} pcs` : '-'}</span>
+          <span className={statusColor(order.status)}>{orderStatusLabel(order.status)}</span>
+          <a href={`/orders/${order.id}`} className="text-[#0877ff]">Voir</a>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CommentsManagementSection({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
   return (
     <section className="min-h-[690px] bg-white text-[#111827] shadow-sm ring-1 ring-slate-200">
-      <OrderStatusHeader activeKey="comments" />
+      <OrderStatusHeader activeKey="comments" counts={orderCounts(orders)} />
       <div className="border-t-[16px] border-[#eef0f3] px-6 pb-24 pt-5">
         <h2 className="text-xl font-normal text-black">Gérer les commentaires</h2>
         <div className="mt-3 grid max-w-[906px] grid-cols-[1.2fr_1.2fr_0.6fr] bg-[#f0f0f0] px-3 py-3 text-xs text-black">
@@ -401,14 +545,24 @@ function CommentsManagementSection() {
           <span>Avis</span>
           <span>Action</span>
         </div>
-        <EmptyResult />
+        <OrdersListRows orders={orders.filter((order) => orderMatchesStatus(order, 'comments'))} dataStatus={dataStatus} compact />
         <div className="mt-20 h-10 max-w-[906px] bg-[#f7f7f7]" />
       </div>
     </section>
   );
 }
 
-function NotificationsSection() {
+function NotificationsSection({
+  notifications,
+  dataStatus,
+  onNotificationsChange,
+}: {
+  notifications: ProfileNotification[];
+  dataStatus: 'loading' | 'ready' | 'signed-out' | 'error';
+  onNotificationsChange: (notifications: ProfileNotification[]) => void;
+}) {
+  const [markingRead, setMarkingRead] = useState(false);
+
   return (
     <section className="min-h-[690px] bg-[#eef0f3] p-5 text-black shadow-sm ring-1 ring-slate-200">
       <h1 className="text-xl font-normal">Notifications</h1>
@@ -418,7 +572,9 @@ function NotificationsSection() {
           <button className="border-r border-[#b8b8b8] pr-5" type="button">Not. Help center</button>
           <button type="button">Not. Product</button>
         </div>
-        <button type="button" className="rounded-none border border-[#b8b8b8] px-3 py-2 text-xs">Tout marquer comme lu</button>
+        <button type="button" disabled={markingRead || notifications.every((notification) => notification.readAt)} onClick={() => void markAllNotificationsRead(notifications, onNotificationsChange, setMarkingRead)} className="rounded-none border border-[#b8b8b8] px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50">
+          {markingRead ? 'Mise à jour...' : 'Tout marquer comme lu'}
+        </button>
       </div>
       <div className="mt-5 bg-white px-5 py-4">
         <div className="grid grid-cols-[1fr_1fr_160px] bg-[#f0f0f0] px-5 py-4 text-xs font-black">
@@ -426,11 +582,34 @@ function NotificationsSection() {
           <span>Article</span>
           <span>Heure(GMT+8)</span>
         </div>
-        <div className="grid min-h-[136px] place-items-center text-sm text-[#92979d]">
-          <p><span className="mr-3 inline-grid h-6 w-6 place-items-center rounded-none bg-yellow-300 text-white">−</span>Votre liste de notifications est vide.</p>
-        </div>
+        <NotificationsList notifications={notifications} dataStatus={dataStatus} />
       </div>
     </section>
+  );
+}
+
+function NotificationsList({ notifications, dataStatus }: { notifications: ProfileNotification[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+  if (dataStatus === 'loading') return <div className="grid min-h-[136px] place-items-center text-sm text-[#92979d]">Chargement des notifications...</div>;
+  if (dataStatus === 'signed-out') return <div className="grid min-h-[136px] place-items-center text-sm text-[#92979d]">Connectez-vous pour afficher vos notifications.</div>;
+  if (dataStatus === 'error') return <div className="grid min-h-[136px] place-items-center text-sm text-red-600">Impossible de charger les notifications.</div>;
+  if (notifications.length === 0) {
+    return (
+      <div className="grid min-h-[136px] place-items-center text-sm text-[#92979d]">
+        <p><span className="mr-3 inline-grid h-6 w-6 place-items-center rounded-none bg-yellow-300 text-white">-</span>Votre liste de notifications est vide.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="divide-y divide-slate-200 text-xs">
+      {notifications.map((notification) => (
+        <div key={notification.id} className="grid grid-cols-[1fr_1fr_160px] px-5 py-4">
+          <span className={notification.readAt ? 'text-[#6b7280]' : 'font-black text-black'}>{notification.title}</span>
+          <span>{notification.body || notification.type}</span>
+          <span>{formatDate(notification.createdAt)}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -519,6 +698,8 @@ function InviteSection() {
 }
 
 function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileForm; userId: string; avatarDataUrl: string }) {
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
   return (
     <section className="min-h-[690px] bg-white p-6 text-black shadow-sm ring-1 ring-slate-200">
       <h1 className="border-b border-[#e5e7eb] pb-4 text-xl font-normal">Paramètres du compte</h1>
@@ -553,7 +734,9 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
       <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
         <h2 className="text-lg">Supprimer le compte</h2>
         <p className="text-[#4b5563]">Suppression définitive du compte et des données associées.</p>
-        <button type="button" className="text-right text-red-300 transition hover:text-red-600 active:text-red-700">Supprimer</button>
+        <button type="button" disabled={deletingAccount} onClick={() => void deleteAccount(setDeletingAccount)} className="text-right text-red-300 transition hover:text-red-600 active:text-red-700 disabled:cursor-not-allowed disabled:text-red-200">
+          {deletingAccount ? 'Suppression...' : 'Supprimer'}
+        </button>
       </div>
     </section>
   );
@@ -653,7 +836,23 @@ function ProductQuickGrid() {
   );
 }
 
-function DashboardPanel({ firstName, userId, avatarDataUrl }: { firstName: string; userId: string; avatarDataUrl: string }) {
+function DashboardPanel({
+  firstName,
+  userId,
+  avatarDataUrl,
+  orders,
+  notifications,
+}: {
+  firstName: string;
+  userId: string;
+  avatarDataUrl: string;
+  orders: ProfileOrder[];
+  notifications: ProfileNotification[];
+  dataStatus: 'loading' | 'ready' | 'signed-out' | 'error';
+}) {
+  const paidTotal = orders.filter((order) => order.paymentStatus === 'paid').reduce((total, order) => total + (order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0), 0);
+  const pendingTotal = orders.filter((order) => order.paymentStatus !== 'paid').reduce((total, order) => total + (order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0), 0);
+
   return (
     <section className="grid grid-cols-[170px_minmax(0,1fr)] bg-white shadow-sm ring-1 ring-slate-200">
       <div className="grid place-items-center border-r border-slate-200 px-4 py-8 text-center">
@@ -669,15 +868,15 @@ function DashboardPanel({ firstName, userId, avatarDataUrl }: { firstName: strin
         <h2 className="text-sm font-black text-[#1f2f43]">Tableau de bord</h2>
         <div className="mt-4 grid grid-cols-[1fr_180px] gap-4">
           <div className="grid grid-cols-2 border border-slate-200">
-            <MetricCell label="Solde (USD)" value="$ 0.00" detail="(Non Retirable: $0.00)" />
-            <MetricCell label="Recemment ajoute" value="+0.00" valueClass="text-[#ff5a00]" />
-            <MetricCell label="Commission pour les circuits imprimes (PCBs) partages" value="$0.00" detail="(+0.00)" />
-            <MetricCell label="Total des remises" value="$0.00" detail="(+0.00)" />
+            <MetricCell label="Total paye (EUR)" value={formatMoney(paidTotal)} detail={`En attente: ${formatMoney(pendingTotal)}`} />
+            <MetricCell label="Commandes" value={String(orders.length)} valueClass="text-[#ff5a00]" />
+            <MetricCell label="En production" value={String(orderCounts(orders).production)} />
+            <MetricCell label="Total des remises" value="0.00 EUR" detail="Non active" />
           </div>
           <div className="grid gap-2">
-            <SmallInfo label="Mes coupons" value="5" />
-            <SmallInfo label="Mes Points" value="320" action="Echanger" />
-            <SmallInfo label="Messages non lus" value="2" danger />
+            <SmallInfo label="Mes coupons" value="0" />
+            <SmallInfo label="Mes Points" value="0" action="Echanger" />
+            <SmallInfo label="Messages non lus" value={String(unreadNotifications(notifications))} danger />
           </div>
         </div>
       </div>
@@ -707,24 +906,24 @@ function SmallInfo({ label, value, action, danger }: { label: string; value: str
 
 function ReferralBanner() {
   return (
-    <section className="mt-4 flex h-[74px] min-h-[68px] items-center justify-between gap-3 bg-gradient-to-r from-[#ff6233] via-[#ff8a18] to-[#ffb000] px-5 py-0 text-white">
+    <section className="mt-4 flex h-[74px] min-h-[68px] items-center justify-between gap-3 bg-[#fff8e8] px-5 py-0 text-[#1f2937] ring-1 ring-[#f4dfb4]">
       <div>
-        <p className="text-2xl font-black italic leading-none">Looking For New Referral Opportunities?</p>
-        <p className="mt-2 text-xs">Refer others and explore the benefits of sharing our services.</p>
+        <p className="text-xl font-black leading-none">Programme de parrainage</p>
+        <p className="mt-2 text-xs">Le parrainage sera active lorsque les regles commerciales seront configurees.</p>
       </div>
-      <a href="#" className="shrink-0 rounded-none bg-white px-6 py-3 text-xs font-black text-[#ff5a00]">Sign Up Now</a>
+      <a href="/contact" className="shrink-0 rounded-none bg-white px-6 py-3 text-xs font-black text-[#ff5a00]">Contacter</a>
     </section>
   );
 }
 
-function StatusStrip() {
+function StatusStrip({ counts }: { counts: ReturnType<typeof orderCounts> }) {
   const statuses = [
-    ['2', 'Verification en cours'],
-    ['1', 'Paiement en attente'],
-    ['3', 'Statut de production'],
-    ['0', "Questions d'ingenierie"],
-    ['1', 'Livraison'],
-    ['2', 'Commentaires en attente'],
+    [counts.verification, 'Verification en cours'],
+    [counts.paymentPending, 'Paiement en attente'],
+    [counts.production, 'Statut de production'],
+    [0, "Questions d'ingenierie"],
+    [counts.delivery, 'Livraison'],
+    [counts.comments, 'Commentaires en attente'],
   ];
 
   return (
@@ -739,57 +938,60 @@ function StatusStrip() {
   );
 }
 
-function OrdersTable() {
+function OrdersTable({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+  const counts = orderCounts(orders);
+  const rows = orders.slice(0, 5);
+
   return (
     <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-[#1f2937]">Ma commande</h2>
-        <a href="/orders" className="text-xs font-semibold text-blue-600">Plus &gt;</a>
+        <a href="/profile?view=orders" className="text-xs font-semibold text-blue-600">Plus &gt;</a>
       </div>
       <div className="mt-4 flex gap-8 border-b border-slate-200 text-xs">
-        {['Toutes (8)', 'Verification (2)', 'Production (3)', 'Livraison (1)', 'Termine (8)'].map((tab, index) => (
+        {[`Toutes (${counts.all})`, `Verification (${counts.verification})`, `Production (${counts.production})`, `Livraison (${counts.delivery})`, `Termine (${counts.completed})`].map((tab, index) => (
           <span key={tab} className={`pb-3 ${index === 0 ? 'border-b-2 border-blue-500 font-black text-blue-600' : 'text-slate-500'}`}>{tab}</span>
         ))}
       </div>
-      <table className="mt-2 w-full text-left text-xs">
-        <thead className="text-[#64748b]">
-          <tr>
-            {['N Commande', 'Produit', 'Date de commande', 'Quantite', 'Statut', 'Montant', 'Action'].map((head) => (
-              <th key={head} className="py-3 font-black">{head}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {orderRows.map((row) => (
-            <tr key={row[0]} className="border-t border-slate-100">
-              {row.map((cell, index) => (
-                <td key={`${row[0]}-${cell}`} className={`py-3 ${index === 4 ? statusColor(cell) : ''}`}>{cell}</td>
+      {dataStatus !== 'ready' || rows.length === 0 ? (
+        <OrdersListRows orders={rows} dataStatus={dataStatus} />
+      ) : (
+        <table className="mt-2 w-full text-left text-xs">
+          <thead className="text-[#64748b]">
+            <tr>
+              {['N Commande', 'Produit', 'Date de commande', 'Quantite', 'Statut', 'Montant', 'Action'].map((head) => (
+                <th key={head} className="py-3 font-black">{head}</th>
               ))}
-              <td className="py-3"><a href="/orders" className="rounded-none border border-blue-400 px-3 py-1 text-blue-600">Voir</a></td>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((order) => (
+              <tr key={order.id} className="border-t border-slate-100">
+                <td className="py-3">{order.orderNumber}</td>
+                <td className="py-3">{orderProductLabel(order)}</td>
+                <td className="py-3">{formatDate(order.createdAt)}</td>
+                <td className="py-3">{order.quoteSnapshot?.quantity ?? '-'}</td>
+                <td className={`py-3 ${statusColor(order.status)}`}>{orderStatusLabel(order.status)}</td>
+                <td className="py-3">{formatMoney(order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0)}</td>
+                <td className="py-3"><a href={`/orders/${order.id}`} className="rounded-none border border-blue-400 px-3 py-1 text-blue-600">Voir</a></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </section>
   );
 }
 
 function GiftExchange() {
-  const gifts = ['Points: 2800', 'Points: 3200', 'Points: 1800', 'Points: 900', 'Points: 1200'];
-
   return (
     <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-black">Echanger des cadeaux</h2>
-        <a href="#" className="text-xs font-semibold text-blue-600">Afficher plus &gt;</a>
+        <span className="text-xs font-semibold text-slate-500">Non active</span>
       </div>
-      <div className="mt-4 grid grid-cols-5 gap-4">
-        {gifts.map((gift, index) => (
-          <div key={gift} className="text-center">
-            <div className="mx-auto h-16 w-24 rounded-none bg-gradient-to-br from-[#0f9f6e] to-[#07182c]" />
-            <p className="mt-2 text-xs text-[#475569]">{gift}</p>
-          </div>
-        ))}
+      <div className="mt-4 grid min-h-[92px] place-items-center bg-[#f8fafc] text-center text-sm font-bold text-[#64748b]">
+        Aucun point cadeau n'est disponible pour ce compte.
       </div>
     </section>
   );
@@ -800,43 +1002,42 @@ function ReviewsPanel() {
     <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex items-center justify-between">
         <div className="flex gap-8 text-sm font-black">
-          <span className="border-b-2 border-[#22c55e] pb-2 text-[#16a34a]">Show client</span>
+          <span className="border-b-2 border-[#22c55e] pb-2 text-[#16a34a]">Avis client</span>
           <span>Programme Partenaire</span>
         </div>
-        <a href="#" className="rounded-none bg-[#0f9f6e] px-5 py-2 text-xs font-black text-white">Laisser un commentaire</a>
+        <a href="/contact" className="rounded-none bg-[#0f9f6e] px-5 py-2 text-xs font-black text-white">Contacter</a>
       </div>
-      <div className="mt-5 grid grid-cols-3 gap-4">
-        {['Engineer', 'Kain', 'COSTA'].map((name) => (
-          <article key={name} className="min-h-[150px] rounded-none bg-[#f8fafc] p-4">
-            <p className="text-xs font-black">{name}</p>
-            <p className="mt-2 text-[#0f9f6e]">★★★★★</p>
-            <p className="mt-3 text-xs leading-5 text-[#475569]">Tres bon suivi, devis clair et progression de commande facile a comprendre.</p>
-          </article>
-        ))}
+      <div className="mt-5 grid min-h-[130px] place-items-center bg-[#f8fafc] text-center text-sm font-bold text-[#64748b]">
+        Aucun avis lie a vos commandes n'est disponible.
       </div>
     </section>
   );
 }
 
-function RightRail() {
+function RightRail({ orders, notifications, dataStatus }: { orders: ProfileOrder[]; notifications: ProfileNotification[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+  const recentOrders = orders.slice(0, 3).map((order) => `${order.orderNumber} - ${orderStatusLabel(order.status)}`);
+  const recentNotifications = notifications.slice(0, 4).map((notification) => notification.title);
+
   return (
     <aside className="grid content-start gap-4">
-      <PromoBanner title="PCB Assembly for 1-20 pcs" price="$29" dark />
-      <PromoBanner title="PCB Prototype Only" price="$5" />
-      <InfoList title="Dernieres nouvelles" items={['Mise a jour des options expedition', 'Impact du nouveau tarif douanier', 'Bonne fete du travail !']} />
-      <InfoList title="Projets partages" items={['Carte mere industrielle v2.1', 'Alimentation 24V - 10A', 'Controleur moteur BLDC']} action="Partager" />
-      <InfoList title="Nouvelles questions" items={["Comment modifier l'epaisseur du cuivre ?", "Quelle finition de surface pour l'ENIG ?", 'Quels fichiers Gerber sont necessaires ?']} action="Theme" />
-      <InfoList title="Nouvelles solutions" items={['How to generate Gerber files from Eagle', 'How to Use Payoneer to Pay for Orders', 'How to Place an OEM Order?', 'Payoneer Payment Instructions']} numbered />
+      <ProfileRailCard title="Commandes recentes" items={dataStatus === 'ready' ? recentOrders : []} emptyText={statusMessage(dataStatus, 'Aucune commande recente.')} />
+      <ProfileRailCard title="Notifications" items={dataStatus === 'ready' ? recentNotifications : []} emptyText={statusMessage(dataStatus, 'Aucune notification.')} />
+      <InfoList title="Support" items={['Centre d’aide', 'Contact commercial', 'Suivi commande']} />
     </aside>
   );
 }
 
-function PromoBanner({ title, price, dark }: { title: string; price: string; dark?: boolean }) {
+function ProfileRailCard({ title, items, emptyText }: { title: string; items: string[]; emptyText: string }) {
   return (
-    <article className={`${dark ? 'bg-[#07184a] text-white' : 'bg-white text-[#1f2937]'} min-h-[112px] overflow-hidden p-4 shadow-sm ring-1 ring-slate-200`}>
-      <p className="text-lg font-black">{title}</p>
-      <p className="mt-2 text-sm">ONLY <span className="text-3xl font-black text-[#ff9f00]">{price}</span> IN TOTAL</p>
-      <div className="mt-3 h-8 rounded-none bg-gradient-to-r from-[#0fe36f] to-[#03b7e8]" />
+    <article className="min-h-[112px] overflow-hidden bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <p className="text-lg font-black text-[#1f2937]">{title}</p>
+      {items.length > 0 ? (
+        <ul className="mt-4 grid gap-3 text-xs text-[#475569]">
+          {items.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+      ) : (
+        <p className="mt-4 text-xs font-bold text-[#64748b]">{emptyText}</p>
+      )}
     </article>
   );
 }
@@ -880,11 +1081,106 @@ function CartIcon() {
   );
 }
 
+async function authenticatedFetch<T>(path: string, accessToken: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+    ...init,
+    headers: { ...(init.headers ?? {}), Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+function orderCounts(orders: ProfileOrder[]) {
+  return {
+    all: orders.length,
+    verification: orders.filter((order) => orderMatchesStatus(order, 'verification')).length,
+    paymentPending: orders.filter((order) => orderMatchesStatus(order, 'payment-pending')).length,
+    production: orders.filter((order) => orderMatchesStatus(order, 'production')).length,
+    delivery: orders.filter((order) => orderMatchesStatus(order, 'delivery')).length,
+    completed: orders.filter((order) => orderMatchesStatus(order, 'completed')).length,
+    comments: orders.filter((order) => orderMatchesStatus(order, 'comments')).length,
+  };
+}
+
+function countForStatus(key: OrderStatusKey | 'payment-unfinished' | 'engineering' | 'comments', counts: ReturnType<typeof orderCounts>) {
+  if (key === 'all') return counts.all;
+  if (key === 'verification') return counts.verification;
+  if (key === 'payment-pending') return counts.paymentPending;
+  if (key === 'production') return counts.production;
+  if (key === 'delivery') return counts.delivery;
+  if (key === 'completed') return counts.completed;
+  if (key === 'comments') return counts.comments;
+  return 0;
+}
+
+function orderMatchesStatus(order: ProfileOrder, key: OrderStatusKey) {
+  if (key === 'all') return true;
+  if (key === 'verification') return order.status === 'draft' || order.status === 'quoted';
+  if (key === 'payment-pending') return order.status === 'awaiting_payment' || order.paymentStatus === 'pending';
+  if (key === 'production') return ['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'received_at_france_hub'].includes(order.status);
+  if (key === 'delivery') return ['shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status);
+  if (key === 'completed') return order.status === 'delivered';
+  if (key === 'comments') return order.status === 'delivered';
+  return false;
+}
+
+function unreadNotifications(notifications: ProfileNotification[]) {
+  return notifications.filter((notification) => !notification.readAt).length;
+}
+
+function orderProductLabel(order: ProfileOrder) {
+  return order.quoteSnapshot?.productType || 'PCB Prototype';
+}
+
+function orderStatusLabel(status: ProfileOrderStatus) {
+  const labels: Record<ProfileOrderStatus, string> = {
+    draft: 'Brouillon',
+    quoted: 'Verification',
+    awaiting_payment: 'Paiement en attente',
+    paid: 'Payee',
+    supplier_order_pending: 'Commande fournisseur',
+    supplier_ordered: 'Fournisseur confirme',
+    supplier_in_production: 'Production',
+    received_at_france_hub: 'Hub France',
+    shipped_to_africa: 'Livraison',
+    customs_processing: 'Douane',
+    out_for_delivery: 'En livraison',
+    delivered: 'Termine',
+    cancelled: 'Annulee',
+    refunded: 'Remboursee',
+  };
+
+  return labels[status];
+}
+
 function statusColor(status: string) {
-  if (status === 'Verification') return 'text-[#0f9f6e]';
-  if (status === 'Production') return 'text-[#16a34a]';
-  if (status === 'Livraison') return 'text-[#ff7a1a]';
+  if (status === 'quoted' || status === 'draft' || status === 'Verification') return 'text-[#0f9f6e]';
+  if (['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'received_at_france_hub', 'Production'].includes(status)) return 'text-[#16a34a]';
+  if (['shipped_to_africa', 'customs_processing', 'out_for_delivery', 'Livraison'].includes(status)) return 'text-[#ff7a1a]';
+  if (status === 'delivered' || status === 'Termine') return 'text-[#0f9f6e]';
+  if (status === 'cancelled' || status === 'refunded') return 'text-red-600';
   return 'text-[#f59e0b]';
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+}
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+}
+
+function statusMessage(status: 'loading' | 'ready' | 'signed-out' | 'error', emptyText: string) {
+  if (status === 'loading') return 'Chargement...';
+  if (status === 'signed-out') return 'Connectez-vous pour afficher ces donnees.';
+  if (status === 'error') return 'Impossible de charger ces donnees.';
+  return emptyText;
 }
 
 function readStoredProfile(): Partial<ProfileForm> {
@@ -929,4 +1225,66 @@ function logout() {
   window.localStorage.removeItem('kendronics.customer.orders');
   window.dispatchEvent(new Event('kendronics:orders-updated'));
   window.location.assign('/login');
+}
+
+async function deleteAccount(setDeleting: (value: boolean) => void) {
+  const confirmed = window.confirm('Supprimer définitivement votre compte Kendronics ? Cette action est irréversible.');
+  if (!confirmed) return;
+
+  setDeleting(true);
+  try {
+    const session = await readFreshAuthSession();
+    if (!session) {
+      window.location.assign('/login');
+      return;
+    }
+
+    const response = await fetch(`${getApiBaseUrl()}/api/users/me`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${session.accessToken}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Delete account failed: ${response.status}`);
+    }
+
+    clearAuthSession();
+    window.localStorage.removeItem(profileStorageKey);
+    window.localStorage.removeItem(avatarStorageKey);
+    window.localStorage.removeItem('kendronics.customer.orders');
+    window.location.assign('/');
+  } catch {
+    window.alert('Impossible de supprimer le compte pour le moment.');
+    setDeleting(false);
+  }
+}
+
+async function markAllNotificationsRead(
+  notifications: ProfileNotification[],
+  onNotificationsChange: (notifications: ProfileNotification[]) => void,
+  setMarkingRead: (value: boolean) => void,
+) {
+  const unread = notifications.filter((notification) => !notification.readAt);
+  if (unread.length === 0) return;
+
+  setMarkingRead(true);
+  try {
+    const session = await readFreshAuthSession();
+    if (!session) {
+      window.location.assign('/login');
+      return;
+    }
+
+    const updated = await Promise.all(
+      unread.map((notification) =>
+        authenticatedFetch<ProfileNotification>(`/api/notifications/${notification.id}/read`, session.accessToken, { method: 'PATCH' }),
+      ),
+    );
+    const updatedById = new Map(updated.map((notification) => [notification.id, notification]));
+    onNotificationsChange(notifications.map((notification) => updatedById.get(notification.id) ?? notification));
+  } catch {
+    window.alert('Impossible de mettre à jour les notifications.');
+  } finally {
+    setMarkingRead(false);
+  }
 }

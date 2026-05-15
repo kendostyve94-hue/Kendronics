@@ -67,6 +67,10 @@ export class UsersService {
     await this.usersRepository.updatePasswordHash(userId, await this.passwordService.hash(password));
   }
 
+  async deleteAccount(userId: string): Promise<void> {
+    await this.usersRepository.deleteById(userId);
+  }
+
   findCookieConsent(userId: string): Promise<CookieConsent | null> {
     return this.cookieConsentRepository.findLatestByUserId(userId);
   }

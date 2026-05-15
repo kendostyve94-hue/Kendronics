@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Put, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
@@ -23,5 +23,11 @@ export class UsersController {
   @Put('me/cookie-consent')
   updateCookieConsent(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpsertCookieConsentDto) {
     return this.usersService.upsertCookieConsent(user.id, dto);
+  }
+
+  @Delete('me')
+  @HttpCode(204)
+  deleteMe(@CurrentUser() user: AuthenticatedUser) {
+    return this.usersService.deleteAccount(user.id);
   }
 }
