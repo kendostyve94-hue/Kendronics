@@ -11,11 +11,11 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
   readonly name = 'pcbway';
 
   isConfigured(): boolean {
-    return Boolean(this.configValue('PCBWAY_API_KEY'));
+    return Boolean(this.apiKeyValue());
   }
 
   async getPcbQuote(dto: CreateQuoteDto): Promise<SupplierQuote> {
-    const apiKey = this.configValue('PCBWAY_API_KEY');
+    const apiKey = this.apiKeyValue();
     if (!apiKey) {
       throw new ServiceUnavailableException('PCBWay quote API is not configured.');
     }
@@ -54,7 +54,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
   }
 
   quoteRequestDiagnostics(dto: CreateQuoteDto): PcbWayQuoteDiagnostics {
-    const apiKey = this.configValue('PCBWAY_API_KEY');
+    const apiKey = this.apiKeyValue();
     const payload = this.toQuotePayload(dto);
 
     return {
@@ -82,7 +82,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
   }
 
   async testAccountConnection(): Promise<PcbWayAccountProbe> {
-    const apiKey = this.configValue('PCBWAY_API_KEY');
+    const apiKey = this.apiKeyValue();
     if (!apiKey) {
       return {
         ok: false,
@@ -349,6 +349,13 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
     return value && value !== 'not-configured' ? value : undefined;
   }
 
+  private apiKeyValue(): string | undefined {
+    const value = this.configValue('PCBWAY_API_KEY');
+    if (!value) return undefined;
+
+    return normalizePcbWayApiKey(value);
+  }
+
   private apiKeyFingerprint(value?: string): string {
     if (!value) return 'missing';
     if (value.length <= 8) return `configured:length:${value.length}`;
@@ -451,6 +458,17 @@ function numberOrUndefined(value: unknown): number | undefined {
   const numberValue = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : Number.NaN;
   return Number.isFinite(numberValue) ? round(numberValue) : undefined;
 }
+
+function normalizePcbWayApiKey(value: string): string {
+  const normalized = stripWrappingQuotes(value) ?? value;
+  if (/\s/.test(normalized)) return normalized.replace(/\s+/, ' ');
+
+  const pcbWayKeyWithCollapsedSeparator = /^(W\d{7}[A-Z])([A-Z0-9]{16,})$/i.exec(normalized);
+  if (!pcbWayKeyWithCollapsedSeparator) return normalized;
+
+  return `${pcbWayKeyWithCollapsedSeparator[1]} ${pcbWayKeyWithCollapsedSeparator[2]}`;
+}
+
 function stripWrappingQuotes(value?: string): string | undefined {
   if (!value) return value;
   let normalized = value.replace(/^\uFEFF/, '').trim();
