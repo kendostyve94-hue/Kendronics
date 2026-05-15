@@ -235,13 +235,15 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
   }
 
   private isErrorResponse(data: PcbWayQuoteResponse): boolean {
-    const status = String(data.Status ?? '').toLowerCase();
-    return status === 'error' || data.Code === 0;
+    const status = String(data.Status ?? '').trim().toLowerCase();
+    const errorText = String(data.ErrorText ?? data.errorText ?? '').trim();
+    return status === 'error' || Boolean(errorText);
   }
 
   private isBalanceErrorResponse(data: PcbWayBalanceResponse): boolean {
-    const status = String(data.Status ?? '').toLowerCase();
-    return status === 'error' || data.Code === 0;
+    const status = String(data.Status ?? '').trim().toLowerCase();
+    const errorText = String(data.ErrorText ?? data.errorText ?? '').trim();
+    return status === 'error' || Boolean(errorText);
   }
 
   private countryName(countryCode: string): string {
@@ -441,6 +443,7 @@ interface PcbWayBalanceResponse extends Record<string, unknown> {
   point?: number | string;
   Status?: string;
   ErrorText?: string;
+  errorText?: string;
   Code?: number;
 }
 
