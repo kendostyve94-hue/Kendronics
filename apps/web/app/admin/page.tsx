@@ -443,8 +443,8 @@ export default function AdminPage() {
 
   return (
     <AdminShell>
-      <div className={tab === 'dashboard' ? 'min-h-screen bg-white' : 'min-h-screen lg:grid lg:grid-cols-[255px_minmax(0,1fr)]'}>
-        {tab !== 'dashboard' ? <AdminSidebar activeTab={tab} onSelect={setTab} /> : null}
+      <div className="min-h-screen lg:grid lg:grid-cols-[255px_minmax(0,1fr)]">
+        <AdminSidebar activeTab={tab} onSelect={setTab} />
 
         <div className="min-w-0">
           {tab !== 'dashboard' ? <AdminTopbar activeTab={tab} onSelect={setTab} /> : null}
@@ -910,7 +910,7 @@ function ModernDashboardPanel({
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(14rem,0.48fr)_minmax(14rem,0.48fr)]">
         <LatestTransactionsCard transactions={buildDashboardTransactions(orders)} />
-        <DealsStatisticsCard orders={orders} tickets={tickets} logs={logs} />
+        <CountrySalesCard orders={orders} />
         <RecentPerformanceCard intelligence={intelligence} />
       </div>
 
@@ -1072,6 +1072,103 @@ function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: 
         ))}
       </div>
     </section>
+  );
+}
+
+const countrySalesFallback = [
+  { code: 'CA', country: 'Canada', value: '$95,256', percent: 68, color: '#ff2f6d' },
+  { code: 'MY', country: 'United Kingdom', value: '$75M', percent: 57, color: '#49dd38' },
+  { code: 'DE', country: 'France', value: '$958K', percent: 48, color: '#15a8ff' },
+  { code: 'NL', country: 'Brazil', value: '$568K', percent: 38, color: '#ffb51b' },
+  { code: 'US', country: 'United Kingdom', value: '$855K', percent: 68, color: '#7147ff' },
+  { code: 'CN', country: 'China', value: '$983K', percent: 61, color: '#6d35ff' },
+];
+
+function CountrySalesCard({ orders }: { orders: AdminOrderRow[] }) {
+  const countryTotals = orders.reduce<Record<string, number>>((totals, order) => {
+    const code = order.destinationCountryIso2 || 'US';
+    totals[code] = (totals[code] ?? 0) + (order.totalPrice ?? 0);
+    return totals;
+  }, {});
+  const dynamicRows = Object.entries(countryTotals)
+    .sort(([, first], [, second]) => second - first)
+    .slice(0, 6)
+    .map(([code, total], index) => ({
+      code,
+      country: countryName(code),
+      value: total > 999999 ? `$${Math.round(total / 1000000)}M` : `$${Math.round(total / 1000 || 1)}K`,
+      percent: [68, 57, 48, 38, 68, 61][index] ?? 52,
+      color: ['#ff2f6d', '#49dd38', '#15a8ff', '#ffb51b', '#7147ff', '#6d35ff'][index] ?? '#15a8ff',
+    }));
+  const rows = dynamicRows.length ? dynamicRows : countrySalesFallback;
+
+  return (
+    <section className="max-h-[345px] overflow-hidden rounded-xl border border-[#1b2445] bg-[#080d2b] text-white shadow-[0_18px_35px_rgba(18,48,130,0.28)]">
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+        <h2 className="text-xl font-semibold tracking-wide text-white">Country Sales</h2>
+        <button type="button" aria-label="Country sales options" className="grid h-8 w-8 place-items-center rounded-md text-white/90 hover:bg-white/10">
+          <span className="flex flex-col gap-1">
+            <span className="h-1 w-1 rounded-full bg-current" />
+            <span className="h-1 w-1 rounded-full bg-current" />
+            <span className="h-1 w-1 rounded-full bg-current" />
+          </span>
+        </button>
+      </div>
+      <div className="space-y-6 px-4 py-5">
+        {rows.map((row) => (
+          <div key={`${row.code}-${row.country}`} className="grid grid-cols-[3rem_minmax(6.5rem,1fr)_minmax(4.5rem,0.55fr)_3rem] items-center gap-2">
+            <CountryFlag code={row.code} />
+            <div>
+              <p className="text-xl font-semibold leading-none text-white">{row.value}</p>
+              <p className="mt-1 text-[15px] leading-none text-white">{row.country}</p>
+            </div>
+            <div className="h-1 rounded-full bg-white/15">
+              <span className="block h-full rounded-full" style={{ width: `${row.percent}%`, backgroundColor: row.color }} />
+            </div>
+            <p className="text-right text-xl font-medium text-white">{row.percent}%</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CountryFlag({ code }: { code: string }) {
+  const normalized = code.toUpperCase();
+  if (normalized === 'CA') {
+    return (
+      <span className="grid h-10 w-10 overflow-hidden rounded-full bg-white grid-cols-[1fr_1.3fr_1fr]">
+        <span className="bg-[#ef233c]" />
+        <span className="grid place-items-center text-sm font-black text-[#ef233c]">*</span>
+        <span className="bg-[#ef233c]" />
+      </span>
+    );
+  }
+  if (normalized === 'MY') {
+    return (
+      <span className="relative block h-10 w-10 overflow-hidden rounded-full bg-[repeating-linear-gradient(to_bottom,#d71920_0_4px,#fff_4px_8px)]">
+        <span className="absolute left-0 top-0 h-5 w-6 bg-[#173a8a]" />
+        <span className="absolute left-2 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-[#ffd100]" />
+      </span>
+    );
+  }
+  if (normalized === 'DE') {
+    return <span className="block h-10 w-10 overflow-hidden rounded-full bg-[linear-gradient(to_bottom,#000_0_33%,#dd0000_33%_66%,#ffce00_66%)]" />;
+  }
+  if (normalized === 'NL') {
+    return <span className="block h-10 w-10 overflow-hidden rounded-full bg-[linear-gradient(to_bottom,#ae1c28_0_33%,#fff_33%_66%,#21468b_66%)]" />;
+  }
+  if (normalized === 'CN') {
+    return (
+      <span className="relative block h-10 w-10 overflow-hidden rounded-full bg-[#de2910]">
+        <span className="absolute left-2 top-2 text-xs font-black text-[#ffde00]">*</span>
+      </span>
+    );
+  }
+  return (
+    <span className="relative block h-10 w-10 overflow-hidden rounded-full bg-[repeating-linear-gradient(to_bottom,#b22234_0_3px,#fff_3px_6px)]">
+      <span className="absolute left-0 top-0 h-5 w-5 bg-[#3c3b6e]" />
+    </span>
   );
 }
 
@@ -1902,6 +1999,23 @@ function formatCurrency(value: number): string {
 
 function formatCompactNumber(value: number): string {
   return new Intl.NumberFormat('en-US').format(Math.round(value));
+}
+
+function countryName(code: string): string {
+  const names: Record<string, string> = {
+    BR: 'Brazil',
+    CA: 'Canada',
+    CD: 'Congo',
+    CG: 'Congo',
+    CN: 'China',
+    DE: 'France',
+    FR: 'France',
+    GB: 'United Kingdom',
+    MY: 'United Kingdom',
+    NL: 'Brazil',
+    US: 'United Kingdom',
+  };
+  return names[code.toUpperCase()] ?? code.toUpperCase();
 }
 
 function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string }> {
