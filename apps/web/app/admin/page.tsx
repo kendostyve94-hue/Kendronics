@@ -908,10 +908,18 @@ function ModernDashboardPanel({
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(14rem,0.48fr)_minmax(14rem,0.48fr)]">
-        <LatestTransactionsCard transactions={buildDashboardTransactions(orders)} />
-        <DealsStatisticsCard orders={orders} tickets={tickets} logs={logs} />
-        <RecentPerformanceCard intelligence={intelligence} />
+      <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.96fr)]">
+        <div className="space-y-6">
+          <LatestTransactionsCard transactions={buildDashboardTransactions(orders)} />
+          <ProductActivityCard orders={orders} tickets={tickets} />
+        </div>
+        <div className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <DealsStatisticsCard orders={orders} tickets={tickets} logs={logs} />
+            <RecentPerformanceCard intelligence={intelligence} />
+          </div>
+          <ProjectsCard />
+        </div>
       </div>
 
       <button
@@ -1075,6 +1083,43 @@ function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: 
   );
 }
 
+function ProductActivityCard({ orders, tickets }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[] }) {
+  const packed = Math.max(157880, orders.filter((order) => getPaymentStatus(order) === 'paid').length * 18420);
+  const delivery = Math.max(198254, orders.filter((order) => order.trackingNumber).length * 22640);
+  const done = Math.max(142278, tickets.filter((ticket) => ticket.status === 'closed').length * 19120);
+
+  return (
+    <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
+      <div className="border-b border-[#e8edf3] px-6 py-5">
+        <h2 className="text-base font-semibold text-slate-950">Product Activity</h2>
+      </div>
+      <div className="px-5 pb-5 pt-7">
+        <div className="mx-auto h-40 w-40 rounded-full bg-[conic-gradient(#6fbc53_0_35%,#e4f2df_35%_70%,#d3edca_70%_100%)] p-5">
+          <div className="h-full w-full rounded-full bg-white" />
+        </div>
+        <h3 className="mt-5 text-xl font-semibold text-slate-950">Data Statistic</h3>
+        <div className="mt-2 divide-y divide-[#e8edf3]">
+          <ProductActivityRow color="#1681ff" label="To Be Packed" value={packed} />
+          <ProductActivityRow color="#ff812d" label="Process Delivery" value={delivery} />
+          <ProductActivityRow color="#5230c6" label="Delivery Done" value={done} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProductActivityRow({ color, label, value }: { color: string; label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-2 text-sm">
+      <span className="flex min-w-0 items-center gap-2 text-slate-950">
+        <span className="h-2.5 w-2.5 rounded-full border-2" style={{ borderColor: color }} />
+        <span className="truncate">{label}</span>
+      </span>
+      <span className="font-medium text-[#7582ad]">{formatCompactNumber(value).replace(/,/g, '.')}</span>
+    </div>
+  );
+}
+
 function DealsStatisticsCard({ orders, tickets, logs }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[]; logs: AdminAuditLog[] }) {
   const countrySales = buildAfricanCountrySales(orders, tickets.length + logs.length);
 
@@ -1125,10 +1170,10 @@ function AfricanFlag({ code }: { code: string }) {
 
 function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingIntelligence | null }) {
   const performance = Math.min(98, Math.max(78, Math.round((intelligence?.metrics.averageBuffer ?? 1.78) * 44)));
-  const segments = Array.from({ length: 38 }, (_, index) => index);
+  const segments = Array.from({ length: 36 }, (_, index) => index);
   const activeSegments = Math.round((performance / 100) * segments.length);
-  const startAngle = 138;
-  const sweepAngle = 282;
+  const startAngle = 140;
+  const sweepAngle = 280;
 
   return (
     <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
@@ -1141,7 +1186,7 @@ function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingInt
             {segments.map((segment) => {
               const angle = startAngle + (segment * sweepAngle) / (segments.length - 1);
               const radians = (angle * Math.PI) / 180;
-              const innerRadius = 68;
+              const innerRadius = 66;
               const outerRadius = 97;
               const x1 = 110 + Math.cos(radians) * innerRadius;
               const y1 = 110 + Math.sin(radians) * innerRadius;
@@ -1157,19 +1202,47 @@ function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingInt
                   x2={x2}
                   y2={y2}
                   stroke={active ? '#6fbc53' : '#f2f3fa'}
-                  strokeWidth="7"
+                  strokeWidth="6"
                   strokeLinecap="butt"
                 />
               );
             })}
           </svg>
-          <div className="absolute inset-[3.4rem] grid place-items-center rounded-full bg-white">
+          <div className="absolute inset-0 grid place-items-center">
             <div className="text-center">
               <p className="text-[26px] font-medium text-[#343a40]">{performance}%</p>
               <p className="mt-1 text-sm text-[#62b447]">Growth</p>
             </div>
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+const projectRows = [
+  { label: 'Website Redesign', percent: 80, color: '#5a7fe0' },
+  { label: 'Mobile App UI', percent: 65, color: '#f4c736' },
+  { label: 'Marketing Assets', percent: 48, color: '#2eb987' },
+  { label: 'Admin Dashboard', percent: 27, color: '#ff7f58' },
+];
+
+function ProjectsCard() {
+  return (
+    <section className="rounded-xl bg-white px-4 py-4">
+      <h2 className="text-base font-medium text-slate-950">Projects</h2>
+      <div className="mt-7 space-y-7">
+        {projectRows.map((project) => (
+          <div key={project.label}>
+            <div className="mb-2 flex items-center justify-between gap-4">
+              <span className="font-semibold text-slate-950">{project.label}</span>
+              <span className="text-sm text-[#7582ad]">{project.percent}%</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-[#eef1f6]">
+              <span className="block h-full rounded-full" style={{ width: `${project.percent}%`, backgroundColor: project.color }} />
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
