@@ -1126,7 +1126,7 @@ function DealsStatisticsCard({ orders, tickets, logs }: { orders: AdminOrderRow[
       </div>
       <div className="h-[285px] space-y-4 overflow-hidden px-4 py-4">
         {countrySales.map((item) => (
-          <div key={item.country} className="grid grid-cols-[2.25rem_minmax(0,1fr)_5.5rem] items-center gap-3">
+          <div key={item.country} className="grid grid-cols-[2.75rem_minmax(0,1fr)_5.5rem] items-center gap-2.5">
             <AfricanFlag code={item.code} />
             <div className="min-w-0">
               <p className="truncate text-lg font-semibold leading-none text-slate-950">{item.value}</p>
@@ -1156,8 +1156,8 @@ function AfricanFlag({ code }: { code: string }) {
   };
 
   return (
-    <span className="grid h-9 w-9 overflow-hidden rounded-full bg-white text-[2rem] leading-none shadow-sm ring-1 ring-slate-200">
-      <span className="-ml-1 -mt-0.5 block scale-125">{flags[code] ?? '🌍'}</span>
+    <span className="flex h-8 w-11 items-center justify-center text-[2rem] leading-none">
+      <span aria-hidden="true" className="block">{flags[code] ?? '🌍'}</span>
     </span>
   );
 }
