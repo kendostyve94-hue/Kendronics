@@ -1085,16 +1085,18 @@ function DealsStatisticsCard({ orders, tickets, logs }: { orders: AdminOrderRow[
       </div>
       <div className="h-[285px] space-y-4 overflow-hidden px-4 py-4">
         {countrySales.map((item) => (
-          <div key={item.country} className="grid grid-cols-[2.5rem_minmax(5.5rem,1fr)_minmax(3.75rem,0.75fr)_2.75rem] items-center gap-3">
+          <div key={item.country} className="grid grid-cols-[2.25rem_minmax(0,1fr)_5.5rem] items-center gap-3">
             <AfricanFlag code={item.code} />
             <div className="min-w-0">
-              <p className="text-xl font-semibold leading-none text-slate-950">{item.value}</p>
-              <p className="mt-1 truncate text-[15px] leading-none text-slate-700">{item.country}</p>
+              <p className="truncate text-lg font-semibold leading-none text-slate-950">{item.value}</p>
+              <p className="mt-1 truncate text-sm leading-none text-slate-700">{item.country}</p>
             </div>
-            <div className="h-1 rounded-full bg-slate-200">
-              <span className="block h-full rounded-full" style={{ width: `${item.percent}%`, backgroundColor: item.color }} />
+            <div className="flex items-center gap-2">
+              <div className="h-1 min-w-0 flex-1 rounded-full bg-slate-200">
+                <span className="block h-full rounded-full" style={{ width: `${item.percent}%`, backgroundColor: item.color }} />
+              </div>
+              <p className="w-9 text-right text-base font-medium text-slate-950">{item.percent}%</p>
             </div>
-            <p className="text-right text-xl font-medium text-slate-950">{item.percent}%</p>
           </div>
         ))}
       </div>
@@ -1104,21 +1106,21 @@ function DealsStatisticsCard({ orders, tickets, logs }: { orders: AdminOrderRow[
 
 function AfricanFlag({ code }: { code: string }) {
   if (code === 'CM') {
-    return <span className="relative block h-10 w-10 overflow-hidden rounded-full bg-[linear-gradient(to_right,#007a5e_0_33%,#ce1126_33%_66%,#fcd116_66%)]"><span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#fcd116]" /></span>;
+    return <span className="relative block h-9 w-9 overflow-hidden rounded-full bg-[linear-gradient(to_right,#007a5e_0_33%,#ce1126_33%_66%,#fcd116_66%)]"><span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#fcd116]" /></span>;
   }
   if (code === 'CI') {
-    return <span className="block h-10 w-10 overflow-hidden rounded-full bg-[linear-gradient(to_right,#f77f00_0_33%,#fff_33%_66%,#009e60_66%)]" />;
+    return <span className="block h-9 w-9 overflow-hidden rounded-full bg-[linear-gradient(to_right,#f77f00_0_33%,#fff_33%_66%,#009e60_66%)]" />;
   }
   if (code === 'SN') {
-    return <span className="relative block h-10 w-10 overflow-hidden rounded-full bg-[linear-gradient(to_right,#00853f_0_33%,#fdef42_33%_66%,#e31b23_66%)]"><span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00853f]" /></span>;
+    return <span className="relative block h-9 w-9 overflow-hidden rounded-full bg-[linear-gradient(to_right,#00853f_0_33%,#fdef42_33%_66%,#e31b23_66%)]"><span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00853f]" /></span>;
   }
   if (code === 'CD') {
-    return <span className="relative block h-10 w-10 overflow-hidden rounded-full bg-[#00a3e0]"><span className="absolute inset-x-[-0.25rem] top-1/2 h-3 -translate-y-1/2 -rotate-45 bg-[#f7d618]" /><span className="absolute inset-x-[-0.25rem] top-1/2 h-1.5 -translate-y-1/2 -rotate-45 bg-[#ce1021]" /><span className="absolute left-2 top-2 h-2 w-2 rounded-full bg-[#f7d618]" /></span>;
+    return <span className="relative block h-9 w-9 overflow-hidden rounded-full bg-[#00a3e0]"><span className="absolute inset-x-[-0.25rem] top-1/2 h-3 -translate-y-1/2 -rotate-45 bg-[#f7d618]" /><span className="absolute inset-x-[-0.25rem] top-1/2 h-1.5 -translate-y-1/2 -rotate-45 bg-[#ce1021]" /><span className="absolute left-2 top-2 h-2 w-2 rounded-full bg-[#f7d618]" /></span>;
   }
   if (code === 'NG') {
-    return <span className="block h-10 w-10 overflow-hidden rounded-full bg-[linear-gradient(to_right,#008753_0_33%,#fff_33%_66%,#008753_66%)]" />;
+    return <span className="block h-9 w-9 overflow-hidden rounded-full bg-[linear-gradient(to_right,#008753_0_33%,#fff_33%_66%,#008753_66%)]" />;
   }
-  return <span className="relative block h-10 w-10 overflow-hidden rounded-full bg-[#c1272d]"><span className="absolute left-3 top-3 h-4 w-4 rounded-full border-2 border-[#006233]" /></span>;
+  return <span className="relative block h-9 w-9 overflow-hidden rounded-full bg-[#c1272d]"><span className="absolute left-3 top-3 h-3.5 w-3.5 rounded-full border-2 border-[#006233]" /></span>;
 }
 
 function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingIntelligence | null }) {
