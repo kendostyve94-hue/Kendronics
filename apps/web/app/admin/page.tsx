@@ -909,17 +909,13 @@ function ModernDashboardPanel({
       </div>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.96fr)]">
-        <div className="space-y-6">
-          <LatestTransactionsCard transactions={buildDashboardTransactions(orders)} />
-          <ProductActivityCard orders={orders} tickets={tickets} />
+        <LatestTransactionsCard transactions={buildDashboardTransactions(orders)} />
+        <div className="grid gap-6 md:grid-cols-2">
+          <DealsStatisticsCard orders={orders} tickets={tickets} logs={logs} />
+          <RecentPerformanceCard intelligence={intelligence} />
         </div>
-        <div className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <DealsStatisticsCard orders={orders} tickets={tickets} logs={logs} />
-            <RecentPerformanceCard intelligence={intelligence} />
-          </div>
-          <ProjectsCard />
-        </div>
+        <ProductActivityCard orders={orders} tickets={tickets} />
+        <ProjectsCard />
       </div>
 
       <button
@@ -1150,22 +1146,20 @@ function DealsStatisticsCard({ orders, tickets, logs }: { orders: AdminOrderRow[
 }
 
 function AfricanFlag({ code }: { code: string }) {
-  if (code === 'CM') {
-    return <span className="relative block h-9 w-9 overflow-hidden rounded-full bg-[linear-gradient(to_right,#007a5e_0_33%,#ce1126_33%_66%,#fcd116_66%)]"><span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#fcd116]" /></span>;
-  }
-  if (code === 'CI') {
-    return <span className="block h-9 w-9 overflow-hidden rounded-full bg-[linear-gradient(to_right,#f77f00_0_33%,#fff_33%_66%,#009e60_66%)]" />;
-  }
-  if (code === 'SN') {
-    return <span className="relative block h-9 w-9 overflow-hidden rounded-full bg-[linear-gradient(to_right,#00853f_0_33%,#fdef42_33%_66%,#e31b23_66%)]"><span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00853f]" /></span>;
-  }
-  if (code === 'CD') {
-    return <span className="relative block h-9 w-9 overflow-hidden rounded-full bg-[#00a3e0]"><span className="absolute inset-x-[-0.25rem] top-1/2 h-3 -translate-y-1/2 -rotate-45 bg-[#f7d618]" /><span className="absolute inset-x-[-0.25rem] top-1/2 h-1.5 -translate-y-1/2 -rotate-45 bg-[#ce1021]" /><span className="absolute left-2 top-2 h-2 w-2 rounded-full bg-[#f7d618]" /></span>;
-  }
-  if (code === 'NG') {
-    return <span className="block h-9 w-9 overflow-hidden rounded-full bg-[linear-gradient(to_right,#008753_0_33%,#fff_33%_66%,#008753_66%)]" />;
-  }
-  return <span className="relative block h-9 w-9 overflow-hidden rounded-full bg-[#c1272d]"><span className="absolute left-3 top-3 h-3.5 w-3.5 rounded-full border-2 border-[#006233]" /></span>;
+  const flags: Record<string, string> = {
+    CD: '🇨🇩',
+    CI: '🇨🇮',
+    CM: '🇨🇲',
+    MA: '🇲🇦',
+    NG: '🇳🇬',
+    SN: '🇸🇳',
+  };
+
+  return (
+    <span className="grid h-9 w-9 overflow-hidden rounded-full bg-white text-[2rem] leading-none shadow-sm ring-1 ring-slate-200">
+      <span className="-ml-1 -mt-0.5 block scale-125">{flags[code] ?? '🌍'}</span>
+    </span>
+  );
 }
 
 function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingIntelligence | null }) {
