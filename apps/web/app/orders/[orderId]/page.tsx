@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/layout/Navbar';
 import { Card } from '../../../components/ui/Card';
 import { getApiBaseUrl } from '../../../lib/api-base-url';
+import { africanCountries } from '../../../lib/african-countries';
 import { readAuthSession, readFreshAuthSession } from '../../../lib/auth-session';
 import {
   isCustomerTrackingStatus,
@@ -23,7 +24,9 @@ import type {
 
 type PageStatus = 'loading' | 'ready' | 'error';
 type CheckoutStatus = 'idle' | 'loading' | 'error';
+type MobileMoneyStatus = 'idle' | 'loading' | 'pending' | 'error';
 type DeleteStatus = 'idle' | 'deleting' | 'error';
+type PaymentMethod = 'stripe' | 'mobile_money';
 const apiBaseUrl = getApiBaseUrl();
 const customerOrdersStorageKey = 'kendronics.customer.orders';
 
@@ -45,6 +48,11 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const [status, setStatus] = useState<PageStatus>('loading');
   const [checkoutStatus, setCheckoutStatus] = useState<CheckoutStatus>('idle');
   const [checkoutError, setCheckoutError] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stripe');
+  const [mobileMoneyStatus, setMobileMoneyStatus] = useState<MobileMoneyStatus>('idle');
+  const [mobileMoneyError, setMobileMoneyError] = useState('');
+  const [mobileMoneyPhone, setMobileMoneyPhone] = useState('');
+  const [mobileMoneyCountryIso2, setMobileMoneyCountryIso2] = useState('');
   const [deleteStatus, setDeleteStatus] = useState<DeleteStatus>('idle');
   const [deleteError, setDeleteError] = useState('');
 
@@ -94,6 +102,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const destination = detail ? countryNames[detail.order.destinationCountryIso2] ?? detail.order.destinationCountryIso2 : '';
   const supportHref = detail ? `/contact?orderId=${encodeURIComponent(detail.order.id)}` : '/contact';
   const canCheckout = status === 'ready' && detail?.order.paymentStatus === 'pending';
+  const selectedMobileMoneyCountry = mobileMoneyCountryIso2 || detail?.order.destinationCountryIso2 || 'SN';
 
   async function startStripeCheckout() {
     if (!detail) return;
@@ -130,6 +139,42 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     } catch (error) {
       setCheckoutStatus('error');
       setCheckoutError(error instanceof Error ? error.message : 'Impossible de lancer le paiement Stripe.');
+    }
+  }
+
+  async function startMobileMoneyPayment() {
+    if (!detail) return;
+    setMobileMoneyStatus('loading');
+    setMobileMoneyError('');
+
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        throw new Error('Connectez-vous avant de payer cette commande.');
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/payments/mobile-money`, {
+        method: 'POST',
+        headers: {
+          Authorization: `${session.tokenType} ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: detail.order.id,
+          phoneNumber: mobileMoneyPhone,
+          countryIso2: selectedMobileMoneyCountry,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Impossible de lancer le paiement Mobile Money.');
+      }
+
+      setMobileMoneyStatus('pending');
+    } catch (error) {
+      setMobileMoneyStatus('error');
+      setMobileMoneyError(error instanceof Error ? error.message : 'Impossible de lancer le paiement Mobile Money.');
     }
   }
 
@@ -226,7 +271,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
               canCheckout={canCheckout}
               checkoutStatus={checkoutStatus}
               checkoutError={checkoutError}
+              paymentMethod={paymentMethod}
+              onPaymentMethodChange={setPaymentMethod}
+              mobileMoneyStatus={mobileMoneyStatus}
+              mobileMoneyError={mobileMoneyError}
+              mobileMoneyPhone={mobileMoneyPhone}
+              mobileMoneyCountryIso2={selectedMobileMoneyCountry}
+              onMobileMoneyPhoneChange={setMobileMoneyPhone}
+              onMobileMoneyCountryChange={setMobileMoneyCountryIso2}
               onCheckout={startStripeCheckout}
+              onMobileMoneyPayment={startMobileMoneyPayment}
             />
             <SupportCard supportHref={supportHref} orderNumber={detail.order.orderNumber} />
           </div>
@@ -242,48 +296,138 @@ function SummaryCard({
   canCheckout,
   checkoutStatus,
   checkoutError,
+  paymentMethod,
+  onPaymentMethodChange,
+  mobileMoneyStatus,
+  mobileMoneyError,
+  mobileMoneyPhone,
+  mobileMoneyCountryIso2,
+  onMobileMoneyPhoneChange,
+  onMobileMoneyCountryChange,
   onCheckout,
+  onMobileMoneyPayment,
 }: {
   order: CustomerOrderSummary;
   canCheckout: boolean;
   checkoutStatus: CheckoutStatus;
   checkoutError: string;
+  paymentMethod: PaymentMethod;
+  onPaymentMethodChange: (method: PaymentMethod) => void;
+  mobileMoneyStatus: MobileMoneyStatus;
+  mobileMoneyError: string;
+  mobileMoneyPhone: string;
+  mobileMoneyCountryIso2: string;
+  onMobileMoneyPhoneChange: (value: string) => void;
+  onMobileMoneyCountryChange: (value: string) => void;
   onCheckout: () => void;
+  onMobileMoneyPayment: () => void;
 }) {
   const shippingEstimate = order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : '--';
+  const canSubmitMobileMoney = canCheckout && mobileMoneyPhone.trim().length >= 8 && mobileMoneyStatus !== 'loading';
 
   return (
     <Card className="p-5">
-      <h2 className="text-xl font-black tracking-tight text-ink">Résumé</h2>
+      <h2 className="text-xl font-black tracking-tight text-ink">Resume</h2>
       <div className="mt-5 space-y-4 text-sm">
         <SummaryLine label="Total marchandises" value={formatMoney(order.totalPrice, order.currency)} />
-        <SummaryLine label="Livraison" value="Incluse ou confirmée au paiement" />
+        <SummaryLine label="Livraison" value="Incluse ou confirmee au paiement" />
         <div className="flex items-center justify-between border-t border-line pt-4 text-base font-black">
           <span>Total</span>
           <span className="text-[#ff7a00]">{formatMoney(order.totalPrice, order.currency)}</span>
         </div>
         <div className="border-t border-line pt-4">
-          <SummaryLine label="Date d’expédition estimée" value={shippingEstimate} />
+          <SummaryLine label="Date d'expedition estimee" value={shippingEstimate} />
           <p className="mt-3 text-xs leading-5 text-slate-500">
-            La commande avance après validation des fichiers, paiement et disponibilité fournisseur.
+            La commande avance apres validation des fichiers, paiement et disponibilite fournisseur.
           </p>
         </div>
       </div>
-      <button
-        type="button"
-        disabled={!canCheckout || checkoutStatus === 'loading'}
-        onClick={onCheckout}
-        className={`mt-5 inline-flex h-12 w-full items-center justify-center rounded-full px-5 text-base font-black text-white transition ${
-          canCheckout && checkoutStatus !== 'loading'
-            ? 'bg-[#0877ff] hover:bg-[#0068e8]'
-            : 'cursor-not-allowed bg-slate-300'
-        }`}
-      >
-        {checkoutStatus === 'loading' ? 'Ouverture de Stripe...' : order.paymentStatus === 'paid' ? 'Paiement confirmé' : 'Paiement sécurisé'}
-      </button>
+
+      <div className="mt-5 grid grid-cols-2 overflow-hidden rounded-full border border-line bg-slate-50 p-1">
+        <button
+          type="button"
+          onClick={() => onPaymentMethodChange('stripe')}
+          className={`h-10 rounded-full text-sm font-black transition ${
+            paymentMethod === 'stripe' ? 'bg-white text-[#0877ff]' : 'text-slate-500 hover:text-ink'
+          }`}
+        >
+          Carte
+        </button>
+        <button
+          type="button"
+          onClick={() => onPaymentMethodChange('mobile_money')}
+          className={`h-10 rounded-full text-sm font-black transition ${
+            paymentMethod === 'mobile_money' ? 'bg-white text-[#0f8f6b]' : 'text-slate-500 hover:text-ink'
+          }`}
+        >
+          Mobile Money
+        </button>
+      </div>
+
+      {paymentMethod === 'stripe' ? (
+        <button
+          type="button"
+          disabled={!canCheckout || checkoutStatus === 'loading'}
+          onClick={onCheckout}
+          className={`mt-4 inline-flex h-12 w-full items-center justify-center rounded-full px-5 text-base font-black text-white transition ${
+            canCheckout && checkoutStatus !== 'loading'
+              ? 'bg-[#0877ff] hover:bg-[#0068e8]'
+              : 'cursor-not-allowed bg-slate-300'
+          }`}
+        >
+          {checkoutStatus === 'loading' ? 'Ouverture de Stripe...' : order.paymentStatus === 'paid' ? 'Paiement confirme' : 'Payer par carte'}
+        </button>
+      ) : (
+        <div className="mt-4 space-y-3">
+          <label className="block text-sm font-black text-ink">
+            Pays
+            <select
+              value={mobileMoneyCountryIso2}
+              onChange={(event) => onMobileMoneyCountryChange(event.target.value)}
+              disabled={!canCheckout || mobileMoneyStatus === 'loading'}
+              className="mt-2 h-11 w-full rounded-sm border border-line bg-white px-3 text-sm font-bold text-ink outline-none focus:border-[#0f8f6b]"
+            >
+              {africanCountries.map((country) => (
+                <option key={country.iso2} value={country.iso2}>{country.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm font-black text-ink">
+            Numero Mobile Money
+            <input
+              type="tel"
+              value={mobileMoneyPhone}
+              onChange={(event) => onMobileMoneyPhoneChange(event.target.value)}
+              disabled={!canCheckout || mobileMoneyStatus === 'loading'}
+              placeholder="+221771234567"
+              className="mt-2 h-11 w-full rounded-sm border border-line bg-white px-3 text-sm font-bold text-ink outline-none focus:border-[#0f8f6b]"
+            />
+          </label>
+          <button
+            type="button"
+            disabled={!canSubmitMobileMoney}
+            onClick={onMobileMoneyPayment}
+            className={`inline-flex h-12 w-full items-center justify-center rounded-full px-5 text-base font-black text-white transition ${
+              canSubmitMobileMoney
+                ? 'bg-[#0f8f6b] hover:bg-[#0b7558]'
+                : 'cursor-not-allowed bg-slate-300'
+            }`}
+          >
+            {mobileMoneyStatus === 'loading' ? 'Demande en cours...' : order.paymentStatus === 'paid' ? 'Paiement confirme' : 'Payer par Mobile Money'}
+          </button>
+          {mobileMoneyStatus === 'pending' ? (
+            <p className="rounded-sm border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-700">
+              Paiement Mobile Money cree. Confirmez la demande sur votre telephone si votre operateur l'envoie.
+            </p>
+          ) : null}
+        </div>
+      )}
+
       {checkoutStatus === 'error' ? <p className="mt-3 text-sm font-bold text-red-700">{checkoutError}</p> : null}
+      {mobileMoneyStatus === 'error' ? <p className="mt-3 text-sm font-bold text-red-700">{mobileMoneyError}</p> : null}
     </Card>
   );
+
 }
 
 function SummaryLine({ label, value }: { label: string; value: string }) {

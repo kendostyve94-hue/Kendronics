@@ -138,7 +138,7 @@ test('keeps order, quote, upload, payment, support, and tracking routes availabl
       'apps/api/src/modules/uploads/uploads.controller.ts': ["@Post('direct')", "@Get(':uploadId/analysis')"],
       'apps/api/src/modules/pricing/pricing.controller.ts': ["@Post('quote')"],
       'apps/api/src/modules/orders/orders.controller.ts': ["@Post()", "@Get()"],
-      'apps/api/src/modules/payments/payments.controller.ts': ["@Post('checkout')", "@Post('webhooks/stripe')"],
+      'apps/api/src/modules/payments/payments.controller.ts': ["@Post('checkout')", "@Post('mobile-money')", "@Post('webhooks/stripe')"],
       'apps/api/src/modules/tracking/tracking.controller.ts': ["@Get(':orderId')", "@Post('lookup')"],
       'apps/api/src/modules/support/support.controller.ts': ["@Post('tickets')", "@Post('contact')"],
       'apps/api/src/modules/notifications/notifications.controller.ts': ['@Get()', "@Patch(':id/read')"],
@@ -152,7 +152,7 @@ test('keeps order, quote, upload, payment, support, and tracking routes availabl
 
 test('keeps deployment checks wired to build, migrate, and run production paths', () => {
     const packageJson = JSON.parse(read('package.json'));
-    assert.equal(packageJson.scripts['web:build'], 'node --max-old-space-size=4096 node_modules/next/dist/bin/next build apps/web');
+    assert.equal(packageJson.scripts['web:build'], 'node --max-old-space-size=8192 node_modules/next/dist/bin/next build apps/web');
     assert.equal(packageJson.scripts['api:prod:build'], 'npm run db:generate && npm run api:build');
     assert.equal(packageJson.scripts['api:deploy:start'], 'npm run db:deploy && npm run api:start:prod');
     assert.equal(packageJson.scripts['test:production-flow'], 'node scripts/production-flow.test.mjs');

@@ -50,11 +50,15 @@ export class PaymentsService {
 
   async initiateMobileMoneyPayment(userId: string, dto: CreateMobileMoneyPaymentDto): Promise<Payment> {
     const order = await this.ordersService.findOwnedOrder(userId, dto.orderId);
+    if (!order.totalPrice || order.totalPrice < 0.5) {
+      throw new BadRequestException('Order quote amount is unavailable for Mobile Money payment.');
+    }
+
     const payment = await this.paymentsRepository.createPayment({
       userId,
       orderId: order.id,
       provider: 'mobile_money',
-      amount: dto.amount,
+      amount: order.totalPrice,
       currency: 'EUR',
     });
 
