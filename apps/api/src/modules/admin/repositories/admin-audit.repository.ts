@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AdminAuditLog as PrismaAdminAuditLog } from '@prisma/client';
+import { AdminAuditLog as PrismaAdminAuditLog, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { AdminAuditLog } from '../entities/admin-audit-log.entity';
 
@@ -7,13 +7,21 @@ import { AdminAuditLog } from '../entities/admin-audit-log.entity';
 export class AdminAuditRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async record(actorUserId: string, action: string, targetType: string, targetId?: string): Promise<void> {
+  async record(
+    actorUserId: string,
+    action: string,
+    targetType: string,
+    targetId?: string,
+    details?: { ipAddress?: string; metadata?: Record<string, unknown> },
+  ): Promise<void> {
     await this.prisma.adminAuditLog.create({
       data: {
         actorUserId,
         action,
         targetType,
         targetId,
+        ipAddress: details?.ipAddress,
+        metadata: details?.metadata as Prisma.InputJsonValue | undefined,
       },
     });
   }
@@ -35,6 +43,12 @@ function toAdminAuditLog(log: PrismaAdminAuditLog): AdminAuditLog {
     action: log.action,
     targetType: log.targetType,
     targetId: log.targetId ?? undefined,
+    ipAddress: log.ipAddress ?? undefined,
+    metadata: isRecord(log.metadata) ? log.metadata : undefined,
     createdAt: log.createdAt,
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

@@ -52,21 +52,25 @@ export class AdminService {
       professionalEmail: access.professionalEmail,
       fullName: access.user.fullName,
       roles: access.user.roles,
+      accessRoles: access.accessRoles,
+      status: adminAccessStatus(access),
       personalCodeExpiresAt: access.personalCodeExpiresAt,
       lockedUntil: access.lockedUntil,
       lastVerifiedAt: access.lastVerifiedAt,
+      lastFailedAt: access.lastFailedAt,
       createdAt: access.createdAt,
     }));
   }
 
-  async addAdminUser(admin: AuthenticatedUser, email: string, professionalEmail: string) {
+  async addAdminUser(admin: AuthenticatedUser, email: string, professionalEmail: string, accessRoles?: string[]) {
     const normalizedEmail = email.toLowerCase().trim();
     const normalizedProfessionalEmail = professionalEmail.toLowerCase().trim();
+    const normalizedRoles = normalizeAccessRoles(accessRoles);
     const user = await this.usersService.grantAdminRole(normalizedEmail);
     const access = await this.prisma.adminAccess.upsert({
       where: { userId_professionalEmail: { userId: user.id, professionalEmail: normalizedProfessionalEmail } },
-      create: { userId: user.id, professionalEmail: normalizedProfessionalEmail },
-      update: {},
+      create: { userId: user.id, professionalEmail: normalizedProfessionalEmail, accessRoles: normalizedRoles, isActive: true },
+      update: { accessRoles: normalizedRoles, isActive: true },
     });
     await this.auditRepository.record(admin.id, 'admin.access.admin.promote', 'user', user.id);
     await this.auditRepository.record(admin.id, 'admin.access.professional-email.link', 'adminAccess', access.id);
@@ -77,9 +81,12 @@ export class AdminService {
       professionalEmail: access.professionalEmail,
       fullName: user.fullName,
       roles: user.roles,
+      accessRoles: access.accessRoles,
+      status: adminAccessStatus(access),
       personalCodeExpiresAt: access.personalCodeExpiresAt,
       lockedUntil: access.lockedUntil,
       lastVerifiedAt: access.lastVerifiedAt,
+      lastFailedAt: access.lastFailedAt,
       createdAt: access.createdAt,
     };
   }
@@ -93,8 +100,8 @@ export class AdminService {
       throw new BadRequestException('You cannot remove your own admin access.');
     }
 
-    await this.prisma.adminAccess.delete({ where: { id: access.id } });
-    const remainingAccessCount = await this.prisma.adminAccess.count({ where: { userId: access.userId } });
+    await this.prisma.adminAccess.update({ where: { id: access.id }, data: { isActive: false } });
+    const remainingAccessCount = await this.prisma.adminAccess.count({ where: { userId: access.userId, isActive: true } });
     const user = remainingAccessCount === 0 ? await this.usersService.revokeAdminRole(access.userId) : this.toUserAccessUser(access.user);
     await this.auditRepository.record(admin.id, 'admin.access.admin.revoke', 'user', access.userId);
     await this.auditRepository.record(admin.id, 'admin.access.professional-email.unlink', 'adminAccess', access.id);
@@ -230,4 +237,26 @@ export class AdminService {
     await this.auditRepository.record(admin.id, 'admin.audit_logs.list', 'audit_log');
     return this.auditRepository.findRecent();
   }
+}
+
+function normalizeAccessRoles(accessRoles?: string[]): string[] {
+  const allowed = new Set(['super_admin', 'admin', 'support', 'logistics', 'pricing']);
+  const roles = (accessRoles ?? ['admin'])
+    .map((role) => role.trim().toLowerCase())
+    .filter((role) => allowed.has(role));
+  return Array.from(new Set(roles.length > 0 ? roles : ['admin']));
+}
+
+function adminAccessStatus(access: {
+  isActive: boolean;
+  lockedUntil: Date | null;
+  personalCodeHash: string | null;
+  personalCodeExpiresAt: Date | null;
+}) {
+  const now = new Date();
+  if (!access.isActive) return 'disabled';
+  if (access.lockedUntil && access.lockedUntil > now) return 'locked';
+  if (!access.personalCodeHash) return 'pending_setup';
+  if (!access.personalCodeExpiresAt || access.personalCodeExpiresAt <= now) return 'expired';
+  return 'active';
 }

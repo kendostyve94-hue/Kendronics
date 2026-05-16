@@ -395,6 +395,7 @@ export default function AdminPage() {
     const payload: AddAdminUserRequest = {
       email: String(form.get('email') ?? '').trim().toLowerCase(),
       professionalEmail: String(form.get('professionalEmail') ?? '').trim().toLowerCase(),
+      accessRoles: form.getAll('accessRoles').map((role) => String(role)),
     };
 
     setMessage('');
@@ -415,11 +416,26 @@ export default function AdminPage() {
     }
 
     setMessage('');
-    await adminRequest(adminApiContract.removeAdminUser.path.replace(':userId', accessId), session, {
+    await adminRequest(adminApiContract.removeAdminUser.path.replace(':accessId', accessId), session, {
       method: adminApiContract.removeAdminUser.method,
     });
     await refreshAdminAccess(session);
     setMessage('Acces admin retire.');
+  }
+
+  async function submitResetAdminCode(accessId: string) {
+    const session = readAuthSession();
+    if (!session) {
+      setLoadState('forbidden');
+      return;
+    }
+
+    setMessage('');
+    await adminRequest(adminApiContract.resetAdminCode.path.replace(':accessId', accessId), session, {
+      method: adminApiContract.resetAdminCode.method,
+    });
+    await refreshAdminAccess(session);
+    setMessage('Code admin reinitialise. Un code temporaire a ete envoye par e-mail.');
   }
 
   async function submitStatus(event: FormEvent<HTMLFormElement>) {
@@ -718,6 +734,7 @@ export default function AdminPage() {
               logs={auditLogs}
               onSubmitAddAdmin={submitAddAdmin}
               onRemoveAdmin={submitRemoveAdmin}
+              onResetAdminCode={submitResetAdminCode}
             />
           )}
             </div>
@@ -2106,11 +2123,13 @@ function AccessManagementPanel({
   logs,
   onSubmitAddAdmin,
   onRemoveAdmin,
+  onResetAdminCode,
 }: {
   admins: AdminAccessUser[];
   logs: AdminAuditLog[];
   onSubmitAddAdmin: (event: FormEvent<HTMLFormElement>) => void;
   onRemoveAdmin: (accessId: string) => void | Promise<void>;
+  onResetAdminCode: (accessId: string) => void | Promise<void>;
 }) {
   const accessLogs = logs.filter((log) => log.action.startsWith('admin.access.'));
 
@@ -2131,6 +2150,8 @@ function AccessManagementPanel({
                 <th className="px-5 py-4">Nom</th>
                 <th className="px-5 py-4">Compte connecte</th>
                 <th className="px-5 py-4">Email pro</th>
+                <th className="px-5 py-4">Roles acces</th>
+                <th className="px-5 py-4">Statut</th>
                 <th className="px-5 py-4">Code</th>
                 <th className="px-5 py-4">Dernier acces</th>
                 <th className="px-5 py-4 text-right">Action</th>
@@ -2142,9 +2163,18 @@ function AccessManagementPanel({
                   <td className="px-5 py-4 font-black text-ink">{admin.fullName}</td>
                   <td className="px-5 py-4 text-slate-600">{admin.email}</td>
                   <td className="px-5 py-4 text-slate-600">{admin.professionalEmail}</td>
+                  <td className="px-5 py-4 text-slate-600">{admin.accessRoles.join(', ')}</td>
+                  <td className="px-5 py-4 text-slate-600">{adminAccessStatusLabel(admin.status)}</td>
                   <td className="px-5 py-4 text-slate-600">{admin.personalCodeExpiresAt ? `Expire ${formatDate(admin.personalCodeExpiresAt)}` : 'A initialiser'}</td>
                   <td className="px-5 py-4 text-slate-600">{admin.lastVerifiedAt ? formatDate(admin.lastVerifiedAt) : 'Jamais'}</td>
                   <td className="px-5 py-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => void onResetAdminCode(admin.accessId)}
+                      className="mr-2 h-9 border border-slate-300 bg-white px-3 text-xs font-black text-slate-700 transition hover:border-slate-500"
+                    >
+                      Reset code
+                    </button>
                     <button
                       type="button"
                       onClick={() => void onRemoveAdmin(admin.accessId)}
@@ -2157,7 +2187,7 @@ function AccessManagementPanel({
               ))}
               {admins.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-sm font-bold text-slate-500">Aucun acces admin trouve.</td>
+                  <td colSpan={8} className="px-5 py-8 text-center text-sm font-bold text-slate-500">Aucun acces admin trouve.</td>
                 </tr>
               ) : null}
             </tbody>
@@ -2169,6 +2199,20 @@ function AccessManagementPanel({
         <AdminForm title="Ajouter admin" onSubmit={onSubmitAddAdmin}>
           <input name="email" type="email" required placeholder="compte-connecte@gmail.com" className={fieldClassName} />
           <input name="professionalEmail" type="email" required placeholder="email.pro@kendronics.com" className={fieldClassName} />
+          <div className="grid gap-2 text-xs text-slate-600">
+            {[
+              ['admin', 'Admin'],
+              ['support', 'Support'],
+              ['logistics', 'Logistique'],
+              ['pricing', 'Pricing'],
+              ['super_admin', 'Super admin'],
+            ].map(([value, label]) => (
+              <label key={value} className="inline-flex items-center gap-2">
+                <input type="checkbox" name="accessRoles" value={value} defaultChecked={value === 'admin'} />
+                <span>{label}</span>
+              </label>
+            ))}
+          </div>
           <p className="text-xs leading-5 text-slate-500">
             Le compte doit deja exister. Le role admin et l'e-mail professionnel seront enregistres en base et traces dans l'audit.
           </p>
@@ -2180,8 +2224,8 @@ function AccessManagementPanel({
             <h2 className="mt-2 text-xl font-black text-ink">Changements d'accès</h2>
           </div>
           <SimpleTable
-            headers={['Action', 'Actor', 'Target', 'Date']}
-            rows={accessLogs.map((log) => [log.action, log.actorUserId, log.targetId ?? 'None', formatDate(log.createdAt)])}
+            headers={['Action', 'Actor', 'Target', 'IP', 'Date']}
+            rows={accessLogs.map((log) => [log.action, log.actorUserId, log.targetId ?? 'None', log.ipAddress ?? 'None', formatDate(log.createdAt)])}
           />
         </Card>
       </div>
@@ -2204,6 +2248,17 @@ function SupportTicketsPanel({ tickets }: { tickets: AdminSupportTicket[] }) {
   );
 }
 
+function adminAccessStatusLabel(status: AdminAccessUser['status']) {
+  const labels: Record<AdminAccessUser['status'], string> = {
+    active: 'Actif',
+    pending_setup: 'A initialiser',
+    expired: 'Expire',
+    locked: 'Verrouille',
+    disabled: 'Desactive',
+  };
+  return labels[status];
+}
+
 function AuditLogPanel({ logs }: { logs: AdminAuditLog[] }) {
   return (
     <Card className="overflow-hidden">
@@ -2212,8 +2267,8 @@ function AuditLogPanel({ logs }: { logs: AdminAuditLog[] }) {
         <h2 className="mt-2 text-2xl font-black text-ink">Admin actions</h2>
       </div>
       <SimpleTable
-        headers={['Action', 'Actor', 'Target', 'Target ID', 'Created']}
-        rows={logs.map((log) => [log.action, log.actorUserId, log.targetType, log.targetId ?? 'None', formatDate(log.createdAt)])}
+        headers={['Action', 'Actor', 'Target', 'Target ID', 'IP', 'Created']}
+        rows={logs.map((log) => [log.action, log.actorUserId, log.targetType, log.targetId ?? 'None', log.ipAddress ?? 'None', formatDate(log.createdAt)])}
       />
     </Card>
   );

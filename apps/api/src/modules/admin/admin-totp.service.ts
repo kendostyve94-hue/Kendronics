@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { UserRole } from '../../common/types/user-role.enum';
 import { EmailNotificationService } from '../support/email-notification.service';
+import { AdminAuditRepository } from './repositories/admin-audit.repository';
 
 type AdminAccessPayload = {
   sub: string;
@@ -18,17 +19,19 @@ export class AdminTotpService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailNotificationService: EmailNotificationService,
+    private readonly auditRepository: AdminAuditRepository,
   ) {}
 
   isRequired(): boolean {
     return process.env.ADMIN_CODE_REQUIRED?.trim().toLowerCase() !== 'false';
   }
 
-  async startCodeFlow(user: AuthenticatedUser, professionalEmail: string): Promise<{ status: AdminAccessStep; expiresAt?: string }> {
+  async startCodeFlow(user: AuthenticatedUser, professionalEmail: string, ipAddress?: string): Promise<{ status: AdminAccessStep; expiresAt?: string }> {
     const access = await this.findOrCreateAccess(user, professionalEmail);
     const now = new Date();
 
     if (access.personalCodeHash && access.personalCodeExpiresAt && access.personalCodeExpiresAt > now) {
+      await this.auditRepository.record(user.id, 'admin.access.code.personal.required', 'adminAccess', access.id, { ipAddress });
       return { status: 'personal_code_required', expiresAt: access.personalCodeExpiresAt.toISOString() };
     }
 
@@ -46,6 +49,7 @@ export class AdminTotpService {
     });
 
     await this.emailNotificationService.sendAdminSetupCode({ to: access.professionalEmail, code: setupCode });
+    await this.auditRepository.record(user.id, 'admin.access.code.setup.sent', 'adminAccess', access.id, { ipAddress });
     return { status: 'setup_code_sent', expiresAt: setupCodeExpiresAt.toISOString() };
   }
 
@@ -54,12 +58,14 @@ export class AdminTotpService {
     professionalEmail: string,
     setupCode: string,
     personalCode: string,
+    ipAddress?: string,
   ): Promise<{ accessToken: string; expiresAt: string; personalCodeExpiresAt: string }> {
     this.assertPersonalCodePolicy(personalCode);
     const access = await this.findActiveAccess(user, professionalEmail);
     const now = new Date();
 
     if (!access.setupCodeHash || !access.setupCodeExpiresAt || access.setupCodeExpiresAt <= now || !verifySecret(setupCode, access.setupCodeHash)) {
+      await this.auditRepository.record(user.id, 'admin.access.code.setup.failed', 'adminAccess', access.id, { ipAddress });
       throw new UnauthorizedException('Invalid admin setup code.');
     }
 
@@ -77,6 +83,7 @@ export class AdminTotpService {
       },
     });
 
+    await this.auditRepository.record(user.id, 'admin.access.code.setup.completed', 'adminAccess', access.id, { ipAddress });
     return { ...this.issueAccessToken(user, access.professionalEmail), personalCodeExpiresAt: personalCodeExpiresAt.toISOString() };
   }
 
@@ -84,6 +91,7 @@ export class AdminTotpService {
     user: AuthenticatedUser,
     professionalEmail: string,
     personalCode: string,
+    ipAddress?: string,
   ): Promise<{ accessToken: string; expiresAt: string; personalCodeExpiresAt: string }> {
     const access = await this.findActiveAccess(user, professionalEmail);
     const now = new Date();
@@ -102,8 +110,13 @@ export class AdminTotpService {
         where: { id: access.id },
         data: {
           failedAttempts,
+          lastFailedAt: now,
           lockedUntil: failedAttempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null,
         },
+      });
+      await this.auditRepository.record(user.id, 'admin.access.code.verify.failed', 'adminAccess', access.id, {
+        ipAddress,
+        metadata: { failedAttempts },
       });
       throw new UnauthorizedException('Invalid admin personal code.');
     }
@@ -113,7 +126,37 @@ export class AdminTotpService {
       data: { failedAttempts: 0, lockedUntil: null, lastVerifiedAt: now },
     });
 
+    await this.auditRepository.record(user.id, 'admin.access.code.verify.succeeded', 'adminAccess', access.id, { ipAddress });
     return { ...this.issueAccessToken(user, access.professionalEmail), personalCodeExpiresAt: access.personalCodeExpiresAt.toISOString() };
+  }
+
+  async resetPersonalCode(admin: AuthenticatedUser, accessId: string, ipAddress?: string) {
+    const access = await this.prisma.adminAccess.findUnique({ where: { id: accessId } });
+    if (!access) {
+      throw new ForbiddenException('Admin access is not available.');
+    }
+    if (access.userId === admin.id) {
+      throw new ForbiddenException('You cannot reset your own admin code from this panel.');
+    }
+
+    const setupCode = String(randomInt(100000, 1000000));
+    const setupCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const updated = await this.prisma.adminAccess.update({
+      where: { id: access.id },
+      data: {
+        personalCodeHash: null,
+        personalCodeExpiresAt: null,
+        setupCodeHash: hashSecret(setupCode),
+        setupCodeExpiresAt,
+        failedAttempts: 0,
+        lockedUntil: null,
+        lastFailedAt: null,
+      },
+    });
+
+    await this.emailNotificationService.sendAdminSetupCode({ to: updated.professionalEmail, code: setupCode });
+    await this.auditRepository.record(admin.id, 'admin.access.code.reset', 'adminAccess', updated.id, { ipAddress });
+    return { ok: true, expiresAt: setupCodeExpiresAt.toISOString() };
   }
 
   verifyAccessToken(user: AuthenticatedUser, token: string | undefined): void {
@@ -147,6 +190,9 @@ export class AdminTotpService {
       where: { userId_professionalEmail: { userId: user.id, professionalEmail: normalizedProfessionalEmail } },
     });
     if (existingAccess) {
+      if (!existingAccess.isActive) {
+        throw new ForbiddenException('Admin access is disabled.');
+      }
       return existingAccess;
     }
 

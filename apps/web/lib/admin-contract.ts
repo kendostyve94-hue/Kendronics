@@ -49,6 +49,8 @@ export interface AdminAuditLog {
   action: string;
   targetType: string;
   targetId?: string;
+  ipAddress?: string;
+  metadata?: Record<string, unknown>;
   createdAt: string;
 }
 
@@ -59,15 +61,19 @@ export interface AdminAccessUser {
   professionalEmail: string;
   fullName: string;
   roles: string[];
+  accessRoles: string[];
+  status: 'active' | 'pending_setup' | 'expired' | 'locked' | 'disabled';
   personalCodeExpiresAt?: string;
   lockedUntil?: string;
   lastVerifiedAt?: string;
+  lastFailedAt?: string;
   createdAt: string;
 }
 
 export interface AddAdminUserRequest {
   email: string;
   professionalEmail: string;
+  accessRoles?: string[];
 }
 
 export interface StartAdminCodeRequest {
@@ -366,7 +372,11 @@ export const adminApiContract = {
   },
   removeAdminUser: {
     method: 'DELETE',
-    path: '/api/admin/access/admins/:userId',
+    path: '/api/admin/access/admins/:accessId',
+  },
+  resetAdminCode: {
+    method: 'POST',
+    path: '/api/admin/access/admins/:accessId/reset-code',
   },
   startAdminCode: {
     method: 'POST',

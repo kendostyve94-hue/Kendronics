@@ -317,6 +317,8 @@ model AdminAuditLog {
   action      String
   targetType  String
   targetId    String?
+  ipAddress   String?
+  metadata    Json?
   createdAt   DateTime @default(now())
 
   actor User @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
@@ -331,6 +333,8 @@ model AdminAccess {
   id                    String    @id @default(uuid())
   userId                String
   professionalEmail     String    @unique
+  accessRoles           String[]  @default(["admin"])
+  isActive              Boolean   @default(true)
   personalCodeHash      String?
   personalCodeExpiresAt DateTime?
   setupCodeHash         String?
@@ -338,6 +342,7 @@ model AdminAccess {
   failedAttempts        Int       @default(0)
   lockedUntil           DateTime?
   lastVerifiedAt        DateTime?
+  lastFailedAt          DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 

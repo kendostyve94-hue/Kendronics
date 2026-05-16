@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { IsEmail, IsString } from 'class-validator';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -26,6 +26,10 @@ class AddAdminUserDto {
 
   @IsEmail()
   professionalEmail!: string;
+
+  @IsOptional()
+  @IsString({ each: true })
+  accessRoles?: string[];
 }
 
 class StartAdminCodeDto {
@@ -56,18 +60,18 @@ export class AdminController {
   ) {}
 
   @Post('access/code/start')
-  startAdminCode(@CurrentUser() admin: AuthenticatedUser, @Body() dto: StartAdminCodeDto) {
-    return this.adminTotpService.startCodeFlow(admin, dto.adminEmail);
+  startAdminCode(@CurrentUser() admin: AuthenticatedUser, @Body() dto: StartAdminCodeDto, @Req() request: { ip?: string; headers: Record<string, string | string[] | undefined> }) {
+    return this.adminTotpService.startCodeFlow(admin, dto.adminEmail, clientIp(request));
   }
 
   @Post('access/code/setup')
-  setupAdminCode(@CurrentUser() admin: AuthenticatedUser, @Body() dto: SetupAdminCodeDto) {
-    return this.adminTotpService.setupPersonalCode(admin, dto.adminEmail, dto.code, dto.personalCode);
+  setupAdminCode(@CurrentUser() admin: AuthenticatedUser, @Body() dto: SetupAdminCodeDto, @Req() request: { ip?: string; headers: Record<string, string | string[] | undefined> }) {
+    return this.adminTotpService.setupPersonalCode(admin, dto.adminEmail, dto.code, dto.personalCode, clientIp(request));
   }
 
   @Post('access/code/verify')
-  verifyAdminCode(@CurrentUser() admin: AuthenticatedUser, @Body() dto: VerifyAdminCodeDto) {
-    return this.adminTotpService.verifyPersonalCode(admin, dto.adminEmail, dto.code);
+  verifyAdminCode(@CurrentUser() admin: AuthenticatedUser, @Body() dto: VerifyAdminCodeDto, @Req() request: { ip?: string; headers: Record<string, string | string[] | undefined> }) {
+    return this.adminTotpService.verifyPersonalCode(admin, dto.adminEmail, dto.code, clientIp(request));
   }
 
   @Get('access/admins')
@@ -77,12 +81,17 @@ export class AdminController {
 
   @Post('access/admins')
   addAdminUser(@CurrentUser() admin: AuthenticatedUser, @Body() dto: AddAdminUserDto) {
-    return this.adminService.addAdminUser(admin, dto.email, dto.professionalEmail);
+    return this.adminService.addAdminUser(admin, dto.email, dto.professionalEmail, dto.accessRoles);
   }
 
-  @Delete('access/admins/:userId')
-  removeAdminUser(@CurrentUser() admin: AuthenticatedUser, @Param('userId') userId: string) {
-    return this.adminService.removeAdminUser(admin, userId);
+  @Delete('access/admins/:accessId')
+  removeAdminUser(@CurrentUser() admin: AuthenticatedUser, @Param('accessId') accessId: string) {
+    return this.adminService.removeAdminUser(admin, accessId);
+  }
+
+  @Post('access/admins/:accessId/reset-code')
+  resetAdminCode(@CurrentUser() admin: AuthenticatedUser, @Param('accessId') accessId: string, @Req() request: { ip?: string; headers: Record<string, string | string[] | undefined> }) {
+    return this.adminTotpService.resetPersonalCode(admin, accessId, clientIp(request));
   }
 
   @Get('orders')
@@ -178,4 +187,10 @@ export class AdminController {
   listAuditLogs(@CurrentUser() admin: AuthenticatedUser) {
     return this.adminService.listAuditLogs(admin);
   }
+}
+
+function clientIp(request: { ip?: string; headers: Record<string, string | string[] | undefined> }): string | undefined {
+  const forwardedFor = request.headers['x-forwarded-for'];
+  const raw = Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor;
+  return raw?.split(',')[0]?.trim() || request.ip;
 }
