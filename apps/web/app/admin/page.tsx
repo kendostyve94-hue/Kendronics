@@ -1092,7 +1092,7 @@ function getAdminPageStats(
         { label: 'Ouverts', value: String(tickets.filter((ticket) => ticket.status !== 'closed').length) },
         { label: 'Urgents', value: String(tickets.filter((ticket) => ticket.status === 'pending_admin').length) },
         { label: 'SAV', value: String(tickets.filter((ticket) => ticket.subject.toLowerCase().includes('sav')).length) },
-        { label: 'Temps reponse', value: '2h15' },
+        { label: 'Temps reponse', value: 'Non suivi' },
       ];
     case 'payments':
       return [
@@ -1105,13 +1105,13 @@ function getAdminPageStats(
       return [
         { label: 'MRR', value: revenue },
         { label: 'Panier moyen', value: formatCurrency(orders.length ? sumOrderTotals(orders) / orders.length : 0) },
-        { label: 'Marge nette', value: '24%' },
+        { label: 'Marge nette', value: intelligence ? `${Math.round(((intelligence.metrics.totals.pcbClientPrice - intelligence.metrics.totals.supplierEstimatedPrice) / Math.max(intelligence.metrics.totals.pcbClientPrice, 1)) * 100)}%` : '0%' },
         { label: 'Taux SAV', value: `${orders.length ? Math.round((tickets.length / orders.length) * 100) : 0}%` },
       ];
     case 'clients':
       return [
-        { label: 'Clients actifs', value: String(orders.length) },
-        { label: 'Entreprises', value: String(Math.max(1, Math.round(orders.length * 0.6))) },
+        { label: 'Clients actifs', value: String(uniqueValues(orders.map((order) => order.userId)).length) },
+        { label: 'Entreprises', value: '0' },
         { label: 'Pays couverts', value: String(uniqueValues(orders.map((order) => order.destinationCountryIso2)).length) },
         { label: 'Clients a risque', value: String(tickets.filter((ticket) => ticket.status === 'pending_admin').length) },
       ];
@@ -1124,10 +1124,10 @@ function getAdminPageStats(
       ];
     case 'suppliers':
       return [
-        { label: 'Fournisseurs actifs', value: '2' },
-        { label: 'Delai moyen production', value: '4.8 jours' },
-        { label: 'Taux defaut', value: '1.6%' },
-        { label: 'API connectees', value: '1' },
+        { label: 'Fournisseurs actifs', value: String(uniqueValues(orders.map((order) => order.externalManufacturingPartner ?? '')).length) },
+        { label: 'Delai moyen production', value: 'Non suivi' },
+        { label: 'Taux defaut', value: `${orders.length ? Math.round((orders.filter((order) => order.status === 'cancelled' || order.status === 'refunded').length / orders.length) * 100) : 0}%` },
+        { label: 'API connectees', value: String(uniqueValues(orders.map((order) => order.externalManufacturingPartner ?? '')).length) },
       ];
     case 'shipments':
       return [
@@ -1139,9 +1139,9 @@ function getAdminPageStats(
     case 'compliance':
       return [
         { label: 'CGV acceptees', value: String(orders.length) },
-        { label: 'Consentements cookies', value: String(orders.length * 3) },
+        { label: 'Consentements cookies', value: 'Non suivi' },
         { label: 'Demandes RGPD', value: '0' },
-        { label: 'Versions legales', value: '5' },
+        { label: 'Versions legales', value: 'Non suivi' },
       ];
     case 'settings':
       return [
@@ -1172,17 +1172,17 @@ function ModernDashboardPanel({
   intelligence: AdminPricingIntelligence | null;
 }) {
   const paidOrders = orders.filter((order) => getPaymentStatus(order) === 'paid').length;
-  const productionOrders = orders.filter((order) => ['supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'in_production'].includes(order.status)).length;
-  const activeCustomers = uniqueValues(orders.filter((order) => isRecentDate(order.createdAt, 30)).map((order) => order.quoteId)).length;
+  const productionOrders = orders.filter((order) => ['supplier_order_pending', 'supplier_ordered', 'supplier_in_production'].includes(order.status)).length;
+  const activeCustomers = uniqueValues(orders.filter((order) => isRecentDate(order.createdAt, 30)).map((order) => order.userId)).length;
   const conversionRate = orders.length ? (paidOrders / orders.length) * 100 : 0;
-  const shipments = orders.filter((order) => Boolean(order.trackingNumber) || ['shipped', 'in_transit', 'out_for_delivery', 'delivered'].includes(order.status)).length;
+  const shipments = orders.filter((order) => Boolean(order.trackingNumber) || ['shipped_to_africa', 'customs_processing', 'out_for_delivery', 'delivered'].includes(order.status)).length;
   const deliveredParcels = orders.filter((order) => order.status === 'delivered').length;
   const supportMessages = tickets.length;
 
   return (
     <div className="relative">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(25rem,0.95fr)]">
-        <SalesOverviewCard orders={orders} />
+        <SalesOverviewCard orders={orders} intelligence={intelligence} />
         <div className="grid gap-4 sm:grid-cols-2">
           <DashboardKpiCard tone="green" icon="bag" title="Commandes en production" value={formatCompactNumber(productionOrders)} trend={`${shareOf(productionOrders, orders.length)}%`} caption="des commandes" />
           <DashboardKpiCard tone="teal" icon="group" title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend={`${shareOf(activeCustomers, orders.length)}%`} caption="30 jours" />
@@ -1216,8 +1216,8 @@ function ModernDashboardPanel({
   );
 }
 
-function SalesOverviewCard({ orders }: { orders: AdminOrderRow[] }) {
-  const quoteSeries = buildMonthlyQuoteSeries(orders);
+function SalesOverviewCard({ orders, intelligence }: { orders: AdminOrderRow[]; intelligence: AdminPricingIntelligence | null }) {
+  const quoteSeries = buildMonthlyQuoteSeries(orders, intelligence?.snapshots ?? []);
   const maxValue = Math.max(...quoteSeries.flatMap((item) => [item.quotes, item.paid]), 1);
   const scaleLabels = buildScaleLabels(maxValue);
 
@@ -1327,17 +1327,34 @@ function DashboardKpiIcon({ icon }: { icon: 'customer' | 'group' | 'dollar' | 'b
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M7 12h10" /><path d="M9 8h8" /><path d="M7 16h8" /></svg>;
 }
 
-function buildMonthlyQuoteSeries(orders: AdminOrderRow[]) {
+function buildMonthlyQuoteSeries(orders: AdminOrderRow[], snapshots: AdminPricingSnapshot[]) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentYear = new Date().getFullYear();
   const series = months.map((month) => ({ month, quotes: 0, paid: 0 }));
 
+  const quoteIds = new Set<string>();
+  for (const snapshot of snapshots) {
+    const quoteId = snapshot.quote?.id ?? snapshot.quoteId;
+    if (!quoteId || quoteIds.has(quoteId)) continue;
+    const createdAt = snapshot.quote?.createdAt ?? snapshot.createdAt;
+    const date = new Date(createdAt);
+    if (date.getFullYear() !== currentYear) continue;
+    quoteIds.add(quoteId);
+    series[date.getMonth()].quotes += 1;
+  }
+
   for (const order of orders) {
     const createdAt = new Date(order.createdAt);
-    if (createdAt.getFullYear() !== currentYear) continue;
-    const bucket = series[createdAt.getMonth()];
-    bucket.quotes += 1;
-    if (getPaymentStatus(order) === 'paid') bucket.paid += 1;
+    if (createdAt.getFullYear() === currentYear && snapshots.length === 0) {
+      const quoteId = order.quoteId;
+      if (!quoteIds.has(quoteId)) {
+        quoteIds.add(quoteId);
+        series[createdAt.getMonth()].quotes += 1;
+      }
+    }
+    const paidAt = order.paidAt ? new Date(order.paidAt) : createdAt;
+    if (paidAt.getFullYear() !== currentYear) continue;
+    if (getPaymentStatus(order) === 'paid') series[paidAt.getMonth()].paid += 1;
   }
 
   return series;
@@ -2675,7 +2692,7 @@ function buildPcbServiceStats(orders: AdminOrderRow[]): Array<{ label: string; p
 }
 
 function productTypeForOrder(order: AdminOrderRow): string | undefined {
-  return (order as AdminOrderRow & { quoteSnapshot?: { productType?: string } }).quoteSnapshot?.productType?.trim();
+  return order.quoteSnapshot?.productType?.trim();
 }
 
 function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> {

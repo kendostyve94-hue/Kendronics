@@ -9,6 +9,7 @@ export type AdminOrderStatus =
 export interface AdminOrderRow {
   id: string;
   orderNumber: string;
+  userId: string;
   quoteId: string;
   status: AdminOrderStatus;
   paymentStatus?: PaymentStatus;
@@ -22,6 +23,21 @@ export interface AdminOrderRow {
   estimatedDeliveryAt?: string;
   paidAt?: string;
   createdAt: string;
+  quoteSnapshot?: {
+    productType: string;
+    gerberFileId: string;
+    layers: number;
+    lengthMm: number;
+    widthMm: number;
+    quantity: number;
+    shippingMode: string;
+    finalTotal: number;
+    currency: 'EUR';
+    breakdown: Record<string, number>;
+    configSnapshot?: Record<string, unknown> | null;
+    validUntil: string;
+    createdAt: string;
+  };
 }
 
 export interface AdminPricingRule {
