@@ -213,21 +213,26 @@ function WhyBuyPcbSection() {
             </a>
           </div>
 
-          <div className="relative">
-            <button type="button" aria-label="Previous PCB category" className="absolute left-1 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 border border-slate-200 bg-white text-3xl leading-none text-slate-600 lg:grid lg:place-items-center">
-              &lt;
-            </button>
-            <div className="grid gap-0 overflow-x-auto sm:grid-cols-3">
-              {pcbwayChoiceCards.map((card) => (
-                <a key={card.title} href={card.href} className="group relative min-h-[18rem] min-w-[17rem] overflow-hidden border-r border-slate-200 last:border-r-0 sm:min-w-0">
-                  <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
-                  <span className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/20 to-slate-950/0" />
-                  <span className="relative block p-5 text-white">
-                    <span className="block text-sm font-black">{card.eyebrow}</span>
-                    <span className="mt-2 block text-2xl font-black tracking-tight">{card.title}</span>
-                  </span>
-                </a>
-              ))}
+          <div>
+            <div className="relative">
+              <button type="button" aria-label="Previous PCB category" className="absolute left-1 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 border border-slate-200 bg-white text-3xl leading-none text-slate-600 lg:grid lg:place-items-center">
+                &lt;
+              </button>
+              <div className="grid gap-0 overflow-hidden sm:grid-cols-3">
+                {pcbwayChoiceCards.map((card) => (
+                  <a key={card.title} href={card.href} className="group relative h-[18rem] min-w-[17rem] overflow-hidden border-r border-slate-200 last:border-r-0 sm:min-w-0">
+                    <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                    <span className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/20 to-slate-950/0" />
+                    <span className="relative block p-5 text-white">
+                      <span className="block text-sm font-black">{card.eyebrow}</span>
+                      <span className="mt-2 block text-2xl font-black tracking-tight">{card.title}</span>
+                    </span>
+                  </a>
+                ))}
+              </div>
+              <button type="button" aria-label="Next PCB category" className="absolute right-1 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 border border-slate-200 bg-white text-3xl leading-none text-slate-600 lg:grid lg:place-items-center">
+                &gt;
+              </button>
             </div>
             <div className="border-t border-slate-200 bg-white px-5 py-5">
               <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
@@ -237,41 +242,32 @@ function WhyBuyPcbSection() {
                 </div>
                 <p className="text-xs text-slate-500">30 derniers jours: <span className="font-semibold text-[#ff5a00]">845+</span></p>
               </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-xs">
-                  <thead className="text-slate-500">
-                    <tr className="border-y border-slate-200">
-                      <th className="py-2 pr-4 font-normal">Date</th>
-                      <th className="py-2 pr-4 font-normal">Zone</th>
-                      <th className="py-2 pr-4 font-normal">Client</th>
-                      <th className="py-2 pr-4 font-normal">Service</th>
-                      <th className="py-2 pr-4 font-normal">Delai</th>
-                      <th className="py-2 font-normal">Progression</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentProductionActivity.map((item) => (
-                      <tr key={`${item.date}-${item.buyer}-${item.service}`} className="border-b border-slate-100 last:border-b-0">
-                        <td className="py-2 pr-4 text-slate-500">{item.date}</td>
-                        <td className="py-2 pr-4 text-slate-700">{item.region}</td>
-                        <td className="py-2 pr-4 text-slate-700">{item.buyer}</td>
-                        <td className="py-2 pr-4 text-slate-700">{item.service}</td>
-                        <td className="py-2 pr-4 font-semibold text-[#ff5a00]">{item.leadTime}</td>
-                        <td className="py-2">
-                          <span className="inline-grid w-28 grid-cols-[1fr_2rem] items-center gap-2">
-                            <span className="h-2 bg-slate-100"><span className="block h-full bg-[#9bcf9f]" style={{ width: `${item.progress}%` }} /></span>
-                            <span className="text-[11px] text-slate-500">{item.progress}%</span>
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="overflow-hidden border border-slate-200">
+                <div className="grid grid-cols-[3.2rem_3rem_4rem_minmax(7rem,1fr)_4.5rem_8.5rem] border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                  <span>Date</span>
+                  <span>Zone</span>
+                  <span>Client</span>
+                  <span>Service</span>
+                  <span>Delai</span>
+                  <span>Progression</span>
+                </div>
+                <div>
+                  {recentProductionActivity.map((item) => (
+                    <div key={`${item.date}-${item.buyer}-${item.service}`} className="grid grid-cols-[3.2rem_3rem_4rem_minmax(7rem,1fr)_4.5rem_8.5rem] items-center border-b border-slate-100 px-3 py-2 text-xs last:border-b-0">
+                      <span className="text-slate-500">{item.date}</span>
+                      <span className="text-slate-700">{item.region}</span>
+                      <span className="text-slate-700">{item.buyer}</span>
+                      <span className="min-w-0 truncate text-slate-700">{item.service}</span>
+                      <span className="font-semibold text-[#ff5a00]">{item.leadTime}</span>
+                      <span className="grid grid-cols-[1fr_2rem] items-center gap-2">
+                        <span className="h-2 bg-slate-100"><span className="block h-full bg-[#9bcf9f]" style={{ width: `${item.progress}%` }} /></span>
+                        <span className="text-[11px] text-slate-500">{item.progress}%</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-            <button type="button" aria-label="Next PCB category" className="absolute right-1 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 border border-slate-200 bg-white text-3xl leading-none text-slate-600 lg:grid lg:place-items-center">
-              &gt;
-            </button>
           </div>
         </div>
       </div>
