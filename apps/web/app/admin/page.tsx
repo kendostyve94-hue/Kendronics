@@ -1355,28 +1355,32 @@ function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: 
         <h2 className="text-base font-semibold text-slate-950">Activite recente</h2>
       </div>
       <div>
-        {transactions.map((transaction) => (
-          <div key={`${transaction.name}-${transaction.date}`} className="grid grid-cols-[3rem_minmax(0,1fr)_7rem_6.5rem] items-center gap-3 border-b border-[#e8edf3] px-5 py-3 last:border-b-0">
-            <span className={`grid h-12 w-12 place-items-center rounded-full border border-[#e8edf3] text-sm font-bold text-white ${transaction.tone}`}>{transaction.name.slice(0, 1)}</span>
-            <div>
-              <p className="font-medium text-slate-950">{transaction.name}</p>
-              <p className="mt-1 max-w-[12rem] text-sm leading-5 text-[#61709a]">{transaction.subtitle}</p>
-            </div>
-            <span className={`mx-auto rounded-full px-2 py-1 text-[10px] font-semibold ${
-              transaction.status === 'Completed' ? 'bg-[#dcf9e8] text-[#18b95b]' : transaction.status === 'Failed' ? 'bg-[#ffe5e9] text-[#f0445c]' : 'bg-[#fff0cf] text-[#f5a400]'
-            }`}>
-              {transaction.status}
-            </span>
-            <div className="text-right">
-              <p className="font-medium text-[#ff5a00]">{transaction.amount}</p>
-              <p className="mt-1 text-sm text-[#61709a]">{transaction.date}</p>
-              <span className="mt-2 grid grid-cols-[1fr_2rem] items-center gap-1">
-                <span className="h-1.5 bg-slate-100"><span className="block h-full bg-[#9bcf9f]" style={{ width: `${transaction.progress}%` }} /></span>
-                <span className="text-[10px] text-slate-500">{transaction.progress}%</span>
+        {transactions.length === 0 ? (
+          <p className="px-5 py-8 text-sm text-slate-500">Aucune commande recente disponible.</p>
+        ) : (
+          transactions.map((transaction) => (
+            <div key={`${transaction.name}-${transaction.date}`} className="grid grid-cols-[3rem_minmax(0,1fr)_7rem_6.5rem] items-center gap-3 border-b border-[#e8edf3] px-5 py-3 last:border-b-0">
+              <span className={`grid h-12 w-12 place-items-center rounded-full border border-[#e8edf3] text-sm font-bold text-white ${transaction.tone}`}>{transaction.name.slice(0, 1)}</span>
+              <div>
+                <p className="font-medium text-slate-950">{transaction.name}</p>
+                <p className="mt-1 max-w-[12rem] text-sm leading-5 text-[#61709a]">{transaction.subtitle}</p>
+              </div>
+              <span className={`mx-auto rounded-full px-2 py-1 text-[10px] font-semibold ${
+                transaction.status === 'Completed' ? 'bg-[#dcf9e8] text-[#18b95b]' : transaction.status === 'Failed' ? 'bg-[#ffe5e9] text-[#f0445c]' : 'bg-[#fff0cf] text-[#f5a400]'
+              }`}>
+                {transaction.status}
               </span>
+              <div className="text-right">
+                <p className="font-medium text-[#ff5a00]">{transaction.amount}</p>
+                <p className="mt-1 text-sm text-[#61709a]">{transaction.date}</p>
+                <span className="mt-2 grid grid-cols-[1fr_2rem] items-center gap-1">
+                  <span className="h-1.5 bg-slate-100"><span className="block h-full bg-[#9bcf9f]" style={{ width: `${transaction.progress}%` }} /></span>
+                  <span className="text-[10px] text-slate-500">{transaction.progress}%</span>
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </section>
   );
@@ -2502,6 +2506,10 @@ function formatCurrency(value: number): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
 }
 
+function formatOrderCurrency(value: number, currency?: 'EUR' | 'USD'): string {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: currency ?? 'EUR' }).format(value);
+}
+
 function formatCompactNumber(value: number): string {
   return new Intl.NumberFormat('en-US').format(Math.round(value));
 }
@@ -2536,27 +2544,21 @@ function buildAfricanCountrySales(orders: AdminOrderRow[]): Array<{ code: string
 }
 
 function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> {
-  const fallback = [
-    { name: 'SN-***', subtitle: 'Standard PCB - client D***r', amount: '3-4 jours', date: 'May 16, 2026', status: 'Pending' as const, tone: 'bg-[#e64b8b]', progress: 28 },
-    { name: 'CI-***', subtitle: 'PCB avance - client A***a', amount: '5-6 jours', date: 'May 16, 2026', status: 'Pending' as const, tone: 'bg-[#edf6ff] text-[#177ddc]', progress: 41 },
-    { name: 'CM-***', subtitle: 'PCBA - client R***c', amount: '6-8 jours', date: 'May 15, 2026', status: 'Completed' as const, tone: 'bg-[#36c5cd]', progress: 72 },
-    { name: 'MA-***', subtitle: 'FPC/Rigid-Flex - client M***l', amount: '4-5 jours', date: 'May 15, 2026', status: 'Pending' as const, tone: 'bg-[#ff6868]', progress: 52 },
-  ];
-
-  if (orders.length === 0) return fallback;
-
-  return orders.slice(0, 4).map((order, index) => {
-    const paymentStatus = getPaymentStatus(order);
-    return {
-      name: `${order.destinationCountryIso2 || 'AF'}-***`,
-      subtitle: `${serviceLabelForOrder(order)} - client ${maskedClient(index)}`,
-      amount: leadTimeForOrder(order),
-      date: order.createdAt ? formatDate(order.createdAt) : fallback[index]?.date ?? '24 Jan, 2024',
-      status: paymentStatus === 'paid' ? 'Completed' : paymentStatus === 'failed' || paymentStatus === 'refunded' ? 'Failed' : 'Pending',
-      tone: ['bg-[#e64b8b]', 'bg-[#edf6ff] text-[#177ddc]', 'bg-[#36c5cd]', 'bg-[#ff6868]'][index] ?? 'bg-[#e64b8b]',
-      progress: progressForOrder(order, index),
-    };
-  });
+  return [...orders]
+    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+    .slice(0, 4)
+    .map((order) => {
+      const paymentStatus = getPaymentStatus(order);
+      return {
+        name: order.orderNumber,
+        subtitle: `${serviceLabelForOrder(order)} - ${countryLabelForOrder(order)} - ${adminStatusLabels[order.status] ?? order.status}`,
+        amount: formatOrderCurrency(order.totalPrice ?? 0, order.currency),
+        date: formatDate(order.createdAt),
+        status: transactionStatusForOrder(order, paymentStatus),
+        tone: transactionToneForOrder(order, paymentStatus),
+        progress: progressForOrder(order),
+      };
+    });
 }
 
 function serviceLabelForOrder(order: AdminOrderRow): string {
@@ -2568,30 +2570,40 @@ function serviceLabelForOrder(order: AdminOrderRow): string {
   return 'Standard PCB';
 }
 
-function maskedClient(index: number): string {
-  return ['D***r', 'A***a', 'R***c', 'M***l', 'K***n'][index % 5];
+function countryLabelForOrder(order: AdminOrderRow): string {
+  const code = order.destinationCountryIso2.trim().toUpperCase();
+  return africanCountries.find((country) => country.iso2 === code)?.name ?? code;
 }
 
-function leadTimeForOrder(order: AdminOrderRow): string {
-  if (order.status === 'delivered') return 'Livre';
-  if (['shipped', 'in_transit', 'out_for_delivery'].includes(order.status)) return '2-5 jours';
-  if (['supplier_in_production', 'supplier_ordered'].includes(order.status)) return '3-6 jours';
-  return 'A verifier';
+function transactionStatusForOrder(order: AdminOrderRow, paymentStatus: PaymentStatus): 'Pending' | 'Completed' | 'Failed' {
+  if (paymentStatus === 'failed' || paymentStatus === 'refunded' || ['cancelled', 'refunded'].includes(order.status)) return 'Failed';
+  if (order.status === 'delivered') return 'Completed';
+  return 'Pending';
 }
 
-function progressForOrder(order: AdminOrderRow, index: number): number {
-  const map: Record<string, number> = {
+function transactionToneForOrder(order: AdminOrderRow, paymentStatus: PaymentStatus): string {
+  if (paymentStatus === 'failed' || paymentStatus === 'refunded' || ['cancelled', 'refunded'].includes(order.status)) return 'bg-[#ff6868]';
+  if (order.status === 'delivered') return 'bg-[#36c5cd]';
+  if (['supplier_in_production', 'received_at_france_hub', 'shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status)) return 'bg-[#e64b8b]';
+  return 'bg-[#edf6ff] text-[#177ddc]';
+}
+
+function progressForOrder(order: AdminOrderRow): number {
+  const map: Record<AdminOrderStatus, number> = {
     awaiting_payment: 12,
     paid: 24,
     supplier_order_pending: 32,
     supplier_ordered: 45,
     supplier_in_production: 62,
-    shipped: 78,
-    in_transit: 84,
+    received_at_france_hub: 72,
+    shipped_to_africa: 82,
+    customs_processing: 88,
     out_for_delivery: 92,
     delivered: 100,
+    cancelled: 0,
+    refunded: 0,
   };
-  return map[order.status] ?? [28, 41, 52, 67][index % 4];
+  return map[order.status];
 }
 
 function radarPoints(values: number[]): string {
