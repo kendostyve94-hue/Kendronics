@@ -1200,7 +1200,7 @@ function ModernDashboardPanel({
           <RecentPerformanceCard orders={orders} />
         </div>
         <ProductActivityCard orders={orders} />
-        <ProjectsCard />
+        <ProjectsCard orders={orders} />
       </div>
 
       <button
@@ -1591,14 +1591,9 @@ function OperationalProgressGauge({ metric }: { metric: { label: string; percent
   );
 }
 
-const projectRows = [
-  { label: 'Standard PCB', percent: 82, color: '#6fbc53' },
-  { label: 'PCB avance / PCBA', percent: 68, color: '#0e6389' },
-  { label: 'FPC / Rigid-Flex', percent: 46, color: '#2eb987' },
-  { label: 'CNC / Impression 3D', percent: 31, color: '#ff812d' },
-];
+function ProjectsCard({ orders }: { orders: AdminOrderRow[] }) {
+  const projectRows = buildPcbServiceStats(orders);
 
-function ProjectsCard() {
   return (
     <section className="rounded-xl bg-white px-4 py-4">
       <h2 className="text-base font-medium text-slate-950">Services PCB</h2>
@@ -2628,6 +2623,61 @@ function buildOperationalProgressMetrics(orders: AdminOrderRow[]) {
   };
 }
 
+function buildPcbServiceStats(orders: AdminOrderRow[]): Array<{ label: string; percent: number; orders: number; color: string }> {
+  const serviceDefinitions = [
+    { id: 'standard_pcb', label: 'Standard PCB', color: '#6fbc53' },
+    { id: 'advanced_pcb', label: 'PCB avance', color: '#0e6389' },
+    { id: 'pcb_assembly', label: 'PCBA', color: '#2eb987' },
+    { id: 'fpc_rigid_flex', label: 'FPC / Rigid-Flex', color: '#12a8ff' },
+    { id: 'smt_stencil', label: 'SMD-Stencil', color: '#ff812d' },
+    { id: 'cnc_3d', label: 'CNC / Impression 3D', color: '#6c3cff' },
+  ];
+  const counts = new Map(serviceDefinitions.map((service) => [service.id, 0]));
+  let unclassifiedCount = 0;
+
+  for (const order of orders) {
+    const productType = productTypeForOrder(order);
+    if (productType && counts.has(productType)) {
+      counts.set(productType, (counts.get(productType) ?? 0) + 1);
+    } else {
+      unclassifiedCount += 1;
+    }
+  }
+
+  const rows = serviceDefinitions.map((service, index) => ({
+    ...service,
+    orders: counts.get(service.id) ?? 0,
+    rank: index,
+  }));
+  if (unclassifiedCount > 0) {
+    rows.push({ id: 'unclassified', label: 'Non classe', color: '#343a40', orders: unclassifiedCount, rank: rows.length });
+  }
+
+  const total = rows.reduce((sum, service) => sum + service.orders, 0);
+  const ranked = rows
+    .map((service) => ({
+      ...service,
+      rawPercent: total ? (service.orders / total) * 100 : 0,
+    }))
+    .sort((left, right) => right.orders - left.orders || left.rank - right.rank);
+
+  let remaining = 100;
+  return ranked.map((service, index) => {
+    const percent = total === 0 ? 0 : index === ranked.length - 1 ? remaining : Math.round(service.rawPercent);
+    remaining -= percent;
+    return {
+      label: service.label,
+      percent,
+      orders: service.orders,
+      color: service.color,
+    };
+  });
+}
+
+function productTypeForOrder(order: AdminOrderRow): string | undefined {
+  return (order as AdminOrderRow & { quoteSnapshot?: { productType?: string } }).quoteSnapshot?.productType?.trim();
+}
+
 function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> {
   return [...orders]
     .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
@@ -2647,7 +2697,7 @@ function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: stri
 }
 
 function serviceLabelForOrder(order: AdminOrderRow): string {
-  const value = String((order as { quoteSnapshot?: { productType?: string } }).quoteSnapshot?.productType ?? '').toLowerCase();
+  const value = String(productTypeForOrder(order) ?? '').toLowerCase();
   if (value.includes('assembly') || value.includes('pcba')) return 'PCBA';
   if (value.includes('flex')) return 'FPC/Rigid-Flex';
   if (value.includes('cnc') || value.includes('3d')) return 'CNC / 3D';
