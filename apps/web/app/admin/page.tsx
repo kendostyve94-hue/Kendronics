@@ -1199,7 +1199,7 @@ function ModernDashboardPanel({
           <DealsStatisticsCard orders={orders} />
           <RecentPerformanceCard orders={orders} />
         </div>
-        <ProductActivityCard orders={orders} tickets={tickets} />
+        <ProductActivityCard orders={orders} />
         <ProjectsCard />
       </div>
 
@@ -1386,8 +1386,8 @@ function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: 
   );
 }
 
-function ProductActivityCard({ orders, tickets }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[] }) {
-  const regionStats = buildAfricanRegionStats(orders, tickets.length);
+function ProductActivityCard({ orders }: { orders: AdminOrderRow[] }) {
+  const regionStats = buildAfricanRegionStats(orders);
   const conicStops = buildConicGradient(regionStats);
 
   return (
@@ -1404,7 +1404,7 @@ function ProductActivityCard({ orders, tickets }: { orders: AdminOrderRow[]; tic
         <h3 className="mt-4 text-base font-semibold text-slate-950">Repartition par zone</h3>
         <div className="mt-2 divide-y divide-[#e8edf3]">
           {regionStats.map((region) => (
-            <ProductActivityRow key={region.label} color={region.color} label={region.label} value={`${region.percent}%`} />
+            <ProductActivityRow key={region.label} color={region.color} label={region.label} value={`${region.percent}% (${region.orders})`} />
           ))}
         </div>
       </div>
@@ -1424,25 +1424,51 @@ function ProductActivityRow({ color, label, value }: { color: string; label: str
   );
 }
 
-function buildAfricanRegionStats(orders: AdminOrderRow[], supportWeight: number) {
-  const seed = orders.length + supportWeight;
-  const west = Math.min(48, 34 + (seed % 9));
-  const central = Math.min(28, 18 + (orders.filter((order) => order.destinationCountryIso2 === 'CM').length % 7));
-  const north = Math.min(22, 14 + (orders.filter((order) => ['MA', 'TN', 'DZ', 'EG'].includes(order.destinationCountryIso2)).length % 6));
-  const east = Math.min(18, 10 + (orders.filter((order) => ['KE', 'ET', 'RW', 'TZ'].includes(order.destinationCountryIso2)).length % 5));
-  const south = Math.max(100 - west - central - north - east, 6);
-  const total = west + central + north + east + south;
-
-  return [
-    { label: "Afrique de l'Ouest", percent: Math.round((west / total) * 100), color: '#6fbc53' },
-    { label: 'Afrique Centrale', percent: Math.round((central / total) * 100), color: '#9ed78b' },
-    { label: 'Afrique du Nord', percent: Math.round((north / total) * 100), color: '#d3edca' },
-    { label: "Afrique de l'Est", percent: Math.round((east / total) * 100), color: '#2eb987' },
-    { label: 'Afrique Australe', percent: Math.max(100 - Math.round((west / total) * 100) - Math.round((central / total) * 100) - Math.round((north / total) * 100) - Math.round((east / total) * 100), 1), color: '#0e6389' },
+function buildAfricanRegionStats(orders: AdminOrderRow[]): Array<{ label: string; percent: number; orders: number; color: string }> {
+  const regionDefinitions = [
+    { id: 'AFRICA_WEST', label: "Afrique de l'Ouest", color: '#6fbc53' },
+    { id: 'AFRICA_CENTRAL', label: 'Afrique Centrale', color: '#9ed78b' },
+    { id: 'AFRICA_NORTH', label: 'Afrique du Nord', color: '#d3edca' },
+    { id: 'AFRICA_EAST', label: "Afrique de l'Est", color: '#2eb987' },
+    { id: 'AFRICA_SOUTHERN', label: 'Afrique Australe', color: '#0e6389' },
+    { id: 'AFRICA_ISLANDS', label: 'Iles africaines', color: '#1478ff' },
   ];
+  const countriesByIso = new Map(africanCountries.map((country) => [country.iso2, country]));
+  const counts = new Map(regionDefinitions.map((region) => [region.id, 0]));
+
+  for (const order of orders) {
+    const code = order.destinationCountryIso2.trim().toUpperCase();
+    const country = countriesByIso.get(code);
+    if (!country) continue;
+    counts.set(country.logisticsZone, (counts.get(country.logisticsZone) ?? 0) + 1);
+  }
+
+  const total = Array.from(counts.values()).reduce((sum, value) => sum + value, 0);
+  const ranked = regionDefinitions
+    .map((region, index) => ({
+      ...region,
+      orders: counts.get(region.id) ?? 0,
+      rank: index,
+      rawPercent: total ? ((counts.get(region.id) ?? 0) / total) * 100 : 0,
+    }))
+    .sort((left, right) => right.orders - left.orders || left.rank - right.rank);
+
+  let remaining = 100;
+  return ranked.map((region, index) => {
+    const percent = total === 0 ? 0 : index === ranked.length - 1 ? remaining : Math.round(region.rawPercent);
+    remaining -= percent;
+    return {
+      label: region.label,
+      percent,
+      orders: region.orders,
+      color: region.color,
+    };
+  });
 }
 
 function buildConicGradient(items: Array<{ percent: number; color: string }>) {
+  if (items.every((item) => item.percent === 0)) return 'conic-gradient(#f2f3fa 0% 100%)';
+
   let cursor = 0;
   const stops = items.map((item) => {
     const start = cursor;
