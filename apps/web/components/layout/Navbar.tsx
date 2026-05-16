@@ -66,6 +66,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   const [isVisible, setIsVisible] = useState(true);
   const [orders, setOrders] = useState<string[]>([]);
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [avatarDataUrl, setAvatarDataUrl] = useState('');
   const [firstName, setFirstName] = useState('Rafale');
   const headerRef = useRef<HTMLElement | null>(null);
@@ -105,6 +106,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
       const storedProfile = readStoredProfile();
       const sessionEmail = readSessionEmail(session?.accessToken ?? '');
       setIsSignedIn(Boolean(session));
+      if (!session) setIsAdmin(false);
       setAvatarDataUrl(window.localStorage.getItem(AVATAR_STORAGE_KEY) ?? '');
       setFirstName(firstNameOf(storedProfile.name || emailName(sessionEmail || storedProfile.email || '') || 'Rafale'));
     }
@@ -130,16 +132,47 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
       }
     }
 
+    async function refreshAdminRole() {
+      const session = readAuthSession();
+      if (!session) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/users/me`, {
+          headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+          cache: 'no-store',
+        });
+        if (!response.ok) {
+          setIsAdmin(false);
+          return;
+        }
+
+        const user = (await response.json()) as { roles?: string[] } | null;
+        setIsAdmin(Array.isArray(user?.roles) && user.roles.includes('admin'));
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+
+    function refreshSessionState() {
+      refreshClientState();
+      void refreshServerOrders();
+      void refreshAdminRole();
+    }
+
     void refreshServerOrders();
-    window.addEventListener('storage', refreshClientState);
-    window.addEventListener('kendronics:auth-updated', refreshClientState);
-    window.addEventListener('kendronics:orders-updated', refreshClientState);
-    window.addEventListener('kendronics:avatar-updated', refreshClientState);
+    void refreshAdminRole();
+    window.addEventListener('storage', refreshSessionState);
+    window.addEventListener('kendronics:auth-updated', refreshSessionState);
+    window.addEventListener('kendronics:orders-updated', refreshSessionState);
+    window.addEventListener('kendronics:avatar-updated', refreshSessionState);
     return () => {
-      window.removeEventListener('storage', refreshClientState);
-      window.removeEventListener('kendronics:auth-updated', refreshClientState);
-      window.removeEventListener('kendronics:orders-updated', refreshClientState);
-      window.removeEventListener('kendronics:avatar-updated', refreshClientState);
+      window.removeEventListener('storage', refreshSessionState);
+      window.removeEventListener('kendronics:auth-updated', refreshSessionState);
+      window.removeEventListener('kendronics:orders-updated', refreshSessionState);
+      window.removeEventListener('kendronics:avatar-updated', refreshSessionState);
     };
   }, []);
 
@@ -163,6 +196,10 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
     return orders[0] ? `/orders/${orders[0]}` : '/quote';
   }, [orders]);
 
+  const visibleProfileNavItems = useMemo(() => {
+    return profileNavItems.filter((item) => item.href !== '/admin' || isAdmin);
+  }, [isAdmin]);
+
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const items = searchItems.map((item) => (item.labelKey === 'nav.cart' ? { ...item, href: cartHref } : item));
@@ -184,7 +221,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             </a>
 
             <nav className="hidden min-w-0 flex-1 snap-x items-center justify-between gap-1 text-[14px] font-normal text-[#111827] xl:gap-2 xl:text-[15px] lg:flex">
-              {profileNavItems.map((item) => (
+              {visibleProfileNavItems.map((item) => (
                 <a key={`${item.href}-${item.label}`} href={item.href} className="grid min-h-[54px] min-w-[84px] snap-start place-items-center px-1 text-center leading-6 transition hover:text-[#00a651] xl:min-w-[92px] xl:px-2">
                   {item.label}
                 </a>
