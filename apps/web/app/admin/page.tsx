@@ -684,33 +684,60 @@ export default function AdminPage() {
 }
 
 function AdminTotpDialog({ error, onSubmit }: { error: string; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+  const [username, setUsername] = useState('');
+  const [code, setCode] = useState('');
+  const canSubmit = username.trim().length > 0 && /^\d{6}$/.test(code.trim());
+
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 px-4">
-      <div className="w-full max-w-[31rem] border border-slate-300 bg-white shadow-2xl shadow-slate-950/30">
-        <div className="flex h-12 items-center justify-between border-t-4 border-[#009a38] border-b border-slate-200 px-4">
-          <h2 className="text-sm font-black text-ink">Acces Admin securise</h2>
+      <div className="w-full max-w-[31rem] border border-slate-300 bg-white">
+        <div className="flex h-12 items-center justify-between border-b-4 border-[#009a38] px-4">
+          <h2 className="text-sm font-normal text-ink">Acces admin securise</h2>
           <a href="/" className="text-2xl leading-none text-slate-500 hover:text-slate-900" aria-label="Quitter admin">
             x
           </a>
         </div>
         <form onSubmit={onSubmit} className="space-y-5 p-5">
           <p className="text-sm leading-6 text-slate-600">
-            Entrez votre nom d'utilisateur admin et le code a 6 chiffres de Google Authenticator.
+            Confirmez votre acces administrateur avec votre identifiant et votre code de validation.
           </p>
-          <label className="grid gap-2 text-sm font-bold text-slate-700 sm:grid-cols-[9rem_1fr] sm:items-center">
+          <label className="grid gap-2 text-sm font-normal text-slate-700 sm:grid-cols-[9rem_1fr] sm:items-center">
             <span>Nom admin *</span>
-            <input name="username" autoComplete="username" required className={fieldClassName} placeholder="email ou nom utilisateur" />
+            <input
+              name="username"
+              autoComplete="username"
+              required
+              className={fieldClassName}
+              placeholder="email ou identifiant admin"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+            />
           </label>
-          <label className="grid gap-2 text-sm font-bold text-slate-700 sm:grid-cols-[9rem_1fr] sm:items-center">
+          <label className="grid gap-2 text-sm font-normal text-slate-700 sm:grid-cols-[9rem_1fr] sm:items-center">
             <span>Code TOTP *</span>
-            <input name="code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} autoComplete="one-time-code" required className={fieldClassName} placeholder="123456" />
+            <input
+              name="code"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              autoComplete="one-time-code"
+              required
+              className={fieldClassName}
+              placeholder="123456"
+              value={code}
+              onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+            />
           </label>
-          {error ? <p className="border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{error}</p> : null}
+          {error ? <p className="border border-red-200 bg-red-50 px-3 py-2 text-sm font-normal text-red-700">{error}</p> : null}
           <div className="flex justify-end gap-3 pt-2">
-            <a href="/" className="inline-flex h-10 items-center border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 transition hover:border-slate-400">
+            <a href="/" className="inline-flex h-10 items-center border border-slate-200 bg-white px-5 text-sm font-normal text-slate-700 transition hover:border-slate-400">
               Annuler
             </a>
-            <button type="submit" className="h-10 bg-[#0877ff] px-6 text-sm font-black text-white transition hover:bg-[#0068e8]">
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className="h-10 bg-[#0877ff] px-6 text-sm font-normal text-white transition hover:bg-[#0068e8] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+            >
               Verifier
             </button>
           </div>
