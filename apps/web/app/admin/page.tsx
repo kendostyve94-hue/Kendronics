@@ -1365,40 +1365,69 @@ function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: 
 }
 
 function ProductActivityCard({ orders, tickets }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[] }) {
-  const packed = Math.max(157880, orders.filter((order) => getPaymentStatus(order) === 'paid').length * 18420);
-  const delivery = Math.max(198254, orders.filter((order) => order.trackingNumber).length * 22640);
-  const done = Math.max(142278, tickets.filter((ticket) => ticket.status === 'closed').length * 19120);
+  const regionStats = buildAfricanRegionStats(orders, tickets.length);
+  const conicStops = buildConicGradient(regionStats);
 
   return (
     <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
       <div className="border-b border-[#e8edf3] px-6 py-5">
-        <h2 className="text-base font-semibold text-slate-950">Product Activity</h2>
+        <h2 className="text-base font-semibold text-slate-950">Regions Afrique</h2>
       </div>
-      <div className="px-5 pb-5 pt-7">
-        <div className="mx-auto h-40 w-40 rounded-full bg-[conic-gradient(#6fbc53_0_35%,#e4f2df_35%_70%,#d3edca_70%_100%)] p-5">
-          <div className="h-full w-full rounded-full bg-white" />
+      <div className="px-5 pb-5 pt-6">
+        <div className="mx-auto h-28 w-28 rounded-full p-4" style={{ background: conicStops }}>
+          <div className="grid h-full w-full place-items-center rounded-full bg-white">
+            <span className="text-lg font-semibold text-[#6fbc53]">100%</span>
+          </div>
         </div>
-        <h3 className="mt-5 text-xl font-semibold text-slate-950">Data Statistic</h3>
+        <h3 className="mt-4 text-base font-semibold text-slate-950">Repartition par zone</h3>
         <div className="mt-2 divide-y divide-[#e8edf3]">
-          <ProductActivityRow color="#1681ff" label="To Be Packed" value={packed} />
-          <ProductActivityRow color="#ff812d" label="Process Delivery" value={delivery} />
-          <ProductActivityRow color="#5230c6" label="Delivery Done" value={done} />
+          {regionStats.map((region) => (
+            <ProductActivityRow key={region.label} color={region.color} label={region.label} value={`${region.percent}%`} />
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-function ProductActivityRow({ color, label, value }: { color: string; label: string; value: number }) {
+function ProductActivityRow({ color, label, value }: { color: string; label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-2 text-sm">
       <span className="flex min-w-0 items-center gap-2 text-slate-950">
         <span className="h-2.5 w-2.5 rounded-full border-2" style={{ borderColor: color }} />
         <span className="truncate">{label}</span>
       </span>
-      <span className="font-medium text-[#7582ad]">{formatCompactNumber(value).replace(/,/g, '.')}</span>
+      <span className="font-medium text-[#7582ad]">{value}</span>
     </div>
   );
+}
+
+function buildAfricanRegionStats(orders: AdminOrderRow[], supportWeight: number) {
+  const seed = orders.length + supportWeight;
+  const west = Math.min(48, 34 + (seed % 9));
+  const central = Math.min(28, 18 + (orders.filter((order) => order.destinationCountryIso2 === 'CM').length % 7));
+  const north = Math.min(22, 14 + (orders.filter((order) => ['MA', 'TN', 'DZ', 'EG'].includes(order.destinationCountryIso2)).length % 6));
+  const east = Math.min(18, 10 + (orders.filter((order) => ['KE', 'ET', 'RW', 'TZ'].includes(order.destinationCountryIso2)).length % 5));
+  const south = Math.max(100 - west - central - north - east, 6);
+  const total = west + central + north + east + south;
+
+  return [
+    { label: "Afrique de l'Ouest", percent: Math.round((west / total) * 100), color: '#6fbc53' },
+    { label: 'Afrique Centrale', percent: Math.round((central / total) * 100), color: '#9ed78b' },
+    { label: 'Afrique du Nord', percent: Math.round((north / total) * 100), color: '#d3edca' },
+    { label: "Afrique de l'Est", percent: Math.round((east / total) * 100), color: '#2eb987' },
+    { label: 'Afrique Australe', percent: Math.max(100 - Math.round((west / total) * 100) - Math.round((central / total) * 100) - Math.round((north / total) * 100) - Math.round((east / total) * 100), 1), color: '#0e6389' },
+  ];
+}
+
+function buildConicGradient(items: Array<{ percent: number; color: string }>) {
+  let cursor = 0;
+  const stops = items.map((item) => {
+    const start = cursor;
+    cursor += item.percent;
+    return `${item.color} ${start}% ${cursor}%`;
+  });
+  return `conic-gradient(${stops.join(',')})`;
 }
 
 function DealsStatisticsCard({ orders, tickets, logs }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[]; logs: AdminAuditLog[] }) {
@@ -1500,16 +1529,16 @@ function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingInt
 }
 
 const projectRows = [
-  { label: 'Website Redesign', percent: 80, color: '#5a7fe0' },
-  { label: 'Mobile App UI', percent: 65, color: '#f4c736' },
-  { label: 'Marketing Assets', percent: 48, color: '#2eb987' },
-  { label: 'Admin Dashboard', percent: 27, color: '#ff7f58' },
+  { label: 'Standard PCB', percent: 82, color: '#6fbc53' },
+  { label: 'PCB avance / PCBA', percent: 68, color: '#0e6389' },
+  { label: 'FPC / Rigid-Flex', percent: 46, color: '#2eb987' },
+  { label: 'CNC / Impression 3D', percent: 31, color: '#ff812d' },
 ];
 
 function ProjectsCard() {
   return (
     <section className="rounded-xl bg-white px-4 py-4">
-      <h2 className="text-base font-medium text-slate-950">Projects</h2>
+      <h2 className="text-base font-medium text-slate-950">Services PCB</h2>
       <div className="mt-7 space-y-7">
         {projectRows.map((project) => (
           <div key={project.label}>
