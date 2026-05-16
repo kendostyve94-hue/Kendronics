@@ -818,18 +818,22 @@ function ProductQuickGrid() {
   return (
     <div className="grid grid-cols-6 gap-4">
       {quickProducts.map((product) => (
-        <a key={product.title} href={product.href} className="grid min-h-[180px] grid-rows-[auto_minmax(0,1fr)_auto] bg-white p-3 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md">
-          <h3 className="min-h-10 text-[15px] font-black leading-5 text-[#111827]">{product.title}</h3>
-          <div className="grid min-h-0 place-items-center py-1">
-            {product.image ? (
-              <img src={product.image} alt="" className="h-full max-h-[96px] w-full object-contain" />
-            ) : (
-              <span className="grid h-full max-h-[96px] min-h-[82px] w-full place-items-center rounded-none" style={{ backgroundColor: `${product.color}22` }}>
-                <span className="h-14 w-16 rounded-none" style={{ border: `4px solid ${product.color}` }} />
-              </span>
-            )}
-          </div>
-          <p className="pt-2 text-xs leading-5 text-[#64748b]">{product.subtitle} &gt;</p>
+        <a key={product.title} href={product.href} className="group relative block min-h-[212px] overflow-hidden bg-white ring-1 ring-slate-200 transition hover:ring-[#009a38]">
+          {product.image ? (
+            <img src={product.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]" />
+          ) : (
+            <span className="absolute inset-0 grid place-items-center" style={{ backgroundColor: `${product.color}22` }}>
+              <span className="h-20 w-24" style={{ border: `5px solid ${product.color}` }} />
+            </span>
+          )}
+          <span className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white via-white/86 to-white/0" />
+          <span className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white via-white/88 to-white/0" />
+          <span className="relative z-10 block p-3">
+            <span className="block min-h-10 text-[15px] font-black leading-5 text-[#111827]">{product.title}</span>
+          </span>
+          <span className="absolute inset-x-0 bottom-0 z-10 block px-3 pb-3 text-xs leading-5 text-[#33506e]">
+            {product.subtitle} &gt;
+          </span>
         </a>
       ))}
     </div>
