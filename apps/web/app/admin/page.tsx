@@ -1197,7 +1197,7 @@ function ModernDashboardPanel({
         <LatestTransactionsCard transactions={buildDashboardTransactions(orders)} />
         <div className="grid gap-6 md:grid-cols-2">
           <DealsStatisticsCard orders={orders} />
-          <RecentPerformanceCard intelligence={intelligence} />
+          <RecentPerformanceCard orders={orders} />
         </div>
         <ProductActivityCard orders={orders} tickets={tickets} />
         <ProjectsCard />
@@ -1499,55 +1499,69 @@ function countryFlag(iso2: string): string {
   return code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 }
 
-function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingIntelligence | null }) {
-  const performance = Math.min(98, Math.max(78, Math.round((intelligence?.metrics.averageBuffer ?? 1.78) * 44)));
-  const segments = Array.from({ length: 36 }, (_, index) => index);
-  const activeSegments = Math.round((performance / 100) * segments.length);
-  const startAngle = 140;
-  const sweepAngle = 280;
+function RecentPerformanceCard({ orders }: { orders: AdminOrderRow[] }) {
+  const metrics = buildOperationalProgressMetrics(orders);
 
   return (
     <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
       <div className="border-b border-[#e8edf3] px-6 py-5">
-        <h2 className="max-w-[12rem] text-base font-semibold leading-5 text-slate-950">Progression production</h2>
+        <h2 className="max-w-[12rem] text-base font-semibold leading-5 text-slate-950">Suivi operationnel</h2>
       </div>
-      <div className="grid h-[285px] place-items-center p-5">
-        <div className="relative h-52 w-52">
-          <svg aria-hidden="true" viewBox="0 0 220 220" className="h-full w-full">
-            {segments.map((segment) => {
-              const angle = startAngle + (segment * sweepAngle) / (segments.length - 1);
-              const radians = (angle * Math.PI) / 180;
-              const innerRadius = 66;
-              const outerRadius = 97;
-              const x1 = 110 + Math.cos(radians) * innerRadius;
-              const y1 = 110 + Math.sin(radians) * innerRadius;
-              const x2 = 110 + Math.cos(radians) * outerRadius;
-              const y2 = 110 + Math.sin(radians) * outerRadius;
-              const active = segment < activeSegments;
-
-              return (
-                <line
-                  key={segment}
-                  x1={x1}
-                  y1={y1}
-                  x2={x2}
-                  y2={y2}
-                  stroke={active ? '#6fbc53' : '#f2f3fa'}
-                  strokeWidth="6"
-                  strokeLinecap="butt"
-                />
-              );
-            })}
-          </svg>
-          <div className="absolute inset-0 grid place-items-center">
-            <div className="text-center">
-              <p className="text-[26px] font-medium text-[#343a40]">{performance}%</p>
-              <p className="mt-1 text-sm text-[#62b447]">Commandes suivies</p>
-            </div>
-          </div>
+      <div className="flex h-[285px] flex-col items-center justify-between px-5 py-4">
+        <OperationalProgressGauge metric={metrics.production} />
+        <OperationalProgressGauge metric={metrics.delivery} />
+        <div className="grid w-full grid-cols-2 gap-3 text-xs text-slate-600">
+          {Object.values(metrics).map((metric) => (
+            <span key={metric.label} className="flex min-w-0 items-center gap-2">
+              <span className="h-2.5 w-2.5 shrink-0" style={{ backgroundColor: metric.color }} />
+              <span className="truncate">{metric.label}</span>
+            </span>
+          ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function OperationalProgressGauge({ metric }: { metric: { label: string; percent: number; color: string; count: number; total: number } }) {
+  const segments = Array.from({ length: 28 }, (_, index) => index);
+  const activeSegments = Math.round((metric.percent / 100) * segments.length);
+  const startAngle = 145;
+  const sweepAngle = 250;
+
+  return (
+    <div className="relative h-[108px] w-[145px]">
+      <svg aria-hidden="true" viewBox="0 0 160 125" className="h-full w-full">
+        {segments.map((segment) => {
+          const angle = startAngle + (segment * sweepAngle) / (segments.length - 1);
+          const radians = (angle * Math.PI) / 180;
+          const innerRadius = 45;
+          const outerRadius = 65;
+          const x1 = 80 + Math.cos(radians) * innerRadius;
+          const y1 = 76 + Math.sin(radians) * innerRadius;
+          const x2 = 80 + Math.cos(radians) * outerRadius;
+          const y2 = 76 + Math.sin(radians) * outerRadius;
+          const active = segment < activeSegments;
+
+          return (
+            <line
+              key={segment}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke={active ? metric.color : '#f2f3fa'}
+              strokeWidth="5"
+              strokeLinecap="butt"
+            />
+          );
+        })}
+      </svg>
+      <div className="absolute inset-x-0 top-[42px] text-center">
+        <p className="text-[22px] font-medium leading-none text-[#343a40]">{metric.percent}%</p>
+        <p className="mt-1 text-xs leading-none" style={{ color: metric.color }}>{metric.count}/{metric.total}</p>
+      </div>
+    </div>
   );
 }
 
@@ -2466,6 +2480,11 @@ function shareOf(value: number, total: number): string {
   return ((value / total) * 100).toFixed(1);
 }
 
+function percentOf(value: number, total: number): number {
+  if (!total) return 0;
+  return Math.round((value / total) * 100);
+}
+
 function sumOrderTotals(orders: AdminOrderRow[]): number {
   return orders.reduce((total, order) => total + (order.totalPrice ?? 0), 0);
 }
@@ -2541,6 +2560,46 @@ function buildAfricanCountrySales(orders: AdminOrderRow[]): Array<{ code: string
       percent: Math.max(1, Math.round((item.orders / Math.max(totalOrders, 1)) * 100)),
       color: colors[index % colors.length],
     }));
+}
+
+function buildOperationalProgressMetrics(orders: AdminOrderRow[]) {
+  const activeOrders = orders.filter((order) => !['cancelled', 'refunded'].includes(order.status));
+  const total = activeOrders.length;
+  const productionStatuses: AdminOrderStatus[] = [
+    'supplier_order_pending',
+    'supplier_ordered',
+    'supplier_in_production',
+    'received_at_france_hub',
+    'shipped_to_africa',
+    'customs_processing',
+    'out_for_delivery',
+    'delivered',
+  ];
+  const deliveryStatuses: AdminOrderStatus[] = [
+    'shipped_to_africa',
+    'customs_processing',
+    'out_for_delivery',
+    'delivered',
+  ];
+  const productionCount = activeOrders.filter((order) => productionStatuses.includes(order.status)).length;
+  const deliveryCount = activeOrders.filter((order) => deliveryStatuses.includes(order.status)).length;
+
+  return {
+    production: {
+      label: 'Fabrication',
+      percent: percentOf(productionCount, total),
+      color: '#6fbc53',
+      count: productionCount,
+      total,
+    },
+    delivery: {
+      label: 'Livraison',
+      percent: percentOf(deliveryCount, total),
+      color: '#0e6389',
+      count: deliveryCount,
+      total,
+    },
+  };
 }
 
 function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> {
