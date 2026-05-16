@@ -1181,14 +1181,14 @@ function ModernDashboardPanel({
   return (
     <div className="relative">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(25rem,0.95fr)]">
-        <SalesOverviewCard />
+        <SalesOverviewCard orders={orders} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <DashboardKpiCard tone="green" icon="bag" title="Commandes en production" value={formatCompactNumber(productionOrders)} trend="temps reel" />
-          <DashboardKpiCard tone="teal" icon="group" title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend="30 jours" />
-          <DashboardKpiCard tone="emerald" icon="percent" title="Taux de conversion" value={`${conversionRate.toFixed(2)}%`} trend="devis > paiement" />
-          <DashboardKpiCard tone="amber" icon="shipment" title="Expeditions" value={formatCompactNumber(shipments)} trend="colis suivis" />
-          <DashboardKpiCard tone="dark" icon="delivered" title="Colis recus" value={formatCompactNumber(deliveredParcels)} trend="livres" />
-          <DashboardKpiCard tone="rose" icon="support" title="Tickets support" value={formatCompactNumber(supportMessages)} trend="messages recus" />
+          <DashboardKpiCard tone="green" icon="bag" title="Commandes en production" value={formatCompactNumber(productionOrders)} trend={`${shareOf(productionOrders, orders.length)}%`} caption="des commandes" />
+          <DashboardKpiCard tone="teal" icon="group" title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend={`${shareOf(activeCustomers, orders.length)}%`} caption="30 jours" />
+          <DashboardKpiCard tone="emerald" icon="percent" title="Taux de conversion" value={`${conversionRate.toFixed(2)}%`} trend={`${conversionRate.toFixed(1)}%`} caption="devis > paiement" />
+          <DashboardKpiCard tone="amber" icon="shipment" title="Expeditions" value={formatCompactNumber(shipments)} trend={`${shareOf(shipments, orders.length)}%`} caption="colis suivis" />
+          <DashboardKpiCard tone="dark" icon="delivered" title="Colis recus" value={formatCompactNumber(deliveredParcels)} trend={`${shareOf(deliveredParcels, orders.length)}%`} caption="livres" />
+          <DashboardKpiCard tone="rose" icon="support" title="Tickets support" value={formatCompactNumber(supportMessages)} trend={`${shareOf(supportMessages, Math.max(orders.length, supportMessages))}%`} caption="messages recus" />
         </div>
       </div>
 
@@ -1215,54 +1215,38 @@ function ModernDashboardPanel({
   );
 }
 
-const salesOverviewData = [
-  { month: 'Jan', profit: 70, expense: 88 },
-  { month: 'Feb', profit: 60, expense: 98 },
-  { month: 'Mar', profit: 37, expense: 97 },
-  { month: 'Apr', profit: 50, expense: 98 },
-  { month: 'May', profit: 76, expense: 98 },
-  { month: 'Jun', profit: 90, expense: 98 },
-  { month: 'Jul', profit: 59, expense: 97 },
-  { month: 'Aug', profit: 75, expense: 96 },
-  { month: 'Sep', profit: 35, expense: 96 },
-  { month: 'Oct', profit: 55, expense: 98 },
-  { month: 'Nov', profit: 75, expense: 98 },
-  { month: 'Dec', profit: 80, expense: 96 },
-];
+function SalesOverviewCard({ orders }: { orders: AdminOrderRow[] }) {
+  const quoteSeries = buildMonthlyQuoteSeries(orders);
+  const maxValue = Math.max(...quoteSeries.flatMap((item) => [item.quotes, item.paid]), 1);
+  const scaleLabels = buildScaleLabels(maxValue);
 
-function SalesOverviewCard() {
   return (
     <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
       <div className="flex items-center justify-between border-b border-[#e8edf3] px-6 py-5">
-        <h2 className="text-base font-semibold text-slate-950">Sales Overview</h2>
+        <h2 className="text-base font-semibold text-slate-950">Devis vs commandes payees</h2>
         <button type="button" className="rounded bg-[#f8f8fc] px-3 py-2 text-xs font-medium text-slate-950">This Month</button>
       </div>
       <div className="px-8 pb-5 pt-7">
         <div className="grid min-h-[285px] grid-cols-[2.8rem_minmax(0,1fr)] gap-3">
           <div className="flex flex-col justify-between pb-7 text-right text-[11px] font-medium text-slate-950">
-            <span>10000</span>
-            <span>8000</span>
-            <span>6000</span>
-            <span>4000</span>
-            <span>2000</span>
-            <span>0</span>
+            {scaleLabels.map((label) => <span key={label}>{label}</span>)}
           </div>
           <div className="grid grid-cols-12 items-end gap-4 border-b border-[#e8edf3]">
-            {salesOverviewData.map((item) => (
+            {quoteSeries.map((item) => (
               <div key={item.month} className="relative flex h-full items-end justify-center">
                 <span className="absolute inset-y-0 left-1/2 border-l border-dashed border-[#dfe4ea]" />
-                <span className="absolute bottom-0 h-full w-3 rounded-t bg-[#dfe4ea]" style={{ height: `${item.expense}%` }} />
-                <span className="relative z-10 w-3 rounded-t bg-[#6fbc53]" style={{ height: `${item.profit}%` }} />
+                <span className="absolute bottom-0 h-full w-3 rounded-t bg-[#dfe4ea]" style={{ height: `${Math.max((item.quotes / maxValue) * 100, item.quotes ? 4 : 0)}%` }} />
+                <span className="relative z-10 w-3 rounded-t bg-[#6fbc53]" style={{ height: `${Math.max((item.paid / maxValue) * 100, item.paid ? 4 : 0)}%` }} />
               </div>
             ))}
           </div>
         </div>
         <div className="ml-[3.95rem] mt-3 grid grid-cols-12 gap-4 text-center text-xs font-medium text-slate-700">
-          {salesOverviewData.map((item) => <span key={item.month}>{item.month}</span>)}
+          {quoteSeries.map((item) => <span key={item.month}>{item.month}</span>)}
         </div>
         <div className="mt-4 flex items-center justify-center gap-5 text-xs text-slate-700">
-          <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#6fbc53]" />Profit</span>
-          <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#dfe4ea]" />Expense</span>
+          <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#6fbc53]" />Commandes payees</span>
+          <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#dfe4ea]" />Devis crees</span>
         </div>
       </div>
     </section>
@@ -1273,12 +1257,14 @@ function DashboardKpiCard({
   title,
   value,
   trend,
+  caption,
   tone,
   icon,
 }: {
   title: string;
   value: string;
   trend: string;
+  caption: string;
   tone: 'green' | 'teal' | 'rose' | 'amber' | 'emerald' | 'dark';
   icon: 'customer' | 'group' | 'dollar' | 'bag' | 'percent' | 'deal' | 'shipment' | 'delivered' | 'support';
 }) {
@@ -1304,8 +1290,8 @@ function DashboardKpiCard({
       <div className="mt-4 flex items-end justify-between gap-3">
         <p className="text-[26px] font-medium leading-none text-slate-950">{value}</p>
         <div className="text-right text-sm leading-5">
-          <p className="font-medium text-[#69ba49]">{trend}</p>
-          <p className="text-slate-950">Kendronics</p>
+          <p className="font-medium text-[#69ba49]">^ {trend}</p>
+          <p className="text-slate-950">{caption}</p>
         </div>
       </div>
     </section>
@@ -1338,6 +1324,27 @@ function DashboardKpiIcon({ icon }: { icon: 'customer' | 'group' | 'dollar' | 'b
     return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a8 8 0 0 1-8 8H8l-5 2 1.8-4A8 8 0 1 1 21 12Z" /><path d="M8 11h8" /><path d="M8 15h5" /></svg>;
   }
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M7 12h10" /><path d="M9 8h8" /><path d="M7 16h8" /></svg>;
+}
+
+function buildMonthlyQuoteSeries(orders: AdminOrderRow[]) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const currentYear = new Date().getFullYear();
+  const series = months.map((month) => ({ month, quotes: 0, paid: 0 }));
+
+  for (const order of orders) {
+    const createdAt = new Date(order.createdAt);
+    if (createdAt.getFullYear() !== currentYear) continue;
+    const bucket = series[createdAt.getMonth()];
+    bucket.quotes += 1;
+    if (getPaymentStatus(order) === 'paid') bucket.paid += 1;
+  }
+
+  return series;
+}
+
+function buildScaleLabels(maxValue: number) {
+  const top = Math.max(5, Math.ceil(maxValue / 5) * 5);
+  return [top, Math.round(top * 0.8), Math.round(top * 0.6), Math.round(top * 0.4), Math.round(top * 0.2), 0].map(String);
 }
 
 function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string }> }) {
@@ -2442,6 +2449,11 @@ function getPaymentStatus(order: AdminOrderRow): PaymentStatus {
 
 function uniqueValues(values: string[]): string[] {
   return [...new Set(values.filter(Boolean))].sort();
+}
+
+function shareOf(value: number, total: number): string {
+  if (!total) return '0.0';
+  return ((value / total) * 100).toFixed(1);
 }
 
 function sumOrderTotals(orders: AdminOrderRow[]): number {
