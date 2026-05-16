@@ -18,6 +18,11 @@ import { TestSupplierConnectionDto } from '../pricing/dto/test-supplier-connecti
 import { CreateTrackingEventDto } from '../tracking/dto/create-tracking-event.dto';
 import { AdminService } from './admin.service';
 
+class AddAdminUserDto {
+  @IsEmail()
+  email!: string;
+}
+
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.Admin)
@@ -132,9 +137,4 @@ export class AdminController {
   listAuditLogs(@CurrentUser() admin: AuthenticatedUser) {
     return this.adminService.listAuditLogs(admin);
   }
-}
-
-class AddAdminUserDto {
-  @IsEmail()
-  email!: string;
 }
