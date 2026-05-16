@@ -1170,26 +1170,25 @@ function ModernDashboardPanel({
   logs: AdminAuditLog[];
   intelligence: AdminPricingIntelligence | null;
 }) {
-  const revenue = sumOrderTotals(orders);
   const paidOrders = orders.filter((order) => getPaymentStatus(order) === 'paid').length;
-  const activeCustomers = Math.max(2839, orders.length * 41 || 2839);
-  const totalCustomers = Math.max(3456, activeCustomers + 617);
-  const conversionRate = orders.length ? (paidOrders / orders.length) * 100 : 14.57;
-  const deals = Math.max(8754, orders.length * 96 || 8754);
-  const profit = Math.max(7254, Math.round(revenue * 0.32) || 7254);
-  const expense = Math.max(4578, Math.round(revenue * 0.19) || 4578);
+  const productionOrders = orders.filter((order) => ['supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'in_production'].includes(order.status)).length;
+  const activeCustomers = uniqueValues(orders.filter((order) => isRecentDate(order.createdAt, 30)).map((order) => order.quoteId)).length;
+  const conversionRate = orders.length ? (paidOrders / orders.length) * 100 : 0;
+  const shipments = orders.filter((order) => Boolean(order.trackingNumber) || ['shipped', 'in_transit', 'out_for_delivery', 'delivered'].includes(order.status)).length;
+  const deliveredParcels = orders.filter((order) => order.status === 'delivered').length;
+  const supportMessages = tickets.length;
 
   return (
     <div className="relative">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(25rem,0.95fr)]">
         <SalesOverviewCard />
         <div className="grid gap-4 sm:grid-cols-2">
-          <DashboardKpiCard tone="green" icon="customer" title="Total Customers" value={formatCompactNumber(totalCustomers)} trend="+ 12.5%" />
-          <DashboardKpiCard tone="teal" icon="group" title="Active Customers" value={formatCompactNumber(activeCustomers)} trend="- 1.5%" negative />
-          <DashboardKpiCard tone="rose" icon="dollar" title="Profit Total" value={`$${formatCompactNumber(profit)}`} trend="+ 12.8%" />
-          <DashboardKpiCard tone="amber" icon="bag" title="Expense Total" value={`$${formatCompactNumber(expense)}`} trend="- 18%" negative />
-          <DashboardKpiCard tone="emerald" icon="percent" title="Conversion Rate" value={`${conversionRate.toFixed(2)}%`} trend="+ 5.8%" />
-          <DashboardKpiCard tone="dark" icon="deal" title="Total Deals" value={formatCompactNumber(deals)} trend="+ 4.5%" />
+          <DashboardKpiCard tone="green" icon="bag" title="Commandes en production" value={formatCompactNumber(productionOrders)} trend="temps reel" />
+          <DashboardKpiCard tone="teal" icon="group" title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend="30 jours" />
+          <DashboardKpiCard tone="emerald" icon="percent" title="Taux de conversion" value={`${conversionRate.toFixed(2)}%`} trend="devis > paiement" />
+          <DashboardKpiCard tone="amber" icon="shipment" title="Expeditions" value={formatCompactNumber(shipments)} trend="colis suivis" />
+          <DashboardKpiCard tone="dark" icon="delivered" title="Colis recus" value={formatCompactNumber(deliveredParcels)} trend="livres" />
+          <DashboardKpiCard tone="rose" icon="support" title="Tickets support" value={formatCompactNumber(supportMessages)} trend="messages recus" />
         </div>
       </div>
 
@@ -1276,14 +1275,12 @@ function DashboardKpiCard({
   trend,
   tone,
   icon,
-  negative = false,
 }: {
   title: string;
   value: string;
   trend: string;
   tone: 'green' | 'teal' | 'rose' | 'amber' | 'emerald' | 'dark';
-  icon: 'customer' | 'group' | 'dollar' | 'bag' | 'percent' | 'deal';
-  negative?: boolean;
+  icon: 'customer' | 'group' | 'dollar' | 'bag' | 'percent' | 'deal' | 'shipment' | 'delivered' | 'support';
 }) {
   const toneClass = {
     green: 'border-[#d9edce] bg-[#ecf7e7] text-[#75bd4d]',
@@ -1307,15 +1304,15 @@ function DashboardKpiCard({
       <div className="mt-4 flex items-end justify-between gap-3">
         <p className="text-[26px] font-medium leading-none text-slate-950">{value}</p>
         <div className="text-right text-sm leading-5">
-          <p className={negative ? 'font-medium text-[#ff2c58]' : 'font-medium text-[#69ba49]'}>{negative ? 'v' : '^'} {trend.replace('-', '')}</p>
-          <p className="text-slate-950">Last 7 days</p>
+          <p className="font-medium text-[#69ba49]">{trend}</p>
+          <p className="text-slate-950">Kendronics</p>
         </div>
       </div>
     </section>
   );
 }
 
-function DashboardKpiIcon({ icon }: { icon: 'customer' | 'group' | 'dollar' | 'bag' | 'percent' | 'deal' }) {
+function DashboardKpiIcon({ icon }: { icon: 'customer' | 'group' | 'dollar' | 'bag' | 'percent' | 'deal' | 'shipment' | 'delivered' | 'support' }) {
   if (icon === 'customer') {
     return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="currentColor"><circle cx="12" cy="8" r="3" /><path d="M6.5 19a5.5 5.5 0 0 1 11 0Z" /></svg>;
   }
@@ -1330,6 +1327,15 @@ function DashboardKpiIcon({ icon }: { icon: 'customer' | 'group' | 'dollar' | 'b
   }
   if (icon === 'percent') {
     return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M7 17 17 7" /><circle cx="8" cy="8" r="2" /><circle cx="16" cy="16" r="2" /></svg>;
+  }
+  if (icon === 'shipment') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7h11v10H3Z" /><path d="M14 10h4l3 3v4h-7Z" /><circle cx="7" cy="18" r="1.5" /><circle cx="18" cy="18" r="1.5" /></svg>;
+  }
+  if (icon === 'delivered') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12 9 17 20 6" /><path d="M4 19h16" /></svg>;
+  }
+  if (icon === 'support') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a8 8 0 0 1-8 8H8l-5 2 1.8-4A8 8 0 1 1 21 12Z" /><path d="M8 11h8" /><path d="M8 15h5" /></svg>;
   }
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M7 12h10" /><path d="M9 8h8" /><path d="M7 16h8" /></svg>;
 }
@@ -2446,6 +2452,12 @@ function isToday(value: string): boolean {
   const date = new Date(value);
   const now = new Date();
   return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
+}
+
+function isRecentDate(value: string, days: number): boolean {
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return false;
+  return Date.now() - timestamp <= days * 24 * 60 * 60 * 1000;
 }
 
 function adminTabTitle(tab: AdminTab): string {
