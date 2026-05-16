@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { IsEmail } from 'class-validator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -22,6 +23,21 @@ import { AdminService } from './admin.service';
 @Roles(UserRole.Admin)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
+
+  @Get('access/admins')
+  listAdminUsers(@CurrentUser() admin: AuthenticatedUser) {
+    return this.adminService.listAdminUsers(admin);
+  }
+
+  @Post('access/admins')
+  addAdminUser(@CurrentUser() admin: AuthenticatedUser, @Body() dto: AddAdminUserDto) {
+    return this.adminService.addAdminUser(admin, dto.email);
+  }
+
+  @Delete('access/admins/:userId')
+  removeAdminUser(@CurrentUser() admin: AuthenticatedUser, @Param('userId') userId: string) {
+    return this.adminService.removeAdminUser(admin, userId);
+  }
 
   @Get('orders')
   listOrders(@CurrentUser() admin: AuthenticatedUser) {
@@ -116,4 +132,9 @@ export class AdminController {
   listAuditLogs(@CurrentUser() admin: AuthenticatedUser) {
     return this.adminService.listAuditLogs(admin);
   }
+}
+
+class AddAdminUserDto {
+  @IsEmail()
+  email!: string;
 }

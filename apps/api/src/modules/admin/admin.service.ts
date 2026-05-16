@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import {
   AddSupplierOrderReferenceDto,
@@ -18,6 +18,7 @@ import { SupplierPricingService } from '../pricing/suppliers/supplier-pricing.se
 import { SupportService } from '../support/support.service';
 import { CreateTrackingEventDto } from '../tracking/dto/create-tracking-event.dto';
 import { TrackingService } from '../tracking/tracking.service';
+import { UsersService } from '../users/users.service';
 import { AdminAuditRepository } from './repositories/admin-audit.repository';
 
 @Injectable()
@@ -32,7 +33,48 @@ export class AdminService {
     private readonly trackingService: TrackingService,
     private readonly auditRepository: AdminAuditRepository,
     private readonly supportService: SupportService,
+    private readonly usersService: UsersService,
   ) {}
+
+  async listAdminUsers(admin: AuthenticatedUser) {
+    await this.auditRepository.record(admin.id, 'admin.access.admins.list', 'user');
+    const users = await this.usersService.listAdmins();
+    return users.map((user) => ({
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      roles: user.roles,
+      createdAt: user.createdAt,
+    }));
+  }
+
+  async addAdminUser(admin: AuthenticatedUser, email: string) {
+    const user = await this.usersService.grantAdminRole(email);
+    await this.auditRepository.record(admin.id, 'admin.access.admin.promote', 'user', user.id);
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      roles: user.roles,
+      createdAt: user.createdAt,
+    };
+  }
+
+  async removeAdminUser(admin: AuthenticatedUser, userId: string) {
+    if (admin.id === userId) {
+      throw new BadRequestException('You cannot remove your own admin access.');
+    }
+
+    const user = await this.usersService.revokeAdminRole(userId);
+    await this.auditRepository.record(admin.id, 'admin.access.admin.revoke', 'user', user.id);
+    return {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      roles: user.roles,
+      createdAt: user.createdAt,
+    };
+  }
 
   async listOrders(admin: AuthenticatedUser) {
     await this.auditRepository.record(admin.id, 'admin.orders.list', 'order');

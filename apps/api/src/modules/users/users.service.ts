@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { PasswordService } from '../auth/password.service';
@@ -63,6 +63,35 @@ export class UsersService {
     return this.usersRepository.findByEmail(email.toLowerCase());
   }
 
+  listAdmins(): Promise<User[]> {
+    return this.usersRepository.findByRole(UserRole.Admin);
+  }
+
+  async grantAdminRole(email: string): Promise<User> {
+    const user = await this.usersRepository.findByEmail(email.toLowerCase().trim());
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    if (user.roles.includes(UserRole.Admin)) {
+      return user;
+    }
+
+    return this.usersRepository.updateRoles(user.id, uniqueRoles([...user.roles, UserRole.Admin]));
+  }
+
+  async revokeAdminRole(userId: string): Promise<User> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    return this.usersRepository.updateRoles(
+      user.id,
+      user.roles.filter((role) => role !== UserRole.Admin),
+    );
+  }
+
   async updatePassword(userId: string, password: string): Promise<void> {
     await this.usersRepository.updatePasswordHash(userId, await this.passwordService.hash(password));
   }
@@ -92,4 +121,8 @@ export class UsersService {
 
     return adminEmails.includes(email) ? [UserRole.User, UserRole.Admin] : [UserRole.User];
   }
+}
+
+function uniqueRoles(roles: UserRole[]): UserRole[] {
+  return Array.from(new Set(roles));
 }

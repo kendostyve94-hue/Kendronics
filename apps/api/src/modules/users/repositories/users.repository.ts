@@ -31,6 +31,22 @@ export class UsersRepository {
     return user ? this.toUser(user) : null;
   }
 
+  async findByRole(role: UserRole): Promise<User[]> {
+    const users = await this.prisma.user.findMany({
+      where: { roles: { has: role } },
+      orderBy: { createdAt: 'asc' },
+    });
+    return users.map((user) => this.toUser(user));
+  }
+
+  async updateRoles(userId: string, roles: UserRole[]): Promise<User> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { roles },
+    });
+    return this.toUser(user);
+  }
+
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },

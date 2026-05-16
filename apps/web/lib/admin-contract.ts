@@ -52,6 +52,18 @@ export interface AdminAuditLog {
   createdAt: string;
 }
 
+export interface AdminAccessUser {
+  id: string;
+  email: string;
+  fullName: string;
+  roles: string[];
+  createdAt: string;
+}
+
+export interface AddAdminUserRequest {
+  email: string;
+}
+
 export interface AdminPricingIntelligence {
   metrics: {
     snapshotCount: number;
@@ -311,6 +323,20 @@ export const adminApiContract = {
     method: 'GET',
     path: '/api/admin/audit-logs',
     response: 'AdminAuditLog[]',
+  },
+  adminUsers: {
+    method: 'GET',
+    path: '/api/admin/access/admins',
+    response: 'AdminAccessUser[]',
+  },
+  addAdminUser: {
+    method: 'POST',
+    path: '/api/admin/access/admins',
+    request: 'AddAdminUserRequest',
+  },
+  removeAdminUser: {
+    method: 'DELETE',
+    path: '/api/admin/access/admins/:userId',
   },
 } as const;
 

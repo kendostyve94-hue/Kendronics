@@ -12,7 +12,9 @@ import {
   adminStatusLabels,
 } from '../../lib/admin-contract';
 import type {
+  AddAdminUserRequest,
   AddSupplierReferenceRequest,
+  AdminAccessUser,
   AdminAuditLog,
   AdminBufferBucket,
   AdminOrderRow,
@@ -192,6 +194,7 @@ export default function AdminPage() {
   const [pricingIntelligence, setPricingIntelligence] = useState<AdminPricingIntelligence | null>(null);
   const [supportTickets, setSupportTickets] = useState<AdminSupportTicket[]>([]);
   const [auditLogs, setAuditLogs] = useState<AdminAuditLog[]>([]);
+  const [adminUsers, setAdminUsers] = useState<AdminAccessUser[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [countryFilter, setCountryFilter] = useState('all');
@@ -212,12 +215,13 @@ export default function AdminPage() {
       }
 
       try {
-        const [ordersResult, pricingResult, intelligenceResult, supportResult, auditResult] = await Promise.all([
+        const [ordersResult, pricingResult, intelligenceResult, supportResult, auditResult, adminUsersResult] = await Promise.all([
           adminRequest<AdminOrderRow[]>(adminApiContract.orders.path, session),
           adminRequest<unknown>(adminApiContract.pricingRules.path, session),
           adminRequest<AdminPricingIntelligence>(adminApiContract.pricingIntelligence.path, session),
           adminRequest<AdminSupportTicket[]>(adminApiContract.supportTickets.path, session),
           adminRequest<AdminAuditLog[]>(adminApiContract.auditLogs.path, session),
+          adminRequest<AdminAccessUser[]>(adminApiContract.adminUsers.path, session),
         ]);
 
         if (cancelled) return;
@@ -229,6 +233,7 @@ export default function AdminPage() {
         setPricingIntelligence(intelligenceResult);
         setSupportTickets(supportResult);
         setAuditLogs(auditResult);
+        setAdminUsers(adminUsersResult);
         setLoadState('authorized');
       } catch (error) {
         if (cancelled) return;
@@ -273,6 +278,53 @@ export default function AdminPage() {
     setMessage('');
     await adminRequest(path, session, { method, body });
     setMessage('Admin action saved. Refresh the table to see persisted backend state.');
+  }
+
+  async function refreshAdminAccess(session: { tokenType: string; accessToken: string }) {
+    const [adminsResult, auditResult] = await Promise.all([
+      adminRequest<AdminAccessUser[]>(adminApiContract.adminUsers.path, session),
+      adminRequest<AdminAuditLog[]>(adminApiContract.auditLogs.path, session),
+    ]);
+    setAdminUsers(adminsResult);
+    setAuditLogs(auditResult);
+  }
+
+  async function submitAddAdmin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const session = readAuthSession();
+    if (!session) {
+      setLoadState('forbidden');
+      return;
+    }
+
+    const form = new FormData(event.currentTarget);
+    const payload: AddAdminUserRequest = {
+      email: String(form.get('email') ?? '').trim().toLowerCase(),
+    };
+
+    setMessage('');
+    await adminRequest(adminApiContract.addAdminUser.path, session, {
+      method: adminApiContract.addAdminUser.method,
+      body: payload,
+    });
+    event.currentTarget.reset();
+    await refreshAdminAccess(session);
+    setMessage(`Admin ajoute: ${payload.email}`);
+  }
+
+  async function submitRemoveAdmin(userId: string) {
+    const session = readAuthSession();
+    if (!session) {
+      setLoadState('forbidden');
+      return;
+    }
+
+    setMessage('');
+    await adminRequest(adminApiContract.removeAdminUser.path.replace(':userId', userId), session, {
+      method: adminApiContract.removeAdminUser.method,
+    });
+    await refreshAdminAccess(session);
+    setMessage('Acces admin retire.');
   }
 
   async function submitStatus(event: FormEvent<HTMLFormElement>) {
@@ -551,17 +603,11 @@ export default function AdminPage() {
           )}
 
           {['settings', 'users', 'permissions', 'apiSettings', 'emailSettings', 'notificationSettings'].includes(tab) && (
-            <OperationalPanel
-              eyebrow="Paramètres"
-              title={adminTabTitle(tab)}
-              description="Utilisateurs, rôles, permissions, clés API, emails, notifications, maintenance et logs système."
-              rows={[
-                ['Stripe', 'Paiements', 'Actif', 'Dashboard fournisseur'],
-                ['PCBWay', 'Fournisseur', supplierConnectionTest?.ok ? 'Connecté' : 'À vérifier', 'API partenaire'],
-                ['Resend', 'Email', 'Configuré', 'Notifications'],
-                ['R2/S3', 'Stockage fichiers', 'Actif', 'Gerber/BOM/CPL'],
-              ]}
-              columns={['Service', 'Scope', 'Statut', 'Usage']}
+            <AccessManagementPanel
+              admins={adminUsers}
+              logs={auditLogs}
+              onSubmitAddAdmin={submitAddAdmin}
+              onRemoveAdmin={submitRemoveAdmin}
             />
           )}
             </div>
@@ -1829,6 +1875,91 @@ function PricingRulesPanel({ rules, onSubmit }: { rules: AdminPricingRule[]; onS
         <input name="marginRate" type="number" min="0" step="0.1" placeholder="Margin %" className={fieldClassName} />
         <label className="flex items-center gap-2 text-sm font-bold text-slate-600"><input name="isActive" type="checkbox" defaultChecked /> Active</label>
       </AdminForm>
+    </div>
+  );
+}
+
+function AccessManagementPanel({
+  admins,
+  logs,
+  onSubmitAddAdmin,
+  onRemoveAdmin,
+}: {
+  admins: AdminAccessUser[];
+  logs: AdminAuditLog[];
+  onSubmitAddAdmin: (event: FormEvent<HTMLFormElement>) => void;
+  onRemoveAdmin: (userId: string) => void | Promise<void>;
+}) {
+  const accessLogs = logs.filter((log) => log.action.startsWith('admin.access.'));
+
+  return (
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <Card className="overflow-hidden">
+        <div className="border-b border-slate-100 p-5">
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Gestion des accès</p>
+          <h2 className="mt-2 text-2xl font-black text-ink">Admins actuels</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Seuls les comptes avec le rôle admin peuvent ouvrir les routes opérationnelles et voir le lien Admin dans la navbar.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
+            <thead className="bg-slate-50 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+              <tr>
+                <th className="px-5 py-4">Nom</th>
+                <th className="px-5 py-4">Email</th>
+                <th className="px-5 py-4">Rôles</th>
+                <th className="px-5 py-4">Créé</th>
+                <th className="px-5 py-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {admins.map((admin) => (
+                <tr key={admin.id}>
+                  <td className="px-5 py-4 font-black text-ink">{admin.fullName}</td>
+                  <td className="px-5 py-4 text-slate-600">{admin.email}</td>
+                  <td className="px-5 py-4 text-slate-600">{admin.roles.join(', ')}</td>
+                  <td className="px-5 py-4 text-slate-600">{formatDate(admin.createdAt)}</td>
+                  <td className="px-5 py-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => void onRemoveAdmin(admin.id)}
+                      className="h-9 border border-red-200 bg-red-50 px-3 text-xs font-black text-red-700 transition hover:bg-red-100"
+                    >
+                      Retirer admin
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {admins.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-5 py-8 text-center text-sm font-bold text-slate-500">Aucun admin trouvé.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <div className="space-y-6">
+        <AdminForm title="Ajouter admin" onSubmit={onSubmitAddAdmin}>
+          <input name="email" type="email" required placeholder="email@domaine.com" className={fieldClassName} />
+          <p className="text-xs leading-5 text-slate-500">
+            Le compte doit déjà exister. Le rôle admin sera ajouté en base et tracé dans l'audit.
+          </p>
+        </AdminForm>
+
+        <Card className="overflow-hidden">
+          <div className="border-b border-slate-100 p-5">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Historique</p>
+            <h2 className="mt-2 text-xl font-black text-ink">Changements d'accès</h2>
+          </div>
+          <SimpleTable
+            headers={['Action', 'Actor', 'Target', 'Date']}
+            rows={accessLogs.map((log) => [log.action, log.actorUserId, log.targetId ?? 'None', formatDate(log.createdAt)])}
+          />
+        </Card>
+      </div>
     </div>
   );
 }
