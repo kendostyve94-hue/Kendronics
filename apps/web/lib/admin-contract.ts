@@ -64,14 +64,28 @@ export interface AddAdminUserRequest {
   email: string;
 }
 
-export interface VerifyAdminTotpRequest {
-  username: string;
+export interface StartAdminCodeRequest {
+  adminEmail: string;
+}
+
+export interface VerifyAdminCodeRequest {
+  adminEmail: string;
   code: string;
 }
 
-export interface VerifyAdminTotpResponse {
+export interface SetupAdminCodeRequest extends VerifyAdminCodeRequest {
+  personalCode: string;
+}
+
+export interface StartAdminCodeResponse {
+  status: 'setup_code_sent' | 'personal_code_required';
+  expiresAt?: string;
+}
+
+export interface VerifyAdminCodeResponse {
   accessToken: string;
   expiresAt: string;
+  personalCodeExpiresAt?: string;
 }
 
 export interface AdminPricingIntelligence {
@@ -348,11 +362,23 @@ export const adminApiContract = {
     method: 'DELETE',
     path: '/api/admin/access/admins/:userId',
   },
-  verifyAdminTotp: {
+  startAdminCode: {
     method: 'POST',
-    path: '/api/admin/access/totp/verify',
-    request: 'VerifyAdminTotpRequest',
-    response: 'VerifyAdminTotpResponse',
+    path: '/api/admin/access/code/start',
+    request: 'StartAdminCodeRequest',
+    response: 'StartAdminCodeResponse',
+  },
+  setupAdminCode: {
+    method: 'POST',
+    path: '/api/admin/access/code/setup',
+    request: 'SetupAdminCodeRequest',
+    response: 'VerifyAdminCodeResponse',
+  },
+  verifyAdminCode: {
+    method: 'POST',
+    path: '/api/admin/access/code/verify',
+    request: 'VerifyAdminCodeRequest',
+    response: 'VerifyAdminCodeResponse',
   },
 } as const;
 

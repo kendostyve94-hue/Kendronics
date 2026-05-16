@@ -25,6 +25,7 @@ model User {
   cookieConsents CookieConsent[]
   supportTickets SupportTicket[]
   adminAuditLogs AdminAuditLog[]
+  adminAccesses AdminAccess[]
   notifications Notification[]
   profileVerificationCodes ProfileVerificationCode[]
   passwordResetTokens PasswordResetToken[]
@@ -324,6 +325,28 @@ model AdminAuditLog {
   @@index([action])
   @@index([targetType, targetId])
   @@index([createdAt])
+}
+
+model AdminAccess {
+  id                    String    @id @default(uuid())
+  userId                String
+  professionalEmail     String    @unique
+  personalCodeHash      String?
+  personalCodeExpiresAt DateTime?
+  setupCodeHash         String?
+  setupCodeExpiresAt    DateTime?
+  failedAttempts        Int       @default(0)
+  lockedUntil           DateTime?
+  lastVerifiedAt        DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, professionalEmail])
+  @@index([userId])
+  @@index([professionalEmail])
+  @@index([personalCodeExpiresAt])
 }
 
 model Notification {

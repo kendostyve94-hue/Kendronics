@@ -114,7 +114,7 @@ export class UsersService {
   }
 
   private rolesForEmail(email: string): UserRole[] {
-    const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+    const adminEmails = (process.env.ADMIN_EMAILS ?? 'kendostyve94@gmail.com')
       .split(',')
       .map((value) => value.trim().toLowerCase())
       .filter(Boolean);

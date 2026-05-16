@@ -30,12 +30,15 @@ import type {
   TestSupplierConnectionRequest,
   UpdateAdminOrderStatusRequest,
   UpdateShipmentRequest,
-  VerifyAdminTotpRequest,
-  VerifyAdminTotpResponse,
+  SetupAdminCodeRequest,
+  StartAdminCodeResponse,
+  VerifyAdminCodeRequest,
+  VerifyAdminCodeResponse,
 } from '../../lib/admin-contract';
 import type { PaymentStatus } from '../../lib/order-detail-contract';
 
 type AdminLoadState = 'checking' | 'elevating' | 'authorized' | 'forbidden' | 'error';
+type AdminCodeStep = 'email' | 'setup' | 'personal';
 type AdminTab =
   | 'dashboard'
   | 'orders'
@@ -203,7 +206,9 @@ export default function AdminPage() {
   const [countryFilter, setCountryFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [message, setMessage] = useState('');
-  const [totpError, setTotpError] = useState('');
+  const [adminCodeError, setAdminCodeError] = useState('');
+  const [adminCodeStep, setAdminCodeStep] = useState<AdminCodeStep>('email');
+  const [adminProfessionalEmail, setAdminProfessionalEmail] = useState('');
   const [adminElevationVersion, setAdminElevationVersion] = useState(0);
   const [supplierOrderPackage, setSupplierOrderPackage] = useState<AdminSupplierOrderPackage | null>(null);
   const [supplierConnectionTest, setSupplierConnectionTest] = useState<AdminSupplierConnectionTest | null>(null);
@@ -294,7 +299,7 @@ export default function AdminPage() {
     setMessage('Admin action saved. Refresh the table to see persisted backend state.');
   }
 
-  async function submitAdminTotp(event: FormEvent<HTMLFormElement>) {
+  async function submitAdminCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const session = readAuthSession();
     if (!session) {
@@ -303,15 +308,49 @@ export default function AdminPage() {
     }
 
     const form = new FormData(event.currentTarget);
-    const payload: VerifyAdminTotpRequest = {
-      username: String(form.get('username') ?? '').trim(),
-      code: String(form.get('code') ?? '').trim(),
-    };
+    const mode = String(form.get('mode') ?? 'email');
+    const adminEmail = String(form.get('adminEmail') ?? adminProfessionalEmail).trim().toLowerCase();
 
-    setTotpError('');
+    setAdminCodeError('');
     try {
-      const response = await fetch(`${apiBaseUrl}${adminApiContract.verifyAdminTotp.path}`, {
-        method: adminApiContract.verifyAdminTotp.method,
+      if (mode === 'email') {
+        const response = await fetch(`${apiBaseUrl}${adminApiContract.startAdminCode.path}`, {
+          method: adminApiContract.startAdminCode.method,
+          headers: {
+            Authorization: `${session.tokenType} ${session.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ adminEmail }),
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          throw new AdminForbiddenError();
+        }
+        if (!response.ok) {
+          throw new Error('Admin verification failed.');
+        }
+
+        const result = (await response.json()) as StartAdminCodeResponse;
+        setAdminProfessionalEmail(adminEmail);
+        setAdminCodeStep(result.status === 'setup_code_sent' ? 'setup' : 'personal');
+        return;
+      }
+
+      const contract = mode === 'setup' ? adminApiContract.setupAdminCode : adminApiContract.verifyAdminCode;
+      const payload: VerifyAdminCodeRequest | SetupAdminCodeRequest =
+        mode === 'setup'
+          ? {
+              adminEmail,
+              code: String(form.get('setupCode') ?? '').trim(),
+              personalCode: String(form.get('personalCode') ?? '').trim(),
+            }
+          : {
+              adminEmail,
+              code: String(form.get('personalCode') ?? '').trim(),
+            };
+
+      const response = await fetch(`${apiBaseUrl}${contract.path}`, {
+        method: contract.method,
         headers: {
           Authorization: `${session.tokenType} ${session.accessToken}`,
           'Content-Type': 'application/json',
@@ -326,12 +365,12 @@ export default function AdminPage() {
         throw new Error('Admin verification failed.');
       }
 
-      const result = (await response.json()) as VerifyAdminTotpResponse;
+      const result = (await response.json()) as VerifyAdminCodeResponse;
       persistAdminAccessToken(result);
       setAdminElevationVersion((value) => value + 1);
       setLoadState('checking');
     } catch (error) {
-      setTotpError(error instanceof AdminForbiddenError ? 'Identifiant admin ou code Google Authenticator invalide.' : 'Verification admin impossible pour le moment.');
+      setAdminCodeError(error instanceof AdminForbiddenError ? 'Acces admin refuse. Verifiez les informations saisies.' : 'Verification admin impossible pour le moment.');
     }
   }
 
@@ -535,7 +574,12 @@ export default function AdminPage() {
     return (
       <AdminShell>
         <div className="min-h-screen bg-slate-100">
-          <AdminTotpDialog error={totpError} onSubmit={submitAdminTotp} />
+          <AdminCodeDialog
+            error={adminCodeError}
+            professionalEmail={adminProfessionalEmail}
+            step={adminCodeStep}
+            onSubmit={submitAdminCode}
+          />
         </div>
       </AdminShell>
     );
@@ -683,10 +727,31 @@ export default function AdminPage() {
   );
 }
 
-function AdminTotpDialog({ error, onSubmit }: { error: string; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
-  const [username, setUsername] = useState('');
-  const [code, setCode] = useState('');
-  const canSubmit = username.trim().length > 0 && /^\d{6}$/.test(code.trim());
+function AdminCodeDialog({
+  error,
+  professionalEmail,
+  step,
+  onSubmit,
+}: {
+  error: string;
+  professionalEmail: string;
+  step: AdminCodeStep;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  const [adminEmail, setAdminEmail] = useState(professionalEmail);
+  const [setupCode, setSetupCode] = useState('');
+  const [personalCode, setPersonalCode] = useState('');
+  const effectiveEmail = professionalEmail || adminEmail;
+  const canSubmit =
+    step === 'email'
+      ? adminEmail.trim().length > 0
+      : step === 'setup'
+        ? /^\d{6}$/.test(setupCode.trim()) && personalCode.trim().length >= 6
+        : personalCode.trim().length >= 6;
+
+  useEffect(() => {
+    if (professionalEmail) setAdminEmail(professionalEmail);
+  }, [professionalEmail]);
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 px-4">
@@ -698,36 +763,63 @@ function AdminTotpDialog({ error, onSubmit }: { error: string; onSubmit: (event:
           </a>
         </div>
         <form onSubmit={onSubmit} className="space-y-5 p-5">
+          <input type="hidden" name="mode" value={step} />
           <p className="text-sm leading-6 text-slate-600">
-            Confirmez votre acces administrateur avec votre identifiant et votre code de validation.
+            Confirmez votre acces administrateur avec votre adresse professionnelle et votre code personnel.
           </p>
           <label className="grid gap-2 text-sm font-normal text-slate-700 sm:grid-cols-[9rem_1fr] sm:items-center">
-            <span>Nom admin *</span>
+            <span>E-mail admin *</span>
             <input
-              name="username"
-              autoComplete="username"
+              name="adminEmail"
+              type="email"
+              autoComplete="email"
               required
               className={fieldClassName}
-              placeholder="email ou identifiant admin"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
+              placeholder="adresse professionnelle autorisee"
+              value={effectiveEmail}
+              readOnly={step !== 'email'}
+              onChange={(event) => setAdminEmail(event.target.value)}
             />
           </label>
-          <label className="grid gap-2 text-sm font-normal text-slate-700 sm:grid-cols-[9rem_1fr] sm:items-center">
-            <span>Code TOTP *</span>
-            <input
-              name="code"
-              inputMode="numeric"
-              pattern="[0-9]{6}"
-              maxLength={6}
-              autoComplete="one-time-code"
-              required
-              className={fieldClassName}
-              placeholder="123456"
-              value={code}
-              onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-            />
-          </label>
+          {step === 'setup' ? (
+            <label className="grid gap-2 text-sm font-normal text-slate-700 sm:grid-cols-[9rem_1fr] sm:items-center">
+              <span>Code recu *</span>
+              <input
+                name="setupCode"
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                autoComplete="one-time-code"
+                required
+                className={fieldClassName}
+                placeholder="code a 6 chiffres"
+                value={setupCode}
+                onChange={(event) => setSetupCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+              />
+            </label>
+          ) : null}
+          {step !== 'email' ? (
+            <label className="grid gap-2 text-sm font-normal text-slate-700 sm:grid-cols-[9rem_1fr] sm:items-center">
+              <span>{step === 'setup' ? 'Nouveau code *' : 'Code personnel *'}</span>
+              <input
+                name="personalCode"
+                type="password"
+                autoComplete={step === 'setup' ? 'new-password' : 'current-password'}
+                required
+                minLength={6}
+                maxLength={32}
+                className={fieldClassName}
+                placeholder="code personnel admin"
+                value={personalCode}
+                onChange={(event) => setPersonalCode(event.target.value)}
+              />
+            </label>
+          ) : null}
+          {step === 'setup' ? (
+            <p className="text-xs leading-5 text-slate-500">
+              Un code temporaire vient d'etre envoye a l'adresse professionnelle. Definissez ensuite votre code personnel.
+            </p>
+          ) : null}
           {error ? <p className="border border-red-200 bg-red-50 px-3 py-2 text-sm font-normal text-red-700">{error}</p> : null}
           <div className="flex justify-end gap-3 pt-2">
             <a href="/" className="inline-flex h-10 items-center border border-slate-200 bg-white px-5 text-sm font-normal text-slate-700 transition hover:border-slate-400">
@@ -738,7 +830,7 @@ function AdminTotpDialog({ error, onSubmit }: { error: string; onSubmit: (event:
               disabled={!canSubmit}
               className="h-10 bg-[#0877ff] px-6 text-sm font-normal text-white transition hover:bg-[#0068e8] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
             >
-              Verifier
+              {step === 'email' ? 'Continuer' : 'Verifier'}
             </button>
           </div>
         </form>
@@ -2200,7 +2292,7 @@ async function adminRequest<T>(path: string, session: { tokenType: string; acces
   return response.json() as Promise<T>;
 }
 
-function persistAdminAccessToken(result: VerifyAdminTotpResponse) {
+function persistAdminAccessToken(result: VerifyAdminCodeResponse) {
   if (typeof window === 'undefined') return;
   window.sessionStorage.setItem(adminElevationStorageKey, JSON.stringify(result));
 }
@@ -2211,7 +2303,7 @@ function readAdminAccessToken(): string | null {
   if (!raw) return null;
 
   try {
-    const session = JSON.parse(raw) as VerifyAdminTotpResponse;
+    const session = JSON.parse(raw) as VerifyAdminCodeResponse;
     if (!session.accessToken || new Date(session.expiresAt).getTime() <= Date.now()) {
       window.sessionStorage.removeItem(adminElevationStorageKey);
       return null;

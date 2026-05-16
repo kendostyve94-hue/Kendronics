@@ -25,12 +25,22 @@ class AddAdminUserDto {
   email!: string;
 }
 
-class VerifyAdminTotpDto {
-  @IsString()
-  username!: string;
+class StartAdminCodeDto {
+  @IsEmail()
+  adminEmail!: string;
+}
+
+class VerifyAdminCodeDto {
+  @IsEmail()
+  adminEmail!: string;
 
   @IsString()
   code!: string;
+}
+
+class SetupAdminCodeDto extends VerifyAdminCodeDto {
+  @IsString()
+  personalCode!: string;
 }
 
 @Controller('admin')
@@ -42,9 +52,19 @@ export class AdminController {
     private readonly adminTotpService: AdminTotpService,
   ) {}
 
-  @Post('access/totp/verify')
-  verifyAdminTotp(@CurrentUser() admin: AuthenticatedUser, @Body() dto: VerifyAdminTotpDto) {
-    return this.adminTotpService.verifyCode(admin, dto.username, dto.code);
+  @Post('access/code/start')
+  startAdminCode(@CurrentUser() admin: AuthenticatedUser, @Body() dto: StartAdminCodeDto) {
+    return this.adminTotpService.startCodeFlow(admin, dto.adminEmail);
+  }
+
+  @Post('access/code/setup')
+  setupAdminCode(@CurrentUser() admin: AuthenticatedUser, @Body() dto: SetupAdminCodeDto) {
+    return this.adminTotpService.setupPersonalCode(admin, dto.adminEmail, dto.code, dto.personalCode);
+  }
+
+  @Post('access/code/verify')
+  verifyAdminCode(@CurrentUser() admin: AuthenticatedUser, @Body() dto: VerifyAdminCodeDto) {
+    return this.adminTotpService.verifyPersonalCode(admin, dto.adminEmail, dto.code);
   }
 
   @Get('access/admins')

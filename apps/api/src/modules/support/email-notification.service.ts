@@ -98,6 +98,30 @@ export class EmailNotificationService {
       throw new ServiceUnavailableException(`SMTP password reset send failed. ${message}`);
     }
   }
+
+  async sendAdminSetupCode(input: { to: string; code: string }): Promise<void> {
+    const subject = '[Kendronics] Code d acces administrateur';
+    const body = [
+      'Verification administrateur Kendronics',
+      '',
+      `Code: ${input.code}`,
+      '',
+      'Ce code expire dans 10 minutes.',
+      "Si vous n'avez pas demande cette action, securisez votre compte et contactez le support.",
+    ].join('\n');
+
+    try {
+      await sendTransactionalMail({
+        to: input.to,
+        subject,
+        text: body,
+      });
+    } catch (error) {
+      const message = smtpErrorDetails(error);
+      console.error('SMTP admin access code send failed:', message);
+      throw new ServiceUnavailableException(`SMTP admin access code send failed. ${message}`);
+    }
+  }
 }
 
 async function sendTransactionalMail(message: EmailMessage): Promise<void> {

@@ -15,7 +15,7 @@ export class AdminTotpGuard implements CanActivate {
     }>();
 
     const path = request.route?.path ?? request.path ?? '';
-    if (path.includes('access/totp/verify')) return true;
+    if (path.includes('access/code/')) return true;
 
     const header = request.headers['x-admin-access-token'];
     const token = Array.isArray(header) ? header[0] : header;
