@@ -1347,11 +1347,11 @@ function buildScaleLabels(maxValue: number) {
   return [top, Math.round(top * 0.8), Math.round(top * 0.6), Math.round(top * 0.4), Math.round(top * 0.2), 0].map(String);
 }
 
-function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string }> }) {
+function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> }) {
   return (
     <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
       <div className="border-b border-[#e8edf3] px-6 py-5">
-        <h2 className="text-base font-semibold text-slate-950">Latest transactions</h2>
+        <h2 className="text-base font-semibold text-slate-950">Activite recente</h2>
       </div>
       <div>
         {transactions.map((transaction) => (
@@ -1367,8 +1367,12 @@ function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: 
               {transaction.status}
             </span>
             <div className="text-right">
-              <p className={transaction.amount.startsWith('-') ? 'font-medium text-slate-950' : 'font-medium text-[#00b84d]'}>{transaction.amount}</p>
+              <p className="font-medium text-[#ff5a00]">{transaction.amount}</p>
               <p className="mt-1 text-sm text-[#61709a]">{transaction.date}</p>
+              <span className="mt-2 grid grid-cols-[1fr_2rem] items-center gap-1">
+                <span className="h-1.5 bg-slate-100"><span className="block h-full bg-[#9bcf9f]" style={{ width: `${transaction.progress}%` }} /></span>
+                <span className="text-[10px] text-slate-500">{transaction.progress}%</span>
+              </span>
             </div>
           </div>
         ))}
@@ -1499,7 +1503,7 @@ function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingInt
   return (
     <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
       <div className="border-b border-[#e8edf3] px-6 py-5">
-        <h2 className="max-w-[10rem] text-base font-semibold leading-5 text-slate-950">Your Recent Performance</h2>
+        <h2 className="max-w-[12rem] text-base font-semibold leading-5 text-slate-950">Progression production</h2>
       </div>
       <div className="grid h-[285px] place-items-center p-5">
         <div className="relative h-52 w-52">
@@ -1532,7 +1536,7 @@ function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingInt
           <div className="absolute inset-0 grid place-items-center">
             <div className="text-center">
               <p className="text-[26px] font-medium text-[#343a40]">{performance}%</p>
-              <p className="mt-1 text-sm text-[#62b447]">Growth</p>
+              <p className="mt-1 text-sm text-[#62b447]">Commandes suivies</p>
             </div>
           </div>
         </div>
@@ -2514,12 +2518,12 @@ function buildAfricanCountrySales(orders: AdminOrderRow[], activityScore: number
   ];
 }
 
-function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string }> {
+function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> {
   const fallback = [
-    { name: 'Bob Dean', subtitle: 'Transfer to bank account', amount: '$158.00 USD', date: '24 Jan, 2024', status: 'Pending' as const, tone: 'bg-[#e64b8b]' },
-    { name: 'Bank of America', subtitle: 'Withdrawal to account', amount: '$258.00 USD', date: '26 June, 2024', status: 'Completed' as const, tone: 'bg-[#edf6ff] text-[#177ddc]' },
-    { name: 'Slack', subtitle: 'Subscription to plan', amount: '-$154.00 USD', date: '12 May, 2024', status: 'Failed' as const, tone: 'bg-[#36c5cd]' },
-    { name: 'Asana', subtitle: 'Subscription payment', amount: '$258.00 USD', date: '15 Feb, 2024', status: 'Completed' as const, tone: 'bg-[#ff6868]' },
+    { name: 'SN-***', subtitle: 'Standard PCB - client D***r', amount: '3-4 jours', date: 'May 16, 2026', status: 'Pending' as const, tone: 'bg-[#e64b8b]', progress: 28 },
+    { name: 'CI-***', subtitle: 'PCB avance - client A***a', amount: '5-6 jours', date: 'May 16, 2026', status: 'Pending' as const, tone: 'bg-[#edf6ff] text-[#177ddc]', progress: 41 },
+    { name: 'CM-***', subtitle: 'PCBA - client R***c', amount: '6-8 jours', date: 'May 15, 2026', status: 'Completed' as const, tone: 'bg-[#36c5cd]', progress: 72 },
+    { name: 'MA-***', subtitle: 'FPC/Rigid-Flex - client M***l', amount: '4-5 jours', date: 'May 15, 2026', status: 'Pending' as const, tone: 'bg-[#ff6868]', progress: 52 },
   ];
 
   if (orders.length === 0) return fallback;
@@ -2527,14 +2531,50 @@ function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: stri
   return orders.slice(0, 4).map((order, index) => {
     const paymentStatus = getPaymentStatus(order);
     return {
-      name: order.orderNumber || `Order ${index + 1}`,
-      subtitle: order.quoteId ? `Quote ${order.quoteId}` : 'PCB order payment',
-      amount: `${paymentStatus === 'refunded' ? '-' : ''}$${Math.abs(order.totalPrice ?? 258).toFixed(2)} USD`,
+      name: `${order.destinationCountryIso2 || 'AF'}-***`,
+      subtitle: `${serviceLabelForOrder(order)} - client ${maskedClient(index)}`,
+      amount: leadTimeForOrder(order),
       date: order.createdAt ? formatDate(order.createdAt) : fallback[index]?.date ?? '24 Jan, 2024',
       status: paymentStatus === 'paid' ? 'Completed' : paymentStatus === 'failed' || paymentStatus === 'refunded' ? 'Failed' : 'Pending',
       tone: ['bg-[#e64b8b]', 'bg-[#edf6ff] text-[#177ddc]', 'bg-[#36c5cd]', 'bg-[#ff6868]'][index] ?? 'bg-[#e64b8b]',
+      progress: progressForOrder(order, index),
     };
   });
+}
+
+function serviceLabelForOrder(order: AdminOrderRow): string {
+  const value = String((order as { quoteSnapshot?: { productType?: string } }).quoteSnapshot?.productType ?? '').toLowerCase();
+  if (value.includes('assembly') || value.includes('pcba')) return 'PCBA';
+  if (value.includes('flex')) return 'FPC/Rigid-Flex';
+  if (value.includes('cnc') || value.includes('3d')) return 'CNC / 3D';
+  if (value.includes('advanced')) return 'PCB avance';
+  return 'Standard PCB';
+}
+
+function maskedClient(index: number): string {
+  return ['D***r', 'A***a', 'R***c', 'M***l', 'K***n'][index % 5];
+}
+
+function leadTimeForOrder(order: AdminOrderRow): string {
+  if (order.status === 'delivered') return 'Livre';
+  if (['shipped', 'in_transit', 'out_for_delivery'].includes(order.status)) return '2-5 jours';
+  if (['supplier_in_production', 'supplier_ordered'].includes(order.status)) return '3-6 jours';
+  return 'A verifier';
+}
+
+function progressForOrder(order: AdminOrderRow, index: number): number {
+  const map: Record<string, number> = {
+    awaiting_payment: 12,
+    paid: 24,
+    supplier_order_pending: 32,
+    supplier_ordered: 45,
+    supplier_in_production: 62,
+    shipped: 78,
+    in_transit: 84,
+    out_for_delivery: 92,
+    delivered: 100,
+  };
+  return map[order.status] ?? [28, 41, 52, 67][index % 4];
 }
 
 function radarPoints(values: number[]): string {

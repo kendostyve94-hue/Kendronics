@@ -45,6 +45,15 @@ const pcbwayChoiceReasons = [
   'Factory PCB options with competitive advantages',
   'Electronic Manufacturing Service support',
 ];
+
+const recentProductionActivity = [
+  { date: '05-16', region: 'SN', buyer: 'D***r', service: 'Standard PCB', leadTime: '3-4 jours', progress: 28 },
+  { date: '05-16', region: 'CI', buyer: 'A***a', service: 'PCB avance', leadTime: '5-6 jours', progress: 41 },
+  { date: '05-15', region: 'CM', buyer: 'R***c', service: 'PCBA', leadTime: '6-8 jours', progress: 35 },
+  { date: '05-15', region: 'MA', buyer: 'M***l', service: 'FPC/Rigid-Flex', leadTime: '4-5 jours', progress: 52 },
+  { date: '05-14', region: 'NG', buyer: 'K***n', service: 'Stencil SMT', leadTime: '2-3 jours', progress: 67 },
+  { date: '05-14', region: 'CD', buyer: 'B***d', service: 'CNC / 3D', leadTime: '5-7 jours', progress: 23 },
+];
 const heroSlides = [
   {
     eyebrow: 'PCB personnalisés et assemblage',
@@ -219,6 +228,46 @@ function WhyBuyPcbSection() {
                   </span>
                 </a>
               ))}
+            </div>
+            <div className="border-t border-slate-200 bg-white px-5 py-5">
+              <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-normal text-slate-800">Activite recente de production</h3>
+                  <p className="text-xs text-slate-500">Commandes anonymisees, progression indicative et zones de livraison.</p>
+                </div>
+                <p className="text-xs text-slate-500">30 derniers jours: <span className="font-semibold text-[#ff5a00]">845+</span></p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-xs">
+                  <thead className="text-slate-500">
+                    <tr className="border-y border-slate-200">
+                      <th className="py-2 pr-4 font-normal">Date</th>
+                      <th className="py-2 pr-4 font-normal">Zone</th>
+                      <th className="py-2 pr-4 font-normal">Client</th>
+                      <th className="py-2 pr-4 font-normal">Service</th>
+                      <th className="py-2 pr-4 font-normal">Delai</th>
+                      <th className="py-2 font-normal">Progression</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentProductionActivity.map((item) => (
+                      <tr key={`${item.date}-${item.buyer}-${item.service}`} className="border-b border-slate-100 last:border-b-0">
+                        <td className="py-2 pr-4 text-slate-500">{item.date}</td>
+                        <td className="py-2 pr-4 text-slate-700">{item.region}</td>
+                        <td className="py-2 pr-4 text-slate-700">{item.buyer}</td>
+                        <td className="py-2 pr-4 text-slate-700">{item.service}</td>
+                        <td className="py-2 pr-4 font-semibold text-[#ff5a00]">{item.leadTime}</td>
+                        <td className="py-2">
+                          <span className="inline-grid w-28 grid-cols-[1fr_2rem] items-center gap-2">
+                            <span className="h-2 bg-slate-100"><span className="block h-full bg-[#9bcf9f]" style={{ width: `${item.progress}%` }} /></span>
+                            <span className="text-[11px] text-slate-500">{item.progress}%</span>
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
             <button type="button" aria-label="Next PCB category" className="absolute right-1 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 border border-slate-200 bg-white text-3xl leading-none text-slate-600 lg:grid lg:place-items-center">
               &gt;
