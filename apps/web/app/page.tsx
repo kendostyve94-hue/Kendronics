@@ -11,6 +11,40 @@ const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
 const smartOrderingMapImage = '/images/smart-ordering-world-map.png';
 const quoteWorkflowImage = '/images/quote-workflow.png';
 const smartOrderingWorkflowImage = '/images/smart-ordering-workflow-fade.png';
+const pcbwayChoiceBannerImage = '/images/hero-pcb-color-variants.png';
+
+const pcbwayChoiceCards = [
+  {
+    eyebrow: 'HIGH-END, COMPLEX',
+    title: 'Advanced PCB',
+    image: '/images/product-pcb-advanced.png',
+    href: '/quote?productType=advanced_pcb',
+  },
+  {
+    eyebrow: 'Polyimide, Stiffener, E-Test',
+    title: 'Flexible, Rigid-Flex',
+    image: '/images/quote-product-fpc-rigid-flex.png',
+    href: '/quote?productType=fpc_rigid_flex',
+  },
+  {
+    eyebrow: 'Turnkey or consigned',
+    title: 'PCB Assembly',
+    image: '/images/home-hero-pcb-assembly.jpeg',
+    href: '/quote?productType=pcb_assembly',
+  },
+];
+
+const pcbwayChoiceReasons = [
+  '24 hours production lead-time*',
+  'Team supported by professionals and technical review',
+  'On-time shipping support with carrier tracking',
+  'Quality options approved through partner review',
+  'Trusted PCB ordering experience',
+  'Non-stop production and assistance service',
+  'Low minimum quantity requirement',
+  'Factory PCB options with competitive advantages',
+  'Electronic Manufacturing Service support',
+];
 const heroSlides = [
   {
     eyebrow: 'PCB personnalisés et assemblage',
@@ -134,11 +168,65 @@ export default function HomePage() {
       <MobileQuickAccess />
       <ProductCatalog />
       <SmartOrdering />
+      <WhyBuyPcbSection />
       <HomeCapabilityMatrix />
       <TrustAssurance />
       <Resources />
       <Footer />
     </main>
+  );
+}
+
+function WhyBuyPcbSection() {
+  return (
+    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
+      <div className="mx-auto max-w-none border-t-2 border-[#a88c00] bg-white">
+        <div className="grid border border-slate-200 lg:grid-cols-[minmax(18rem,25rem)_1fr]">
+          <div className="border-b border-slate-200 p-5 sm:p-6 lg:border-b-0 lg:border-r">
+            <h2 className="text-xl font-normal tracking-tight text-slate-800">Why Buy Printed Circuit Boards From us?</h2>
+            <ul className="mt-5 space-y-2 text-sm leading-5 text-slate-600">
+              {pcbwayChoiceReasons.map((reason) => (
+                <li key={reason} className="flex gap-3">
+                  <span className="mt-0.5 text-base font-black text-[#87c98a]">v</span>
+                  <span>{reason}</span>
+                </li>
+              ))}
+            </ul>
+            <a href="/capabilities" className="group relative mt-4 block h-20 overflow-hidden border border-slate-300 bg-ink text-white">
+              <img src={pcbwayChoiceBannerImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-65" />
+              <span className="absolute inset-0 bg-gradient-to-r from-[#064626]/80 via-[#0b5134]/70 to-[#1f2937]/40" />
+              <span className="relative flex h-full items-center justify-end px-5 text-right">
+                <span>
+                  <span className="block text-sm font-black">Why Choose PCBWay?</span>
+                  <span className="mt-1 block text-xs font-black">Explore More <span className="inline-block transition group-hover:translate-x-1">-&gt;</span></span>
+                </span>
+              </span>
+            </a>
+          </div>
+
+          <div className="relative">
+            <button type="button" aria-label="Previous PCB category" className="absolute left-1 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 border border-slate-200 bg-white text-3xl leading-none text-slate-600 lg:grid lg:place-items-center">
+              &lt;
+            </button>
+            <div className="grid gap-0 overflow-x-auto sm:grid-cols-3">
+              {pcbwayChoiceCards.map((card) => (
+                <a key={card.title} href={card.href} className="group relative min-h-[18rem] min-w-[17rem] overflow-hidden border-r border-slate-200 last:border-r-0 sm:min-w-0">
+                  <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                  <span className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/20 to-slate-950/0" />
+                  <span className="relative block p-5 text-white">
+                    <span className="block text-sm font-black">{card.eyebrow}</span>
+                    <span className="mt-2 block text-2xl font-black tracking-tight">{card.title}</span>
+                  </span>
+                </a>
+              ))}
+            </div>
+            <button type="button" aria-label="Next PCB category" className="absolute right-1 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 border border-slate-200 bg-white text-3xl leading-none text-slate-600 lg:grid lg:place-items-center">
+              &gt;
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
