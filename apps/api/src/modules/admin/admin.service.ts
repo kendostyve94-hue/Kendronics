@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import {
   AddSupplierOrderReferenceDto,
@@ -34,39 +35,69 @@ export class AdminService {
     private readonly auditRepository: AdminAuditRepository,
     private readonly supportService: SupportService,
     private readonly usersService: UsersService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async listAdminUsers(admin: AuthenticatedUser) {
     await this.auditRepository.record(admin.id, 'admin.access.admins.list', 'user');
-    const users = await this.usersService.listAdmins();
-    return users.map((user) => ({
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
-      roles: user.roles,
-      createdAt: user.createdAt,
+    const accesses = await this.prisma.adminAccess.findMany({
+      include: { user: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return accesses.map((access) => ({
+      id: access.user.id,
+      accessId: access.id,
+      email: access.user.email,
+      professionalEmail: access.professionalEmail,
+      fullName: access.user.fullName,
+      roles: access.user.roles,
+      personalCodeExpiresAt: access.personalCodeExpiresAt,
+      lockedUntil: access.lockedUntil,
+      lastVerifiedAt: access.lastVerifiedAt,
+      createdAt: access.createdAt,
     }));
   }
 
-  async addAdminUser(admin: AuthenticatedUser, email: string) {
-    const user = await this.usersService.grantAdminRole(email);
+  async addAdminUser(admin: AuthenticatedUser, email: string, professionalEmail: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedProfessionalEmail = professionalEmail.toLowerCase().trim();
+    const user = await this.usersService.grantAdminRole(normalizedEmail);
+    const access = await this.prisma.adminAccess.upsert({
+      where: { userId_professionalEmail: { userId: user.id, professionalEmail: normalizedProfessionalEmail } },
+      create: { userId: user.id, professionalEmail: normalizedProfessionalEmail },
+      update: {},
+    });
     await this.auditRepository.record(admin.id, 'admin.access.admin.promote', 'user', user.id);
+    await this.auditRepository.record(admin.id, 'admin.access.professional-email.link', 'adminAccess', access.id);
     return {
       id: user.id,
+      accessId: access.id,
       email: user.email,
+      professionalEmail: access.professionalEmail,
       fullName: user.fullName,
       roles: user.roles,
-      createdAt: user.createdAt,
+      personalCodeExpiresAt: access.personalCodeExpiresAt,
+      lockedUntil: access.lockedUntil,
+      lastVerifiedAt: access.lastVerifiedAt,
+      createdAt: access.createdAt,
     };
   }
 
-  async removeAdminUser(admin: AuthenticatedUser, userId: string) {
-    if (admin.id === userId) {
+  async removeAdminUser(admin: AuthenticatedUser, accessId: string) {
+    const access = await this.prisma.adminAccess.findUnique({ where: { id: accessId }, include: { user: true } });
+    if (!access) {
+      throw new NotFoundException('Admin access not found.');
+    }
+    if (admin.id === access.userId) {
       throw new BadRequestException('You cannot remove your own admin access.');
     }
 
-    const user = await this.usersService.revokeAdminRole(userId);
-    await this.auditRepository.record(admin.id, 'admin.access.admin.revoke', 'user', user.id);
+    await this.prisma.adminAccess.delete({ where: { id: access.id } });
+    const remainingAccessCount = await this.prisma.adminAccess.count({ where: { userId: access.userId } });
+    const user = remainingAccessCount === 0 ? await this.usersService.revokeAdminRole(access.userId) : this.toUserAccessUser(access.user);
+    await this.auditRepository.record(admin.id, 'admin.access.admin.revoke', 'user', access.userId);
+    await this.auditRepository.record(admin.id, 'admin.access.professional-email.unlink', 'adminAccess', access.id);
     return {
       id: user.id,
       email: user.email,
@@ -79,6 +110,28 @@ export class AdminService {
   async listOrders(admin: AuthenticatedUser) {
     await this.auditRepository.record(admin.id, 'admin.orders.list', 'order');
     return this.ordersService.listForAdmin();
+  }
+
+  private toUserAccessUser(user: {
+    id: string;
+    email: string;
+    passwordHash: string;
+    fullName: string;
+    companyName: string | null;
+    roles: string[];
+    emailVerifiedAt: Date | null;
+    createdAt: Date;
+  }) {
+    return {
+      id: user.id,
+      email: user.email,
+      passwordHash: user.passwordHash,
+      fullName: user.fullName,
+      companyName: user.companyName ?? undefined,
+      roles: user.roles,
+      emailVerifiedAt: user.emailVerifiedAt ?? undefined,
+      createdAt: user.createdAt,
+    };
   }
 
   async updateOrderStatus(admin: AuthenticatedUser, orderId: string, dto: UpdateOrderStatusDto) {

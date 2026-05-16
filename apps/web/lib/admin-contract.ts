@@ -54,14 +54,20 @@ export interface AdminAuditLog {
 
 export interface AdminAccessUser {
   id: string;
+  accessId: string;
   email: string;
+  professionalEmail: string;
   fullName: string;
   roles: string[];
+  personalCodeExpiresAt?: string;
+  lockedUntil?: string;
+  lastVerifiedAt?: string;
   createdAt: string;
 }
 
 export interface AddAdminUserRequest {
   email: string;
+  professionalEmail: string;
 }
 
 export interface StartAdminCodeRequest {

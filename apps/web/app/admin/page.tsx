@@ -394,6 +394,7 @@ export default function AdminPage() {
     const form = new FormData(event.currentTarget);
     const payload: AddAdminUserRequest = {
       email: String(form.get('email') ?? '').trim().toLowerCase(),
+      professionalEmail: String(form.get('professionalEmail') ?? '').trim().toLowerCase(),
     };
 
     setMessage('');
@@ -406,7 +407,7 @@ export default function AdminPage() {
     setMessage(`Admin ajoute: ${payload.email}`);
   }
 
-  async function submitRemoveAdmin(userId: string) {
+  async function submitRemoveAdmin(accessId: string) {
     const session = readAuthSession();
     if (!session) {
       setLoadState('forbidden');
@@ -414,7 +415,7 @@ export default function AdminPage() {
     }
 
     setMessage('');
-    await adminRequest(adminApiContract.removeAdminUser.path.replace(':userId', userId), session, {
+    await adminRequest(adminApiContract.removeAdminUser.path.replace(':userId', accessId), session, {
       method: adminApiContract.removeAdminUser.method,
     });
     await refreshAdminAccess(session);
@@ -2109,7 +2110,7 @@ function AccessManagementPanel({
   admins: AdminAccessUser[];
   logs: AdminAuditLog[];
   onSubmitAddAdmin: (event: FormEvent<HTMLFormElement>) => void;
-  onRemoveAdmin: (userId: string) => void | Promise<void>;
+  onRemoveAdmin: (accessId: string) => void | Promise<void>;
 }) {
   const accessLogs = logs.filter((log) => log.action.startsWith('admin.access.'));
 
@@ -2118,9 +2119,9 @@ function AccessManagementPanel({
       <Card className="overflow-hidden">
         <div className="border-b border-slate-100 p-5">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Gestion des accès</p>
-          <h2 className="mt-2 text-2xl font-black text-ink">Admins actuels</h2>
+          <h2 className="mt-2 text-2xl font-black text-ink">Acces admin en base</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Seuls les comptes avec le rôle admin peuvent ouvrir les routes opérationnelles et voir le lien Admin dans la navbar.
+            Render garde seulement l'acces de depart. Les nouveaux admins sont maintenant lies ici avec leur compte de connexion et leur e-mail professionnel.
           </p>
         </div>
         <div className="overflow-x-auto">
@@ -2128,23 +2129,25 @@ function AccessManagementPanel({
             <thead className="bg-slate-50 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
               <tr>
                 <th className="px-5 py-4">Nom</th>
-                <th className="px-5 py-4">Email</th>
-                <th className="px-5 py-4">Rôles</th>
-                <th className="px-5 py-4">Créé</th>
+                <th className="px-5 py-4">Compte connecte</th>
+                <th className="px-5 py-4">Email pro</th>
+                <th className="px-5 py-4">Code</th>
+                <th className="px-5 py-4">Dernier acces</th>
                 <th className="px-5 py-4 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {admins.map((admin) => (
-                <tr key={admin.id}>
+                <tr key={admin.accessId}>
                   <td className="px-5 py-4 font-black text-ink">{admin.fullName}</td>
                   <td className="px-5 py-4 text-slate-600">{admin.email}</td>
-                  <td className="px-5 py-4 text-slate-600">{admin.roles.join(', ')}</td>
-                  <td className="px-5 py-4 text-slate-600">{formatDate(admin.createdAt)}</td>
+                  <td className="px-5 py-4 text-slate-600">{admin.professionalEmail}</td>
+                  <td className="px-5 py-4 text-slate-600">{admin.personalCodeExpiresAt ? `Expire ${formatDate(admin.personalCodeExpiresAt)}` : 'A initialiser'}</td>
+                  <td className="px-5 py-4 text-slate-600">{admin.lastVerifiedAt ? formatDate(admin.lastVerifiedAt) : 'Jamais'}</td>
                   <td className="px-5 py-4 text-right">
                     <button
                       type="button"
-                      onClick={() => void onRemoveAdmin(admin.id)}
+                      onClick={() => void onRemoveAdmin(admin.accessId)}
                       className="h-9 border border-red-200 bg-red-50 px-3 text-xs font-black text-red-700 transition hover:bg-red-100"
                     >
                       Retirer admin
@@ -2154,7 +2157,7 @@ function AccessManagementPanel({
               ))}
               {admins.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-sm font-bold text-slate-500">Aucun admin trouvé.</td>
+                  <td colSpan={6} className="px-5 py-8 text-center text-sm font-bold text-slate-500">Aucun acces admin trouve.</td>
                 </tr>
               ) : null}
             </tbody>
@@ -2164,9 +2167,10 @@ function AccessManagementPanel({
 
       <div className="space-y-6">
         <AdminForm title="Ajouter admin" onSubmit={onSubmitAddAdmin}>
-          <input name="email" type="email" required placeholder="email@domaine.com" className={fieldClassName} />
+          <input name="email" type="email" required placeholder="compte-connecte@gmail.com" className={fieldClassName} />
+          <input name="professionalEmail" type="email" required placeholder="email.pro@kendronics.com" className={fieldClassName} />
           <p className="text-xs leading-5 text-slate-500">
-            Le compte doit déjà exister. Le rôle admin sera ajouté en base et tracé dans l'audit.
+            Le compte doit deja exister. Le role admin et l'e-mail professionnel seront enregistres en base et traces dans l'audit.
           </p>
         </AdminForm>
 

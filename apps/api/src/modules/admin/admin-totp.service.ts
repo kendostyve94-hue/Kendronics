@@ -142,12 +142,18 @@ export class AdminTotpService {
   private async findOrCreateAccess(user: AuthenticatedUser, professionalEmail: string) {
     this.assertSignedInAdmin(user);
     const normalizedProfessionalEmail = normalizeEmail(professionalEmail);
-    const allowedProfessionalEmail = this.professionalEmailForConnectedAccount(user.email);
 
+    const existingAccess = await this.prisma.adminAccess.findUnique({
+      where: { userId_professionalEmail: { userId: user.id, professionalEmail: normalizedProfessionalEmail } },
+    });
+    if (existingAccess) {
+      return existingAccess;
+    }
+
+    const allowedProfessionalEmail = this.bootstrapProfessionalEmailForConnectedAccount(user.email);
     if (normalizedProfessionalEmail !== allowedProfessionalEmail) {
       throw new ForbiddenException('Admin professional email is not authorized for this account.');
     }
-
     return this.prisma.adminAccess.upsert({
       where: { userId_professionalEmail: { userId: user.id, professionalEmail: normalizedProfessionalEmail } },
       create: { userId: user.id, professionalEmail: normalizedProfessionalEmail },
@@ -169,7 +175,7 @@ export class AdminTotpService {
     }
   }
 
-  private professionalEmailForConnectedAccount(connectedEmail: string): string {
+  private bootstrapProfessionalEmailForConnectedAccount(connectedEmail: string): string {
     const normalizedConnectedEmail = normalizeEmail(connectedEmail);
     const configured = (process.env.ADMIN_PRO_EMAIL_MAP ?? 'kendostyve94@gmail.com:contact.kendronics@gmail.com')
       .split(',')

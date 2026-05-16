@@ -23,6 +23,9 @@ import { AdminTotpService } from './admin-totp.service';
 class AddAdminUserDto {
   @IsEmail()
   email!: string;
+
+  @IsEmail()
+  professionalEmail!: string;
 }
 
 class StartAdminCodeDto {
@@ -74,7 +77,7 @@ export class AdminController {
 
   @Post('access/admins')
   addAdminUser(@CurrentUser() admin: AuthenticatedUser, @Body() dto: AddAdminUserDto) {
-    return this.adminService.addAdminUser(admin, dto.email);
+    return this.adminService.addAdminUser(admin, dto.email, dto.professionalEmail);
   }
 
   @Delete('access/admins/:userId')
