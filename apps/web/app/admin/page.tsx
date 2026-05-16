@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { AdminShell } from '../../components/admin/AdminShell';
 import { AdminStatusBadge, PaymentBadge } from '../../components/admin/AdminBadge';
 import { Card } from '../../components/ui/Card';
+import { africanCountries } from '../../lib/african-countries';
 import { readAuthSession } from '../../lib/auth-session';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import {
@@ -1195,7 +1196,7 @@ function ModernDashboardPanel({
       <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.96fr)]">
         <LatestTransactionsCard transactions={buildDashboardTransactions(orders)} />
         <div className="grid gap-6 md:grid-cols-2">
-          <DealsStatisticsCard orders={orders} tickets={tickets} logs={logs} />
+          <DealsStatisticsCard orders={orders} />
           <RecentPerformanceCard intelligence={intelligence} />
         </div>
         <ProductActivityCard orders={orders} tickets={tickets} />
@@ -1447,8 +1448,8 @@ function buildConicGradient(items: Array<{ percent: number; color: string }>) {
   return `conic-gradient(${stops.join(',')})`;
 }
 
-function DealsStatisticsCard({ orders, tickets, logs }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[]; logs: AdminAuditLog[] }) {
-  const countrySales = buildAfricanCountrySales(orders, tickets.length + logs.length);
+function DealsStatisticsCard({ orders }: { orders: AdminOrderRow[] }) {
+  const countrySales = buildAfricanCountrySales(orders);
 
   return (
     <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
@@ -1456,41 +1457,42 @@ function DealsStatisticsCard({ orders, tickets, logs }: { orders: AdminOrderRow[
         <h2 className="text-base font-semibold text-slate-950">Country Sales</h2>
       </div>
       <div className="h-[285px] space-y-4 overflow-hidden px-4 py-4">
-        {countrySales.map((item) => (
-          <div key={item.country} className="grid grid-cols-[2.75rem_minmax(0,1fr)_5.5rem] items-center gap-2.5">
-            <AfricanFlag code={item.code} />
-            <div className="min-w-0">
-              <p className="truncate text-lg font-semibold leading-none text-slate-950">{item.value}</p>
-              <p className="mt-1 truncate text-sm leading-none text-slate-700">{item.country}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-1 min-w-0 flex-1 rounded-full bg-slate-200">
-                <span className="block h-full rounded-full" style={{ width: `${item.percent}%`, backgroundColor: item.color }} />
+        {countrySales.length === 0 ? (
+          <p className="px-1 py-8 text-sm text-slate-500">Aucune commande pays disponible.</p>
+        ) : (
+          countrySales.map((item) => (
+            <div key={item.country} className="grid grid-cols-[2.75rem_minmax(0,1fr)_5.5rem] items-center gap-2.5">
+              <AfricanFlag code={item.code} />
+              <div className="min-w-0">
+                <p className="truncate text-lg font-semibold leading-none text-slate-950">{item.value}</p>
+                <p className="mt-1 truncate text-sm leading-none text-slate-700">{item.country}</p>
               </div>
-              <p className="w-9 text-right text-base font-medium text-slate-950">{item.percent}%</p>
+              <div className="flex items-center gap-2">
+                <div className="h-1 min-w-0 flex-1 rounded-full bg-slate-200">
+                  <span className="block h-full rounded-full" style={{ width: `${item.percent}%`, backgroundColor: item.color }} />
+                </div>
+                <p className="w-9 text-right text-base font-medium text-slate-950">{item.percent}%</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </section>
   );
 }
 
 function AfricanFlag({ code }: { code: string }) {
-  const flags: Record<string, string> = {
-    CD: '🇨🇩',
-    CI: '🇨🇮',
-    CM: '🇨🇲',
-    MA: '🇲🇦',
-    NG: '🇳🇬',
-    SN: '🇸🇳',
-  };
-
   return (
     <span className="flex h-8 w-11 items-center justify-center text-[2rem] leading-none">
-      <span aria-hidden="true" className="block">{flags[code] ?? '🌍'}</span>
+      <span aria-hidden="true" className="block">{countryFlag(code)}</span>
     </span>
   );
+}
+
+function countryFlag(iso2: string): string {
+  const code = iso2.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code)) return '🌍';
+  return code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 }
 
 function RecentPerformanceCard({ intelligence }: { intelligence: AdminPricingIntelligence | null }) {
@@ -2504,18 +2506,33 @@ function formatCompactNumber(value: number): string {
   return new Intl.NumberFormat('en-US').format(Math.round(value));
 }
 
-function buildAfricanCountrySales(orders: AdminOrderRow[], activityScore: number): Array<{ code: string; country: string; value: string; percent: number; color: string }> {
-  const total = sumOrderTotals(orders);
-  const scale = Math.max(1, Math.round(total / 1000) + activityScore);
+function buildAfricanCountrySales(orders: AdminOrderRow[]): Array<{ code: string; country: string; value: string; percent: number; color: string }> {
+  const countriesByIso = new Map(africanCountries.map((country) => [country.iso2, country.name]));
+  const buckets = new Map<string, { code: string; country: string; orders: number; total: number }>();
 
-  return [
-    { code: 'CI', country: "Cote d'Ivoire", value: `$${formatCompactNumber(95256 + scale)}`, percent: 68, color: '#ff2f8b' },
-    { code: 'SN', country: 'Senegal', value: `$${Math.max(75, Math.round(scale / 3))}M`, percent: 57, color: '#31d843' },
-    { code: 'CM', country: 'Cameroon', value: `$${formatCompactNumber(958000 + scale * 8)}`, percent: 48, color: '#12a8ff' },
-    { code: 'CD', country: 'DR Congo', value: `$${formatCompactNumber(568000 + scale * 5)}`, percent: 38, color: '#ffb319' },
-    { code: 'NG', country: 'Nigeria', value: `$${formatCompactNumber(855000 + scale * 7)}`, percent: 68, color: '#6c3cff' },
-    { code: 'MA', country: 'Morocco', value: `$${formatCompactNumber(983000 + scale * 6)}`, percent: 88, color: '#1478ff' },
-  ];
+  for (const order of orders) {
+    const code = (order.destinationCountryIso2 ?? '').trim().toUpperCase();
+    if (!countriesByIso.has(code)) continue;
+
+    const current = buckets.get(code) ?? { code, country: countriesByIso.get(code) ?? code, orders: 0, total: 0 };
+    current.orders += 1;
+    current.total += order.totalPrice ?? 0;
+    buckets.set(code, current);
+  }
+
+  const totalOrders = Array.from(buckets.values()).reduce((sum, item) => sum + item.orders, 0);
+  const colors = ['#ff2f8b', '#31d843', '#12a8ff', '#ffb319', '#6c3cff', '#1478ff', '#6fbc53', '#0e6389'];
+
+  return Array.from(buckets.values())
+    .sort((left, right) => right.orders - left.orders || right.total - left.total || left.country.localeCompare(right.country))
+    .slice(0, 8)
+    .map((item, index) => ({
+      code: item.code,
+      country: `${item.country} (${item.orders})`,
+      value: formatCurrency(item.total),
+      percent: Math.max(1, Math.round((item.orders / Math.max(totalOrders, 1)) * 100)),
+      color: colors[index % colors.length],
+    }));
 }
 
 function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> {
