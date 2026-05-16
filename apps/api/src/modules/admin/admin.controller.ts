@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { IsEmail } from 'class-validator';
+import { IsEmail, IsString } from 'class-validator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -16,18 +16,36 @@ import { PrepareSupplierOrderDto } from '../pricing/dto/prepare-supplier-order.d
 import { RecordSupplierRealPriceDto } from '../pricing/dto/record-supplier-real-price.dto';
 import { TestSupplierConnectionDto } from '../pricing/dto/test-supplier-connection.dto';
 import { CreateTrackingEventDto } from '../tracking/dto/create-tracking-event.dto';
+import { AdminTotpGuard } from './admin-totp.guard';
 import { AdminService } from './admin.service';
+import { AdminTotpService } from './admin-totp.service';
 
 class AddAdminUserDto {
   @IsEmail()
   email!: string;
 }
 
+class VerifyAdminTotpDto {
+  @IsString()
+  username!: string;
+
+  @IsString()
+  code!: string;
+}
+
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, AdminTotpGuard)
 @Roles(UserRole.Admin)
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly adminTotpService: AdminTotpService,
+  ) {}
+
+  @Post('access/totp/verify')
+  verifyAdminTotp(@CurrentUser() admin: AuthenticatedUser, @Body() dto: VerifyAdminTotpDto) {
+    return this.adminTotpService.verifyCode(admin, dto.username, dto.code);
+  }
 
   @Get('access/admins')
   listAdminUsers(@CurrentUser() admin: AuthenticatedUser) {

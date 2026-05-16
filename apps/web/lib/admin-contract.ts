@@ -64,6 +64,16 @@ export interface AddAdminUserRequest {
   email: string;
 }
 
+export interface VerifyAdminTotpRequest {
+  username: string;
+  code: string;
+}
+
+export interface VerifyAdminTotpResponse {
+  accessToken: string;
+  expiresAt: string;
+}
+
 export interface AdminPricingIntelligence {
   metrics: {
     snapshotCount: number;
@@ -337,6 +347,12 @@ export const adminApiContract = {
   removeAdminUser: {
     method: 'DELETE',
     path: '/api/admin/access/admins/:userId',
+  },
+  verifyAdminTotp: {
+    method: 'POST',
+    path: '/api/admin/access/totp/verify',
+    request: 'VerifyAdminTotpRequest',
+    response: 'VerifyAdminTotpResponse',
   },
 } as const;
 

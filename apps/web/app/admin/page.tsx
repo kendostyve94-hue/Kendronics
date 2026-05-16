@@ -30,10 +30,12 @@ import type {
   TestSupplierConnectionRequest,
   UpdateAdminOrderStatusRequest,
   UpdateShipmentRequest,
+  VerifyAdminTotpRequest,
+  VerifyAdminTotpResponse,
 } from '../../lib/admin-contract';
 import type { PaymentStatus } from '../../lib/order-detail-contract';
 
-type AdminLoadState = 'checking' | 'authorized' | 'forbidden' | 'error';
+type AdminLoadState = 'checking' | 'elevating' | 'authorized' | 'forbidden' | 'error';
 type AdminTab =
   | 'dashboard'
   | 'orders'
@@ -82,6 +84,7 @@ type AdminTab =
   | 'notificationSettings';
 
 const apiBaseUrl = getApiBaseUrl();
+const adminElevationStorageKey = 'kendronics.admin.elevation';
 
 const adminNavigation: Array<{ title: string; items: Array<{ id: AdminTab; label: string }> }> = [
   { title: 'Pilotage', items: [{ id: 'dashboard', label: 'Dashboard' }] },
@@ -200,6 +203,8 @@ export default function AdminPage() {
   const [countryFilter, setCountryFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [message, setMessage] = useState('');
+  const [totpError, setTotpError] = useState('');
+  const [adminElevationVersion, setAdminElevationVersion] = useState(0);
   const [supplierOrderPackage, setSupplierOrderPackage] = useState<AdminSupplierOrderPackage | null>(null);
   const [supplierConnectionTest, setSupplierConnectionTest] = useState<AdminSupplierConnectionTest | null>(null);
 
@@ -211,6 +216,11 @@ export default function AdminPage() {
 
       if (!session) {
         setLoadState('forbidden');
+        return;
+      }
+
+      if (!readAdminAccessToken()) {
+        setLoadState('elevating');
         return;
       }
 
@@ -237,7 +247,7 @@ export default function AdminPage() {
         setLoadState('authorized');
       } catch (error) {
         if (cancelled) return;
-        setLoadState(error instanceof AdminForbiddenError ? 'forbidden' : 'error');
+        setLoadState(error instanceof AdminElevationRequiredError ? 'elevating' : error instanceof AdminForbiddenError ? 'forbidden' : 'error');
       }
     }
 
@@ -246,7 +256,7 @@ export default function AdminPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [adminElevationVersion]);
 
   const countries = useMemo(() => uniqueValues(orders.map((order) => order.destinationCountryIso2)), [orders]);
   const filteredOrders = useMemo(
@@ -274,10 +284,55 @@ export default function AdminPage() {
       setLoadState('forbidden');
       return;
     }
+    if (!readAdminAccessToken()) {
+      setLoadState('elevating');
+      return;
+    }
 
     setMessage('');
     await adminRequest(path, session, { method, body });
     setMessage('Admin action saved. Refresh the table to see persisted backend state.');
+  }
+
+  async function submitAdminTotp(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const session = readAuthSession();
+    if (!session) {
+      setLoadState('forbidden');
+      return;
+    }
+
+    const form = new FormData(event.currentTarget);
+    const payload: VerifyAdminTotpRequest = {
+      username: String(form.get('username') ?? '').trim(),
+      code: String(form.get('code') ?? '').trim(),
+    };
+
+    setTotpError('');
+    try {
+      const response = await fetch(`${apiBaseUrl}${adminApiContract.verifyAdminTotp.path}`, {
+        method: adminApiContract.verifyAdminTotp.method,
+        headers: {
+          Authorization: `${session.tokenType} ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        throw new AdminForbiddenError();
+      }
+      if (!response.ok) {
+        throw new Error('Admin verification failed.');
+      }
+
+      const result = (await response.json()) as VerifyAdminTotpResponse;
+      persistAdminAccessToken(result);
+      setAdminElevationVersion((value) => value + 1);
+      setLoadState('checking');
+    } catch (error) {
+      setTotpError(error instanceof AdminForbiddenError ? 'Identifiant admin ou code Google Authenticator invalide.' : 'Verification admin impossible pour le moment.');
+    }
   }
 
   async function refreshAdminAccess(session: { tokenType: string; accessToken: string }) {
@@ -476,6 +531,16 @@ export default function AdminPage() {
     );
   }
 
+  if (loadState === 'elevating') {
+    return (
+      <AdminShell>
+        <div className="min-h-screen bg-slate-100">
+          <AdminTotpDialog error={totpError} onSubmit={submitAdminTotp} />
+        </div>
+      </AdminShell>
+    );
+  }
+
   if (loadState === 'error') {
     return (
       <AdminShell>
@@ -615,6 +680,43 @@ export default function AdminPage() {
         </div>
       </div>
     </AdminShell>
+  );
+}
+
+function AdminTotpDialog({ error, onSubmit }: { error: string; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 px-4">
+      <div className="w-full max-w-[31rem] border border-slate-300 bg-white shadow-2xl shadow-slate-950/30">
+        <div className="flex h-12 items-center justify-between border-t-4 border-[#009a38] border-b border-slate-200 px-4">
+          <h2 className="text-sm font-black text-ink">Acces Admin securise</h2>
+          <a href="/" className="text-2xl leading-none text-slate-500 hover:text-slate-900" aria-label="Quitter admin">
+            x
+          </a>
+        </div>
+        <form onSubmit={onSubmit} className="space-y-5 p-5">
+          <p className="text-sm leading-6 text-slate-600">
+            Entrez votre nom d'utilisateur admin et le code a 6 chiffres de Google Authenticator.
+          </p>
+          <label className="grid gap-2 text-sm font-bold text-slate-700 sm:grid-cols-[9rem_1fr] sm:items-center">
+            <span>Nom admin *</span>
+            <input name="username" autoComplete="username" required className={fieldClassName} placeholder="email ou nom utilisateur" />
+          </label>
+          <label className="grid gap-2 text-sm font-bold text-slate-700 sm:grid-cols-[9rem_1fr] sm:items-center">
+            <span>Code TOTP *</span>
+            <input name="code" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} autoComplete="one-time-code" required className={fieldClassName} placeholder="123456" />
+          </label>
+          {error ? <p className="border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{error}</p> : null}
+          <div className="flex justify-end gap-3 pt-2">
+            <a href="/" className="inline-flex h-10 items-center border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 transition hover:border-slate-400">
+              Annuler
+            </a>
+            <button type="submit" className="h-10 bg-[#0877ff] px-6 text-sm font-black text-white transition hover:bg-[#0068e8]">
+              Verifier
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -2045,16 +2147,22 @@ function Metric({ label, value, helper }: { label: string; value: string; helper
 }
 
 async function adminRequest<T>(path: string, session: { tokenType: string; accessToken: string }, options?: { method?: string; body?: object }): Promise<T> {
+  const adminAccessToken = readAdminAccessToken();
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method: options?.method ?? 'GET',
     headers: {
       Authorization: `${session.tokenType} ${session.accessToken}`,
       'Content-Type': 'application/json',
+      ...(adminAccessToken ? { 'X-Admin-Access-Token': adminAccessToken } : {}),
     },
     body: options?.body ? JSON.stringify(options.body) : undefined,
   });
 
   if (response.status === 401 || response.status === 403) {
+    if (adminAccessToken && typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(adminElevationStorageKey);
+      throw new AdminElevationRequiredError();
+    }
     throw new AdminForbiddenError();
   }
 
@@ -2063,6 +2171,29 @@ async function adminRequest<T>(path: string, session: { tokenType: string; acces
   }
 
   return response.json() as Promise<T>;
+}
+
+function persistAdminAccessToken(result: VerifyAdminTotpResponse) {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.setItem(adminElevationStorageKey, JSON.stringify(result));
+}
+
+function readAdminAccessToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  const raw = window.sessionStorage.getItem(adminElevationStorageKey);
+  if (!raw) return null;
+
+  try {
+    const session = JSON.parse(raw) as VerifyAdminTotpResponse;
+    if (!session.accessToken || new Date(session.expiresAt).getTime() <= Date.now()) {
+      window.sessionStorage.removeItem(adminElevationStorageKey);
+      return null;
+    }
+    return session.accessToken;
+  } catch {
+    window.sessionStorage.removeItem(adminElevationStorageKey);
+    return null;
+  }
 }
 
 function normalizeOrder(order: AdminOrderRow): AdminOrderRow {
@@ -2198,3 +2329,4 @@ const fieldClassName =
   'h-11 w-full rounded-sm border border-slate-200 bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100';
 
 class AdminForbiddenError extends Error {}
+class AdminElevationRequiredError extends Error {}

@@ -6,11 +6,13 @@ import { TrackingModule } from '../tracking/tracking.module';
 import { UsersModule } from '../users/users.module';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { AdminTotpGuard } from './admin-totp.guard';
+import { AdminTotpService } from './admin-totp.service';
 import { AdminAuditRepository } from './repositories/admin-audit.repository';
 
 @Module({
   imports: [OrdersModule, PricingModule, TrackingModule, SupportModule, UsersModule],
   controllers: [AdminController],
-  providers: [AdminService, AdminAuditRepository],
+  providers: [AdminService, AdminAuditRepository, AdminTotpService, AdminTotpGuard],
 })
 export class AdminModule {}
