@@ -618,7 +618,7 @@ export default function AdminPage() {
   }
 
   const pageMeta = getAdminPageMeta(tab);
-  const pageStats = getAdminPageStats(tab, orders, supportTickets, pricingIntelligence);
+  const pageStats = getAdminPageStats(tab, orders, supportTickets, pricingIntelligence, auditLogs, adminUsers);
 
   return (
     <AdminShell>
@@ -1067,6 +1067,8 @@ function getAdminPageStats(
   orders: AdminOrderRow[],
   tickets: AdminSupportTicket[],
   intelligence: AdminPricingIntelligence | null,
+  logs: AdminAuditLog[],
+  admins: AdminAccessUser[],
 ): Array<{ label: string; value: string; helper?: string }> {
   const primary = getPrimaryAdminTab(tab);
   const revenue = formatCurrency(sumOrderTotals(orders));
@@ -1092,7 +1094,7 @@ function getAdminPageStats(
         { label: 'Ouverts', value: String(tickets.filter((ticket) => ticket.status !== 'closed').length) },
         { label: 'Urgents', value: String(tickets.filter((ticket) => ticket.status === 'pending_admin').length) },
         { label: 'SAV', value: String(tickets.filter((ticket) => ticket.subject.toLowerCase().includes('sav')).length) },
-        { label: 'Temps reponse', value: 'Non suivi' },
+        { label: 'Contacts publics', value: String(tickets.filter((ticket) => ticket.userId === 'public-contact').length) },
       ];
     case 'payments':
       return [
@@ -1111,7 +1113,7 @@ function getAdminPageStats(
     case 'clients':
       return [
         { label: 'Clients actifs', value: String(uniqueValues(orders.map((order) => order.userId)).length) },
-        { label: 'Entreprises', value: '0' },
+        { label: 'Clients 30 jours', value: String(uniqueValues(orders.filter((order) => isRecentDate(order.createdAt, 30)).map((order) => order.userId)).length) },
         { label: 'Pays couverts', value: String(uniqueValues(orders.map((order) => order.destinationCountryIso2)).length) },
         { label: 'Clients a risque', value: String(tickets.filter((ticket) => ticket.status === 'pending_admin').length) },
       ];
@@ -1125,7 +1127,7 @@ function getAdminPageStats(
     case 'suppliers':
       return [
         { label: 'Fournisseurs actifs', value: String(uniqueValues(orders.map((order) => order.externalManufacturingPartner ?? '')).length) },
-        { label: 'Delai moyen production', value: 'Non suivi' },
+        { label: 'Commandes 3PL', value: String(orders.filter((order) => order.status === 'china_3pl_received').length) },
         { label: 'Taux defaut', value: `${orders.length ? Math.round((orders.filter((order) => order.status === 'cancelled' || order.status === 'refunded').length / orders.length) * 100) : 0}%` },
         { label: 'API connectees', value: String(uniqueValues(orders.map((order) => order.externalManufacturingPartner ?? '')).length) },
       ];
@@ -1139,16 +1141,16 @@ function getAdminPageStats(
     case 'compliance':
       return [
         { label: 'CGV acceptees', value: String(orders.length) },
-        { label: 'Consentements cookies', value: 'Non suivi' },
-        { label: 'Demandes RGPD', value: '0' },
-        { label: 'Versions legales', value: 'Non suivi' },
+        { label: 'Logs audit', value: String(logs.length) },
+        { label: 'Actions 30 jours', value: String(logs.filter((log) => isRecentDate(log.createdAt, 30)).length) },
+        { label: 'Demandes support', value: String(tickets.length) },
       ];
     case 'settings':
       return [
-        { label: 'Admins', value: '1' },
-        { label: 'Integrations', value: '4' },
-        { label: 'Emails actifs', value: '3' },
-        { label: 'Alertes', value: '6' },
+        { label: 'Admins actifs', value: String(admins.filter((admin) => admin.status === 'active').length) },
+        { label: 'Admins verrouilles', value: String(admins.filter((admin) => admin.status === 'locked').length) },
+        { label: 'Roles declares', value: String(uniqueValues(admins.flatMap((admin) => admin.accessRoles)).length) },
+        { label: 'Audits recents', value: String(logs.filter((log) => isRecentDate(log.createdAt, 30)).length) },
       ];
     default:
       return [
@@ -1202,22 +1204,13 @@ function ModernDashboardPanel({
         <ProductActivityCard orders={orders} />
         <ProjectsCard orders={orders} />
       </div>
-
-      <button
-        type="button"
-        aria-label="Open admin chat"
-        className="fixed bottom-7 right-7 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#4d05ec] text-white shadow-[8px_8px_0_rgba(103,190,74,0.95)] transition hover:scale-105"
-      >
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 13.5a4 4 0 0 1-4 4H9l-5 3v-13a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4Z" />
-        </svg>
-      </button>
     </div>
   );
 }
 
 function SalesOverviewCard({ orders, intelligence }: { orders: AdminOrderRow[]; intelligence: AdminPricingIntelligence | null }) {
-  const quoteSeries = buildMonthlyQuoteSeries(orders, intelligence?.snapshots ?? []);
+  const [period, setPeriod] = useState<SalesOverviewPeriod>('year');
+  const quoteSeries = buildQuoteSeries(orders, intelligence?.snapshots ?? [], period);
   const maxValue = Math.max(...quoteSeries.flatMap((item) => [item.quotes, item.paid]), 1);
   const scaleLabels = buildScaleLabels(maxValue);
 
@@ -1225,14 +1218,21 @@ function SalesOverviewCard({ orders, intelligence }: { orders: AdminOrderRow[]; 
     <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
       <div className="flex items-center justify-between border-b border-[#e8edf3] px-6 py-5">
         <h2 className="text-base font-semibold text-slate-950">Devis vs commandes payees</h2>
-        <button type="button" className="rounded bg-[#f8f8fc] px-3 py-2 text-xs font-medium text-slate-950">This Month</button>
+        <select
+          value={period}
+          onChange={(event) => setPeriod(event.target.value as SalesOverviewPeriod)}
+          className="rounded bg-[#f8f8fc] px-3 py-2 text-xs font-medium text-slate-950 outline-none"
+        >
+          <option value="year">Cette annee</option>
+          <option value="month">Ce mois</option>
+        </select>
       </div>
       <div className="px-8 pb-5 pt-7">
         <div className="grid min-h-[285px] grid-cols-[2.8rem_minmax(0,1fr)] gap-3">
           <div className="flex flex-col justify-between pb-7 text-right text-[11px] font-medium text-slate-950">
             {scaleLabels.map((label) => <span key={label}>{label}</span>)}
           </div>
-          <div className="grid grid-cols-12 items-end gap-4 border-b border-[#e8edf3]">
+          <div className={`grid items-end gap-4 border-b border-[#e8edf3] ${period === 'month' ? 'grid-cols-4' : 'grid-cols-12'}`}>
             {quoteSeries.map((item) => (
               <div key={item.month} className="relative flex h-full items-end justify-center">
                 <span className="absolute inset-y-0 left-1/2 border-l border-dashed border-[#dfe4ea]" />
@@ -1242,7 +1242,7 @@ function SalesOverviewCard({ orders, intelligence }: { orders: AdminOrderRow[]; 
             ))}
           </div>
         </div>
-        <div className="ml-[3.95rem] mt-3 grid grid-cols-12 gap-4 text-center text-xs font-medium text-slate-700">
+        <div className={`ml-[3.95rem] mt-3 grid gap-4 text-center text-xs font-medium text-slate-700 ${period === 'month' ? 'grid-cols-4' : 'grid-cols-12'}`}>
           {quoteSeries.map((item) => <span key={item.month}>{item.month}</span>)}
         </div>
         <div className="mt-4 flex items-center justify-center gap-5 text-xs text-slate-700">
@@ -1325,6 +1325,50 @@ function DashboardKpiIcon({ icon }: { icon: 'customer' | 'group' | 'dollar' | 'b
     return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a8 8 0 0 1-8 8H8l-5 2 1.8-4A8 8 0 1 1 21 12Z" /><path d="M8 11h8" /><path d="M8 15h5" /></svg>;
   }
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M7 12h10" /><path d="M9 8h8" /><path d="M7 16h8" /></svg>;
+}
+
+type SalesOverviewPeriod = 'year' | 'month';
+
+function buildQuoteSeries(orders: AdminOrderRow[], snapshots: AdminPricingSnapshot[], period: SalesOverviewPeriod) {
+  return period === 'month' ? buildCurrentMonthQuoteSeries(orders, snapshots) : buildMonthlyQuoteSeries(orders, snapshots);
+}
+
+function buildCurrentMonthQuoteSeries(orders: AdminOrderRow[], snapshots: AdminPricingSnapshot[]) {
+  const now = new Date();
+  const series = [
+    { month: 'S1', quotes: 0, paid: 0 },
+    { month: 'S2', quotes: 0, paid: 0 },
+    { month: 'S3', quotes: 0, paid: 0 },
+    { month: 'S4', quotes: 0, paid: 0 },
+  ];
+  const quoteIds = new Set<string>();
+
+  for (const snapshot of snapshots) {
+    const quoteId = snapshot.quote?.id ?? snapshot.quoteId;
+    if (!quoteId || quoteIds.has(quoteId)) continue;
+    const createdAt = new Date(snapshot.quote?.createdAt ?? snapshot.createdAt);
+    if (createdAt.getFullYear() !== now.getFullYear() || createdAt.getMonth() !== now.getMonth()) continue;
+    quoteIds.add(quoteId);
+    series[monthWeekIndex(createdAt)].quotes += 1;
+  }
+
+  for (const order of orders) {
+    const createdAt = new Date(order.createdAt);
+    if (createdAt.getFullYear() === now.getFullYear() && createdAt.getMonth() === now.getMonth() && snapshots.length === 0 && !quoteIds.has(order.quoteId)) {
+      quoteIds.add(order.quoteId);
+      series[monthWeekIndex(createdAt)].quotes += 1;
+    }
+    const paidAt = order.paidAt ? new Date(order.paidAt) : createdAt;
+    if (paidAt.getFullYear() === now.getFullYear() && paidAt.getMonth() === now.getMonth() && getPaymentStatus(order) === 'paid') {
+      series[monthWeekIndex(paidAt)].paid += 1;
+    }
+  }
+
+  return series;
+}
+
+function monthWeekIndex(date: Date): number {
+  return Math.min(3, Math.floor((date.getDate() - 1) / 7));
 }
 
 function buildMonthlyQuoteSeries(orders: AdminOrderRow[], snapshots: AdminPricingSnapshot[]) {
