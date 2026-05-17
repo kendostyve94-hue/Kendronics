@@ -1077,7 +1077,7 @@ function getAdminPageStats(
       return [
         { label: 'A valider', value: String(orders.filter((order) => order.status === 'awaiting_payment').length) },
         { label: 'En fabrication', value: String(orders.filter((order) => order.status === 'supplier_in_production').length) },
-        { label: 'En livraison', value: String(orders.filter((order) => order.status === 'shipped_to_africa').length) },
+        { label: 'En livraison', value: String(orders.filter((order) => ['shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status)).length) },
         { label: 'Litiges', value: String(orders.filter((order) => order.status === 'cancelled').length) },
       ];
     case 'pricing':
@@ -2550,7 +2550,7 @@ function adminTabTitle(tab: AdminTab): string {
 function filterOrdersForAdminTab(orders: AdminOrderRow[], tab: AdminTab): AdminOrderRow[] {
   if (tab === 'orderValidation') return orders.filter((order) => ['awaiting_payment', 'created', 'file_review'].includes(order.status));
   if (tab === 'production') return orders.filter((order) => ['production', 'quality_control'].includes(order.status));
-  if (tab === 'delivery') return orders.filter((order) => ['shipped', 'in_transit', 'delivered'].includes(order.status));
+  if (tab === 'delivery') return orders.filter((order) => ['shipped_to_africa', 'customs_processing', 'out_for_delivery', 'delivered'].includes(order.status));
   if (tab === 'disputes') return orders.filter((order) => ['cancelled', 'refunded'].includes(order.status) || getPaymentStatus(order) === 'refunded');
   return orders;
 }
@@ -2607,7 +2607,7 @@ function buildOperationalProgressMetrics(orders: AdminOrderRow[]) {
     'supplier_order_pending',
     'supplier_ordered',
     'supplier_in_production',
-    'received_at_france_hub',
+    'china_3pl_received',
     'shipped_to_africa',
     'customs_processing',
     'out_for_delivery',
@@ -2704,7 +2704,7 @@ function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: stri
       const paymentStatus = getPaymentStatus(order);
       return {
         name: order.orderNumber,
-        subtitle: `${serviceLabelForOrder(order)} - ${countryLabelForOrder(order)} - ${adminStatusLabels[order.status] ?? order.status}`,
+        subtitle: `${serviceLabelForOrder(order)} - ${countryLabelForOrder(order)} - ${dashboardStageLabelForOrder(order)}`,
         amount: formatOrderCurrency(order.totalPrice ?? 0, order.currency),
         date: formatDate(order.createdAt),
         status: transactionStatusForOrder(order, paymentStatus),
@@ -2728,6 +2728,17 @@ function countryLabelForOrder(order: AdminOrderRow): string {
   return africanCountries.find((country) => country.iso2 === code)?.name ?? code;
 }
 
+function dashboardStageLabelForOrder(order: AdminOrderRow): string {
+  if (order.status === 'awaiting_payment') return 'Paiement';
+  if (['paid', 'supplier_order_pending', 'supplier_ordered'].includes(order.status)) return 'Fournisseur';
+  if (order.status === 'supplier_in_production') return 'Fabrication';
+  if (order.status === 'china_3pl_received') return '3PL Chine';
+  if (['shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status)) return 'Livraison';
+  if (order.status === 'delivered') return 'Livree';
+  if (['cancelled', 'refunded'].includes(order.status)) return 'Fermee';
+  return adminStatusLabels[order.status] ?? order.status;
+}
+
 function transactionStatusForOrder(order: AdminOrderRow, paymentStatus: PaymentStatus): 'Pending' | 'Completed' | 'Failed' {
   if (paymentStatus === 'failed' || paymentStatus === 'refunded' || ['cancelled', 'refunded'].includes(order.status)) return 'Failed';
   if (order.status === 'delivered') return 'Completed';
@@ -2737,7 +2748,7 @@ function transactionStatusForOrder(order: AdminOrderRow, paymentStatus: PaymentS
 function transactionToneForOrder(order: AdminOrderRow, paymentStatus: PaymentStatus): string {
   if (paymentStatus === 'failed' || paymentStatus === 'refunded' || ['cancelled', 'refunded'].includes(order.status)) return 'bg-[#ff6868]';
   if (order.status === 'delivered') return 'bg-[#36c5cd]';
-  if (['supplier_in_production', 'received_at_france_hub', 'shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status)) return 'bg-[#e64b8b]';
+  if (['supplier_in_production', 'china_3pl_received', 'shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status)) return 'bg-[#e64b8b]';
   return 'bg-[#edf6ff] text-[#177ddc]';
 }
 
@@ -2748,7 +2759,7 @@ function progressForOrder(order: AdminOrderRow): number {
     supplier_order_pending: 35,
     supplier_ordered: 45,
     supplier_in_production: 55,
-    received_at_france_hub: 70,
+    china_3pl_received: 70,
     shipped_to_africa: 80,
     customs_processing: 88,
     out_for_delivery: 95,

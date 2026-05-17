@@ -5,7 +5,7 @@ export const ORDER_STATUS_FLOW: OrderStatus[] = [
   'supplier_order_pending',
   'supplier_ordered',
   'supplier_in_production',
-  'received_at_france_hub',
+  'china_3pl_received',
   'shipped_to_africa',
   'customs_processing',
   'out_for_delivery',

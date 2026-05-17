@@ -7,7 +7,7 @@ const statusClasses: Record<string, string> = {
   supplier_order_pending: 'bg-slate-100 text-slate-700 ring-slate-200',
   supplier_ordered: 'bg-sky-50 text-deepblue ring-sky-100',
   supplier_in_production: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
-  received_at_france_hub: 'bg-cyan-50 text-cyan-700 ring-cyan-100',
+  china_3pl_received: 'bg-cyan-50 text-cyan-700 ring-cyan-100',
   shipped_to_africa: 'bg-blue-50 text-blue-700 ring-blue-100',
   customs_processing: 'bg-purple-50 text-purple-700 ring-purple-100',
   out_for_delivery: 'bg-emerald-50 text-emerald-700 ring-emerald-100',

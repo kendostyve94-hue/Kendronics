@@ -33,7 +33,7 @@ type ProfileOrderStatus =
   | 'supplier_order_pending'
   | 'supplier_ordered'
   | 'supplier_in_production'
-  | 'received_at_france_hub'
+  | 'china_3pl_received'
   | 'shipped_to_africa'
   | 'customs_processing'
   | 'out_for_delivery'
@@ -1125,7 +1125,7 @@ function orderMatchesStatus(order: ProfileOrder, key: OrderStatusKey) {
   if (key === 'all') return true;
   if (key === 'verification') return order.status === 'draft' || order.status === 'quoted';
   if (key === 'payment-pending') return order.status === 'awaiting_payment' || order.paymentStatus === 'pending';
-  if (key === 'production') return ['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'received_at_france_hub'].includes(order.status);
+  if (key === 'production') return ['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'china_3pl_received'].includes(order.status);
   if (key === 'delivery') return ['shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status);
   if (key === 'completed') return order.status === 'delivered';
   if (key === 'comments') return order.status === 'delivered';
@@ -1149,7 +1149,7 @@ function orderStatusLabel(status: ProfileOrderStatus) {
     supplier_order_pending: 'Commande fournisseur',
     supplier_ordered: 'Fournisseur confirme',
     supplier_in_production: 'Production',
-    received_at_france_hub: 'Hub France',
+    china_3pl_received: '3PL Chine',
     shipped_to_africa: 'Livraison',
     customs_processing: 'Douane',
     out_for_delivery: 'En livraison',
@@ -1163,7 +1163,7 @@ function orderStatusLabel(status: ProfileOrderStatus) {
 
 function statusColor(status: string) {
   if (status === 'quoted' || status === 'draft' || status === 'Verification') return 'text-[#0f9f6e]';
-  if (['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'received_at_france_hub', 'Production'].includes(status)) return 'text-[#16a34a]';
+  if (['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'china_3pl_received', 'Production'].includes(status)) return 'text-[#16a34a]';
   if (['shipped_to_africa', 'customs_processing', 'out_for_delivery', 'Livraison'].includes(status)) return 'text-[#ff7a1a]';
   if (status === 'delivered' || status === 'Termine') return 'text-[#0f9f6e]';
   if (status === 'cancelled' || status === 'refunded') return 'text-red-600';
