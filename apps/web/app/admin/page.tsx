@@ -2697,6 +2697,7 @@ function productTypeForOrder(order: AdminOrderRow): string | undefined {
 
 function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> {
   return [...orders]
+    .filter((order) => !['delivered', 'cancelled', 'refunded'].includes(order.status))
     .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
     .slice(0, 4)
     .map((order) => {
@@ -2742,15 +2743,15 @@ function transactionToneForOrder(order: AdminOrderRow, paymentStatus: PaymentSta
 
 function progressForOrder(order: AdminOrderRow): number {
   const map: Record<AdminOrderStatus, number> = {
-    awaiting_payment: 12,
-    paid: 24,
-    supplier_order_pending: 32,
+    awaiting_payment: 10,
+    paid: 25,
+    supplier_order_pending: 35,
     supplier_ordered: 45,
-    supplier_in_production: 62,
-    received_at_france_hub: 72,
-    shipped_to_africa: 82,
+    supplier_in_production: 55,
+    received_at_france_hub: 70,
+    shipped_to_africa: 80,
     customs_processing: 88,
-    out_for_delivery: 92,
+    out_for_delivery: 95,
     delivered: 100,
     cancelled: 0,
     refunded: 0,
