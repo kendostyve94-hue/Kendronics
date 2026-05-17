@@ -2132,7 +2132,7 @@ function AnalyticsCalendarFilter({
               <button type="button" onClick={selectMonth} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-xs font-semibold text-white/75 hover:bg-[#0b3047]">Mois entier</button>
             </div>
           </div>
-          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs">
+          <div className="mt-5 grid grid-cols-7 gap-1 text-center text-xs">
             {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day) => (
               <span key={day} className="py-2 font-semibold text-white/55">{day}</span>
             ))}
@@ -2159,10 +2159,20 @@ function AnalyticsCalendarFilter({
           </div>
           <div className="mt-3">
           <div className="grid grid-cols-2 gap-2">
-            <select value={month} onChange={(event) => onMonthChange(Number(event.target.value))} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-sm text-white outline-none [color-scheme:dark]">
+            <select
+              value={month}
+              onChange={(event) => onMonthChange(Number(event.target.value))}
+              className="px-3 py-2 text-sm text-white outline-none [color-scheme:dark]"
+              style={{ backgroundColor: '#061d2d', border: '1px solid #1f4a68' }}
+            >
               {monthNames.map((name, index) => <option key={name} value={index}>{name}</option>)}
             </select>
-            <select value={year} onChange={(event) => onYearChange(Number(event.target.value))} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-sm text-white outline-none [color-scheme:dark]">
+            <select
+              value={year}
+              onChange={(event) => onYearChange(Number(event.target.value))}
+              className="px-3 py-2 text-sm text-white outline-none [color-scheme:dark]"
+              style={{ backgroundColor: '#061d2d', border: '1px solid #1f4a68' }}
+            >
               {years.map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </div>
