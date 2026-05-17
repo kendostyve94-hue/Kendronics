@@ -1957,9 +1957,9 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
 
 function AnalyticsMetricCard({ title, value, trend, sparkline, tone, icon }: { title: string; value: string; trend: string; sparkline: number[]; tone: string; icon: 'quote' | 'percent' | 'cart' | 'users' }) {
   return (
-    <article
-      className="min-h-[178px] rounded-md border border-[#11516b] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_18px_rgba(16,185,129,0.08)]"
-      style={{ background: 'linear-gradient(135deg, #07334a 0%, #05283c 55%, #062236 100%)' }}
+    <div
+      className="min-h-[178px] rounded-md p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_18px_rgba(16,185,129,0.08)]"
+      style={{ background: 'linear-gradient(135deg, #07334a 0%, #05283c 55%, #062236 100%)', border: '1px solid #11516b' }}
     >
       <div className="flex items-start gap-4">
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-sm text-white shadow-[0_0_14px_rgba(0,0,0,0.25)]" style={{ backgroundColor: tone }}>
@@ -1974,7 +1974,7 @@ function AnalyticsMetricCard({ title, value, trend, sparkline, tone, icon }: { t
           <MiniLineChart values={sparkline} color={tone} />
         </div>
       </div>
-    </article>
+    </div>
   );
 }
 
@@ -2112,14 +2112,14 @@ function TopAfricanCountriesCard({ countries }: { countries: ReturnType<typeof b
 
 function AnalyticsFinancialTile({ label, value, helper, color }: { label: string; value: string; helper: string; color: string }) {
   return (
-    <article className="rounded-sm border border-[#143b58] bg-[#061d2d] p-4">
+    <div className="rounded-sm p-4" style={{ backgroundColor: '#061d2d', border: '1px solid #143b58' }}>
       <span className="grid h-10 w-10 place-items-center rounded-sm text-white" style={{ backgroundColor: color }}>
         <DashboardKpiIcon icon="dollar" />
       </span>
       <p className="mt-4 text-xs font-semibold text-white/70">{label}</p>
       <p className="mt-2 text-2xl font-semibold tracking-tight text-white">{value}</p>
       <p className="mt-3 text-[11px] text-white/50">{helper}</p>
-    </article>
+    </div>
   );
 }
 
@@ -2199,11 +2199,11 @@ function DonutChart({ total, label, items }: { total: number; label: string; ite
 
 function DarkSupportMetric({ label, value, helper }: { label: string; value: string; helper: string }) {
   return (
-    <article className="rounded-sm border border-[#143b58] bg-[#061d2d] p-3">
+    <div className="rounded-sm p-3" style={{ backgroundColor: '#061d2d', border: '1px solid #143b58' }}>
       <p className="text-[11px] font-semibold text-white/65">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
       <p className="mt-2 text-[11px] text-white/45">{helper}</p>
-    </article>
+    </div>
   );
 }
 
