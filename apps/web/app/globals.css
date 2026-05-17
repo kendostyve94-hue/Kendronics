@@ -722,6 +722,23 @@ section {
   }
 }
 
+.admin-dark-control {
+  background-color: #061d2d !important;
+  color: #ffffff !important;
+  border-color: #2a6280 !important;
+  color-scheme: dark;
+}
+
+.admin-dark-control::placeholder {
+  color: #8aa4b7 !important;
+  opacity: 1;
+}
+
+.admin-dark-control option {
+  background-color: #061d2d !important;
+  color: #ffffff !important;
+}
+
 /* PCBWay-style square UI across the whole storefront. Keep this last so
    legacy Tailwind rounded utilities and component overrides cannot re-round. */
 *,

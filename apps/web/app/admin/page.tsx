@@ -1842,7 +1842,7 @@ function OrdersWorkspace({
               <select
                 value={pageSize}
                 onChange={(event) => setPageSize(Number(event.target.value))}
-                className="h-11 border border-[#2a6280] bg-[#061d2d] px-3 text-sm font-bold text-white outline-none focus:border-[#2edf7f]"
+                className="admin-dark-control h-11 border border-[#2a6280] bg-[#061d2d] px-3 text-sm font-bold text-white outline-none focus:border-[#2edf7f]"
               >
                 {[5, 10, 25, 50].map((size) => <option key={size} value={size}>{size}</option>)}
               </select>
@@ -1857,7 +1857,7 @@ function OrdersWorkspace({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Commande, client, pays, fournisseur..."
-              className="h-11 w-full border border-[#2a6280] bg-[#061d2d] px-4 text-sm font-bold text-white outline-none placeholder:text-[#6f92a8] focus:border-[#2edf7f]"
+              className="admin-dark-control h-11 w-full border border-[#2a6280] bg-[#061d2d] px-4 text-sm font-bold text-white outline-none placeholder:text-[#6f92a8] focus:border-[#2edf7f]"
             />
           </label>
         </div>
@@ -1969,7 +1969,7 @@ function OrderFilterSelect({ label, value, onChange, options }: { label: string;
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 min-w-[9rem] border border-[#2a6280] bg-[#061d2d] px-3 text-sm font-bold text-white outline-none focus:border-[#2edf7f]"
+        className="admin-dark-control h-11 min-w-[9rem] border border-[#2a6280] bg-[#061d2d] px-3 text-sm font-bold text-white outline-none focus:border-[#2edf7f]"
       >
         {options.map((option) => <option key={option} value={option}>{orderFilterLabel(option)}</option>)}
       </select>
@@ -2391,7 +2391,7 @@ function AnalyticsCalendarFilter({
             <select
               value={month}
               onChange={(event) => onMonthChange(Number(event.target.value))}
-              className="px-3 py-2 text-sm text-white outline-none [color-scheme:dark]"
+              className="admin-dark-control px-3 py-2 text-sm text-white outline-none [color-scheme:dark]"
               style={{ backgroundColor: '#061d2d', border: '1px solid #1f4a68' }}
             >
               {monthNames.map((name, index) => <option key={name} value={index}>{name}</option>)}
@@ -2399,7 +2399,7 @@ function AnalyticsCalendarFilter({
             <select
               value={year}
               onChange={(event) => onYearChange(Number(event.target.value))}
-              className="px-3 py-2 text-sm text-white outline-none [color-scheme:dark]"
+              className="admin-dark-control px-3 py-2 text-sm text-white outline-none [color-scheme:dark]"
               style={{ backgroundColor: '#061d2d', border: '1px solid #1f4a68' }}
             >
               {years.map((value) => <option key={value} value={value}>{value}</option>)}
