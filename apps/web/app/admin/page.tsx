@@ -1893,7 +1893,7 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="space-y-4">
-          <AnalyticsRevenueChart series={revenueSeries} />
+          <AnalyticsRevenueChart orders={orders} />
           <section className="rounded-md border border-[#143b58] bg-[#08263a] p-4">
             <h2 className="text-sm font-semibold text-white">Revenus et performance commerciale</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -1937,9 +1937,9 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
             <tbody className="divide-y divide-[#143b58] text-white/80">
               {recentTickets.length ? recentTickets.map((ticket) => (
                 <tr key={ticket.id}>
-                  <td className="px-3 py-2">{formatDate(ticket.createdAt)}</td>
-                  <td className="px-3 py-2">{ticket.ticketNumber}</td>
-                  <td className="px-3 py-2">{ticket.subject}</td>
+                  <td className="px-3 py-2">{safeFormatDate(ticket.createdAt)}</td>
+                  <td className="px-3 py-2">{ticket.ticketNumber?.trim() || 'Ticket sans ID'}</td>
+                  <td className="px-3 py-2">{ticket.subject?.trim() || 'Sujet non renseigne'}</td>
                   <td className="px-3 py-2 text-[#4ee28f]">{ticket.status}</td>
                   <td className="px-3 py-2 text-[#ffb34d]">{ticket.status === 'pending_admin' ? 'Elevee' : 'Moyenne'}</td>
                 </tr>
@@ -1991,19 +1991,17 @@ function AnalyticsMetricIcon({ icon }: { icon: 'quote' | 'percent' | 'cart' | 'u
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="2.6" /><path d="M7.5 19a4.5 4.5 0 0 1 9 0" /><path d="M5 10.5a2 2 0 1 0 0 4" /><path d="M19 10.5a2 2 0 1 1 0 4" /></svg>;
 }
 
-function AnalyticsRevenueChart({ series }: { series: Array<{ month: string; revenue: number; orders: number }> }) {
+function AnalyticsRevenueChart({ orders }: { orders: AdminOrderRow[] }) {
+  const [period, setPeriod] = useState<AnalyticsRevenuePeriod>('year');
+  const series = buildAnalyticsRevenueSeriesForPeriod(orders, period);
   const maxRevenue = Math.max(...series.map((item) => item.revenue), 1);
   const maxOrders = Math.max(...series.map((item) => item.orders), 1);
-  const visibleSeries = series.map((item) => ({
-    ...item,
-    revenueVisual: item.revenue > 0 ? 24 + (item.revenue / maxRevenue) * 42 : 0,
-    orderVisual: item.orders > 0 ? 30 + (item.orders / maxOrders) * 42 : 8,
-  }));
+  const revenueScale = buildCurrencyScale(maxRevenue);
+  const orderScale = buildOrderScale(maxOrders);
   const linePoints = series
     .map((item, index) => {
-      const x = 8 + (index / Math.max(series.length - 1, 1)) * 86;
-      const visual = item.orders > 0 ? 30 + (item.orders / maxOrders) * 42 : 8;
-      const y = 76 - visual;
+      const x = 10 + (index / Math.max(series.length - 1, 1)) * 80;
+      const y = 76 - (item.orders / maxOrders) * 58;
       return `${x},${y}`;
     })
     .join(' ');
@@ -2015,22 +2013,35 @@ function AnalyticsRevenueChart({ series }: { series: Array<{ month: string; reve
         <div className="flex items-center gap-4 text-[11px] text-white/70">
           <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#36d679]" />Revenus</span>
           <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#2d8cff]" />Commandes</span>
-          <span className="rounded-sm border border-[#1f4a68] bg-[#0b3047] px-2 py-1 text-white/80">Cette annee</span>
+          <select
+            value={period}
+            onChange={(event) => setPeriod(event.target.value as AnalyticsRevenuePeriod)}
+            className="rounded-sm border border-[#1f4a68] bg-[#0b3047] px-2 py-1 text-white/80 outline-none"
+          >
+            <option value="day">Jour</option>
+            <option value="week">Semaine</option>
+            <option value="month">Mois</option>
+            <option value="year">Annee</option>
+          </select>
         </div>
       </div>
-      <div className="mt-5 h-[300px]">
+      <div className="mt-5 grid h-[300px] grid-cols-[3rem_minmax(0,1fr)_3rem] gap-3">
+        <div className="flex flex-col justify-between pb-7 text-right text-[11px] text-white/70">
+          <span>USD</span>
+          {revenueScale.map((label) => <span key={label}>{label}</span>)}
+        </div>
         <svg viewBox="0 0 100 84" className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
           {[18, 32.5, 47, 61.5, 76].map((y) => <line key={y} x1="6" x2="96" y1={y} y2={y} stroke="rgba(141,180,201,0.18)" strokeWidth="0.35" />)}
-          {visibleSeries.map((item, index) => {
-            const barHeight = item.revenueVisual;
-            const x = 8 + (index / Math.max(series.length - 1, 1)) * 86;
-            return <rect key={item.month} x={x - 1.15} y={76 - barHeight} width="2.3" height={barHeight} rx="0.4" fill="url(#revenueBar)" opacity="0.95" />;
+          {series.map((item, index) => {
+            const barHeight = (item.revenue / maxRevenue) * 54;
+            const x = 10 + (index / Math.max(series.length - 1, 1)) * 80;
+            return <rect key={item.month} x={x - 1.1} y={76 - barHeight} width="2.2" height={barHeight} rx="0.35" fill="url(#revenueBar)" opacity="0.95" />;
           })}
-          <polyline points={linePoints} fill="none" stroke="#2d8cff" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />
-          {visibleSeries.map((item, index) => {
-            const x = 8 + (index / Math.max(series.length - 1, 1)) * 86;
-            const y = 76 - item.orderVisual;
-            return <circle key={`${item.month}-point`} cx={x} cy={y} r="1.35" fill="#ffffff" stroke="#2d8cff" strokeWidth="0.75" />;
+          <polyline points={linePoints} fill="none" stroke="#2d8cff" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" />
+          {series.map((item, index) => {
+            const x = 10 + (index / Math.max(series.length - 1, 1)) * 80;
+            const y = 76 - (item.orders / maxOrders) * 58;
+            return <circle key={`${item.month}-point`} cx={x} cy={y} r="1" fill="#ffffff" stroke="#2d8cff" strokeWidth="0.5" />;
           })}
           <defs>
             <linearGradient id="revenueBar" x1="0" x2="0" y1="0" y2="1">
@@ -2039,8 +2050,12 @@ function AnalyticsRevenueChart({ series }: { series: Array<{ month: string; reve
             </linearGradient>
           </defs>
         </svg>
+        <div className="flex flex-col justify-between pb-7 text-left text-[11px] text-white/70">
+          <span>Commandes</span>
+          {orderScale.map((label) => <span key={label}>{label}</span>)}
+        </div>
       </div>
-      <div className="grid grid-cols-12 gap-2 text-center text-[11px] text-white/65">
+      <div className="mx-[4rem] grid gap-2 text-center text-[11px] text-white/65" style={{ gridTemplateColumns: `repeat(${series.length}, minmax(0, 1fr))` }}>
         {series.map((item) => <span key={item.month}>{item.month}</span>)}
       </div>
     </section>
@@ -2976,6 +2991,73 @@ function buildAnalyticsRevenueSeries(orders: AdminOrderRow[]): Array<{ month: st
   return series;
 }
 
+type AnalyticsRevenuePeriod = 'day' | 'week' | 'month' | 'year';
+
+function buildAnalyticsRevenueSeriesForPeriod(orders: AdminOrderRow[], period: AnalyticsRevenuePeriod): Array<{ month: string; revenue: number; orders: number }> {
+  if (period === 'year') return buildAnalyticsRevenueSeries(orders);
+
+  const now = new Date();
+  if (period === 'day') {
+    const labels = Array.from({ length: 24 }, (_, hour) => `${hour}h`);
+    const series = labels.map((month) => ({ month, revenue: 0, orders: 0 }));
+    for (const order of orders) {
+      if (getPaymentStatus(order) !== 'paid' || ['cancelled', 'refunded'].includes(order.status)) continue;
+      const date = new Date(order.paidAt ?? order.createdAt);
+      if (date.getFullYear() !== now.getFullYear() || date.getMonth() !== now.getMonth() || date.getDate() !== now.getDate()) continue;
+      series[date.getHours()].revenue += order.totalPrice ?? 0;
+      series[date.getHours()].orders += 1;
+    }
+    return series.filter((_, index) => index % 2 === 0);
+  }
+
+  if (period === 'week') {
+    const labels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+    const series = labels.map((month) => ({ month, revenue: 0, orders: 0 }));
+    const day = now.getDay() || 7;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - day + 1);
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 7);
+
+    for (const order of orders) {
+      if (getPaymentStatus(order) !== 'paid' || ['cancelled', 'refunded'].includes(order.status)) continue;
+      const date = new Date(order.paidAt ?? order.createdAt);
+      if (date < monday || date >= sunday) continue;
+      const index = (date.getDay() || 7) - 1;
+      series[index].revenue += order.totalPrice ?? 0;
+      series[index].orders += 1;
+    }
+    return series;
+  }
+
+  const series = ['S1', 'S2', 'S3', 'S4'].map((month) => ({ month, revenue: 0, orders: 0 }));
+  for (const order of orders) {
+    if (getPaymentStatus(order) !== 'paid' || ['cancelled', 'refunded'].includes(order.status)) continue;
+    const date = new Date(order.paidAt ?? order.createdAt);
+    if (date.getFullYear() !== now.getFullYear() || date.getMonth() !== now.getMonth()) continue;
+    const index = monthWeekIndex(date);
+    series[index].revenue += order.totalPrice ?? 0;
+    series[index].orders += 1;
+  }
+  return series;
+}
+
+function buildCurrencyScale(maxValue: number): string[] {
+  const ceiling = Math.max(maxValue, 1);
+  return [1, 0.75, 0.5, 0.25, 0].map((ratio) => formatCompactCurrencyScale(ceiling * ratio));
+}
+
+function buildOrderScale(maxValue: number): string[] {
+  const ceiling = Math.max(maxValue, 1);
+  return [1, 0.8, 0.6, 0.4, 0.2, 0].map((ratio) => formatCompactNumber(ceiling * ratio));
+}
+
+function formatCompactCurrencyScale(value: number): string {
+  if (value >= 1000) return `${Math.round(value / 1000)}K`;
+  return formatCompactNumber(value);
+}
+
 function buildMonthlyOrderCounts(orders: AdminOrderRow[]): number[] {
   const currentYear = new Date().getFullYear();
   const counts = Array.from({ length: 12 }, () => 0);
@@ -3036,6 +3118,13 @@ function filterOrdersForAdminTab(orders: AdminOrderRow[], tab: AdminTab): AdminO
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(value));
+}
+
+function safeFormatDate(value?: string): string {
+  if (!value) return 'Date inconnue';
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return 'Date inconnue';
+  return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(date);
 }
 
 function formatCurrency(value: number): string {
