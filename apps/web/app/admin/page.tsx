@@ -2099,9 +2099,12 @@ function AnalyticsCalendarFilter({
 
   return (
     <section className="mb-4 rounded-md border border-[#11516b] bg-[#08263a] p-4">
-      <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[17rem_minmax(0,1fr)_18rem]">
-        <div>
-          <p className="text-sm font-semibold text-white">Bloc cible</p>
+      <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[17rem_minmax(0,1fr)_18rem] xl:items-start">
+        <div className="grid h-full grid-rows-[3.75rem_minmax(0,1fr)]">
+          <div>
+            <p className="text-sm font-semibold text-white">Bloc cible</p>
+            <p className="mt-1 text-xs text-white/45">Choisir le bloc a filtrer.</p>
+          </div>
           <div className="mt-3 max-h-[15.5rem] overflow-y-auto border border-[#143b58] bg-[#061d2d]">
             {analyticsCalendarBlocks.map((item) => (
               <button
@@ -2117,8 +2120,8 @@ function AnalyticsCalendarFilter({
           </div>
         </div>
 
-        <div>
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="grid h-full grid-rows-[3.75rem_minmax(0,1fr)]">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-white">Filtre calendrier</p>
               <p className="mt-1 text-xs text-white/55">Les jours selectionnes filtrent uniquement le bloc actif.</p>
@@ -2129,7 +2132,7 @@ function AnalyticsCalendarFilter({
               <button type="button" onClick={selectMonth} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-xs font-semibold text-white/75 hover:bg-[#0b3047]">Mois entier</button>
             </div>
           </div>
-          <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs">
+          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-xs">
             {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day) => (
               <span key={day} className="py-2 font-semibold text-white/55">{day}</span>
             ))}
@@ -2149,22 +2152,27 @@ function AnalyticsCalendarFilter({
           </div>
         </div>
 
-        <div>
-          <p className="text-sm font-semibold text-white">Periode</p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <select value={month} onChange={(event) => onMonthChange(Number(event.target.value))} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-sm text-white outline-none">
+        <div className="grid h-full grid-rows-[3.75rem_minmax(0,1fr)]">
+          <div>
+            <p className="text-sm font-semibold text-white">Periode</p>
+            <p className="mt-1 text-xs text-white/45">Mois et annee d'analyse.</p>
+          </div>
+          <div className="mt-3">
+          <div className="grid grid-cols-2 gap-2">
+            <select value={month} onChange={(event) => onMonthChange(Number(event.target.value))} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-sm text-white outline-none [color-scheme:dark]">
               {monthNames.map((name, index) => <option key={name} value={index}>{name}</option>)}
             </select>
-            <select value={year} onChange={(event) => onYearChange(Number(event.target.value))} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-sm text-white outline-none">
+            <select value={year} onChange={(event) => onYearChange(Number(event.target.value))} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-sm text-white outline-none [color-scheme:dark]">
               {years.map((value) => <option key={value} value={value}>{value}</option>)}
             </select>
           </div>
-          <div className="mt-4 space-y-3 border border-[#143b58] bg-[#061d2d] p-3 text-xs">
+          <div className="mt-4 space-y-3 p-3 text-xs" style={{ backgroundColor: '#061d2d', border: '1px solid #143b58' }}>
             <p className="text-white/55">Bloc filtre</p>
             <p className="text-base font-semibold text-white">{selectedBlockLabel}</p>
             <p className="text-white/55">Periode active</p>
             <p className="font-semibold text-[#36d679]">{selectedLabel}</p>
             <p className="text-white/45">Les points verts indiquent les jours avec activite reelle.</p>
+          </div>
           </div>
         </div>
       </div>
@@ -2209,8 +2217,7 @@ function AnalyticsMetricIcon({ icon }: { icon: 'quote' | 'percent' | 'cart' | 'u
 }
 
 function AnalyticsRevenueChart({ orders }: { orders: AdminOrderRow[] }) {
-  const [period, setPeriod] = useState<AnalyticsRevenuePeriod>('year');
-  const series = buildAnalyticsRevenueSeriesForPeriod(orders, period);
+  const series = buildAnalyticsRevenueSeriesForPeriod(orders, 'year');
   const maxRevenue = Math.max(...series.map((item) => item.revenue), 1);
   const maxOrders = Math.max(...series.map((item) => item.orders), 1);
   const revenueScale = buildCurrencyScale(maxRevenue);
@@ -2230,23 +2237,7 @@ function AnalyticsRevenueChart({ orders }: { orders: AdminOrderRow[] }) {
         <div className="flex items-center gap-4 text-[11px] text-white/70">
           <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#36d679]" />Revenus</span>
           <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#2d8cff]" />Commandes</span>
-          <div className="flex overflow-hidden rounded-sm border border-[#1f4a68] bg-[#0b3047]">
-            {[
-              ['day', 'Jour'],
-              ['week', 'Semaine'],
-              ['month', 'Mois'],
-              ['year', 'Annee'],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setPeriod(value as AnalyticsRevenuePeriod)}
-                className={`px-2 py-1 text-[11px] transition ${period === value ? 'bg-[#1478ff] text-white' : 'text-white/70 hover:bg-[#123c58] hover:text-white'}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <span className="border border-[#1f4a68] bg-[#0b3047] px-2 py-1 text-white/80">Annee</span>
         </div>
       </div>
       <div className="mt-5 grid h-[300px] grid-cols-[3rem_minmax(0,1fr)_3rem] gap-3">
