@@ -620,20 +620,21 @@ export default function AdminPage() {
   const pageMeta = getAdminPageMeta(tab);
   const pageStats = getAdminPageStats(tab, orders, supportTickets, pricingIntelligence, auditLogs, adminUsers);
   const isAnalyticsTab = ['analytics', 'revenueAnalytics', 'countryAnalytics', 'performanceAnalytics'].includes(tab);
+  const isOrdersTab = ['orders', 'orderValidation', 'production', 'delivery', 'disputes'].includes(tab);
 
   return (
     <AdminShell>
       <div className="min-h-screen lg:grid lg:grid-cols-[255px_minmax(0,1fr)]">
         <AdminSidebar activeTab={tab} onSelect={setTab} />
 
-        <div className="min-w-0" style={tab === 'dashboard' ? { backgroundColor: '#061d2d' } : undefined}>
-          {tab !== 'dashboard' && !isAnalyticsTab ? <AdminTopbar activeTab={tab} onSelect={setTab} /> : null}
+        <div className="min-w-0" style={tab === 'dashboard' || isOrdersTab ? { backgroundColor: '#061d2d' } : undefined}>
+          {tab !== 'dashboard' && !isAnalyticsTab && !isOrdersTab ? <AdminTopbar activeTab={tab} onSelect={setTab} /> : null}
           <section
-            className={tab === 'dashboard' ? 'px-4 py-9 sm:px-6 lg:px-7' : isAnalyticsTab ? 'px-0 py-0' : 'px-4 py-6 sm:px-6 lg:px-10'}
-            style={tab === 'dashboard' ? { backgroundColor: '#061d2d' } : undefined}
+            className={tab === 'dashboard' ? 'px-4 py-9 sm:px-6 lg:px-7' : isAnalyticsTab ? 'px-0 py-0' : isOrdersTab ? 'px-4 py-7 sm:px-6 lg:px-8' : 'px-4 py-6 sm:px-6 lg:px-10'}
+            style={tab === 'dashboard' || isOrdersTab ? { backgroundColor: '#061d2d' } : undefined}
           >
-            {!isAnalyticsTab ? <AdminPageHeader meta={pageMeta} isDashboard={tab === 'dashboard'} /> : null}
-            {tab !== 'dashboard' && !isAnalyticsTab ? (
+            {!isAnalyticsTab && !isOrdersTab ? <AdminPageHeader meta={pageMeta} isDashboard={tab === 'dashboard'} /> : null}
+            {tab !== 'dashboard' && !isAnalyticsTab && !isOrdersTab ? (
               <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
                 {pageStats.map((stat) => (
                   <Metric key={stat.label} label={stat.label} value={stat.value} helper={stat.helper} />
@@ -643,7 +644,7 @@ export default function AdminPage() {
 
             {message && <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{message}</div>}
 
-            <div className={tab === 'dashboard' ? 'mt-9 space-y-7' : isAnalyticsTab ? 'space-y-0' : 'mt-8 space-y-7'}>
+            <div className={tab === 'dashboard' ? 'mt-9 space-y-7' : isAnalyticsTab || isOrdersTab ? 'space-y-0' : 'mt-8 space-y-7'}>
 
           {tab === 'dashboard' && (
             <ModernDashboardPanel orders={orders} tickets={supportTickets} logs={auditLogs} intelligence={pricingIntelligence} />
@@ -1773,38 +1774,263 @@ function OrdersWorkspace({
   supplierOrderPackage: AdminSupplierOrderPackage | null;
 }) {
   const title = adminTabTitle(tab);
+  const [pageSize, setPageSize] = useState(5);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const query = search.trim().toLowerCase();
+  const searchedOrders = useMemo(
+    () =>
+      orders.filter((order) => {
+        if (!query) return true;
+        return [
+          order.orderNumber,
+          order.id,
+          order.quoteId,
+          order.userId,
+          order.destinationCountryIso2,
+          order.externalManufacturingPartner,
+          order.externalSupplierOrderId,
+          serviceLabelForOrder(order),
+          dashboardStageLabelForOrder(order),
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query));
+      }),
+    [orders, query],
+  );
+  const pageCount = Math.max(1, Math.ceil(searchedOrders.length / pageSize));
+  const safePage = Math.min(page, pageCount);
+  const visibleOrders = searchedOrders.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const firstIndex = searchedOrders.length === 0 ? 0 : (safePage - 1) * pageSize + 1;
+  const lastIndex = Math.min(searchedOrders.length, safePage * pageSize);
+  const pendingOrders = orders.filter((order) => getPaymentStatus(order) === 'pending' || order.status === 'awaiting_payment');
+  const completedOrders = orders.filter((order) => order.status === 'delivered');
+  const refundedOrders = orders.filter((order) => getPaymentStatus(order) === 'refunded' || order.status === 'refunded');
+  const failedOrders = orders.filter((order) => getPaymentStatus(order) === 'failed' || order.status === 'cancelled');
+  const orderKpis = [
+    { label: 'Paiements en attente', value: formatOrderKpiAmount(pendingOrders), helper: `${pendingOrders.length} commandes`, accent: '#2f8cff', icon: 'P' },
+    { label: 'Terminees', value: formatOrderKpiAmount(completedOrders), helper: `${completedOrders.length} livrees`, accent: '#16b69b', icon: 'T' },
+    { label: 'Remboursees', value: formatOrderKpiAmount(refundedOrders), helper: `${refundedOrders.length} dossiers`, accent: '#f6ad2f', icon: 'R' },
+    { label: 'Echouees', value: formatOrderKpiAmount(failedOrders), helper: `${failedOrders.length} incidents`, accent: '#f43f5e', icon: '!' },
+  ];
+
+  useEffect(() => {
+    setPage(1);
+  }, [pageSize, query, statusFilter, countryFilter, paymentFilter, tab]);
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
-      <Card className="overflow-hidden">
-        <div className="border-b border-slate-100 p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Commandes</p>
-              <h2 className="mt-2 text-2xl font-black text-ink">{title}</h2>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <FilterSelect label="Status" value={statusFilter} onChange={onStatusFilter} options={['all', ...adminOrderStatuses]} />
-              <FilterSelect label="Country" value={countryFilter} onChange={onCountryFilter} options={['all', ...countries]} />
-              <FilterSelect label="Payment" value={paymentFilter} onChange={onPaymentFilter} options={['all', 'pending', 'paid', 'failed', 'refunded']} />
-            </div>
+    <div className="space-y-6 text-white">
+      <div className="flex min-h-[4.5rem] flex-col justify-center border border-[#1c5874] bg-[#061d2d] px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-black text-white">Commandes</h1>
+          <p className="mt-2 text-sm text-[#9fc2d7]">{title}, paiements, production et suivi client.</p>
+        </div>
+        <p className="mt-4 text-sm text-[#9fc2d7] sm:mt-0">Accueil <span className="mx-2 text-[#2edf7f]">/</span> <span className="text-[#2edf7f]">{title}</span></p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {orderKpis.map((card) => (
+          <OrderKpiCard key={card.label} {...card} />
+        ))}
+      </div>
+
+      <div className="border border-[#1c5874] bg-[#082b40]">
+        <div className="flex flex-col gap-4 border-b border-[#16465f] p-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="grid gap-3 sm:grid-cols-[auto_auto_auto_auto] sm:items-end">
+            <label className="block">
+              <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#9fc2d7]">Afficher</span>
+              <select
+                value={pageSize}
+                onChange={(event) => setPageSize(Number(event.target.value))}
+                className="h-11 border border-[#2a6280] bg-[#061d2d] px-3 text-sm font-bold text-white outline-none focus:border-[#2edf7f]"
+              >
+                {[5, 10, 25, 50].map((size) => <option key={size} value={size}>{size}</option>)}
+              </select>
+            </label>
+            <OrderFilterSelect label="Statut" value={statusFilter} onChange={onStatusFilter} options={['all', ...adminOrderStatuses]} />
+            <OrderFilterSelect label="Pays" value={countryFilter} onChange={onCountryFilter} options={['all', ...countries]} />
+            <OrderFilterSelect label="Paiement" value={paymentFilter} onChange={onPaymentFilter} options={['all', 'pending', 'paid', 'failed', 'refunded']} />
+          </div>
+          <label className="block w-full max-w-md">
+            <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#9fc2d7]">Recherche</span>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Commande, client, pays, fournisseur..."
+              className="h-11 w-full border border-[#2a6280] bg-[#061d2d] px-4 text-sm font-bold text-white outline-none placeholder:text-[#6f92a8] focus:border-[#2edf7f]"
+            />
+          </label>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b border-[#16465f] bg-[#0b3851] text-xs font-black uppercase tracking-[0.12em] text-[#9fc2d7]">
+              <tr>
+                <th className="px-5 py-4">Client</th>
+                <th className="px-5 py-4">Date</th>
+                <th className="px-5 py-4">Commande</th>
+                <th className="px-5 py-4">Produit</th>
+                <th className="px-5 py-4">Paiement</th>
+                <th className="px-5 py-4">Statut</th>
+                <th className="px-5 py-4">Fournisseur</th>
+                <th className="px-5 py-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#16465f]">
+              {visibleOrders.map((order) => (
+                <AdminOrderListRow
+                  key={order.id}
+                  order={order}
+                  selected={selectedOrderId === order.id}
+                  onSelect={onSelectOrder}
+                />
+              ))}
+              {visibleOrders.length === 0 ? (
+                <tr>
+                  <td className="px-5 py-10 text-center text-sm font-bold text-[#9fc2d7]" colSpan={8}>Aucune commande ne correspond aux filtres.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex flex-col gap-4 border-t border-[#16465f] px-5 py-4 text-sm text-[#9fc2d7] sm:flex-row sm:items-center sm:justify-between">
+          <p>Affichage {firstIndex} a {lastIndex} sur {searchedOrders.length} commandes</p>
+          <div className="flex items-center gap-2">
+            <button type="button" disabled={safePage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))} className="h-10 border border-[#2a6280] px-4 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">Precedent</button>
+            {Array.from({ length: Math.min(pageCount, 5) }, (_, index) => index + 1).map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setPage(item)}
+                className={`h-10 min-w-10 border border-[#2a6280] px-3 font-bold ${safePage === item ? 'bg-[#168f66] text-white' : 'text-[#9fc2d7]'}`}
+              >
+                {item}
+              </button>
+            ))}
+            <button type="button" disabled={safePage === pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))} className="h-10 border border-[#2a6280] px-4 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">Suivant</button>
           </div>
         </div>
-        <OrdersTable orders={orders} selectedOrderId={selectedOrderId} onSelect={onSelectOrder} />
-      </Card>
+      </div>
 
       {selectedOrder ? (
-        <AdminOrderActions
-          order={selectedOrder}
-          onSubmitStatus={onSubmitStatus}
-          onSubmitSupplier={onSubmitSupplier}
-          onSubmitSupplierOrder={onSubmitSupplierOrder}
-          onSubmitSupplierRealPrice={onSubmitSupplierRealPrice}
-          onSubmitShipment={onSubmitShipment}
-          supplierOrderPackage={supplierOrderPackage}
-        />
+        <div className="border border-[#1c5874] bg-[#082b40] p-5">
+          <div className="mb-5">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#2edf7f]">Traitement admin</p>
+            <h2 className="mt-2 text-xl font-black text-white">{selectedOrder.orderNumber}</h2>
+            <p className="mt-1 text-sm text-[#9fc2d7]">{selectedOrder.id}</p>
+          </div>
+          <AdminOrderActions
+            order={selectedOrder}
+            onSubmitStatus={onSubmitStatus}
+            onSubmitSupplier={onSubmitSupplier}
+            onSubmitSupplierOrder={onSubmitSupplierOrder}
+            onSubmitSupplierRealPrice={onSubmitSupplierRealPrice}
+            onSubmitShipment={onSubmitShipment}
+            supplierOrderPackage={supplierOrderPackage}
+          />
+        </div>
       ) : null}
     </div>
+  );
+}
+
+function OrderKpiCard({ label, value, helper, accent, icon }: { label: string; value: string; helper: string; accent: string; icon: string }) {
+  return (
+    <div className="border border-[#1c5874] bg-[#082b40] p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-black text-white">{label}</p>
+          <p className="mt-4 text-2xl font-black text-white">{value}</p>
+          <p className="mt-2 text-xs font-bold text-[#9fc2d7]">{helper}</p>
+        </div>
+        <span className="grid h-12 w-12 place-items-center text-lg font-black text-white" style={{ backgroundColor: accent }}>
+          {icon}
+        </span>
+      </div>
+      <svg viewBox="0 0 180 48" className="mt-4 h-12 w-full" aria-hidden="true">
+        <polyline
+          points="0,36 24,36 48,35 72,18 96,34 120,36 144,30 168,22 180,26"
+          fill="none"
+          stroke={accent}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
+  );
+}
+
+function OrderFilterSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-[#9fc2d7]">{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-11 min-w-[9rem] border border-[#2a6280] bg-[#061d2d] px-3 text-sm font-bold text-white outline-none focus:border-[#2edf7f]"
+      >
+        {options.map((option) => <option key={option} value={option}>{orderFilterLabel(option)}</option>)}
+      </select>
+    </label>
+  );
+}
+
+function AdminOrderListRow({ order, selected, onSelect }: { order: AdminOrderRow; selected: boolean; onSelect: (id: string) => void }) {
+  const paymentStatus = getPaymentStatus(order);
+  const product = serviceLabelForOrder(order);
+  const quantity = order.quoteSnapshot?.quantity ? `${order.quoteSnapshot.quantity} pcs` : 'Quantite a confirmer';
+  const layers = order.quoteSnapshot?.layers ? `${order.quoteSnapshot.layers} couches` : '';
+  const country = countryLabelForOrder(order);
+
+  return (
+    <tr className={selected ? 'bg-[#0d405d]' : 'bg-[#082b40]'}>
+      <td className="px-5 py-4">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center border border-[#2a6280] bg-[#0b3851] text-sm font-black text-white">
+            {clientInitial(order.userId)}
+          </span>
+          <div>
+            <p className="font-black text-white">{clientLabel(order.userId)}</p>
+            <p className="mt-1 text-xs font-bold text-[#9fc2d7]">{country}</p>
+          </div>
+        </div>
+      </td>
+      <td className="px-5 py-4 font-bold text-[#d7edf8]">{formatDate(order.createdAt)}</td>
+      <td className="px-5 py-4">
+        <button type="button" onClick={() => onSelect(order.id)} className="font-black text-[#35b5ff] hover:text-[#2edf7f]">
+          {order.orderNumber}
+        </button>
+        <p className="mt-1 max-w-[12rem] truncate text-xs font-bold text-[#9fc2d7]">Quote {order.quoteId}</p>
+      </td>
+      <td className="px-5 py-4">
+        <p className="font-black text-white">{product}</p>
+        <p className="mt-1 text-xs font-bold text-[#9fc2d7]">{[quantity, layers].filter(Boolean).join(' - ')}</p>
+      </td>
+      <td className="px-5 py-4">
+        <span className="inline-flex items-center gap-2 font-black text-white">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: paymentColor(paymentStatus) }} />
+          {paymentLabel(paymentStatus)}
+        </span>
+        <p className="mt-1 text-xs font-bold text-[#2edf7f]">{formatOrderCurrency(order.totalPrice ?? 0, order.currency)}</p>
+      </td>
+      <td className="px-5 py-4">
+        <span className="inline-flex border border-[#2a6280] bg-[#0b3851] px-3 py-1 text-xs font-black text-[#d7edf8]">
+          {adminStatusLabels[order.status] ?? order.status}
+        </span>
+      </td>
+      <td className="px-5 py-4">
+        <p className="font-bold text-white">{order.externalManufacturingPartner || 'A affecter'}</p>
+        <p className="mt-1 max-w-[10rem] truncate text-xs font-bold text-[#9fc2d7]">{order.externalSupplierOrderId || order.trackingNumber || 'Reference en attente'}</p>
+      </td>
+      <td className="px-5 py-4">
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => onSelect(order.id)} className="h-9 border border-[#2a6280] px-3 text-xs font-black text-white hover:border-[#2edf7f]">Traiter</button>
+          <a href={`/orders/${order.id}`} className="grid h-9 place-items-center border border-[#2a6280] px-3 text-xs font-black text-[#35b5ff] hover:border-[#2edf7f]">Voir</a>
+        </div>
+      </td>
+    </tr>
   );
 }
 
@@ -2566,46 +2792,46 @@ function AdminOrderActions({
 }) {
   return (
     <div className="space-y-5">
-      <Card className="p-5">
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Selected order</p>
-        <h2 className="mt-2 text-xl font-black text-ink">{order.orderNumber}</h2>
-        <p className="mt-1 text-sm text-slate-600">{order.id}</p>
-        <p className="mt-1 text-xs font-bold text-slate-500">Quote {order.quoteId}</p>
-      </Card>
+      <div className="border border-[#1c5874] bg-[#061d2d] p-5">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-[#2edf7f]">Commande selectionnee</p>
+        <h2 className="mt-2 text-xl font-black text-white">{order.orderNumber}</h2>
+        <p className="mt-1 text-sm text-[#9fc2d7]">{order.id}</p>
+        <p className="mt-1 text-xs font-bold text-[#9fc2d7]">Quote {order.quoteId}</p>
+      </div>
 
-      <AdminForm title="Update status" onSubmit={onSubmitStatus}>
+      <AdminForm title="Update status" onSubmit={onSubmitStatus} variant="dark">
         <select name="status" defaultValue={order.status} className={fieldClassName}>
           {adminOrderStatuses.map((status) => <option key={status} value={status}>{adminStatusLabels[status]}</option>)}
         </select>
         <input name="note" placeholder="Customer-safe tracking note" className={fieldClassName} />
       </AdminForm>
 
-      <AdminForm title="Supplier reference" onSubmit={onSubmitSupplier}>
+      <AdminForm title="Supplier reference" onSubmit={onSubmitSupplier} variant="dark">
         <input name="externalManufacturingPartner" placeholder="External partner name" className={fieldClassName} />
         <input name="externalSupplierOrderId" placeholder="Supplier order ID" className={fieldClassName} />
-        <p className="text-xs font-bold text-slate-500">Admin-only. These values are never shown on customer order detail pages.</p>
+        <p className="text-xs font-bold text-[#9fc2d7]">Admin-only. These values are never shown on customer order detail pages.</p>
       </AdminForm>
 
-      <AdminForm title="Supplier order package" onSubmit={onSubmitSupplierOrder}>
+      <AdminForm title="Supplier order package" onSubmit={onSubmitSupplierOrder} variant="dark">
         <select name="mode" defaultValue="prepare" className={fieldClassName}>
           <option value="prepare">Prepare package</option>
           <option value="create">Create through API</option>
         </select>
         <input name="supplier" placeholder="Supplier" defaultValue={order.externalManufacturingPartner || 'jlcpcb'} className={fieldClassName} />
         <input name="note" placeholder="Internal note optional" className={fieldClassName} />
-        <p className="text-xs font-bold text-slate-500">Prepare mode is assisted ordering. Create mode only works when the supplier order API is configured.</p>
+        <p className="text-xs font-bold text-[#9fc2d7]">Prepare mode is assisted ordering. Create mode only works when the supplier order API is configured.</p>
       </AdminForm>
 
       {supplierOrderPackage ? <SupplierOrderPackagePanel packageData={supplierOrderPackage} /> : null}
 
-      <AdminForm title="Supplier real price" onSubmit={onSubmitSupplierRealPrice}>
+      <AdminForm title="Supplier real price" onSubmit={onSubmitSupplierRealPrice} variant="dark">
         <input name="realSupplierPrice" type="number" min="0.01" step="0.01" placeholder="Real supplier PCB price" className={fieldClassName} />
         <input name="supplierOrderId" placeholder="Supplier order ID optional" defaultValue={order.externalSupplierOrderId} className={fieldClassName} />
         <input name="note" placeholder="Internal note optional" className={fieldClassName} />
-        <p className="text-xs font-bold text-slate-500">Updates the Smart Buffer bucket for this quote. This cost is admin-only.</p>
+        <p className="text-xs font-bold text-[#9fc2d7]">Updates the Smart Buffer bucket for this quote. This cost is admin-only.</p>
       </AdminForm>
 
-      <AdminForm title="Shipment" onSubmit={onSubmitShipment}>
+      <AdminForm title="Shipment" onSubmit={onSubmitShipment} variant="dark">
         <input name="carrierName" placeholder="Carrier" defaultValue={order.carrierName} className={fieldClassName} />
         <input name="trackingNumber" placeholder="Tracking number" defaultValue={order.trackingNumber} className={fieldClassName} />
         <input name="estimatedDeliveryAt" type="date" className={fieldClassName} />
@@ -3022,15 +3248,26 @@ function SimpleTable({ headers, rows }: { headers: string[]; rows: string[][] })
   );
 }
 
-function AdminForm({ title, onSubmit, children }: { title: string; onSubmit: (event: FormEvent<HTMLFormElement>) => void; children: React.ReactNode }) {
+function AdminForm({
+  title,
+  onSubmit,
+  children,
+  variant = 'light',
+}: {
+  title: string;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  children: React.ReactNode;
+  variant?: 'light' | 'dark';
+}) {
+  const isDark = variant === 'dark';
   return (
-    <Card className="p-5">
-      <h2 className="text-lg font-black text-ink">{title}</h2>
+    <div className={isDark ? 'border border-[#1c5874] bg-[#061d2d] p-5' : 'rounded-sm border border-line bg-white p-5'}>
+      <h2 className={`text-lg font-black ${isDark ? 'text-white' : 'text-ink'}`}>{title}</h2>
       <form onSubmit={onSubmit} className="mt-4 space-y-3">
         {children}
-        <button type="submit" className="h-11 w-full rounded-sm bg-deepblue text-sm font-black text-white transition hover:bg-deepblue-dark">Save</button>
+        <button type="submit" className={`h-11 w-full rounded-sm text-sm font-black text-white transition ${isDark ? 'bg-[#168f66] hover:bg-[#0f7b56]' : 'bg-deepblue hover:bg-deepblue-dark'}`}>Save</button>
       </form>
-    </Card>
+    </div>
   );
 }
 
@@ -3470,6 +3707,48 @@ function formatCurrency(value: number): string {
 
 function formatOrderCurrency(value: number, currency?: 'EUR' | 'USD'): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: currency ?? 'EUR' }).format(value);
+}
+
+function formatOrderKpiAmount(orders: AdminOrderRow[]): string {
+  return formatCurrency(orders.reduce((sum, order) => sum + (order.totalPrice ?? 0), 0));
+}
+
+function orderFilterLabel(value: string): string {
+  if (value === 'all') return 'Tous';
+  if (value === 'pending') return 'En attente';
+  if (value === 'paid') return 'Paye';
+  if (value === 'failed') return 'Echoue';
+  if (value === 'refunded') return 'Rembourse';
+  return adminStatusLabels[value as AdminOrderStatus] ?? value;
+}
+
+function clientInitial(userId: string): string {
+  return clientLabel(userId).slice(0, 1).toUpperCase();
+}
+
+function clientLabel(userId: string): string {
+  if (!userId) return 'Client';
+  return `Client ${userId.slice(0, 6).toUpperCase()}`;
+}
+
+function paymentLabel(status: PaymentStatus): string {
+  const labels: Record<PaymentStatus, string> = {
+    pending: 'En attente',
+    paid: 'Paye',
+    failed: 'Echoue',
+    refunded: 'Rembourse',
+  };
+  return labels[status] ?? status;
+}
+
+function paymentColor(status: PaymentStatus): string {
+  const colors: Record<PaymentStatus, string> = {
+    pending: '#f6ad2f',
+    paid: '#2edf7f',
+    failed: '#f43f5e',
+    refunded: '#8aa4b7',
+  };
+  return colors[status] ?? '#8aa4b7';
 }
 
 function formatCompactNumber(value: number): string {
