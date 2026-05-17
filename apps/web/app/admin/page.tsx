@@ -1183,7 +1183,7 @@ function ModernDashboardPanel({
   const supportMessages = tickets.length;
 
   return (
-    <div className="relative">
+    <div className="relative rounded-md border border-[#12324a] bg-[#061d2d] p-4 text-white">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(25rem,0.95fr)]">
         <SalesOverviewCard orders={orders} intelligence={intelligence} />
         <div className="grid gap-4 sm:grid-cols-2">
@@ -1216,13 +1216,13 @@ function SalesOverviewCard({ orders, intelligence }: { orders: AdminOrderRow[]; 
   const scaleLabels = buildScaleLabels(maxValue);
 
   return (
-    <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
-      <div className="flex items-center justify-between border-b border-[#e8edf3] px-6 py-5">
-        <h2 className="text-base font-semibold text-slate-950">Devis vs commandes payees</h2>
+    <section className="overflow-hidden rounded-md border border-[#11516b] bg-[#08263a]">
+      <div className="flex items-center justify-between border-b border-[#143b58] px-6 py-5">
+        <h2 className="text-base font-semibold text-white">Devis vs commandes payees</h2>
         <select
           value={period}
           onChange={(event) => setPeriod(event.target.value as SalesOverviewPeriod)}
-          className="rounded bg-[#f8f8fc] px-3 py-2 text-xs font-medium text-slate-950 outline-none"
+          className="rounded-sm border border-[#1f4a68] bg-[#0b3047] px-3 py-2 text-xs font-medium text-white outline-none"
         >
           <option value="year">Cette annee</option>
           <option value="month">Ce mois</option>
@@ -1230,25 +1230,25 @@ function SalesOverviewCard({ orders, intelligence }: { orders: AdminOrderRow[]; 
       </div>
       <div className="px-8 pb-5 pt-7">
         <div className="grid min-h-[285px] grid-cols-[2.8rem_minmax(0,1fr)] gap-3">
-          <div className="flex flex-col justify-between pb-7 text-right text-[11px] font-medium text-slate-950">
+          <div className="flex flex-col justify-between pb-7 text-right text-[11px] font-medium text-white/70">
             {scaleLabels.map((label) => <span key={label}>{label}</span>)}
           </div>
-          <div className={`grid items-end gap-4 border-b border-[#e8edf3] ${period === 'month' ? 'grid-cols-4' : 'grid-cols-12'}`}>
+          <div className={`grid items-end gap-4 border-b border-[#24465c] ${period === 'month' ? 'grid-cols-4' : 'grid-cols-12'}`}>
             {quoteSeries.map((item) => (
               <div key={item.month} className="relative flex h-full items-end justify-center">
-                <span className="absolute inset-y-0 left-1/2 border-l border-dashed border-[#dfe4ea]" />
-                <span className="absolute bottom-0 h-full w-3 rounded-t bg-[#dfe4ea]" style={{ height: `${Math.max((item.quotes / maxValue) * 100, item.quotes ? 4 : 0)}%` }} />
-                <span className="relative z-10 w-3 rounded-t bg-[#6fbc53]" style={{ height: `${Math.max((item.paid / maxValue) * 100, item.paid ? 4 : 0)}%` }} />
+                <span className="absolute inset-y-0 left-1/2 border-l border-dashed border-[#143b58]" />
+                <span className="absolute bottom-0 h-full w-3 rounded-t bg-[#17415a]" style={{ height: `${Math.max((item.quotes / maxValue) * 100, item.quotes ? 4 : 0)}%` }} />
+                <span className="relative z-10 w-3 rounded-t bg-[#36d679]" style={{ height: `${Math.max((item.paid / maxValue) * 100, item.paid ? 4 : 0)}%` }} />
               </div>
             ))}
           </div>
         </div>
-        <div className={`ml-[3.95rem] mt-3 grid gap-4 text-center text-xs font-medium text-slate-700 ${period === 'month' ? 'grid-cols-4' : 'grid-cols-12'}`}>
+        <div className={`ml-[3.95rem] mt-3 grid gap-4 text-center text-xs font-medium text-white/65 ${period === 'month' ? 'grid-cols-4' : 'grid-cols-12'}`}>
           {quoteSeries.map((item) => <span key={item.month}>{item.month}</span>)}
         </div>
-        <div className="mt-4 flex items-center justify-center gap-5 text-xs text-slate-700">
-          <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#6fbc53]" />Commandes payees</span>
-          <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#dfe4ea]" />Devis crees</span>
+        <div className="mt-4 flex items-center justify-center gap-5 text-xs text-white/70">
+          <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#36d679]" />Commandes payees</span>
+          <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-sm bg-[#17415a]" />Devis crees</span>
         </div>
       </div>
     </section>
@@ -1280,20 +1280,20 @@ function DashboardKpiCard({
   }[tone];
 
   return (
-    <section className="min-h-[140px] rounded-md border border-[#e4e9f0] bg-white px-5 py-5">
+    <section className="min-h-[140px] rounded-md border border-[#11516b] bg-[#08263a] px-5 py-5">
       <div className="flex items-start gap-4">
-        <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-full border ${toneClass}`}>
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-current">
+        <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-sm border ${toneClass}`}>
+          <span className="grid h-8 w-8 place-items-center rounded-sm bg-current">
             <DashboardKpiIcon icon={icon} />
           </span>
         </span>
-        <h3 className="max-w-[8rem] pt-1 text-base font-semibold leading-5 text-slate-950">{title}</h3>
+        <h3 className="max-w-[8rem] pt-1 text-base font-semibold leading-5 text-white">{title}</h3>
       </div>
       <div className="mt-4 flex items-end justify-between gap-3">
-        <p className="text-[26px] font-medium leading-none text-slate-950">{value}</p>
+        <p className="text-[26px] font-medium leading-none text-white">{value}</p>
         <div className="text-right text-sm leading-5">
-          <p className="font-medium text-[#69ba49]">^ {trend}</p>
-          <p className="text-slate-950">{caption}</p>
+          <p className="font-medium text-[#65d84f]">^ {trend}</p>
+          <p className="text-white/70">{caption}</p>
         </div>
       </div>
     </section>
@@ -1412,20 +1412,20 @@ function buildScaleLabels(maxValue: number) {
 
 function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> }) {
   return (
-    <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
-      <div className="border-b border-[#e8edf3] px-6 py-5">
-        <h2 className="text-base font-semibold text-slate-950">Activite recente</h2>
+    <section className="overflow-hidden rounded-md border border-[#11516b] bg-[#08263a]">
+      <div className="border-b border-[#143b58] px-6 py-5">
+        <h2 className="text-base font-semibold text-white">Activite recente</h2>
       </div>
       <div>
         {transactions.length === 0 ? (
-          <p className="px-5 py-8 text-sm text-slate-500">Aucune commande recente disponible.</p>
+          <p className="px-5 py-8 text-sm text-white/55">Aucune commande recente disponible.</p>
         ) : (
           transactions.map((transaction) => (
-            <div key={`${transaction.name}-${transaction.date}`} className="grid grid-cols-[3rem_minmax(0,1fr)_7rem_6.5rem] items-center gap-3 border-b border-[#e8edf3] px-5 py-3 last:border-b-0">
-              <span className={`grid h-12 w-12 place-items-center rounded-full border border-[#e8edf3] text-sm font-bold text-white ${transaction.tone}`}>{transaction.name.slice(0, 1)}</span>
+            <div key={`${transaction.name}-${transaction.date}`} className="grid grid-cols-[3rem_minmax(0,1fr)_7rem_6.5rem] items-center gap-3 border-b border-[#143b58] px-5 py-3 last:border-b-0">
+              <span className={`grid h-12 w-12 place-items-center rounded-sm border border-[#143b58] text-sm font-bold text-white ${transaction.tone}`}>{transaction.name.slice(0, 1)}</span>
               <div>
-                <p className="font-medium text-slate-950">{transaction.name}</p>
-                <p className="mt-1 max-w-[12rem] text-sm leading-5 text-[#61709a]">{transaction.subtitle}</p>
+                <p className="font-medium text-white">{transaction.name}</p>
+                <p className="mt-1 max-w-[12rem] text-sm leading-5 text-white/60">{transaction.subtitle}</p>
               </div>
               <span className={`mx-auto rounded-full px-2 py-1 text-[10px] font-semibold ${
                 transaction.status === 'Completed' ? 'bg-[#dcf9e8] text-[#18b95b]' : transaction.status === 'Failed' ? 'bg-[#ffe5e9] text-[#f0445c]' : 'bg-[#fff0cf] text-[#f5a400]'
@@ -1433,11 +1433,11 @@ function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: 
                 {transaction.status}
               </span>
               <div className="text-right">
-                <p className="font-medium text-[#ff5a00]">{transaction.amount}</p>
-                <p className="mt-1 text-sm text-[#61709a]">{transaction.date}</p>
+                <p className="font-medium text-[#36d679]">{transaction.amount}</p>
+                <p className="mt-1 text-sm text-white/60">{transaction.date}</p>
                 <span className="mt-2 grid grid-cols-[1fr_2rem] items-center gap-1">
-                  <span className="h-1.5 bg-slate-100"><span className="block h-full bg-[#9bcf9f]" style={{ width: `${transaction.progress}%` }} /></span>
-                  <span className="text-[10px] text-slate-500">{transaction.progress}%</span>
+                  <span className="h-1.5 bg-[#0c3149]"><span className="block h-full bg-[#36d679]" style={{ width: `${transaction.progress}%` }} /></span>
+                  <span className="text-[10px] text-white/50">{transaction.progress}%</span>
                 </span>
               </div>
             </div>
@@ -1453,18 +1453,18 @@ function ProductActivityCard({ orders }: { orders: AdminOrderRow[] }) {
   const conicStops = buildConicGradient(regionStats);
 
   return (
-    <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
-      <div className="border-b border-[#e8edf3] px-6 py-5">
-        <h2 className="text-base font-semibold text-slate-950">Regions Afrique</h2>
+    <section className="overflow-hidden rounded-md border border-[#11516b] bg-[#08263a]">
+      <div className="border-b border-[#143b58] px-6 py-5">
+        <h2 className="text-base font-semibold text-white">Regions Afrique</h2>
       </div>
       <div className="px-5 pb-5 pt-6">
         <div className="mx-auto h-28 w-28 rounded-full p-4" style={{ background: conicStops }}>
-          <div className="grid h-full w-full place-items-center rounded-full bg-white">
+          <div className="grid h-full w-full place-items-center rounded-full bg-[#08263a]">
             <span className="text-lg font-semibold text-[#6fbc53]">100%</span>
           </div>
         </div>
-        <h3 className="mt-4 text-base font-semibold text-slate-950">Repartition par zone</h3>
-        <div className="mt-2 divide-y divide-[#e8edf3]">
+        <h3 className="mt-4 text-base font-semibold text-white">Repartition par zone</h3>
+        <div className="mt-2 divide-y divide-[#143b58]">
           {regionStats.map((region) => (
             <ProductActivityRow key={region.label} color={region.color} label={region.label} value={`${region.percent}% (${region.orders})`} />
           ))}
@@ -1477,11 +1477,11 @@ function ProductActivityCard({ orders }: { orders: AdminOrderRow[] }) {
 function ProductActivityRow({ color, label, value }: { color: string; label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-2 text-sm">
-      <span className="flex min-w-0 items-center gap-2 text-slate-950">
+      <span className="flex min-w-0 items-center gap-2 text-white/75">
         <span className="h-2.5 w-2.5 rounded-full border-2" style={{ borderColor: color }} />
         <span className="truncate">{label}</span>
       </span>
-      <span className="font-medium text-[#7582ad]">{value}</span>
+      <span className="font-medium text-white">{value}</span>
     </div>
   );
 }
@@ -1544,26 +1544,26 @@ function DealsStatisticsCard({ orders }: { orders: AdminOrderRow[] }) {
   const countrySales = buildAfricanCountrySales(orders);
 
   return (
-    <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
-      <div className="border-b border-[#e8edf3] px-6 py-5">
-        <h2 className="text-base font-semibold text-slate-950">Country Sales</h2>
+    <section className="overflow-hidden rounded-md border border-[#11516b] bg-[#08263a]">
+      <div className="border-b border-[#143b58] px-6 py-5">
+        <h2 className="text-base font-semibold text-white">Top pays africains</h2>
       </div>
       <div className="h-[285px] space-y-4 overflow-hidden px-4 py-4">
         {countrySales.length === 0 ? (
-          <p className="px-1 py-8 text-sm text-slate-500">Aucune commande pays disponible.</p>
+          <p className="px-1 py-8 text-sm text-white/55">Aucune commande pays disponible.</p>
         ) : (
           countrySales.map((item) => (
             <div key={item.country} className="grid grid-cols-[2.75rem_minmax(0,1fr)_5.5rem] items-center gap-2.5">
               <AfricanFlag code={item.code} />
               <div className="min-w-0">
-                <p className="truncate text-lg font-semibold leading-none text-slate-950">{item.value}</p>
-                <p className="mt-1 truncate text-sm leading-none text-slate-700">{item.country}</p>
+                <p className="truncate text-lg font-semibold leading-none text-white">{item.value}</p>
+                <p className="mt-1 truncate text-sm leading-none text-white/60">{item.country}</p>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-1 min-w-0 flex-1 rounded-full bg-slate-200">
+                <div className="h-1 min-w-0 flex-1 rounded-full bg-[#0c3149]">
                   <span className="block h-full rounded-full" style={{ width: `${item.percent}%`, backgroundColor: item.color }} />
                 </div>
-                <p className="w-9 text-right text-base font-medium text-slate-950">{item.percent}%</p>
+                <p className="w-9 text-right text-base font-medium text-white">{item.percent}%</p>
               </div>
             </div>
           ))
@@ -1591,14 +1591,14 @@ function RecentPerformanceCard({ orders }: { orders: AdminOrderRow[] }) {
   const metrics = buildOperationalProgressMetrics(orders);
 
   return (
-    <section className="overflow-hidden rounded-md border border-[#e4e9f0] bg-white">
-      <div className="border-b border-[#e8edf3] px-6 py-5">
-        <h2 className="max-w-[12rem] text-base font-semibold leading-5 text-slate-950">Suivi operationnel</h2>
+    <section className="overflow-hidden rounded-md border border-[#11516b] bg-[#08263a]">
+      <div className="border-b border-[#143b58] px-6 py-5">
+        <h2 className="max-w-[12rem] text-base font-semibold leading-5 text-white">Suivi operationnel</h2>
       </div>
       <div className="flex h-[285px] flex-col items-center justify-between px-5 py-4">
         <OperationalProgressGauge metric={metrics.production} />
         <OperationalProgressGauge metric={metrics.delivery} />
-        <div className="grid w-full grid-cols-2 gap-3 text-xs text-slate-600">
+        <div className="grid w-full grid-cols-2 gap-3 text-xs text-white/65">
           {Object.values(metrics).map((metric) => (
             <span key={metric.label} className="flex min-w-0 items-center gap-2">
               <span className="h-2.5 w-2.5 shrink-0" style={{ backgroundColor: metric.color }} />
@@ -1638,7 +1638,7 @@ function OperationalProgressGauge({ metric }: { metric: { label: string; percent
               y1={y1}
               x2={x2}
               y2={y2}
-              stroke={active ? metric.color : '#f2f3fa'}
+              stroke={active ? metric.color : '#143b58'}
               strokeWidth="5"
               strokeLinecap="butt"
             />
@@ -1646,7 +1646,7 @@ function OperationalProgressGauge({ metric }: { metric: { label: string; percent
         })}
       </svg>
       <div className="absolute inset-x-0 top-[42px] text-center">
-        <p className="text-[22px] font-medium leading-none text-[#343a40]">{metric.percent}%</p>
+        <p className="text-[22px] font-medium leading-none text-white">{metric.percent}%</p>
         <p className="mt-1 text-xs leading-none" style={{ color: metric.color }}>{metric.count}/{metric.total}</p>
       </div>
     </div>
@@ -1657,16 +1657,16 @@ function ProjectsCard({ orders }: { orders: AdminOrderRow[] }) {
   const projectRows = buildPcbServiceStats(orders);
 
   return (
-    <section className="rounded-xl bg-white px-4 py-4">
-      <h2 className="text-base font-medium text-slate-950">Services PCB</h2>
+    <section className="rounded-md border border-[#11516b] bg-[#08263a] px-4 py-4">
+      <h2 className="text-base font-medium text-white">Services PCB</h2>
       <div className="mt-7 space-y-7">
         {projectRows.map((project) => (
           <div key={project.label}>
             <div className="mb-2 flex items-center justify-between gap-4">
-              <span className="font-semibold text-slate-950">{project.label}</span>
-              <span className="text-sm text-[#7582ad]">{project.percent}%</span>
+              <span className="font-semibold text-white">{project.label}</span>
+              <span className="text-sm text-white/65">{project.percent}%</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-[#eef1f6]">
+            <div className="h-2 overflow-hidden rounded-full bg-[#0c3149]">
               <span className="block h-full rounded-full" style={{ width: `${project.percent}%`, backgroundColor: project.color }} />
             </div>
           </div>
