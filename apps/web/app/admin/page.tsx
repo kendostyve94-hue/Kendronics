@@ -2790,6 +2790,8 @@ function AdminOrderActions({
   onSubmitShipment: (event: FormEvent<HTMLFormElement>) => void;
   supplierOrderPackage: AdminSupplierOrderPackage | null;
 }) {
+  const darkFieldClassName = `${fieldClassName} admin-dark-control`;
+
   return (
     <div className="space-y-5">
       <div className="border border-[#1c5874] bg-[#061d2d] p-5">
@@ -2799,44 +2801,74 @@ function AdminOrderActions({
         <p className="mt-1 text-xs font-bold text-[#9fc2d7]">Quote {order.quoteId}</p>
       </div>
 
-      <AdminForm title="Update status" onSubmit={onSubmitStatus} variant="dark">
-        <select name="status" defaultValue={order.status} className={fieldClassName}>
-          {adminOrderStatuses.map((status) => <option key={status} value={status}>{adminStatusLabels[status]}</option>)}
-        </select>
-        <input name="note" placeholder="Customer-safe tracking note" className={fieldClassName} />
-      </AdminForm>
+      <OrderActionSection
+        title="Suivi commande"
+        description="Mettre a jour l'etape visible dans l'administration et ajouter une note de suivi client si necessaire."
+      >
+        <AdminForm title="Changer l'etat de la commande" onSubmit={onSubmitStatus} variant="dark">
+          <select name="status" defaultValue={order.status} className={darkFieldClassName}>
+            {adminOrderStatuses.map((status) => <option key={status} value={status}>{adminStatusLabels[status]}</option>)}
+          </select>
+          <input name="note" placeholder="Note de suivi visible cote client si necessaire" className={darkFieldClassName} />
+        </AdminForm>
+      </OrderActionSection>
 
-      <AdminForm title="Supplier reference" onSubmit={onSubmitSupplier} variant="dark">
-        <input name="externalManufacturingPartner" placeholder="External partner name" className={fieldClassName} />
-        <input name="externalSupplierOrderId" placeholder="Supplier order ID" className={fieldClassName} />
-        <p className="text-xs font-bold text-[#9fc2d7]">Admin-only. These values are never shown on customer order detail pages.</p>
-      </AdminForm>
+      <OrderActionSection
+        title="Fournisseur"
+        description="Identifier l'usine ou le partenaire, preparer le dossier fournisseur et conserver les references de production."
+      >
+        <div className="grid gap-4 xl:grid-cols-2">
+          <AdminForm title="Reference fournisseur" onSubmit={onSubmitSupplier} variant="dark">
+            <input name="externalManufacturingPartner" placeholder="Nom du fournisseur, ex. PCBWay" className={darkFieldClassName} />
+            <input name="externalSupplierOrderId" placeholder="Numero de commande chez le fournisseur" className={darkFieldClassName} />
+            <p className="text-xs font-bold text-[#9fc2d7]">Information interne utilisee pour retrouver la fabrication cote partenaire.</p>
+          </AdminForm>
 
-      <AdminForm title="Supplier order package" onSubmit={onSubmitSupplierOrder} variant="dark">
-        <select name="mode" defaultValue="prepare" className={fieldClassName}>
-          <option value="prepare">Prepare package</option>
-          <option value="create">Create through API</option>
-        </select>
-        <input name="supplier" placeholder="Supplier" defaultValue={order.externalManufacturingPartner || 'jlcpcb'} className={fieldClassName} />
-        <input name="note" placeholder="Internal note optional" className={fieldClassName} />
-        <p className="text-xs font-bold text-[#9fc2d7]">Prepare mode is assisted ordering. Create mode only works when the supplier order API is configured.</p>
-      </AdminForm>
+          <AdminForm title="Dossier fournisseur" onSubmit={onSubmitSupplierOrder} variant="dark">
+            <select name="mode" defaultValue="prepare" className={darkFieldClassName}>
+              <option value="prepare">Preparer le dossier</option>
+              <option value="create">Creer via API fournisseur</option>
+            </select>
+            <input name="supplier" placeholder="Fournisseur" defaultValue={order.externalManufacturingPartner || 'jlcpcb'} className={darkFieldClassName} />
+            <input name="note" placeholder="Note interne optionnelle" className={darkFieldClassName} />
+            <p className="text-xs font-bold text-[#9fc2d7]">Le mode preparation genere le dossier. Le mode API fonctionne uniquement si le fournisseur est configure.</p>
+          </AdminForm>
+        </div>
+        {supplierOrderPackage ? <SupplierOrderPackagePanel packageData={supplierOrderPackage} /> : null}
+      </OrderActionSection>
 
-      {supplierOrderPackage ? <SupplierOrderPackagePanel packageData={supplierOrderPackage} /> : null}
+      <OrderActionSection
+        title="Finance et livraison"
+        description="Saisir le cout reel facture par le fournisseur et renseigner les informations d'expedition."
+      >
+        <div className="grid gap-4 xl:grid-cols-2">
+          <AdminForm title="Cout reel fournisseur" onSubmit={onSubmitSupplierRealPrice} variant="dark">
+            <input name="realSupplierPrice" type="number" min="0.01" step="0.01" placeholder="Prix reel facture par le fournisseur" className={darkFieldClassName} />
+            <input name="supplierOrderId" placeholder="Numero fournisseur optionnel" defaultValue={order.externalSupplierOrderId} className={darkFieldClassName} />
+            <input name="note" placeholder="Note interne optionnelle" className={darkFieldClassName} />
+            <p className="text-xs font-bold text-[#9fc2d7]">Ce cout sert a calculer la marge reelle et a ameliorer les futurs devis.</p>
+          </AdminForm>
 
-      <AdminForm title="Supplier real price" onSubmit={onSubmitSupplierRealPrice} variant="dark">
-        <input name="realSupplierPrice" type="number" min="0.01" step="0.01" placeholder="Real supplier PCB price" className={fieldClassName} />
-        <input name="supplierOrderId" placeholder="Supplier order ID optional" defaultValue={order.externalSupplierOrderId} className={fieldClassName} />
-        <input name="note" placeholder="Internal note optional" className={fieldClassName} />
-        <p className="text-xs font-bold text-[#9fc2d7]">Updates the Smart Buffer bucket for this quote. This cost is admin-only.</p>
-      </AdminForm>
-
-      <AdminForm title="Shipment" onSubmit={onSubmitShipment} variant="dark">
-        <input name="carrierName" placeholder="Carrier" defaultValue={order.carrierName} className={fieldClassName} />
-        <input name="trackingNumber" placeholder="Tracking number" defaultValue={order.trackingNumber} className={fieldClassName} />
-        <input name="estimatedDeliveryAt" type="date" className={fieldClassName} />
-      </AdminForm>
+          <AdminForm title="Expedition" onSubmit={onSubmitShipment} variant="dark">
+            <input name="carrierName" placeholder="Transporteur" defaultValue={order.carrierName} className={darkFieldClassName} />
+            <input name="trackingNumber" placeholder="Numero de suivi" defaultValue={order.trackingNumber} className={darkFieldClassName} />
+            <input name="estimatedDeliveryAt" type="date" className={darkFieldClassName} />
+          </AdminForm>
+        </div>
+      </OrderActionSection>
     </div>
+  );
+}
+
+function OrderActionSection({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+  return (
+    <section className="border border-[#1c5874] bg-[#082b40] p-5">
+      <div className="mb-4 border-b border-[#16465f] pb-4">
+        <h3 className="text-lg font-black text-white">{title}</h3>
+        <p className="mt-1 text-sm font-medium text-[#9fc2d7]">{description}</p>
+      </div>
+      <div className="space-y-4">{children}</div>
+    </section>
   );
 }
 
@@ -2844,10 +2876,10 @@ function SupplierOrderPackagePanel({ packageData }: { packageData: AdminSupplier
   const analysis = packageData.gerber?.analysis;
 
   return (
-    <Card className="p-5">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Prepared supplier data</p>
-      <h2 className="mt-2 text-lg font-black text-ink">{packageData.supplier.toUpperCase()} package</h2>
-      <div className="mt-4 space-y-3 text-sm text-slate-600">
+    <div className="border border-[#1c5874] bg-[#061d2d] p-5">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-[#2edf7f]">Dossier prepare</p>
+      <h2 className="mt-2 text-lg font-black text-white">Dossier {packageData.supplier.toUpperCase()}</h2>
+      <div className="mt-4 space-y-3 text-sm text-[#9fc2d7]">
         <InfoLine label="Order" value={`${packageData.orderNumber} / ${packageData.quoteId.slice(0, 8)}`} />
         <InfoLine label="Gerber" value={packageData.gerber?.storageKey ?? 'Missing upload record'} />
         <InfoLine label="Board" value={`${packageData.pcb.layers} layers, ${packageData.pcb.lengthMm} x ${packageData.pcb.widthMm} mm, ${packageData.pcb.quantity} pcs`} />
@@ -2859,17 +2891,17 @@ function SupplierOrderPackagePanel({ packageData }: { packageData: AdminSupplier
         <InfoLine label="Live API" value={packageData.liveCreateAvailable ? 'Configured' : 'Not configured'} />
         {packageData.supplierOrderId ? <InfoLine label="Supplier ID" value={packageData.supplierOrderId} /> : null}
       </div>
-      <div className="mt-4 rounded-sm border border-slate-200 bg-slate-50 p-3 text-xs font-bold text-slate-600">
+      <div className="mt-4 border border-[#1c5874] bg-[#082b40] p-3 text-xs font-bold text-[#9fc2d7]">
         {packageData.notes.join(' ')}
       </div>
-    </Card>
+    </div>
   );
 }
 
 function InfoLine({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-3">
-      <span className="min-w-28 font-black text-ink">{label}</span>
+      <span className="min-w-28 font-black text-white">{label}</span>
       <span className="break-all">{value}</span>
     </div>
   );
