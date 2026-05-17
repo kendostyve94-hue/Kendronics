@@ -1994,10 +1994,16 @@ function AnalyticsMetricIcon({ icon }: { icon: 'quote' | 'percent' | 'cart' | 'u
 function AnalyticsRevenueChart({ series }: { series: Array<{ month: string; revenue: number; orders: number }> }) {
   const maxRevenue = Math.max(...series.map((item) => item.revenue), 1);
   const maxOrders = Math.max(...series.map((item) => item.orders), 1);
+  const visibleSeries = series.map((item) => ({
+    ...item,
+    revenueVisual: item.revenue > 0 ? 24 + (item.revenue / maxRevenue) * 42 : 0,
+    orderVisual: item.orders > 0 ? 30 + (item.orders / maxOrders) * 42 : 8,
+  }));
   const linePoints = series
     .map((item, index) => {
       const x = 8 + (index / Math.max(series.length - 1, 1)) * 86;
-      const y = 76 - (item.orders / maxOrders) * 58;
+      const visual = item.orders > 0 ? 30 + (item.orders / maxOrders) * 42 : 8;
+      const y = 76 - visual;
       return `${x},${y}`;
     })
     .join(' ');
@@ -2015,15 +2021,15 @@ function AnalyticsRevenueChart({ series }: { series: Array<{ month: string; reve
       <div className="mt-5 h-[300px]">
         <svg viewBox="0 0 100 84" className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
           {[18, 32.5, 47, 61.5, 76].map((y) => <line key={y} x1="6" x2="96" y1={y} y2={y} stroke="rgba(141,180,201,0.18)" strokeWidth="0.35" />)}
-          {series.map((item, index) => {
-            const barHeight = (item.revenue / maxRevenue) * 54;
+          {visibleSeries.map((item, index) => {
+            const barHeight = item.revenueVisual;
             const x = 8 + (index / Math.max(series.length - 1, 1)) * 86;
             return <rect key={item.month} x={x - 1.15} y={76 - barHeight} width="2.3" height={barHeight} rx="0.4" fill="url(#revenueBar)" opacity="0.95" />;
           })}
           <polyline points={linePoints} fill="none" stroke="#2d8cff" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />
-          {series.map((item, index) => {
+          {visibleSeries.map((item, index) => {
             const x = 8 + (index / Math.max(series.length - 1, 1)) * 86;
-            const y = 76 - (item.orders / maxOrders) * 58;
+            const y = 76 - item.orderVisual;
             return <circle key={`${item.month}-point`} cx={x} cy={y} r="1.35" fill="#ffffff" stroke="#2d8cff" strokeWidth="0.75" />;
           })}
           <defs>
