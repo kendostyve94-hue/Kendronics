@@ -1885,10 +1885,10 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
   return (
     <div className="rounded-md border border-[#12324a] bg-[#061d2d] p-4 text-white">
       <div className="grid gap-4 lg:grid-cols-4">
-        <AnalyticsMetricCard tone="#0ca66a" title="Devis generes" value={formatCompactNumber(quoteSeries.reduce((sum, item) => sum + item.quotes, 0))} trend={revenueSummary.revenueTrendLabel} sparkline={quoteSeries.map((item) => item.quotes)} />
-        <AnalyticsMetricCard tone="#2384ff" title="Taux de conversion" value={`${conversionRate.toFixed(1)}%`} trend={`+ ${shareOf(paidOrders.length, orders.length)}%`} sparkline={quoteSeries.map((item) => item.paid)} />
-        <AnalyticsMetricCard tone="#13a48e" title="Commandes payees" value={formatCompactNumber(paidOrders.length)} trend={`+ ${shareOf(paidOrders.length, orders.length)}%`} sparkline={revenueSeries.map((item) => item.orders)} />
-        <AnalyticsMetricCard tone="#1fb6d9" title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend="+ 30 jours" sparkline={orderSparkline} />
+        <AnalyticsMetricCard tone="#16c784" icon="quote" title="Devis generes" value={formatCompactNumber(quoteSeries.reduce((sum, item) => sum + item.quotes, 0))} trend={revenueSummary.revenueTrendLabel} sparkline={quoteSeries.map((item) => item.quotes)} />
+        <AnalyticsMetricCard tone="#2787ff" icon="percent" title="Taux de conversion" value={`${conversionRate.toFixed(1)}%`} trend={`+ ${shareOf(paidOrders.length, orders.length)}%`} sparkline={quoteSeries.map((item) => item.paid)} />
+        <AnalyticsMetricCard tone="#12a88f" icon="cart" title="Commandes payees" value={formatCompactNumber(paidOrders.length)} trend={`+ ${shareOf(paidOrders.length, orders.length)}%`} sparkline={revenueSeries.map((item) => item.orders)} />
+        <AnalyticsMetricCard tone="#27bddc" icon="users" title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend="+ 30 jours" sparkline={orderSparkline} />
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
@@ -1955,18 +1955,21 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
   );
 }
 
-function AnalyticsMetricCard({ title, value, trend, sparkline, tone }: { title: string; value: string; trend: string; sparkline: number[]; tone: string }) {
+function AnalyticsMetricCard({ title, value, trend, sparkline, tone, icon }: { title: string; value: string; trend: string; sparkline: number[]; tone: string; icon: 'quote' | 'percent' | 'cart' | 'users' }) {
   return (
-    <article className="rounded-md border border-[#143b58] bg-[#08263a] p-4">
-      <div className="flex items-start gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-sm text-white" style={{ backgroundColor: tone }}>
-          <DashboardKpiIcon icon="deal" />
+    <article
+      className="min-h-[178px] rounded-md border border-[#11516b] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_18px_rgba(16,185,129,0.08)]"
+      style={{ background: 'linear-gradient(135deg, #07334a 0%, #05283c 55%, #062236 100%)' }}
+    >
+      <div className="flex items-start gap-4">
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-sm text-white shadow-[0_0_14px_rgba(0,0,0,0.25)]" style={{ backgroundColor: tone }}>
+          <AnalyticsMetricIcon icon={icon} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-semibold text-white/80">{title}</p>
-          <div className="mt-3 flex items-end justify-between gap-3">
-            <p className="text-2xl font-semibold tracking-tight text-white">{value}</p>
-            <p className="text-xs font-semibold text-[#53db72]">{trend}</p>
+          <p className="truncate text-sm font-semibold text-white/85">{title}</p>
+          <div className="mt-8 flex items-end justify-between gap-3">
+            <p className="text-[34px] font-semibold leading-none tracking-tight text-white">{value}</p>
+            <p className="pb-1 text-sm font-semibold text-[#65d84f]">{trend}</p>
           </div>
           <MiniLineChart values={sparkline} color={tone} />
         </div>
@@ -1975,21 +1978,34 @@ function AnalyticsMetricCard({ title, value, trend, sparkline, tone }: { title: 
   );
 }
 
+function AnalyticsMetricIcon({ icon }: { icon: 'quote' | 'percent' | 'cart' | 'users' }) {
+  if (icon === 'quote') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 3h8l4 4v14H7z" /><path d="M15 3v5h5" /><path d="M10 13h6" /><path d="M10 17h4" /></svg>;
+  }
+  if (icon === 'percent') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M7 17 17 7" /><circle cx="8" cy="8" r="2.1" /><circle cx="16" cy="16" r="2.1" /></svg>;
+  }
+  if (icon === 'cart') {
+    return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h2l2 10h9l2-7H8" /><circle cx="10" cy="20" r="1.4" /><circle cx="17" cy="20" r="1.4" /></svg>;
+  }
+  return <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="2.6" /><path d="M7.5 19a4.5 4.5 0 0 1 9 0" /><path d="M5 10.5a2 2 0 1 0 0 4" /><path d="M19 10.5a2 2 0 1 1 0 4" /></svg>;
+}
+
 function AnalyticsRevenueChart({ series }: { series: Array<{ month: string; revenue: number; orders: number }> }) {
   const maxRevenue = Math.max(...series.map((item) => item.revenue), 1);
   const maxOrders = Math.max(...series.map((item) => item.orders), 1);
   const linePoints = series
     .map((item, index) => {
-      const x = series.length === 1 ? 50 : (index / (series.length - 1)) * 100;
-      const y = 78 - (item.revenue / maxRevenue) * 58;
+      const x = 8 + (index / Math.max(series.length - 1, 1)) * 86;
+      const y = 76 - (item.orders / maxOrders) * 58;
       return `${x},${y}`;
     })
     .join(' ');
 
   return (
-    <section className="rounded-md border border-[#143b58] bg-[#08263a] p-4">
+    <section className="rounded-md border border-[#11516b] bg-[#08263a] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-white">Revenus et commandes</h2>
+        <h2 className="text-lg font-semibold text-white">Revenus et commandes</h2>
         <div className="flex items-center gap-4 text-[11px] text-white/70">
           <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#36d679]" />Revenus</span>
           <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#2d8cff]" />Commandes</span>
@@ -1998,13 +2014,24 @@ function AnalyticsRevenueChart({ series }: { series: Array<{ month: string; reve
       </div>
       <div className="mt-5 h-[300px]">
         <svg viewBox="0 0 100 84" className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
-          {[18, 34, 50, 66].map((y) => <line key={y} x1="0" x2="100" y1={y} y2={y} stroke="rgba(141,180,201,0.18)" strokeWidth="0.35" />)}
-          <polyline points={linePoints} fill="none" stroke="#2d8cff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          {[18, 32.5, 47, 61.5, 76].map((y) => <line key={y} x1="6" x2="96" y1={y} y2={y} stroke="rgba(141,180,201,0.18)" strokeWidth="0.35" />)}
           {series.map((item, index) => {
-            const barHeight = (item.orders / maxOrders) * 44;
-            const x = series.length === 1 ? 48 : (index / (series.length - 1)) * 96 + 2;
-            return <rect key={item.month} x={x - 0.9} y={80 - barHeight} width="1.8" height={barHeight} rx="0.4" fill="#36d679" opacity="0.9" />;
+            const barHeight = (item.revenue / maxRevenue) * 54;
+            const x = 8 + (index / Math.max(series.length - 1, 1)) * 86;
+            return <rect key={item.month} x={x - 1.15} y={76 - barHeight} width="2.3" height={barHeight} rx="0.4" fill="url(#revenueBar)" opacity="0.95" />;
           })}
+          <polyline points={linePoints} fill="none" stroke="#2d8cff" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />
+          {series.map((item, index) => {
+            const x = 8 + (index / Math.max(series.length - 1, 1)) * 86;
+            const y = 76 - (item.orders / maxOrders) * 58;
+            return <circle key={`${item.month}-point`} cx={x} cy={y} r="1.35" fill="#ffffff" stroke="#2d8cff" strokeWidth="0.75" />;
+          })}
+          <defs>
+            <linearGradient id="revenueBar" x1="0" x2="0" y1="0" y2="1">
+              <stop stopColor="#72d45e" offset="0" />
+              <stop stopColor="#21c4c4" offset="1" />
+            </linearGradient>
+          </defs>
         </svg>
       </div>
       <div className="grid grid-cols-12 gap-2 text-center text-[11px] text-white/65">
@@ -2182,17 +2209,19 @@ function DarkSupportMetric({ label, value, helper }: { label: string; value: str
 
 function MiniLineChart({ values, color }: { values: number[]; color: string }) {
   const maxValue = Math.max(...values, 1);
-  const points = values
-    .map((value, index) => {
-      const x = values.length === 1 ? 50 : (index / (values.length - 1)) * 100;
-      const y = 38 - (value / maxValue) * 30;
-      return `${x},${y}`;
-    })
-    .join(' ');
+  const plottedValues = values.length > 0 ? values : [0];
+  const points = plottedValues.map((value, index) => {
+    const x = plottedValues.length === 1 ? 50 : 4 + (index / (plottedValues.length - 1)) * 92;
+    const y = 34 - (value / maxValue) * 24;
+    return { x, y };
+  });
+  const line = points.map((point) => `${point.x},${point.y}`).join(' ');
+  const area = `4,40 ${line} 96,40`;
 
   return (
     <svg viewBox="0 0 100 44" className="mt-5 h-12 w-full" preserveAspectRatio="none" aria-hidden="true">
-      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <polygon points={area} fill={color} opacity="0.13" />
+      <polyline points={line} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
