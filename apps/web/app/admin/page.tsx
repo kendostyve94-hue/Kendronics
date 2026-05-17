@@ -989,7 +989,7 @@ function LegacyAdminTopbar({ onSelect }: { onSelect: (tab: AdminTab) => void }) 
 function AdminPageHeader({ meta, isDashboard = false }: { meta: ReturnType<typeof getAdminPageMeta>; isDashboard?: boolean }) {
   if (isDashboard) {
     return (
-      <div className="flex items-center justify-between gap-4 rounded-md border border-[#12324a] bg-[#061d2d] p-5">
+      <div className="flex items-center justify-between gap-4 rounded-md p-5" style={{ backgroundColor: '#061d2d', border: '1px solid #12324a' }}>
         <h1 className="text-xl font-semibold tracking-tight text-white sm:text-[21px]">{meta.title}</h1>
         <div className="flex items-center gap-2 text-sm">
           <span className="text-white/55">Accueil</span>
@@ -1183,7 +1183,7 @@ function ModernDashboardPanel({
   const supportMessages = tickets.length;
 
   return (
-    <div className="relative rounded-md border border-[#12324a] bg-[#061d2d] p-4 text-white">
+    <div className="relative rounded-md p-4 text-white" style={{ backgroundColor: '#061d2d', border: '1px solid #12324a' }}>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(25rem,0.95fr)]">
         <SalesOverviewCard orders={orders} intelligence={intelligence} />
         <div className="grid gap-4 sm:grid-cols-2">
