@@ -1864,29 +1864,248 @@ function SupplierPanel({
 }
 
 function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[]; intelligence: AdminPricingIntelligence | null }) {
+  const revenueSummary = buildAnalyticsRevenueSummary(orders);
+  const commercialPerformance = buildCommercialPerformance(revenueSummary.currentRevenue, revenueSummary.previousRevenue);
+  const quoteSeries = buildQuoteSeries(orders, intelligence?.snapshots ?? [], 'year');
+  const paidOrders = orders.filter((order) => getPaymentStatus(order) === 'paid');
+  const conversionRate = quoteSeries.reduce((sum, item) => sum + item.quotes, 0)
+    ? (quoteSeries.reduce((sum, item) => sum + item.paid, 0) / quoteSeries.reduce((sum, item) => sum + item.quotes, 0)) * 100
+    : 0;
+  const activeCustomers = uniqueValues(orders.filter((order) => isRecentDate(order.createdAt, 30)).map((order) => order.userId)).length;
+  const serviceStats = buildPcbServiceStats(orders);
+  const countrySales = buildAfricanCountrySales(orders);
+  const revenueSeries = buildAnalyticsRevenueSeries(orders);
+  const orderSparkline = buildMonthlyOrderCounts(orders);
+  const supplierCost = intelligence?.metrics.totals.supplierEstimatedPrice ?? 0;
+  const margin = Math.max(0, revenueSummary.totalRevenue - supplierCost);
+
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
-      <Card className="p-5">
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Analytics</p>
-        <h2 className="mt-2 text-2xl font-black text-ink">Croissance et performance</h2>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <DashboardTile label="Revenu suivi" value={formatCurrency(sumOrderTotals(orders))} />
-          <DashboardTile label="Panier moyen" value={formatCurrency(orders.length ? sumOrderTotals(orders) / orders.length : 0)} />
-          <DashboardTile label="Pays actifs" value={uniqueValues(orders.map((order) => order.destinationCountryIso2)).length.toString()} />
-          <DashboardTile label="Taux SAV" value={`${orders.length ? Math.round((tickets.length / orders.length) * 100) : 0}%`} />
+    <div className="space-y-6">
+      <section className="rounded-md border border-[#153a63] bg-[linear-gradient(135deg,#06395a_0%,#0b7d84_48%,#5d4fd4_100%)] p-5 text-white">
+        <div className="grid gap-4 lg:grid-cols-4">
+          <AnalyticsMetricCard title="Devis generes" value={formatCompactNumber(quoteSeries.reduce((sum, item) => sum + item.quotes, 0))} trend={revenueSummary.revenueTrendLabel} sparkline={quoteSeries.map((item) => item.quotes)} />
+          <AnalyticsMetricCard title="Taux conversion" value={`${conversionRate.toFixed(1)}%`} trend={`${shareOf(paidOrders.length, orders.length)}% commandes`} sparkline={quoteSeries.map((item) => item.paid)} />
+          <AnalyticsMetricCard title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend="30 jours" sparkline={orderSparkline} />
+          <AnalyticsMetricCard title="Commandes payees" value={formatCompactNumber(paidOrders.length)} trend={`${shareOf(paidOrders.length, orders.length)}% du flux`} sparkline={revenueSeries.map((item) => item.orders)} />
         </div>
-      </Card>
-      <Card className="p-5">
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Pricing intelligence</p>
-        <h2 className="mt-2 text-2xl font-black text-ink">Moteur Smart Buffer</h2>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <DashboardTile label="Snapshots" value={String(intelligence?.metrics.snapshotCount ?? 0)} />
-          <DashboardTile label="Buckets" value={String(intelligence?.metrics.bucketCount ?? 0)} />
-          <DashboardTile label="Buckets risque" value={String(intelligence?.metrics.flaggedBucketCount ?? 0)} />
-          <DashboardTile label="Buffer moyen" value={intelligence ? `x${intelligence.metrics.averageBuffer.toFixed(2)}` : 'x0.00'} />
+
+        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.7fr)_minmax(19rem,0.7fr)]">
+          <AnalyticsRevenueChart series={revenueSeries} />
+          <RevenueSummaryCard summary={revenueSummary} />
+          <CommercialPerformanceCard performance={commercialPerformance} />
         </div>
-      </Card>
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.48fr)]">
+        <section className="rounded-md border border-slate-200 bg-white">
+          <div className="border-b border-slate-200 px-6 py-5">
+            <h2 className="text-lg font-semibold text-slate-950">Revenus et performance commerciale</h2>
+          </div>
+          <div className="grid gap-0 md:grid-cols-3">
+            <AnalyticsFinancialTile label="Revenus suivis" value={formatCurrency(revenueSummary.totalRevenue)} helper={`${paidOrders.length} commandes payees`} color="#0f9f6e" />
+            <AnalyticsFinancialTile label="Marge estimee" value={formatCurrency(margin)} helper={supplierCost ? 'prix client - fournisseur' : 'en attente cout fournisseur'} color="#6fbc53" />
+            <AnalyticsFinancialTile label="Couts fournisseurs" value={formatCurrency(supplierCost)} helper={`${intelligence?.metrics.snapshotCount ?? 0} snapshots pricing`} color="#0e6389" />
+          </div>
+        </section>
+        <TopAfricanCountriesCard countries={countrySales} />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <AnalyticsServiceCard services={serviceStats} />
+        <AnalyticsSupportCard orders={orders} tickets={tickets} />
+      </div>
     </div>
+  );
+}
+
+function AnalyticsMetricCard({ title, value, trend, sparkline }: { title: string; value: string; trend: string; sparkline: number[] }) {
+  return (
+    <article className="rounded-md border border-white/10 bg-white/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium text-white/80">{title}</p>
+          <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{value}</p>
+        </div>
+        <span className="text-sm font-semibold text-white">{trend}</span>
+      </div>
+      <MiniLineChart values={sparkline} />
+    </article>
+  );
+}
+
+function AnalyticsRevenueChart({ series }: { series: Array<{ month: string; revenue: number; orders: number }> }) {
+  const maxRevenue = Math.max(...series.map((item) => item.revenue), 1);
+  const maxOrders = Math.max(...series.map((item) => item.orders), 1);
+  const linePoints = series
+    .map((item, index) => {
+      const x = series.length === 1 ? 50 : (index / (series.length - 1)) * 100;
+      const y = 78 - (item.revenue / maxRevenue) * 58;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  return (
+    <section className="rounded-md border border-white/10 bg-black/15 p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-white">Revenus mensuels</h2>
+        <div className="flex items-center gap-4 text-xs text-white/75">
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-white" />Revenus</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#9be18a]" />Commandes</span>
+        </div>
+      </div>
+      <div className="mt-6 h-[260px]">
+        <svg viewBox="0 0 100 84" className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
+          {[18, 34, 50, 66].map((y) => <line key={y} x1="0" x2="100" y1={y} y2={y} stroke="rgba(255,255,255,0.12)" strokeWidth="0.35" />)}
+          <polyline points={linePoints} fill="none" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          {series.map((item, index) => {
+            const barHeight = (item.orders / maxOrders) * 44;
+            const x = series.length === 1 ? 48 : (index / (series.length - 1)) * 96 + 2;
+            return <rect key={item.month} x={x - 0.7} y={80 - barHeight} width="1.4" height={barHeight} rx="0.4" fill="#9be18a" opacity="0.85" />;
+          })}
+        </svg>
+      </div>
+      <div className="grid grid-cols-12 gap-2 text-center text-xs text-white/70">
+        {series.map((item) => <span key={item.month}>{item.month}</span>)}
+      </div>
+    </section>
+  );
+}
+
+function RevenueSummaryCard({ summary }: { summary: ReturnType<typeof buildAnalyticsRevenueSummary> }) {
+  return (
+    <section className="rounded-md border border-white/10 bg-white p-5 text-slate-950">
+      <div className="flex items-center gap-3">
+        <span className="grid h-11 w-11 place-items-center rounded-sm bg-[#0f9f6e] text-white">
+          <DashboardKpiIcon icon="dollar" />
+        </span>
+        <h3 className="text-base font-semibold">Revenus</h3>
+      </div>
+      <p className="mt-7 text-4xl font-semibold tracking-tight">{formatCurrency(summary.currentRevenue)}</p>
+      <p className={`mt-4 text-sm font-semibold ${summary.revenueTrend >= 0 ? 'text-[#58b947]' : 'text-[#ff315f]'}`}>
+        {summary.revenueTrend >= 0 ? '^' : 'v'} {Math.abs(summary.revenueTrend).toFixed(1)}%
+      </p>
+      <p className="mt-2 text-sm text-slate-500">vs periode precedente</p>
+    </section>
+  );
+}
+
+function CommercialPerformanceCard({ performance }: { performance: ReturnType<typeof buildCommercialPerformance> }) {
+  const radius = 58;
+  const circumference = Math.PI * radius;
+  const clamped = Math.min(100, Math.max(0, performance.percent));
+
+  return (
+    <section className="rounded-md border border-white/10 bg-white p-5 text-slate-950">
+      <h3 className="text-base font-semibold">Performance commerciale</h3>
+      <div className="mt-5 grid place-items-center">
+        <svg viewBox="0 0 160 92" className="h-32 w-full max-w-[210px]" aria-hidden="true">
+          <path d="M22 78a58 58 0 0 1 116 0" fill="none" stroke="#dce8f1" strokeWidth="12" strokeLinecap="round" />
+          <path
+            d="M22 78a58 58 0 0 1 116 0"
+            fill="none"
+            stroke="#0f9f6e"
+            strokeWidth="12"
+            strokeLinecap="round"
+            strokeDasharray={`${(clamped / 100) * circumference} ${circumference}`}
+          />
+          <text x="80" y="62" textAnchor="middle" className="fill-slate-950 text-[24px] font-semibold">{Math.round(clamped)}%</text>
+          <text x="80" y="82" textAnchor="middle" className="fill-slate-500 text-[10px]">objectif atteint</text>
+        </svg>
+      </div>
+      <div className="mt-4 space-y-1 text-sm text-slate-700">
+        <p>Objectif : {formatCurrency(performance.goal)}</p>
+        <p>Actuel : {formatCurrency(performance.current)}</p>
+      </div>
+    </section>
+  );
+}
+
+function TopAfricanCountriesCard({ countries }: { countries: ReturnType<typeof buildAfricanCountrySales> }) {
+  return (
+    <section className="rounded-md border border-slate-200 bg-white p-6">
+      <h2 className="text-lg font-semibold text-slate-950">Top pays africains</h2>
+      <div className="mt-5 space-y-4">
+        {countries.length ? countries.map((country) => (
+          <div key={country.code} className="grid grid-cols-[2rem_minmax(0,1fr)_auto_auto] items-center gap-3 text-sm">
+            <span className="text-2xl leading-none">{countryFlag(country.code)}</span>
+            <span className="truncate font-medium text-slate-800">{country.country.replace(/\s\(\d+\)$/, '')}</span>
+            <span className="font-semibold text-slate-950">{country.value}</span>
+            <span className="w-12 text-right text-xs text-slate-500">{country.percent}%</span>
+          </div>
+        )) : <p className="text-sm text-slate-500">Aucune commande africaine suivie.</p>}
+      </div>
+      <p className="mt-6 text-center text-sm font-semibold text-[#1478ff]">Classement temps reel</p>
+    </section>
+  );
+}
+
+function AnalyticsFinancialTile({ label, value, helper, color }: { label: string; value: string; helper: string; color: string }) {
+  return (
+    <article className="border-b border-slate-200 p-6 md:border-b-0 md:border-r last:md:border-r-0">
+      <span className="grid h-12 w-12 place-items-center rounded-sm text-white" style={{ backgroundColor: color }}>
+        <DashboardKpiIcon icon="dollar" />
+      </span>
+      <p className="mt-5 text-sm font-semibold text-slate-600">{label}</p>
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{value}</p>
+      <p className="mt-3 text-xs text-slate-500">{helper}</p>
+    </article>
+  );
+}
+
+function AnalyticsServiceCard({ services }: { services: ReturnType<typeof buildPcbServiceStats> }) {
+  return (
+    <section className="rounded-md border border-slate-200 bg-white p-6">
+      <h2 className="text-lg font-semibold text-slate-950">Services les plus commandes</h2>
+      <div className="mt-6 space-y-5">
+        {services.map((service) => (
+          <div key={service.label}>
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-semibold text-slate-950">{service.label}</span>
+              <span className="text-slate-500">{service.percent}%</span>
+            </div>
+            <div className="mt-2 h-2 bg-slate-100">
+              <div className="h-full" style={{ width: `${service.percent}%`, backgroundColor: service.color }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AnalyticsSupportCard({ orders, tickets }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[] }) {
+  const openTickets = tickets.filter((ticket) => ticket.status !== 'closed').length;
+  const urgentTickets = tickets.filter((ticket) => ticket.status === 'pending_admin').length;
+  const delivered = orders.filter((order) => order.status === 'delivered').length;
+  const inLogistics = orders.filter((order) => ['china_3pl_received', 'shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status)).length;
+
+  return (
+    <section className="rounded-md border border-slate-200 bg-white p-6">
+      <h2 className="text-lg font-semibold text-slate-950">Support et operations</h2>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <DashboardTile label="Tickets ouverts" value={formatCompactNumber(openTickets)} />
+        <DashboardTile label="Tickets urgents" value={formatCompactNumber(urgentTickets)} />
+        <DashboardTile label="Colis livres" value={formatCompactNumber(delivered)} />
+        <DashboardTile label="Flux logistique" value={formatCompactNumber(inLogistics)} />
+      </div>
+    </section>
+  );
+}
+
+function MiniLineChart({ values }: { values: number[] }) {
+  const maxValue = Math.max(...values, 1);
+  const points = values
+    .map((value, index) => {
+      const x = values.length === 1 ? 50 : (index / (values.length - 1)) * 100;
+      const y = 38 - (value / maxValue) * 30;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  return (
+    <svg viewBox="0 0 100 44" className="mt-5 h-12 w-full" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points={points} fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -2569,6 +2788,82 @@ function percentOf(value: number, total: number): number {
 
 function sumOrderTotals(orders: AdminOrderRow[]): number {
   return orders.reduce((total, order) => total + (order.totalPrice ?? 0), 0);
+}
+
+function sumPaidOrderTotals(orders: AdminOrderRow[]): number {
+  return orders
+    .filter((order) => getPaymentStatus(order) === 'paid' && !['cancelled', 'refunded'].includes(order.status))
+    .reduce((total, order) => total + (order.totalPrice ?? 0), 0);
+}
+
+function buildAnalyticsRevenueSummary(orders: AdminOrderRow[]) {
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+  const previousMonthDate = new Date(currentYear, currentMonth - 1, 1);
+  const previousMonth = previousMonthDate.getMonth();
+  const previousYear = previousMonthDate.getFullYear();
+
+  let currentRevenue = 0;
+  let previousRevenue = 0;
+
+  for (const order of orders) {
+    if (getPaymentStatus(order) !== 'paid' || ['cancelled', 'refunded'].includes(order.status)) continue;
+    const date = new Date(order.paidAt ?? order.createdAt);
+    const value = order.totalPrice ?? 0;
+    if (date.getFullYear() === currentYear && date.getMonth() === currentMonth) currentRevenue += value;
+    if (date.getFullYear() === previousYear && date.getMonth() === previousMonth) previousRevenue += value;
+  }
+
+  const revenueTrend = previousRevenue > 0 ? ((currentRevenue - previousRevenue) / previousRevenue) * 100 : currentRevenue > 0 ? 100 : 0;
+
+  return {
+    totalRevenue: sumPaidOrderTotals(orders),
+    currentRevenue,
+    previousRevenue,
+    revenueTrend,
+    revenueTrendLabel: `${revenueTrend >= 0 ? '+' : ''}${revenueTrend.toFixed(1)}%`,
+  };
+}
+
+function buildCommercialPerformance(currentRevenue: number, previousRevenue: number) {
+  const goal = previousRevenue > 0 ? previousRevenue * 1.15 : currentRevenue;
+  const percent = goal > 0 ? (currentRevenue / goal) * 100 : 0;
+
+  return {
+    current: currentRevenue,
+    goal,
+    percent,
+  };
+}
+
+function buildAnalyticsRevenueSeries(orders: AdminOrderRow[]): Array<{ month: string; revenue: number; orders: number }> {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const currentYear = new Date().getFullYear();
+  const series = months.map((month) => ({ month, revenue: 0, orders: 0 }));
+
+  for (const order of orders) {
+    if (getPaymentStatus(order) !== 'paid' || ['cancelled', 'refunded'].includes(order.status)) continue;
+    const date = new Date(order.paidAt ?? order.createdAt);
+    if (date.getFullYear() !== currentYear) continue;
+    series[date.getMonth()].revenue += order.totalPrice ?? 0;
+    series[date.getMonth()].orders += 1;
+  }
+
+  return series;
+}
+
+function buildMonthlyOrderCounts(orders: AdminOrderRow[]): number[] {
+  const currentYear = new Date().getFullYear();
+  const counts = Array.from({ length: 12 }, () => 0);
+
+  for (const order of orders) {
+    const date = new Date(order.createdAt);
+    if (date.getFullYear() !== currentYear) continue;
+    counts[date.getMonth()] += 1;
+  }
+
+  return counts;
 }
 
 function isToday(value: string): boolean {
