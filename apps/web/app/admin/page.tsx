@@ -1866,7 +1866,7 @@ function SupplierPanel({
 
 function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[]; intelligence: AdminPricingIntelligence | null }) {
   const revenueSummary = buildAnalyticsRevenueSummary(orders);
-  const commercialPerformance = buildCommercialPerformance(revenueSummary.currentRevenue, revenueSummary.previousRevenue);
+  const commercialPerformance = buildCommercialPerformance(revenueSummary.totalRevenue, revenueSummary.previousRevenue);
   const quoteSeries = buildQuoteSeries(orders, intelligence?.snapshots ?? [], 'year');
   const paidOrders = orders.filter((order) => getPaymentStatus(order) === 'paid');
   const conversionRate = quoteSeries.reduce((sum, item) => sum + item.quotes, 0)
@@ -1878,15 +1878,18 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
   const revenueSeries = buildAnalyticsRevenueSeries(orders);
   const orderSparkline = buildMonthlyOrderCounts(orders);
   const supplierCost = intelligence?.metrics.totals.supplierEstimatedPrice ?? 0;
-  const margin = Math.max(0, revenueSummary.totalRevenue - supplierCost);
+  const margin = revenueSummary.totalRevenue - supplierCost;
   const logisticsStats = buildAnalyticsLogisticsStats(orders);
-  const recentTickets = [...tickets].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()).slice(0, 5);
+  const recentTickets = [...tickets]
+    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+    .slice(0, 5)
+    .map(normalizeSupportTicketForDisplay);
 
   return (
     <div className="rounded-md border border-[#12324a] bg-[#061d2d] p-4 text-white">
       <div className="grid gap-4 lg:grid-cols-4">
         <AnalyticsMetricCard tone="#16c784" icon="quote" title="Devis generes" value={formatCompactNumber(quoteSeries.reduce((sum, item) => sum + item.quotes, 0))} trend={revenueSummary.revenueTrendLabel} sparkline={quoteSeries.map((item) => item.quotes)} />
-        <AnalyticsMetricCard tone="#2787ff" icon="percent" title="Taux de conversion" value={`${conversionRate.toFixed(1)}%`} trend={`+ ${shareOf(paidOrders.length, orders.length)}%`} sparkline={quoteSeries.map((item) => item.paid)} />
+        <AnalyticsMetricCard tone="#2787ff" icon="percent" title="Taux de conversion" value={`${conversionRate.toFixed(1)}%`} trend="devis > paiement" sparkline={quoteSeries.map((item) => item.paid)} />
         <AnalyticsMetricCard tone="#12a88f" icon="cart" title="Commandes payees" value={formatCompactNumber(paidOrders.length)} trend={`+ ${shareOf(paidOrders.length, orders.length)}%`} sparkline={revenueSeries.map((item) => item.orders)} />
         <AnalyticsMetricCard tone="#27bddc" icon="users" title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend="+ 30 jours" sparkline={orderSparkline} />
       </div>
@@ -1934,14 +1937,14 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
                 <th className="px-3 py-2 font-semibold">Priorite</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#143b58] text-white/80">
+            <tbody className="divide-y divide-[#143b58] bg-[#08263a] text-white/80">
               {recentTickets.length ? recentTickets.map((ticket) => (
-                <tr key={ticket.id}>
-                  <td className="px-3 py-2">{safeFormatDate(ticket.createdAt)}</td>
-                  <td className="px-3 py-2">{ticket.ticketNumber?.trim() || 'Ticket sans ID'}</td>
-                  <td className="px-3 py-2">{ticket.subject?.trim() || 'Sujet non renseigne'}</td>
+                <tr key={ticket.id} className="bg-[#08263a] odd:bg-[#0a3048]">
+                  <td className="px-3 py-2">{ticket.date}</td>
+                  <td className="px-3 py-2">{ticket.ticketNumber}</td>
+                  <td className="px-3 py-2">{ticket.subject}</td>
                   <td className="px-3 py-2 text-[#4ee28f]">{ticket.status}</td>
-                  <td className="px-3 py-2 text-[#ffb34d]">{ticket.status === 'pending_admin' ? 'Elevee' : 'Moyenne'}</td>
+                  <td className="px-3 py-2 text-[#ffb34d]">{ticket.priority}</td>
                 </tr>
               )) : (
                 <tr><td colSpan={5} className="px-3 py-5 text-center text-white/55">Aucun ticket support.</td></tr>
@@ -2013,16 +2016,23 @@ function AnalyticsRevenueChart({ orders }: { orders: AdminOrderRow[] }) {
         <div className="flex items-center gap-4 text-[11px] text-white/70">
           <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#36d679]" />Revenus</span>
           <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#2d8cff]" />Commandes</span>
-          <select
-            value={period}
-            onChange={(event) => setPeriod(event.target.value as AnalyticsRevenuePeriod)}
-            className="rounded-sm border border-[#1f4a68] bg-[#0b3047] px-2 py-1 text-white/80 outline-none"
-          >
-            <option value="day">Jour</option>
-            <option value="week">Semaine</option>
-            <option value="month">Mois</option>
-            <option value="year">Annee</option>
-          </select>
+          <div className="flex overflow-hidden rounded-sm border border-[#1f4a68] bg-[#0b3047]">
+            {[
+              ['day', 'Jour'],
+              ['week', 'Semaine'],
+              ['month', 'Mois'],
+              ['year', 'Annee'],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setPeriod(value as AnalyticsRevenuePeriod)}
+                className={`px-2 py-1 text-[11px] transition ${period === value ? 'bg-[#1478ff] text-white' : 'text-white/70 hover:bg-[#123c58] hover:text-white'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       <div className="mt-5 grid h-[300px] grid-cols-[3rem_minmax(0,1fr)_3rem] gap-3">
@@ -2071,11 +2081,9 @@ function RevenueSummaryCard({ summary }: { summary: ReturnType<typeof buildAnaly
         </span>
         <h3 className="text-sm font-semibold">Revenus</h3>
       </div>
-      <p className="mt-7 text-3xl font-semibold tracking-tight">{formatCurrency(summary.currentRevenue)}</p>
-      <p className={`mt-4 text-sm font-semibold ${summary.revenueTrend >= 0 ? 'text-[#58b947]' : 'text-[#ff315f]'}`}>
-        {summary.revenueTrend >= 0 ? '^' : 'v'} {Math.abs(summary.revenueTrend).toFixed(1)}%
-      </p>
-      <p className="mt-2 text-xs text-white/60">vs periode precedente</p>
+      <p className="mt-7 text-3xl font-semibold tracking-tight">{formatCurrency(summary.totalRevenue)}</p>
+      <p className="mt-4 text-sm font-semibold text-[#58b947]">revenus encaisses</p>
+      <p className="mt-2 text-xs text-white/60">total commandes payees</p>
     </section>
   );
 }
@@ -2211,9 +2219,9 @@ function DonutChart({ total, label, items }: { total: number; label: string; ite
         offset -= length;
         return segment;
       })}
-      <text x="60" y="56" textAnchor="middle" className="fill-white/55 text-[8px]">Total</text>
-      <text x="60" y="72" textAnchor="middle" className="fill-white text-[18px] font-semibold">{formatCompactNumber(total)}</text>
-      <text x="60" y="84" textAnchor="middle" className="fill-white/55 text-[8px]">{label}</text>
+      <text x="60" y="50" textAnchor="middle" className="fill-white/55 text-[7px]">Total</text>
+      <text x="60" y="68" textAnchor="middle" className="fill-white text-[18px] font-semibold">{formatCompactNumber(total)}</text>
+      <text x="60" y="84" textAnchor="middle" className="fill-white/55 text-[7px]">{label}</text>
     </svg>
   );
 }
@@ -3125,6 +3133,28 @@ function safeFormatDate(value?: string): string {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return 'Date inconnue';
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(date);
+}
+
+function normalizeSupportTicketForDisplay(ticket: AdminSupportTicket) {
+  return {
+    id: ticket.id || `${ticket.ticketNumber || 'ticket'}-${ticket.createdAt || 'unknown'}`,
+    date: safeFormatDate(ticket.createdAt),
+    ticketNumber: ticket.ticketNumber?.trim() || 'Ticket sans ID',
+    subject: ticket.subject?.trim() || 'Sujet non renseigne',
+    status: supportTicketStatusLabel(ticket.status),
+    priority: ticket.status === 'pending_admin' ? 'Elevee' : 'Moyenne',
+  };
+}
+
+function supportTicketStatusLabel(status: AdminSupportTicket['status']): string {
+  const labels: Record<AdminSupportTicket['status'], string> = {
+    open: 'Ouvert',
+    pending_customer: 'Client',
+    pending_admin: 'A traiter',
+    resolved: 'Resolu',
+    closed: 'Ferme',
+  };
+  return labels[status] ?? 'Ouvert';
 }
 
 function formatCurrency(value: number): string {
