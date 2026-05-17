@@ -1871,43 +1871,120 @@ function SupplierPanel({
   );
 }
 
+type AnalyticsCalendarBlockId =
+  | 'devisGeneres'
+  | 'tauxConversion'
+  | 'commandesPayees'
+  | 'clientsActifs'
+  | 'revenusCommandes'
+  | 'revenus'
+  | 'performanceCommerciale'
+  | 'revenusPerformance'
+  | 'topPays'
+  | 'services'
+  | 'suiviLogistique'
+  | 'support';
+
+const analyticsCalendarBlocks: Array<{ id: AnalyticsCalendarBlockId; label: string }> = [
+  { id: 'devisGeneres', label: 'Devis generes' },
+  { id: 'tauxConversion', label: 'Taux de conversion' },
+  { id: 'commandesPayees', label: 'Commandes payees' },
+  { id: 'clientsActifs', label: 'Clients actifs' },
+  { id: 'revenusCommandes', label: 'Revenus et commandes' },
+  { id: 'revenus', label: 'Revenus' },
+  { id: 'performanceCommerciale', label: 'Performance commerciale' },
+  { id: 'revenusPerformance', label: 'Revenus et performance' },
+  { id: 'topPays', label: 'Top pays africains' },
+  { id: 'services', label: 'Services PCB' },
+  { id: 'suiviLogistique', label: 'Suivi logistique' },
+  { id: 'support', label: 'Support' },
+];
+
 function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[]; intelligence: AdminPricingIntelligence | null }) {
-  const revenueSummary = buildAnalyticsRevenueSummary(orders);
-  const commercialPerformance = buildCommercialPerformance(revenueSummary.totalRevenue, revenueSummary.previousRevenue);
-  const quoteSeries = buildQuoteSeries(orders, intelligence?.snapshots ?? [], 'year');
-  const paidOrders = orders.filter((order) => getPaymentStatus(order) === 'paid');
-  const conversionRate = quoteSeries.reduce((sum, item) => sum + item.quotes, 0)
-    ? (quoteSeries.reduce((sum, item) => sum + item.paid, 0) / quoteSeries.reduce((sum, item) => sum + item.quotes, 0)) * 100
+  const today = new Date();
+  const [calendarBlock, setCalendarBlock] = useState<AnalyticsCalendarBlockId>('commandesPayees');
+  const [calendarMonth, setCalendarMonth] = useState(today.getMonth());
+  const [calendarYear, setCalendarYear] = useState(today.getFullYear());
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const allSnapshots = useMemo(() => intelligence?.snapshots ?? [], [intelligence]);
+
+  useEffect(() => {
+    setSelectedDays([bestAnalyticsCalendarDay(calendarBlock, calendarYear, calendarMonth, orders, tickets, allSnapshots)]);
+  }, [calendarBlock, calendarMonth, calendarYear, orders, tickets, allSnapshots]);
+
+  const calendarScopedOrders = useMemo(
+    () => orders.filter((order) => isDateInCalendarSelection(orderAnalyticsDate(order), calendarYear, calendarMonth, selectedDays)),
+    [orders, calendarYear, calendarMonth, selectedDays],
+  );
+  const calendarScopedTickets = useMemo(
+    () => tickets.filter((ticket) => isDateInCalendarSelection(ticket.createdAt, calendarYear, calendarMonth, selectedDays)),
+    [tickets, calendarYear, calendarMonth, selectedDays],
+  );
+  const calendarScopedSnapshots = useMemo(
+    () => allSnapshots.filter((snapshot) => isDateInCalendarSelection(snapshot.quote?.createdAt ?? snapshot.createdAt, calendarYear, calendarMonth, selectedDays)),
+    [allSnapshots, calendarYear, calendarMonth, selectedDays],
+  );
+  const calendarActivityDays = useMemo(
+    () => buildAnalyticsActivityDays(calendarBlock, calendarYear, calendarMonth, orders, tickets, allSnapshots),
+    [calendarBlock, calendarYear, calendarMonth, orders, tickets, allSnapshots],
+  );
+  const scopedOrdersFor = (block: AnalyticsCalendarBlockId) => (calendarBlock === block ? calendarScopedOrders : orders);
+  const scopedTicketsFor = (block: AnalyticsCalendarBlockId) => (calendarBlock === block ? calendarScopedTickets : tickets);
+  const scopedSnapshotsFor = (block: AnalyticsCalendarBlockId) => (calendarBlock === block ? calendarScopedSnapshots : allSnapshots);
+
+  const quoteSeries = buildQuoteSeries(scopedOrdersFor('devisGeneres'), scopedSnapshotsFor('devisGeneres'), 'year');
+  const conversionQuoteSeries = buildQuoteSeries(scopedOrdersFor('tauxConversion'), scopedSnapshotsFor('tauxConversion'), 'year');
+  const paidOrders = scopedOrdersFor('commandesPayees').filter((order) => getPaymentStatus(order) === 'paid');
+  const conversionRate = conversionQuoteSeries.reduce((sum, item) => sum + item.quotes, 0)
+    ? (conversionQuoteSeries.reduce((sum, item) => sum + item.paid, 0) / conversionQuoteSeries.reduce((sum, item) => sum + item.quotes, 0)) * 100
     : 0;
-  const activeCustomers = uniqueValues(orders.filter((order) => isRecentDate(order.createdAt, 30)).map((order) => order.userId)).length;
-  const serviceStats = buildPcbServiceStats(orders);
-  const countrySales = buildAfricanCountrySales(orders);
-  const revenueSeries = buildAnalyticsRevenueSeries(orders);
-  const orderSparkline = buildMonthlyOrderCounts(orders);
+  const activeCustomerOrders = scopedOrdersFor('clientsActifs');
+  const activeCustomers = uniqueValues(activeCustomerOrders.filter((order) => isRecentDate(order.createdAt, 30) || calendarBlock === 'clientsActifs').map((order) => order.userId)).length;
+  const serviceStats = buildPcbServiceStats(scopedOrdersFor('services'));
+  const countrySales = buildAfricanCountrySales(scopedOrdersFor('topPays'));
+  const revenueChartOrders = scopedOrdersFor('revenusCommandes');
+  const revenueSummary = buildAnalyticsRevenueSummary(scopedOrdersFor('revenus'));
+  const performanceSummary = buildAnalyticsRevenueSummary(scopedOrdersFor('performanceCommerciale'));
+  const commercialPerformance = buildCommercialPerformance(performanceSummary.totalRevenue, performanceSummary.previousRevenue);
+  const financialOrders = scopedOrdersFor('revenusPerformance');
+  const financialRevenueSummary = buildAnalyticsRevenueSummary(financialOrders);
+  const orderSparkline = buildMonthlyOrderCounts(scopedOrdersFor('clientsActifs'));
   const supplierCost = intelligence?.metrics.totals.supplierEstimatedPrice ?? 0;
-  const margin = revenueSummary.totalRevenue - supplierCost;
-  const logisticsStats = buildAnalyticsLogisticsStats(orders);
-  const recentTickets = [...tickets]
+  const margin = financialRevenueSummary.totalRevenue - supplierCost;
+  const logisticsStats = buildAnalyticsLogisticsStats(scopedOrdersFor('suiviLogistique'));
+  const supportTickets = scopedTicketsFor('support');
+  const recentTickets = [...supportTickets]
     .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
     .slice(0, 5)
     .map(normalizeSupportTicketForDisplay);
 
   return (
     <div className="rounded-md border border-[#12324a] bg-[#061d2d] p-4 text-white">
+      <AnalyticsCalendarFilter
+        block={calendarBlock}
+        month={calendarMonth}
+        year={calendarYear}
+        selectedDays={selectedDays}
+        activityDays={calendarActivityDays}
+        onBlockChange={setCalendarBlock}
+        onMonthChange={setCalendarMonth}
+        onYearChange={setCalendarYear}
+        onSelectedDaysChange={setSelectedDays}
+      />
       <div className="grid gap-4 lg:grid-cols-4">
         <AnalyticsMetricCard tone="#16c784" icon="quote" title="Devis generes" value={formatCompactNumber(quoteSeries.reduce((sum, item) => sum + item.quotes, 0))} trend={revenueSummary.revenueTrendLabel} sparkline={quoteSeries.map((item) => item.quotes)} />
-        <AnalyticsMetricCard tone="#2787ff" icon="percent" title="Taux de conversion" value={`${conversionRate.toFixed(1)}%`} trend="devis > paiement" sparkline={quoteSeries.map((item) => item.paid)} />
-        <AnalyticsMetricCard tone="#12a88f" icon="cart" title="Commandes payees" value={formatCompactNumber(paidOrders.length)} trend={`+ ${shareOf(paidOrders.length, orders.length)}%`} sparkline={revenueSeries.map((item) => item.orders)} />
+        <AnalyticsMetricCard tone="#2787ff" icon="percent" title="Taux de conversion" value={`${conversionRate.toFixed(1)}%`} trend="devis > paiement" sparkline={conversionQuoteSeries.map((item) => item.paid)} />
+        <AnalyticsMetricCard tone="#12a88f" icon="cart" title="Commandes payees" value={formatCompactNumber(paidOrders.length)} trend={`+ ${shareOf(paidOrders.length, scopedOrdersFor('commandesPayees').length)}%`} sparkline={buildMonthlyOrderCounts(scopedOrdersFor('commandesPayees'))} />
         <AnalyticsMetricCard tone="#27bddc" icon="users" title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend="+ 30 jours" sparkline={orderSparkline} />
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="space-y-4">
-          <AnalyticsRevenueChart orders={orders} />
+          <AnalyticsRevenueChart orders={revenueChartOrders} />
           <section className="rounded-md border border-[#143b58] bg-[#08263a] p-4">
             <h2 className="text-sm font-semibold text-white">Revenus et performance commerciale</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
-              <AnalyticsFinancialTile label="Revenus" value={formatCurrency(revenueSummary.totalRevenue)} helper={`${paidOrders.length} commandes payees`} color="#0f9f6e" />
+              <AnalyticsFinancialTile label="Revenus" value={formatCurrency(financialRevenueSummary.totalRevenue)} helper={`${financialOrders.filter((order) => getPaymentStatus(order) === 'paid').length} commandes payees`} color="#0f9f6e" />
               <AnalyticsFinancialTile label="Marge estimee" value={formatCurrency(margin)} helper={supplierCost ? 'prix client - fournisseur' : 'cout fournisseur en attente'} color="#6fbc53" />
               <AnalyticsFinancialTile label="Couts fournisseurs" value={formatCurrency(supplierCost)} helper={`${intelligence?.metrics.snapshotCount ?? 0} snapshots pricing`} color="#0e6389" />
             </div>
@@ -1928,9 +2005,9 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
       <section className="mt-4 rounded-md border border-[#143b58] bg-[#08263a] p-4">
         <h2 className="text-sm font-semibold text-white">Support</h2>
         <div className="mt-4 grid gap-3 md:grid-cols-4">
-          <DarkSupportMetric label="Tickets ouverts" value={formatCompactNumber(tickets.filter((ticket) => ticket.status !== 'closed').length)} helper="vs periode precedente" />
+          <DarkSupportMetric label="Tickets ouverts" value={formatCompactNumber(supportTickets.filter((ticket) => ticket.status !== 'closed').length)} helper="vs periode precedente" />
           <DarkSupportMetric label="Temps de reponse moy." value="Non suivi" helper="champ SLA a connecter" />
-          <DarkSupportMetric label="Resolution SLA" value={`${tickets.length ? Math.round((tickets.filter((ticket) => ['resolved', 'closed'].includes(ticket.status)).length / tickets.length) * 100) : 0}%`} helper="tickets resolus" />
+          <DarkSupportMetric label="Resolution SLA" value={`${supportTickets.length ? Math.round((supportTickets.filter((ticket) => ['resolved', 'closed'].includes(ticket.status)).length / supportTickets.length) * 100) : 0}%`} helper="tickets resolus" />
           <DarkSupportMetric label="Satisfaction client" value="Non suivi" helper="avis support a connecter" />
         </div>
         <div className="mt-4 overflow-x-auto rounded-sm border border-[#143b58]">
@@ -1962,6 +2039,136 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
         <p className="mt-3 text-center text-xs font-semibold text-[#34a7ff]">Voir tous les tickets</p>
       </section>
     </div>
+  );
+}
+
+function AnalyticsCalendarFilter({
+  block,
+  month,
+  year,
+  selectedDays,
+  activityDays,
+  onBlockChange,
+  onMonthChange,
+  onYearChange,
+  onSelectedDaysChange,
+}: {
+  block: AnalyticsCalendarBlockId;
+  month: number;
+  year: number;
+  selectedDays: number[];
+  activityDays: Set<number>;
+  onBlockChange: (block: AnalyticsCalendarBlockId) => void;
+  onMonthChange: (month: number) => void;
+  onYearChange: (year: number) => void;
+  onSelectedDaysChange: (days: number[]) => void;
+}) {
+  const monthNames = ['Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Decembre'];
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 7 }, (_, index) => currentYear - 3 + index);
+  const days = buildCalendarGrid(year, month);
+  const selectedSet = new Set(selectedDays);
+  const selectedLabel = selectedDays.length
+    ? selectedDays.length === 1
+      ? `${padDay(selectedDays[0])}/${padDay(month + 1)}/${year}`
+      : `${selectedDays.length} jours selectionnes`
+    : 'Aucun jour selectionne';
+  const selectedBlockLabel = analyticsCalendarBlocks.find((item) => item.id === block)?.label ?? 'Bloc';
+
+  function toggleDay(day: number) {
+    const next = selectedSet.has(day) ? selectedDays.filter((value) => value !== day) : [...selectedDays, day].sort((left, right) => left - right);
+    onSelectedDaysChange(next.length ? next : [day]);
+  }
+
+  function selectMonth() {
+    onSelectedDaysChange(Array.from({ length: daysInMonth(year, month) }, (_, index) => index + 1));
+  }
+
+  function selectSevenDays() {
+    const start = selectedDays[0] ?? 1;
+    const max = daysInMonth(year, month);
+    onSelectedDaysChange(Array.from({ length: Math.min(7, max - start + 1) }, (_, index) => start + index));
+  }
+
+  function selectToday() {
+    const now = new Date();
+    onMonthChange(now.getMonth());
+    onYearChange(now.getFullYear());
+    onSelectedDaysChange([now.getDate()]);
+  }
+
+  return (
+    <section className="mb-4 rounded-md border border-[#11516b] bg-[#08263a] p-4">
+      <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[17rem_minmax(0,1fr)_18rem]">
+        <div>
+          <p className="text-sm font-semibold text-white">Bloc cible</p>
+          <div className="mt-3 max-h-[15.5rem] overflow-y-auto border border-[#143b58] bg-[#061d2d]">
+            {analyticsCalendarBlocks.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onBlockChange(item.id)}
+                className={`flex w-full items-center justify-between border-b border-[#143b58] px-3 py-2 text-left text-xs last:border-b-0 ${block === item.id ? 'bg-[#0f8f6b] text-white' : 'text-white/70 hover:bg-[#0b3047] hover:text-white'}`}
+              >
+                <span>{item.label}</span>
+                {block === item.id ? <span className="text-[10px]">Actif</span> : null}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-white">Filtre calendrier</p>
+              <p className="mt-1 text-xs text-white/55">Les jours selectionnes filtrent uniquement le bloc actif.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={selectToday} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-xs font-semibold text-white/75 hover:bg-[#0b3047]">Aujourd'hui</button>
+              <button type="button" onClick={selectSevenDays} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-xs font-semibold text-white/75 hover:bg-[#0b3047]">7 jours</button>
+              <button type="button" onClick={selectMonth} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-xs font-semibold text-white/75 hover:bg-[#0b3047]">Mois entier</button>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs">
+            {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day) => (
+              <span key={day} className="py-2 font-semibold text-white/55">{day}</span>
+            ))}
+            {days.map((day, index) => (
+              day ? (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => toggleDay(day)}
+                  className={`relative min-h-10 border text-sm font-semibold transition ${selectedSet.has(day) ? 'border-[#36d679] bg-[#0f8f6b] text-white' : 'border-[#143b58] bg-[#061d2d] text-white/70 hover:border-[#2d8cff] hover:text-white'}`}
+                >
+                  {day}
+                  {activityDays.has(day) ? <span className="absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 bg-[#36d679]" /> : null}
+                </button>
+              ) : <span key={`empty-${index}`} className="min-h-10 border border-transparent" />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-white">Periode</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <select value={month} onChange={(event) => onMonthChange(Number(event.target.value))} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-sm text-white outline-none">
+              {monthNames.map((name, index) => <option key={name} value={index}>{name}</option>)}
+            </select>
+            <select value={year} onChange={(event) => onYearChange(Number(event.target.value))} className="border border-[#1f4a68] bg-[#061d2d] px-3 py-2 text-sm text-white outline-none">
+              {years.map((value) => <option key={value} value={value}>{value}</option>)}
+            </select>
+          </div>
+          <div className="mt-4 space-y-3 border border-[#143b58] bg-[#061d2d] p-3 text-xs">
+            <p className="text-white/55">Bloc filtre</p>
+            <p className="text-base font-semibold text-white">{selectedBlockLabel}</p>
+            <p className="text-white/55">Periode active</p>
+            <p className="font-semibold text-[#36d679]">{selectedLabel}</p>
+            <p className="text-white/45">Les points verts indiquent les jours avec activite reelle.</p>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -3140,6 +3347,95 @@ function safeFormatDate(value?: string): string {
   const date = new Date(value);
   if (!Number.isFinite(date.getTime())) return 'Date inconnue';
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(date);
+}
+
+function padDay(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function buildCalendarGrid(year: number, month: number): Array<number | null> {
+  const firstDay = new Date(year, month, 1).getDay();
+  const mondayIndex = (firstDay + 6) % 7;
+  const totalDays = daysInMonth(year, month);
+  return [
+    ...Array.from({ length: mondayIndex }, () => null),
+    ...Array.from({ length: totalDays }, (_, index) => index + 1),
+  ];
+}
+
+function orderAnalyticsDate(order: AdminOrderRow): string {
+  return order.paidAt ?? order.createdAt;
+}
+
+function isDateInCalendarSelection(value: string | undefined, year: number, month: number, selectedDays: number[]): boolean {
+  if (!value || selectedDays.length === 0) return false;
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return false;
+  return date.getFullYear() === year && date.getMonth() === month && selectedDays.includes(date.getDate());
+}
+
+function bestAnalyticsCalendarDay(
+  block: AnalyticsCalendarBlockId,
+  year: number,
+  month: number,
+  orders: AdminOrderRow[],
+  tickets: AdminSupportTicket[],
+  snapshots: AdminPricingSnapshot[],
+): number {
+  const counts = new Map<number, number>();
+  const add = (value?: string) => {
+    if (!value) return;
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime()) || date.getFullYear() !== year || date.getMonth() !== month) return;
+    counts.set(date.getDate(), (counts.get(date.getDate()) ?? 0) + 1);
+  };
+
+  if (block === 'support') {
+    tickets.forEach((ticket) => add(ticket.createdAt));
+  } else if (block === 'devisGeneres' || block === 'tauxConversion') {
+    snapshots.forEach((snapshot) => add(snapshot.quote?.createdAt ?? snapshot.createdAt));
+    orders.forEach((order) => add(order.createdAt));
+  } else {
+    orders.forEach((order) => add(orderAnalyticsDate(order)));
+  }
+
+  const ranked = [...counts.entries()].sort((left, right) => right[1] - left[1] || left[0] - right[0]);
+  if (ranked[0]) return ranked[0][0];
+  const now = new Date();
+  if (now.getFullYear() === year && now.getMonth() === month) return now.getDate();
+  return 1;
+}
+
+function buildAnalyticsActivityDays(
+  block: AnalyticsCalendarBlockId,
+  year: number,
+  month: number,
+  orders: AdminOrderRow[],
+  tickets: AdminSupportTicket[],
+  snapshots: AdminPricingSnapshot[],
+): Set<number> {
+  const days = new Set<number>();
+  const add = (value?: string) => {
+    if (!value) return;
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime()) || date.getFullYear() !== year || date.getMonth() !== month) return;
+    days.add(date.getDate());
+  };
+
+  if (block === 'support') {
+    tickets.forEach((ticket) => add(ticket.createdAt));
+  } else if (block === 'devisGeneres' || block === 'tauxConversion') {
+    snapshots.forEach((snapshot) => add(snapshot.quote?.createdAt ?? snapshot.createdAt));
+    orders.forEach((order) => add(order.createdAt));
+  } else {
+    orders.forEach((order) => add(orderAnalyticsDate(order)));
+  }
+
+  return days;
 }
 
 function normalizeSupportTicketForDisplay(ticket: AdminSupportTicket) {
