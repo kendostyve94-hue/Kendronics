@@ -619,6 +619,7 @@ export default function AdminPage() {
 
   const pageMeta = getAdminPageMeta(tab);
   const pageStats = getAdminPageStats(tab, orders, supportTickets, pricingIntelligence, auditLogs, adminUsers);
+  const isAnalyticsTab = ['analytics', 'revenueAnalytics', 'countryAnalytics', 'performanceAnalytics'].includes(tab);
 
   return (
     <AdminShell>
@@ -626,10 +627,10 @@ export default function AdminPage() {
         <AdminSidebar activeTab={tab} onSelect={setTab} />
 
         <div className="min-w-0">
-          {tab !== 'dashboard' ? <AdminTopbar activeTab={tab} onSelect={setTab} /> : null}
-          <section className={tab === 'dashboard' ? 'px-4 py-9 sm:px-6 lg:px-7' : 'px-4 py-6 sm:px-6 lg:px-10'}>
-            <AdminPageHeader meta={pageMeta} isDashboard={tab === 'dashboard'} />
-            {tab !== 'dashboard' ? (
+          {tab !== 'dashboard' && !isAnalyticsTab ? <AdminTopbar activeTab={tab} onSelect={setTab} /> : null}
+          <section className={tab === 'dashboard' ? 'px-4 py-9 sm:px-6 lg:px-7' : isAnalyticsTab ? 'px-0 py-0' : 'px-4 py-6 sm:px-6 lg:px-10'}>
+            {!isAnalyticsTab ? <AdminPageHeader meta={pageMeta} isDashboard={tab === 'dashboard'} /> : null}
+            {tab !== 'dashboard' && !isAnalyticsTab ? (
               <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
                 {pageStats.map((stat) => (
                   <Metric key={stat.label} label={stat.label} value={stat.value} helper={stat.helper} />
@@ -639,7 +640,7 @@ export default function AdminPage() {
 
             {message && <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{message}</div>}
 
-            <div className={tab === 'dashboard' ? 'mt-9 space-y-7' : 'mt-8 space-y-7'}>
+            <div className={tab === 'dashboard' ? 'mt-9 space-y-7' : isAnalyticsTab ? 'space-y-0' : 'mt-8 space-y-7'}>
 
           {tab === 'dashboard' && (
             <ModernDashboardPanel orders={orders} tickets={supportTickets} logs={auditLogs} intelligence={pricingIntelligence} />
