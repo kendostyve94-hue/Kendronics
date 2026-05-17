@@ -1878,57 +1878,98 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
   const orderSparkline = buildMonthlyOrderCounts(orders);
   const supplierCost = intelligence?.metrics.totals.supplierEstimatedPrice ?? 0;
   const margin = Math.max(0, revenueSummary.totalRevenue - supplierCost);
+  const logisticsStats = buildAnalyticsLogisticsStats(orders);
+  const recentTickets = [...tickets].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()).slice(0, 5);
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-md border border-[#153a63] bg-[linear-gradient(135deg,#06395a_0%,#0b7d84_48%,#5d4fd4_100%)] p-5 text-white">
-        <div className="grid gap-4 lg:grid-cols-4">
-          <AnalyticsMetricCard title="Devis generes" value={formatCompactNumber(quoteSeries.reduce((sum, item) => sum + item.quotes, 0))} trend={revenueSummary.revenueTrendLabel} sparkline={quoteSeries.map((item) => item.quotes)} />
-          <AnalyticsMetricCard title="Taux conversion" value={`${conversionRate.toFixed(1)}%`} trend={`${shareOf(paidOrders.length, orders.length)}% commandes`} sparkline={quoteSeries.map((item) => item.paid)} />
-          <AnalyticsMetricCard title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend="30 jours" sparkline={orderSparkline} />
-          <AnalyticsMetricCard title="Commandes payees" value={formatCompactNumber(paidOrders.length)} trend={`${shareOf(paidOrders.length, orders.length)}% du flux`} sparkline={revenueSeries.map((item) => item.orders)} />
-        </div>
+    <div className="rounded-md border border-[#12324a] bg-[#061d2d] p-4 text-white">
+      <div className="grid gap-4 lg:grid-cols-4">
+        <AnalyticsMetricCard tone="#0ca66a" title="Devis generes" value={formatCompactNumber(quoteSeries.reduce((sum, item) => sum + item.quotes, 0))} trend={revenueSummary.revenueTrendLabel} sparkline={quoteSeries.map((item) => item.quotes)} />
+        <AnalyticsMetricCard tone="#2384ff" title="Taux de conversion" value={`${conversionRate.toFixed(1)}%`} trend={`+ ${shareOf(paidOrders.length, orders.length)}%`} sparkline={quoteSeries.map((item) => item.paid)} />
+        <AnalyticsMetricCard tone="#13a48e" title="Commandes payees" value={formatCompactNumber(paidOrders.length)} trend={`+ ${shareOf(paidOrders.length, orders.length)}%`} sparkline={revenueSeries.map((item) => item.orders)} />
+        <AnalyticsMetricCard tone="#1fb6d9" title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend="+ 30 jours" sparkline={orderSparkline} />
+      </div>
 
-        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(19rem,0.7fr)_minmax(19rem,0.7fr)]">
+      <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="space-y-4">
           <AnalyticsRevenueChart series={revenueSeries} />
+          <section className="rounded-md border border-[#143b58] bg-[#08263a] p-4">
+            <h2 className="text-sm font-semibold text-white">Revenus et performance commerciale</h2>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <AnalyticsFinancialTile label="Revenus" value={formatCurrency(revenueSummary.totalRevenue)} helper={`${paidOrders.length} commandes payees`} color="#0f9f6e" />
+              <AnalyticsFinancialTile label="Marge estimee" value={formatCurrency(margin)} helper={supplierCost ? 'prix client - fournisseur' : 'cout fournisseur en attente'} color="#6fbc53" />
+              <AnalyticsFinancialTile label="Couts fournisseurs" value={formatCurrency(supplierCost)} helper={`${intelligence?.metrics.snapshotCount ?? 0} snapshots pricing`} color="#0e6389" />
+            </div>
+          </section>
+        </div>
+        <div className="grid gap-4">
           <RevenueSummaryCard summary={revenueSummary} />
           <CommercialPerformanceCard performance={commercialPerformance} />
         </div>
-      </section>
+      </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.48fr)]">
-        <section className="rounded-md border border-slate-200 bg-white">
-          <div className="border-b border-slate-200 px-6 py-5">
-            <h2 className="text-lg font-semibold text-slate-950">Revenus et performance commerciale</h2>
-          </div>
-          <div className="grid gap-0 md:grid-cols-3">
-            <AnalyticsFinancialTile label="Revenus suivis" value={formatCurrency(revenueSummary.totalRevenue)} helper={`${paidOrders.length} commandes payees`} color="#0f9f6e" />
-            <AnalyticsFinancialTile label="Marge estimee" value={formatCurrency(margin)} helper={supplierCost ? 'prix client - fournisseur' : 'en attente cout fournisseur'} color="#6fbc53" />
-            <AnalyticsFinancialTile label="Couts fournisseurs" value={formatCurrency(supplierCost)} helper={`${intelligence?.metrics.snapshotCount ?? 0} snapshots pricing`} color="#0e6389" />
-          </div>
-        </section>
+      <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <TopAfricanCountriesCard countries={countrySales} />
+        <AnalyticsServiceCard services={serviceStats} />
+        <AnalyticsLogisticsCard stats={logisticsStats} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <AnalyticsServiceCard services={serviceStats} />
-        <AnalyticsSupportCard orders={orders} tickets={tickets} />
-      </div>
+      <section className="mt-4 rounded-md border border-[#143b58] bg-[#08263a] p-4">
+        <h2 className="text-sm font-semibold text-white">Support</h2>
+        <div className="mt-4 grid gap-3 md:grid-cols-4">
+          <DarkSupportMetric label="Tickets ouverts" value={formatCompactNumber(tickets.filter((ticket) => ticket.status !== 'closed').length)} helper="vs periode precedente" />
+          <DarkSupportMetric label="Temps de reponse moy." value="Non suivi" helper="champ SLA a connecter" />
+          <DarkSupportMetric label="Resolution SLA" value={`${tickets.length ? Math.round((tickets.filter((ticket) => ['resolved', 'closed'].includes(ticket.status)).length / tickets.length) * 100) : 0}%`} helper="tickets resolus" />
+          <DarkSupportMetric label="Satisfaction client" value="Non suivi" helper="avis support a connecter" />
+        </div>
+        <div className="mt-4 overflow-x-auto rounded-sm border border-[#143b58]">
+          <table className="min-w-full text-left text-xs">
+            <thead className="bg-[#0b3047] text-[#8db4c9]">
+              <tr>
+                <th className="px-3 py-2 font-semibold">Date</th>
+                <th className="px-3 py-2 font-semibold">ID ticket</th>
+                <th className="px-3 py-2 font-semibold">Sujet</th>
+                <th className="px-3 py-2 font-semibold">Statut</th>
+                <th className="px-3 py-2 font-semibold">Priorite</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#143b58] text-white/80">
+              {recentTickets.length ? recentTickets.map((ticket) => (
+                <tr key={ticket.id}>
+                  <td className="px-3 py-2">{formatDate(ticket.createdAt)}</td>
+                  <td className="px-3 py-2">{ticket.ticketNumber}</td>
+                  <td className="px-3 py-2">{ticket.subject}</td>
+                  <td className="px-3 py-2 text-[#4ee28f]">{ticket.status}</td>
+                  <td className="px-3 py-2 text-[#ffb34d]">{ticket.status === 'pending_admin' ? 'Elevee' : 'Moyenne'}</td>
+                </tr>
+              )) : (
+                <tr><td colSpan={5} className="px-3 py-5 text-center text-white/55">Aucun ticket support.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-center text-xs font-semibold text-[#34a7ff]">Voir tous les tickets</p>
+      </section>
     </div>
   );
 }
 
-function AnalyticsMetricCard({ title, value, trend, sparkline }: { title: string; value: string; trend: string; sparkline: number[] }) {
+function AnalyticsMetricCard({ title, value, trend, sparkline, tone }: { title: string; value: string; trend: string; sparkline: number[]; tone: string }) {
   return (
-    <article className="rounded-md border border-white/10 bg-white/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-white/80">{title}</p>
-          <p className="mt-3 text-3xl font-semibold tracking-tight text-white">{value}</p>
+    <article className="rounded-md border border-[#143b58] bg-[#08263a] p-4">
+      <div className="flex items-start gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-sm text-white" style={{ backgroundColor: tone }}>
+          <DashboardKpiIcon icon="deal" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-semibold text-white/80">{title}</p>
+          <div className="mt-3 flex items-end justify-between gap-3">
+            <p className="text-2xl font-semibold tracking-tight text-white">{value}</p>
+            <p className="text-xs font-semibold text-[#53db72]">{trend}</p>
+          </div>
+          <MiniLineChart values={sparkline} color={tone} />
         </div>
-        <span className="text-sm font-semibold text-white">{trend}</span>
       </div>
-      <MiniLineChart values={sparkline} />
     </article>
   );
 }
@@ -1945,26 +1986,27 @@ function AnalyticsRevenueChart({ series }: { series: Array<{ month: string; reve
     .join(' ');
 
   return (
-    <section className="rounded-md border border-white/10 bg-black/15 p-5">
+    <section className="rounded-md border border-[#143b58] bg-[#08263a] p-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-white">Revenus mensuels</h2>
-        <div className="flex items-center gap-4 text-xs text-white/75">
-          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-white" />Revenus</span>
-          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#9be18a]" />Commandes</span>
+        <h2 className="text-sm font-semibold text-white">Revenus et commandes</h2>
+        <div className="flex items-center gap-4 text-[11px] text-white/70">
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#36d679]" />Revenus</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#2d8cff]" />Commandes</span>
+          <span className="rounded-sm border border-[#1f4a68] bg-[#0b3047] px-2 py-1 text-white/80">Cette annee</span>
         </div>
       </div>
-      <div className="mt-6 h-[260px]">
+      <div className="mt-5 h-[300px]">
         <svg viewBox="0 0 100 84" className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
-          {[18, 34, 50, 66].map((y) => <line key={y} x1="0" x2="100" y1={y} y2={y} stroke="rgba(255,255,255,0.12)" strokeWidth="0.35" />)}
-          <polyline points={linePoints} fill="none" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          {[18, 34, 50, 66].map((y) => <line key={y} x1="0" x2="100" y1={y} y2={y} stroke="rgba(141,180,201,0.18)" strokeWidth="0.35" />)}
+          <polyline points={linePoints} fill="none" stroke="#2d8cff" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
           {series.map((item, index) => {
             const barHeight = (item.orders / maxOrders) * 44;
             const x = series.length === 1 ? 48 : (index / (series.length - 1)) * 96 + 2;
-            return <rect key={item.month} x={x - 0.7} y={80 - barHeight} width="1.4" height={barHeight} rx="0.4" fill="#9be18a" opacity="0.85" />;
+            return <rect key={item.month} x={x - 0.9} y={80 - barHeight} width="1.8" height={barHeight} rx="0.4" fill="#36d679" opacity="0.9" />;
           })}
         </svg>
       </div>
-      <div className="grid grid-cols-12 gap-2 text-center text-xs text-white/70">
+      <div className="grid grid-cols-12 gap-2 text-center text-[11px] text-white/65">
         {series.map((item) => <span key={item.month}>{item.month}</span>)}
       </div>
     </section>
@@ -1973,18 +2015,18 @@ function AnalyticsRevenueChart({ series }: { series: Array<{ month: string; reve
 
 function RevenueSummaryCard({ summary }: { summary: ReturnType<typeof buildAnalyticsRevenueSummary> }) {
   return (
-    <section className="rounded-md border border-white/10 bg-white p-5 text-slate-950">
+    <section className="rounded-md border border-[#143b58] bg-[#08263a] p-4 text-white">
       <div className="flex items-center gap-3">
         <span className="grid h-11 w-11 place-items-center rounded-sm bg-[#0f9f6e] text-white">
           <DashboardKpiIcon icon="dollar" />
         </span>
-        <h3 className="text-base font-semibold">Revenus</h3>
+        <h3 className="text-sm font-semibold">Revenus</h3>
       </div>
-      <p className="mt-7 text-4xl font-semibold tracking-tight">{formatCurrency(summary.currentRevenue)}</p>
+      <p className="mt-7 text-3xl font-semibold tracking-tight">{formatCurrency(summary.currentRevenue)}</p>
       <p className={`mt-4 text-sm font-semibold ${summary.revenueTrend >= 0 ? 'text-[#58b947]' : 'text-[#ff315f]'}`}>
         {summary.revenueTrend >= 0 ? '^' : 'v'} {Math.abs(summary.revenueTrend).toFixed(1)}%
       </p>
-      <p className="mt-2 text-sm text-slate-500">vs periode precedente</p>
+      <p className="mt-2 text-xs text-white/60">vs periode precedente</p>
     </section>
   );
 }
@@ -1995,24 +2037,24 @@ function CommercialPerformanceCard({ performance }: { performance: ReturnType<ty
   const clamped = Math.min(100, Math.max(0, performance.percent));
 
   return (
-    <section className="rounded-md border border-white/10 bg-white p-5 text-slate-950">
-      <h3 className="text-base font-semibold">Performance commerciale</h3>
+    <section className="rounded-md border border-[#143b58] bg-[#08263a] p-4 text-white">
+      <h3 className="text-sm font-semibold">Performance commerciale</h3>
       <div className="mt-5 grid place-items-center">
         <svg viewBox="0 0 160 92" className="h-32 w-full max-w-[210px]" aria-hidden="true">
-          <path d="M22 78a58 58 0 0 1 116 0" fill="none" stroke="#dce8f1" strokeWidth="12" strokeLinecap="round" />
+          <path d="M22 78a58 58 0 0 1 116 0" fill="none" stroke="#1f4056" strokeWidth="12" strokeLinecap="round" />
           <path
             d="M22 78a58 58 0 0 1 116 0"
             fill="none"
-            stroke="#0f9f6e"
+            stroke="#36d679"
             strokeWidth="12"
             strokeLinecap="round"
             strokeDasharray={`${(clamped / 100) * circumference} ${circumference}`}
           />
-          <text x="80" y="62" textAnchor="middle" className="fill-slate-950 text-[24px] font-semibold">{Math.round(clamped)}%</text>
-          <text x="80" y="82" textAnchor="middle" className="fill-slate-500 text-[10px]">objectif atteint</text>
+          <text x="80" y="62" textAnchor="middle" className="fill-white text-[24px] font-semibold">{Math.round(clamped)}%</text>
+          <text x="80" y="82" textAnchor="middle" className="fill-white/60 text-[10px]">objectif atteint</text>
         </svg>
       </div>
-      <div className="mt-4 space-y-1 text-sm text-slate-700">
+      <div className="mt-4 space-y-1 text-xs text-white/70">
         <p>Objectif : {formatCurrency(performance.goal)}</p>
         <p>Actuel : {formatCurrency(performance.current)}</p>
       </div>
@@ -2022,50 +2064,50 @@ function CommercialPerformanceCard({ performance }: { performance: ReturnType<ty
 
 function TopAfricanCountriesCard({ countries }: { countries: ReturnType<typeof buildAfricanCountrySales> }) {
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-6">
-      <h2 className="text-lg font-semibold text-slate-950">Top pays africains</h2>
-      <div className="mt-5 space-y-4">
+    <section className="rounded-md border border-[#143b58] bg-[#08263a] p-4">
+      <h2 className="text-sm font-semibold text-white">Top pays africains</h2>
+      <div className="mt-4 space-y-3">
         {countries.length ? countries.map((country) => (
-          <div key={country.code} className="grid grid-cols-[2rem_minmax(0,1fr)_auto_auto] items-center gap-3 text-sm">
-            <span className="text-2xl leading-none">{countryFlag(country.code)}</span>
-            <span className="truncate font-medium text-slate-800">{country.country.replace(/\s\(\d+\)$/, '')}</span>
-            <span className="font-semibold text-slate-950">{country.value}</span>
-            <span className="w-12 text-right text-xs text-slate-500">{country.percent}%</span>
+          <div key={country.code} className="grid grid-cols-[2rem_minmax(0,1fr)_auto_auto] items-center gap-3 text-xs">
+            <span className="text-xl leading-none">{countryFlag(country.code)}</span>
+            <span className="truncate font-medium text-white/80">{country.country.replace(/\s\(\d+\)$/, '')}</span>
+            <span className="font-semibold text-white">{country.value}</span>
+            <span className="w-10 text-right text-white/55">{country.percent}%</span>
+            <span className="col-span-4 h-1 bg-[#0c3149]"><span className="block h-full bg-[#36d679]" style={{ width: `${country.percent}%` }} /></span>
           </div>
-        )) : <p className="text-sm text-slate-500">Aucune commande africaine suivie.</p>}
+        )) : <p className="text-sm text-white/55">Aucune commande africaine suivie.</p>}
       </div>
-      <p className="mt-6 text-center text-sm font-semibold text-[#1478ff]">Classement temps reel</p>
+      <p className="mt-5 text-center text-xs font-semibold text-[#34a7ff]">Voir tous</p>
     </section>
   );
 }
 
 function AnalyticsFinancialTile({ label, value, helper, color }: { label: string; value: string; helper: string; color: string }) {
   return (
-    <article className="border-b border-slate-200 p-6 md:border-b-0 md:border-r last:md:border-r-0">
-      <span className="grid h-12 w-12 place-items-center rounded-sm text-white" style={{ backgroundColor: color }}>
+    <article className="rounded-sm border border-[#143b58] bg-[#061d2d] p-4">
+      <span className="grid h-10 w-10 place-items-center rounded-sm text-white" style={{ backgroundColor: color }}>
         <DashboardKpiIcon icon="dollar" />
       </span>
-      <p className="mt-5 text-sm font-semibold text-slate-600">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{value}</p>
-      <p className="mt-3 text-xs text-slate-500">{helper}</p>
+      <p className="mt-4 text-xs font-semibold text-white/70">{label}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-white">{value}</p>
+      <p className="mt-3 text-[11px] text-white/50">{helper}</p>
     </article>
   );
 }
 
 function AnalyticsServiceCard({ services }: { services: ReturnType<typeof buildPcbServiceStats> }) {
+  const totalOrders = services.reduce((sum, service) => sum + service.orders, 0);
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-6">
-      <h2 className="text-lg font-semibold text-slate-950">Services les plus commandes</h2>
-      <div className="mt-6 space-y-5">
+    <section className="rounded-md border border-[#143b58] bg-[#08263a] p-4">
+      <h2 className="text-sm font-semibold text-white">Services les plus demandes</h2>
+      <div className="mt-5 grid place-items-center">
+        <DonutChart total={totalOrders} label="commandes" items={services.map((service) => ({ label: service.label, percent: service.percent, color: service.color }))} />
+      </div>
+      <div className="mt-4 space-y-2">
         {services.map((service) => (
-          <div key={service.label}>
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-semibold text-slate-950">{service.label}</span>
-              <span className="text-slate-500">{service.percent}%</span>
-            </div>
-            <div className="mt-2 h-2 bg-slate-100">
-              <div className="h-full" style={{ width: `${service.percent}%`, backgroundColor: service.color }} />
-            </div>
+          <div key={service.label} className="flex items-center justify-between gap-3 text-xs">
+            <span className="flex min-w-0 items-center gap-2 text-white/70"><span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: service.color }} /><span className="truncate">{service.label}</span></span>
+            <span className="text-white">{service.percent}%</span>
           </div>
         ))}
       </div>
@@ -2073,26 +2115,71 @@ function AnalyticsServiceCard({ services }: { services: ReturnType<typeof buildP
   );
 }
 
-function AnalyticsSupportCard({ orders, tickets }: { orders: AdminOrderRow[]; tickets: AdminSupportTicket[] }) {
-  const openTickets = tickets.filter((ticket) => ticket.status !== 'closed').length;
-  const urgentTickets = tickets.filter((ticket) => ticket.status === 'pending_admin').length;
-  const delivered = orders.filter((order) => order.status === 'delivered').length;
-  const inLogistics = orders.filter((order) => ['china_3pl_received', 'shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status)).length;
-
+function AnalyticsLogisticsCard({ stats }: { stats: ReturnType<typeof buildAnalyticsLogisticsStats> }) {
   return (
-    <section className="rounded-md border border-slate-200 bg-white p-6">
-      <h2 className="text-lg font-semibold text-slate-950">Support et operations</h2>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <DashboardTile label="Tickets ouverts" value={formatCompactNumber(openTickets)} />
-        <DashboardTile label="Tickets urgents" value={formatCompactNumber(urgentTickets)} />
-        <DashboardTile label="Colis livres" value={formatCompactNumber(delivered)} />
-        <DashboardTile label="Flux logistique" value={formatCompactNumber(inLogistics)} />
+    <section className="rounded-md border border-[#143b58] bg-[#08263a] p-4">
+      <h2 className="text-sm font-semibold text-white">Suivi logistique</h2>
+      <div className="mt-5 grid place-items-center">
+        <DonutChart total={stats.reduce((sum, item) => sum + item.count, 0)} label="operations" items={stats} />
+      </div>
+      <div className="mt-4 space-y-2">
+        {stats.map((item) => (
+          <div key={item.label} className="flex items-center justify-between gap-3 text-xs">
+            <span className="flex min-w-0 items-center gap-2 text-white/70"><span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: item.color }} /><span className="truncate">{item.label}</span></span>
+            <span className="text-white">{item.percent}%</span>
+          </div>
+        ))}
       </div>
     </section>
   );
 }
 
-function MiniLineChart({ values }: { values: number[] }) {
+function DonutChart({ total, label, items }: { total: number; label: string; items: Array<{ label: string; percent: number; color: string }> }) {
+  let offset = 25;
+  const radius = 38;
+  const circumference = 2 * Math.PI * radius;
+
+  return (
+    <svg viewBox="0 0 120 120" className="h-40 w-40" aria-hidden="true">
+      <circle cx="60" cy="60" r={radius} fill="none" stroke="#0c3149" strokeWidth="17" />
+      {items.map((item) => {
+        const length = (Math.max(0, item.percent) / 100) * circumference;
+        const segment = (
+          <circle
+            key={item.label}
+            cx="60"
+            cy="60"
+            r={radius}
+            fill="none"
+            stroke={item.color}
+            strokeWidth="17"
+            strokeDasharray={`${length} ${circumference - length}`}
+            strokeDashoffset={offset}
+            strokeLinecap="butt"
+            transform="rotate(-90 60 60)"
+          />
+        );
+        offset -= length;
+        return segment;
+      })}
+      <text x="60" y="56" textAnchor="middle" className="fill-white/55 text-[8px]">Total</text>
+      <text x="60" y="72" textAnchor="middle" className="fill-white text-[18px] font-semibold">{formatCompactNumber(total)}</text>
+      <text x="60" y="84" textAnchor="middle" className="fill-white/55 text-[8px]">{label}</text>
+    </svg>
+  );
+}
+
+function DarkSupportMetric({ label, value, helper }: { label: string; value: string; helper: string }) {
+  return (
+    <article className="rounded-sm border border-[#143b58] bg-[#061d2d] p-3">
+      <p className="text-[11px] font-semibold text-white/65">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+      <p className="mt-2 text-[11px] text-white/45">{helper}</p>
+    </article>
+  );
+}
+
+function MiniLineChart({ values, color }: { values: number[]; color: string }) {
   const maxValue = Math.max(...values, 1);
   const points = values
     .map((value, index) => {
@@ -2104,7 +2191,7 @@ function MiniLineChart({ values }: { values: number[] }) {
 
   return (
     <svg viewBox="0 0 100 44" className="mt-5 h-12 w-full" preserveAspectRatio="none" aria-hidden="true">
-      <polyline points={points} fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -2864,6 +2951,23 @@ function buildMonthlyOrderCounts(orders: AdminOrderRow[]): number[] {
   }
 
   return counts;
+}
+
+function buildAnalyticsLogisticsStats(orders: AdminOrderRow[]): Array<{ label: string; percent: number; count: number; color: string }> {
+  const rows = [
+    { label: 'Livres', count: orders.filter((order) => order.status === 'delivered').length, color: '#36d679' },
+    { label: 'En transit', count: orders.filter((order) => ['china_3pl_received', 'shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status)).length, color: '#2d8cff' },
+    { label: 'En attente', count: orders.filter((order) => ['awaiting_payment', 'paid', 'supplier_order_pending', 'supplier_ordered'].includes(order.status)).length, color: '#ffb22e' },
+    { label: 'Retardes', count: orders.filter((order) => ['cancelled', 'refunded'].includes(order.status)).length, color: '#ff4b6e' },
+  ];
+  const total = rows.reduce((sum, item) => sum + item.count, 0);
+  let remaining = 100;
+
+  return rows.map((item, index) => {
+    const percent = total === 0 ? 0 : index === rows.length - 1 ? remaining : Math.round((item.count / total) * 100);
+    remaining -= percent;
+    return { ...item, percent };
+  });
 }
 
 function isToday(value: string): boolean {
