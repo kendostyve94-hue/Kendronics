@@ -989,11 +989,11 @@ function LegacyAdminTopbar({ onSelect }: { onSelect: (tab: AdminTab) => void }) 
 function AdminPageHeader({ meta, isDashboard = false }: { meta: ReturnType<typeof getAdminPageMeta>; isDashboard?: boolean }) {
   if (isDashboard) {
     return (
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-xl font-semibold tracking-tight text-slate-950 sm:text-[21px]">{meta.title}</h1>
+      <div className="flex items-center justify-between gap-4 rounded-md border border-[#12324a] bg-[#061d2d] p-5">
+        <h1 className="text-xl font-semibold tracking-tight text-white sm:text-[21px]">{meta.title}</h1>
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-slate-500">Home</span>
-          <span className="text-slate-300">/</span>
+          <span className="text-white/55">Accueil</span>
+          <span className="text-white/30">/</span>
           <span className="font-medium text-[#70bd4d]">Dashboard</span>
         </div>
       </div>
@@ -1216,17 +1216,24 @@ function SalesOverviewCard({ orders, intelligence }: { orders: AdminOrderRow[]; 
   const scaleLabels = buildScaleLabels(maxValue);
 
   return (
-    <section className="overflow-hidden rounded-md border border-[#11516b] bg-[#08263a]">
-      <div className="flex items-center justify-between border-b border-[#143b58] px-6 py-5">
+    <section className="overflow-hidden rounded-md" style={{ backgroundColor: '#08263a', border: '1px solid #11516b' }}>
+      <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid #143b58' }}>
         <h2 className="text-base font-semibold text-white">Devis vs commandes payees</h2>
-        <select
-          value={period}
-          onChange={(event) => setPeriod(event.target.value as SalesOverviewPeriod)}
-          className="rounded-sm border border-[#1f4a68] bg-[#0b3047] px-3 py-2 text-xs font-medium text-white outline-none"
-        >
-          <option value="year">Cette annee</option>
-          <option value="month">Ce mois</option>
-        </select>
+        <div className="flex overflow-hidden rounded-sm border border-[#1f4a68] bg-[#0b3047]">
+          {[
+            ['year', 'Cette annee'],
+            ['month', 'Ce mois'],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setPeriod(value as SalesOverviewPeriod)}
+              className={`px-3 py-2 text-xs font-medium transition ${period === value ? 'bg-[#1478ff] text-white' : 'text-white/70 hover:bg-[#123c58] hover:text-white'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="px-8 pb-5 pt-7">
         <div className="grid min-h-[285px] grid-cols-[2.8rem_minmax(0,1fr)] gap-3">
@@ -1280,7 +1287,7 @@ function DashboardKpiCard({
   }[tone];
 
   return (
-    <section className="min-h-[140px] rounded-md border border-[#11516b] bg-[#08263a] px-5 py-5">
+    <section className="min-h-[140px] rounded-md px-5 py-5" style={{ backgroundColor: '#08263a', border: '1px solid #11516b' }}>
       <div className="flex items-start gap-4">
         <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-sm border ${toneClass}`}>
           <span className="grid h-8 w-8 place-items-center rounded-sm bg-current">
@@ -1412,8 +1419,8 @@ function buildScaleLabels(maxValue: number) {
 
 function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> }) {
   return (
-    <section className="overflow-hidden rounded-md border border-[#11516b] bg-[#08263a]">
-      <div className="border-b border-[#143b58] px-6 py-5">
+    <section className="overflow-hidden rounded-md" style={{ backgroundColor: '#08263a', border: '1px solid #11516b' }}>
+      <div className="px-6 py-5" style={{ borderBottom: '1px solid #143b58' }}>
         <h2 className="text-base font-semibold text-white">Activite recente</h2>
       </div>
       <div>
@@ -1453,8 +1460,8 @@ function ProductActivityCard({ orders }: { orders: AdminOrderRow[] }) {
   const conicStops = buildConicGradient(regionStats);
 
   return (
-    <section className="overflow-hidden rounded-md border border-[#11516b] bg-[#08263a]">
-      <div className="border-b border-[#143b58] px-6 py-5">
+    <section className="overflow-hidden rounded-md" style={{ backgroundColor: '#08263a', border: '1px solid #11516b' }}>
+      <div className="px-6 py-5" style={{ borderBottom: '1px solid #143b58' }}>
         <h2 className="text-base font-semibold text-white">Regions Afrique</h2>
       </div>
       <div className="px-5 pb-5 pt-6">
@@ -1544,8 +1551,8 @@ function DealsStatisticsCard({ orders }: { orders: AdminOrderRow[] }) {
   const countrySales = buildAfricanCountrySales(orders);
 
   return (
-    <section className="overflow-hidden rounded-md border border-[#11516b] bg-[#08263a]">
-      <div className="border-b border-[#143b58] px-6 py-5">
+    <section className="overflow-hidden rounded-md" style={{ backgroundColor: '#08263a', border: '1px solid #11516b' }}>
+      <div className="px-6 py-5" style={{ borderBottom: '1px solid #143b58' }}>
         <h2 className="text-base font-semibold text-white">Top pays africains</h2>
       </div>
       <div className="h-[285px] space-y-4 overflow-hidden px-4 py-4">
@@ -1591,8 +1598,8 @@ function RecentPerformanceCard({ orders }: { orders: AdminOrderRow[] }) {
   const metrics = buildOperationalProgressMetrics(orders);
 
   return (
-    <section className="overflow-hidden rounded-md border border-[#11516b] bg-[#08263a]">
-      <div className="border-b border-[#143b58] px-6 py-5">
+    <section className="overflow-hidden rounded-md" style={{ backgroundColor: '#08263a', border: '1px solid #11516b' }}>
+      <div className="px-6 py-5" style={{ borderBottom: '1px solid #143b58' }}>
         <h2 className="max-w-[12rem] text-base font-semibold leading-5 text-white">Suivi operationnel</h2>
       </div>
       <div className="flex h-[285px] flex-col items-center justify-between px-5 py-4">
@@ -1657,7 +1664,7 @@ function ProjectsCard({ orders }: { orders: AdminOrderRow[] }) {
   const projectRows = buildPcbServiceStats(orders);
 
   return (
-    <section className="rounded-md border border-[#11516b] bg-[#08263a] px-4 py-4">
+    <section className="rounded-md px-4 py-4" style={{ backgroundColor: '#08263a', border: '1px solid #11516b' }}>
       <h2 className="text-base font-medium text-white">Services PCB</h2>
       <div className="mt-7 space-y-7">
         {projectRows.map((project) => (
