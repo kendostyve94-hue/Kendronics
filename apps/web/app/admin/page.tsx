@@ -626,9 +626,12 @@ export default function AdminPage() {
       <div className="min-h-screen lg:grid lg:grid-cols-[255px_minmax(0,1fr)]">
         <AdminSidebar activeTab={tab} onSelect={setTab} />
 
-        <div className="min-w-0">
+        <div className="min-w-0" style={tab === 'dashboard' ? { backgroundColor: '#061d2d' } : undefined}>
           {tab !== 'dashboard' && !isAnalyticsTab ? <AdminTopbar activeTab={tab} onSelect={setTab} /> : null}
-          <section className={tab === 'dashboard' ? 'px-4 py-9 sm:px-6 lg:px-7' : isAnalyticsTab ? 'px-0 py-0' : 'px-4 py-6 sm:px-6 lg:px-10'}>
+          <section
+            className={tab === 'dashboard' ? 'px-4 py-9 sm:px-6 lg:px-7' : isAnalyticsTab ? 'px-0 py-0' : 'px-4 py-6 sm:px-6 lg:px-10'}
+            style={tab === 'dashboard' ? { backgroundColor: '#061d2d' } : undefined}
+          >
             {!isAnalyticsTab ? <AdminPageHeader meta={pageMeta} isDashboard={tab === 'dashboard'} /> : null}
             {tab !== 'dashboard' && !isAnalyticsTab ? (
               <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
