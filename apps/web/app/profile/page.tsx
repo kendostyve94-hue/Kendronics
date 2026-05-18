@@ -17,6 +17,39 @@ type ProfileForm = {
   country: string;
 };
 
+type DeleteReason =
+  | 'unused'
+  | 'not_found'
+  | 'price_high'
+  | 'shipping_customs_high'
+  | 'delivery_slow'
+  | 'process_complex'
+  | 'bug'
+  | 'quote_mismatch'
+  | 'support_unsatisfied'
+  | 'new_account'
+  | 'privacy_security'
+  | 'other';
+
+type DeleteFeedback = {
+  reason: DeleteReason | '';
+  priceIssue: string;
+  fairPrice: string;
+  expectedDelivery: string;
+  processIssue: string;
+  bugDescription: string;
+  device: string;
+  browser: string;
+  supportRating: string;
+  supportImprovement: string;
+  orderedBefore: string;
+  improvementPriority: string;
+  keepReason: string;
+};
+
+type DeleteModalStep = 'feedback' | 'alternative' | 'code' | 'alternative_done';
+type DeleteAlternative = 'pause' | 'unsubscribe' | 'continue';
+
 type QuickProduct = {
   title: string;
   subtitle: string;
@@ -698,11 +731,24 @@ function InviteSection() {
 }
 
 function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileForm; userId: string; avatarDataUrl: string }) {
-  const [deleteStep, setDeleteStep] = useState<'idle' | 'code_sent'>('idle');
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<DeleteModalStep>('feedback');
   const [deleteCode, setDeleteCode] = useState('');
   const [deleteMessage, setDeleteMessage] = useState('');
   const [requestingDeleteCode, setRequestingDeleteCode] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [selectedAlternative, setSelectedAlternative] = useState<DeleteAlternative | null>(null);
+  const [deleteFeedback, setDeleteFeedback] = useState<DeleteFeedback>(createEmptyDeleteFeedback());
+
+  function closeDeleteModal() {
+    if (requestingDeleteCode || deletingAccount) return;
+    setDeleteModalOpen(false);
+    setDeleteStep('feedback');
+    setDeleteCode('');
+    setDeleteMessage('');
+    setSelectedAlternative(null);
+    setDeleteFeedback(createEmptyDeleteFeedback());
+  }
 
   return (
     <section className="min-h-[690px] bg-white p-6 text-black shadow-sm ring-1 ring-slate-200">
@@ -737,53 +783,408 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
       </div>
       <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
         <h2 className="text-lg">Supprimer le compte</h2>
-        <div className="space-y-3 text-[#4b5563]">
-          <p>Suppression definitive du compte, de la session et des donnees client associees.</p>
-          {deleteStep === 'code_sent' ? (
-            <div className="grid max-w-md gap-3 rounded-sm border border-red-100 bg-red-50 p-4">
-              <p className="text-sm font-semibold text-red-900">Entrez le code de verification envoye a {maskEmail(profile.email || 'votre e-mail')}.</p>
-              <input
-                value={deleteCode}
-                onChange={(event) => setDeleteCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                placeholder="Code a 6 chiffres"
-                className="h-11 border border-red-200 bg-white px-3 text-sm font-semibold text-black outline-none transition focus:border-red-500"
-              />
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  disabled={deletingAccount || deleteCode.length !== 6}
-                  onClick={() => void deleteAccount(deleteCode, setDeletingAccount)}
-                  className="h-10 bg-red-600 px-4 text-sm font-black text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-200"
-                >
-                  {deletingAccount ? 'Suppression...' : 'Supprimer definitivement'}
+        <p className="text-[#4b5563]">Suppression definitive du compte et des donnees client associees, apres verification par e-mail.</p>
+        <button
+          type="button"
+          onClick={() => setDeleteModalOpen(true)}
+          className="text-right text-red-400 transition hover:text-red-600 active:text-red-700 disabled:cursor-not-allowed disabled:text-red-200"
+        >
+          Supprimer
+        </button>
+      </div>
+      {deleteModalOpen ? (
+        <DeleteAccountModal
+          profile={profile}
+          step={deleteStep}
+          feedback={deleteFeedback}
+          code={deleteCode}
+          message={deleteMessage}
+          selectedAlternative={selectedAlternative}
+          requestingCode={requestingDeleteCode}
+          deletingAccount={deletingAccount}
+          onClose={closeDeleteModal}
+          onFeedbackChange={setDeleteFeedback}
+          onCodeChange={setDeleteCode}
+          onStepChange={setDeleteStep}
+          onAlternativeChange={setSelectedAlternative}
+          onRequestCode={() => void requestDeleteAccountCode(setRequestingDeleteCode, setDeleteStep, setDeleteMessage)}
+          onDelete={() => void deleteAccount(deleteCode, setDeletingAccount)}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+const deleteReasonOptions: { value: DeleteReason; label: string }[] = [
+  { value: 'unused', label: "Je n'utilise plus le service" },
+  { value: 'not_found', label: "Je n'ai pas trouve ce que je cherchais" },
+  { value: 'price_high', label: 'Les prix sont trop eleves' },
+  { value: 'shipping_customs_high', label: 'Les frais de livraison / douane sont trop eleves' },
+  { value: 'delivery_slow', label: 'Les delais de livraison sont trop longs' },
+  { value: 'process_complex', label: 'Le processus de commande est trop complique' },
+  { value: 'bug', label: "J'ai rencontre un bug / probleme technique" },
+  { value: 'quote_mismatch', label: 'Le devis automatique ne repond pas a mes besoins' },
+  { value: 'support_unsatisfied', label: "Le service client ne m'a pas satisfait" },
+  { value: 'new_account', label: 'Je cree un nouveau compte' },
+  { value: 'privacy_security', label: 'Preoccupations liees a la confidentialite / securite' },
+  { value: 'other', label: 'Autre' },
+];
+
+function DeleteAccountModal({
+  profile,
+  step,
+  feedback,
+  code,
+  message,
+  selectedAlternative,
+  requestingCode,
+  deletingAccount,
+  onClose,
+  onFeedbackChange,
+  onCodeChange,
+  onStepChange,
+  onAlternativeChange,
+  onRequestCode,
+  onDelete,
+}: {
+  profile: ProfileForm;
+  step: DeleteModalStep;
+  feedback: DeleteFeedback;
+  code: string;
+  message: string;
+  selectedAlternative: DeleteAlternative | null;
+  requestingCode: boolean;
+  deletingAccount: boolean;
+  onClose: () => void;
+  onFeedbackChange: (feedback: DeleteFeedback) => void;
+  onCodeChange: (code: string) => void;
+  onStepChange: (step: DeleteModalStep) => void;
+  onAlternativeChange: (alternative: DeleteAlternative | null) => void;
+  onRequestCode: () => void;
+  onDelete: () => void;
+}) {
+  const canContinue = feedback.reason.length > 0;
+  const alternativeCopy = selectedAlternative ? deleteAlternativeCopy(selectedAlternative) : null;
+
+  function updateFeedback<K extends keyof DeleteFeedback>(key: K, value: DeleteFeedback[K]) {
+    onFeedbackChange({ ...feedback, [key]: value });
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950/45 px-4">
+      <div className="max-h-[92vh] w-full max-w-[34rem] overflow-hidden border border-slate-300 bg-white text-[#0f172a]">
+        <div className="flex h-12 items-center justify-between border-b-4 border-[#009a38] px-4">
+          <h2 className="text-sm font-normal">Suppression du compte</h2>
+          <button type="button" onClick={onClose} disabled={requestingCode || deletingAccount} className="text-2xl leading-none text-slate-500 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300" aria-label="Fermer">
+            x
+          </button>
+        </div>
+        <div className="max-h-[calc(92vh-3rem)] overflow-y-auto p-5">
+          {step === 'feedback' ? (
+            <div className="space-y-5">
+              <p className="text-sm leading-6 text-slate-600">
+                Avant de supprimer votre compte, dites-nous ce qui n'a pas fonctionne. Une reponse courte suffit, et elle nous aide vraiment a ameliorer Kendronics.
+              </p>
+              <label className="grid gap-2 text-sm font-normal text-slate-700">
+                <span>Pourquoi souhaitez-vous supprimer definitivement votre compte ? *</span>
+                <select value={feedback.reason} onChange={(event) => updateFeedback('reason', event.target.value as DeleteReason)} className={profileModalFieldClassName}>
+                  <option value="">Selectionner une raison</option>
+                  {deleteReasonOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <DeleteConditionalQuestions feedback={feedback} onUpdate={updateFeedback} />
+              <div className="grid gap-3 border-t border-slate-200 pt-4">
+                <label className="grid gap-2 text-sm font-normal text-slate-700">
+                  <span>Avez-vous deja passe une commande ?</span>
+                  <select value={feedback.orderedBefore} onChange={(event) => updateFeedback('orderedBefore', event.target.value)} className={profileModalFieldClassName}>
+                    <option value="">Facultatif</option>
+                    <option value="yes">Oui</option>
+                    <option value="no">Non</option>
+                  </select>
+                </label>
+                <label className="grid gap-2 text-sm font-normal text-slate-700">
+                  <span>Que devrions-nous ameliorer en priorite ?</span>
+                  <select value={feedback.improvementPriority} onChange={(event) => updateFeedback('improvementPriority', event.target.value)} className={profileModalFieldClassName}>
+                    <option value="">Facultatif</option>
+                    {['Prix', 'Livraison', 'Rapidite', 'Interface', 'Devis automatique', 'Support client', 'Documentation technique'].map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-2 text-sm font-normal text-slate-700">
+                  <span>Qu'aurions-nous pu faire pour vous garder ?</span>
+                  <textarea value={feedback.keepReason} onChange={(event) => updateFeedback('keepReason', event.target.value)} rows={3} className={profileModalTextAreaClassName} placeholder="Facultatif" />
+                </label>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={onClose} className={profileModalSecondaryButtonClassName}>
+                  Annuler
                 </button>
-                <button
-                  type="button"
-                  disabled={requestingDeleteCode || deletingAccount}
-                  onClick={() => void requestDeleteAccountCode(setRequestingDeleteCode, setDeleteStep, setDeleteMessage)}
-                  className="h-10 border border-red-200 px-4 text-sm font-semibold text-red-700 transition hover:border-red-400 disabled:cursor-not-allowed disabled:text-red-300"
-                >
-                  Renvoyer le code
+                <button type="button" disabled={!canContinue} onClick={() => onStepChange('alternative')} className={profileModalPrimaryButtonClassName}>
+                  Continuer
                 </button>
               </div>
             </div>
           ) : null}
-          {deleteMessage ? <p className="text-sm font-semibold text-red-700">{deleteMessage}</p> : null}
+
+          {step === 'alternative' ? (
+            <div className="space-y-5">
+              <p className="text-sm leading-6 text-slate-600">
+                Avant de partir, vous pouvez garder votre espace sans recevoir de messages, ou simplement mettre votre compte en pause.
+              </p>
+              <div className="grid gap-3">
+                {[
+                  ['pause', 'Desactiver temporairement', 'Conserver votre historique et revenir plus tard.'],
+                  ['unsubscribe', 'Se desabonner des emails', 'Garder le compte, sans communications marketing.'],
+                  ['continue', 'Continuer la suppression', 'Recevoir le code de verification par e-mail.'],
+                ].map(([value, title, description]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => {
+                      const alternative = value as DeleteAlternative;
+                      onAlternativeChange(alternative);
+                      if (alternative === 'continue') {
+                        onRequestCode();
+                        return;
+                      }
+                      onStepChange('alternative_done');
+                    }}
+                    disabled={requestingCode}
+                    className="grid gap-1 border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-[#009a38] hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <span className="text-sm font-black text-slate-900">{title}</span>
+                    <span className="text-xs leading-5 text-slate-500">{description}</span>
+                  </button>
+                ))}
+              </div>
+              {message ? <p className="border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{message}</p> : null}
+              <div className="flex justify-between gap-3 pt-2">
+                <button type="button" onClick={() => onStepChange('feedback')} className={profileModalSecondaryButtonClassName}>
+                  Retour
+                </button>
+                <button type="button" onClick={onClose} className={profileModalSecondaryButtonClassName}>
+                  Annuler
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {step === 'alternative_done' && alternativeCopy ? (
+            <div className="space-y-5">
+              <div className="border border-emerald-100 bg-emerald-50 p-4">
+                <h3 className="text-base font-black text-slate-900">{alternativeCopy.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{alternativeCopy.body}</p>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={onClose} className={profileModalSecondaryButtonClassName}>
+                  Annuler
+                </button>
+                <a href="/" className={profileModalPrimaryLinkClassName}>
+                  Retour a l'accueil
+                </a>
+              </div>
+            </div>
+          ) : null}
+
+          {step === 'code' ? (
+            <div className="space-y-5">
+              <p className="text-sm leading-6 text-slate-600">
+                Merci pour votre retour. Entrez le code envoye a {maskEmail(profile.email || 'votre e-mail')} pour confirmer la suppression definitive.
+              </p>
+              <label className="grid gap-2 text-sm font-normal text-slate-700">
+                <span>Code de verification *</span>
+                <input
+                  value={code}
+                  onChange={(event) => onCodeChange(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="code a 6 chiffres"
+                  className={profileModalFieldClassName}
+                />
+              </label>
+              {message ? <p className="border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{message}</p> : null}
+              <div className="flex flex-wrap justify-end gap-3 pt-2">
+                <button type="button" onClick={onClose} disabled={deletingAccount} className={profileModalSecondaryButtonClassName}>
+                  Annuler
+                </button>
+                <button type="button" onClick={onRequestCode} disabled={requestingCode || deletingAccount} className={profileModalSecondaryButtonClassName}>
+                  {requestingCode ? 'Envoi...' : 'Renvoyer le code'}
+                </button>
+                <button type="button" onClick={onDelete} disabled={deletingAccount || code.length !== 6} className="h-10 bg-red-600 px-5 text-sm font-normal text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
+                  {deletingAccount ? 'Suppression...' : 'Supprimer definitivement'}
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
-        <button
-          type="button"
-          disabled={requestingDeleteCode || deletingAccount}
-          onClick={() => void requestDeleteAccountCode(setRequestingDeleteCode, setDeleteStep, setDeleteMessage)}
-          className="text-right text-red-400 transition hover:text-red-600 active:text-red-700 disabled:cursor-not-allowed disabled:text-red-200"
-        >
-          {requestingDeleteCode ? 'Envoi...' : deleteStep === 'code_sent' ? 'Code envoye' : 'Supprimer'}
-        </button>
       </div>
-    </section>
+    </div>
   );
 }
+
+function DeleteConditionalQuestions({
+  feedback,
+  onUpdate,
+}: {
+  feedback: DeleteFeedback;
+  onUpdate: <K extends keyof DeleteFeedback>(key: K, value: DeleteFeedback[K]) => void;
+}) {
+  if (feedback.reason === 'price_high' || feedback.reason === 'shipping_customs_high') {
+    return (
+      <div className="grid gap-3">
+        <label className="grid gap-2 text-sm font-normal text-slate-700">
+          <span>Qu'est-ce qui vous semble trop cher ?</span>
+          <select value={feedback.priceIssue} onChange={(event) => onUpdate('priceIssue', event.target.value)} className={profileModalFieldClassName}>
+            <option value="">Facultatif</option>
+            {['Fabrication PCB', 'Assemblage PCBA', 'Livraison', 'Frais de douane', 'Prix global'].map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-normal text-slate-700">
+          <span>Quel prix vous semblerait plus juste ?</span>
+          <input value={feedback.fairPrice} onChange={(event) => onUpdate('fairPrice', event.target.value)} className={profileModalFieldClassName} placeholder="Facultatif" />
+        </label>
+      </div>
+    );
+  }
+
+  if (feedback.reason === 'delivery_slow') {
+    return (
+      <label className="grid gap-2 text-sm font-normal text-slate-700">
+        <span>Quelle duree de livraison attendiez-vous ?</span>
+        <select value={feedback.expectedDelivery} onChange={(event) => onUpdate('expectedDelivery', event.target.value)} className={profileModalFieldClassName}>
+          <option value="">Facultatif</option>
+          {['2-5 jours', '1 semaine', '2 semaines', 'Plus flexible'].map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
+    );
+  }
+
+  if (feedback.reason === 'process_complex') {
+    return (
+      <label className="grid gap-2 text-sm font-normal text-slate-700">
+        <span>Quelle etape vous a pose probleme ?</span>
+        <select value={feedback.processIssue} onChange={(event) => onUpdate('processIssue', event.target.value)} className={profileModalFieldClassName}>
+          <option value="">Facultatif</option>
+          {['Creation du compte', 'Upload fichiers Gerber', 'Configuration PCB', 'Options techniques', 'Paiement', 'Choix de livraison', 'Suivi de commande'].map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
+    );
+  }
+
+  if (feedback.reason === 'bug') {
+    return (
+      <div className="grid gap-3">
+        <label className="grid gap-2 text-sm font-normal text-slate-700">
+          <span>Quel probleme avez-vous rencontre ?</span>
+          <textarea value={feedback.bugDescription} onChange={(event) => onUpdate('bugDescription', event.target.value)} rows={3} className={profileModalTextAreaClassName} placeholder="Facultatif" />
+        </label>
+        <label className="grid gap-2 text-sm font-normal text-slate-700">
+          <span>Sur quel appareil ?</span>
+          <select value={feedback.device} onChange={(event) => onUpdate('device', event.target.value)} className={profileModalFieldClassName}>
+            <option value="">Facultatif</option>
+            {['Mobile', 'Desktop', 'Tablette'].map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-normal text-slate-700">
+          <span>Navigateur utilise ?</span>
+          <input value={feedback.browser} onChange={(event) => onUpdate('browser', event.target.value)} className={profileModalFieldClassName} placeholder="Facultatif" />
+        </label>
+      </div>
+    );
+  }
+
+  if (feedback.reason === 'support_unsatisfied') {
+    return (
+      <div className="grid gap-3">
+        <label className="grid gap-2 text-sm font-normal text-slate-700">
+          <span>Comment evalueriez-vous votre experience support ?</span>
+          <select value={feedback.supportRating} onChange={(event) => onUpdate('supportRating', event.target.value)} className={profileModalFieldClassName}>
+            <option value="">Facultatif</option>
+            {[1, 2, 3, 4, 5].map((option) => (
+              <option key={option} value={String(option)}>
+                {option}/5
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-normal text-slate-700">
+          <span>Que pouvons-nous ameliorer ?</span>
+          <textarea value={feedback.supportImprovement} onChange={(event) => onUpdate('supportImprovement', event.target.value)} rows={3} className={profileModalTextAreaClassName} placeholder="Facultatif" />
+        </label>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+function createEmptyDeleteFeedback(): DeleteFeedback {
+  return {
+    reason: '',
+    priceIssue: '',
+    fairPrice: '',
+    expectedDelivery: '',
+    processIssue: '',
+    bugDescription: '',
+    device: '',
+    browser: '',
+    supportRating: '',
+    supportImprovement: '',
+    orderedBefore: '',
+    improvementPriority: '',
+    keepReason: '',
+  };
+}
+
+function deleteAlternativeCopy(alternative: DeleteAlternative) {
+  if (alternative === 'pause') {
+    return {
+      title: 'Votre compte peut rester en pause.',
+      body: 'Votre espace reste disponible, avec votre historique conserve. Vous pourrez revenir quand vous serez pret, sans repartir de zero.',
+    };
+  }
+
+  if (alternative === 'unsubscribe') {
+    return {
+      title: 'On reduit le bruit.',
+      body: "C'est note. Vous pouvez garder votre espace Kendronics disponible, sans communications marketing inutiles.",
+    };
+  }
+
+  return {
+    title: 'Merci pour votre retour.',
+    body: 'Votre avis nous aide a rendre Kendronics plus simple, plus rapide et plus juste pour les prochains utilisateurs.',
+  };
+}
+
+const profileModalFieldClassName = 'h-11 border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#009a38]';
+const profileModalTextAreaClassName = 'min-h-24 resize-y border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#009a38]';
+const profileModalSecondaryButtonClassName = 'inline-flex h-10 items-center border border-slate-200 bg-white px-5 text-sm font-normal text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:text-slate-300';
+const profileModalPrimaryButtonClassName = 'h-10 bg-[#0877ff] px-6 text-sm font-normal text-white transition hover:bg-[#0068e8] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500';
+const profileModalPrimaryLinkClassName = 'inline-flex h-10 items-center bg-[#0877ff] px-6 text-sm font-normal text-white transition hover:bg-[#0068e8]';
 
 function maskEmail(email: string) {
   const [name, domain] = email.split('@');
@@ -1276,7 +1677,7 @@ function logout() {
 
 async function requestDeleteAccountCode(
   setRequesting: (value: boolean) => void,
-  setStep: (value: 'idle' | 'code_sent') => void,
+  setStep: (value: DeleteModalStep) => void,
   setMessage: (value: string) => void,
 ) {
   setRequesting(true);
@@ -1301,7 +1702,7 @@ async function requestDeleteAccountCode(
       throw new Error(`Delete verification request failed: ${response.status}`);
     }
 
-    setStep('code_sent');
+    setStep('code');
     setMessage('Code envoye. Il reste valide pendant 10 minutes.');
   } catch {
     setMessage("Impossible d'envoyer le code de suppression pour le moment.");
