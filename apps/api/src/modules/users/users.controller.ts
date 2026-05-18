@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, HttpCode, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Post, Put, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { ProfileVerificationService } from '../auth/profile-verification.service';
+import { AccountDeletionFeedbackDto } from './dto/account-deletion-feedback.dto';
 import { UpsertCookieConsentDto } from './dto/cookie-consent.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
 import { UsersService } from './users.service';
@@ -28,6 +29,11 @@ export class UsersController {
   @Put('me/cookie-consent')
   updateCookieConsent(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpsertCookieConsentDto) {
     return this.usersService.upsertCookieConsent(user.id, dto);
+  }
+
+  @Post('me/account-deletion-feedback')
+  createAccountDeletionFeedback(@CurrentUser() user: AuthenticatedUser, @Body() dto: AccountDeletionFeedbackDto) {
+    return this.usersService.createAccountDeletionFeedback(user, dto);
   }
 
   @Delete('me')

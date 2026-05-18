@@ -29,6 +29,7 @@ model User {
   notifications Notification[]
   profileVerificationCodes ProfileVerificationCode[]
   passwordResetTokens PasswordResetToken[]
+  accountDeletionFeedbacks AccountDeletionFeedback[]
 }
 
 model CookieConsent {
@@ -397,4 +398,25 @@ model PasswordResetToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model AccountDeletionFeedback {
+  id                  String   @id @default(uuid())
+  userId              String?
+  emailHash           String?
+  reason              String
+  details             Json?
+  orderedBefore       String?
+  improvementPriority String?
+  keepReason          String?
+  alternative         String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([reason])
+  @@index([alternative])
+  @@index([createdAt])
 }

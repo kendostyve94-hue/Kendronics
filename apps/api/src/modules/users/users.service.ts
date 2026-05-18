@@ -2,9 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { PasswordService } from '../auth/password.service';
+import { AccountDeletionFeedbackDto } from './dto/account-deletion-feedback.dto';
 import { UpsertCookieConsentDto } from './dto/cookie-consent.dto';
 import { CookieConsent } from './entities/cookie-consent.entity';
 import { User } from './entities/user.entity';
+import { AccountDeletionFeedbackRepository } from './repositories/account-deletion-feedback.repository';
 import { CookieConsentRepository } from './repositories/cookie-consent.repository';
 import { UsersRepository } from './repositories/users.repository';
 import { UserRole } from '../../common/types/user-role.enum';
@@ -16,6 +18,7 @@ export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
     private readonly cookieConsentRepository: CookieConsentRepository,
+    private readonly accountDeletionFeedbackRepository: AccountDeletionFeedbackRepository,
     private readonly passwordService: PasswordService,
   ) {}
 
@@ -98,6 +101,10 @@ export class UsersService {
 
   async deleteAccount(userId: string): Promise<void> {
     await this.usersRepository.deleteById(userId);
+  }
+
+  async createAccountDeletionFeedback(user: { id: string; email: string }, dto: AccountDeletionFeedbackDto): Promise<{ ok: true }> {
+    return this.accountDeletionFeedbackRepository.create(user, dto);
   }
 
   findCookieConsent(userId: string): Promise<CookieConsent | null> {

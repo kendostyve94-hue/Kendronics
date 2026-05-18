@@ -737,17 +737,32 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
   const [deleteMessage, setDeleteMessage] = useState('');
   const [requestingDeleteCode, setRequestingDeleteCode] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [savingDeleteFeedback, setSavingDeleteFeedback] = useState(false);
   const [selectedAlternative, setSelectedAlternative] = useState<DeleteAlternative | null>(null);
   const [deleteFeedback, setDeleteFeedback] = useState<DeleteFeedback>(createEmptyDeleteFeedback());
 
   function closeDeleteModal() {
-    if (requestingDeleteCode || deletingAccount) return;
+    if (requestingDeleteCode || deletingAccount || savingDeleteFeedback) return;
     setDeleteModalOpen(false);
     setDeleteStep('feedback');
     setDeleteCode('');
     setDeleteMessage('');
     setSelectedAlternative(null);
     setDeleteFeedback(createEmptyDeleteFeedback());
+  }
+
+  async function handleDeleteAlternative(alternative: DeleteAlternative) {
+    setSelectedAlternative(alternative);
+    setDeleteMessage('');
+    const saved = await submitAccountDeletionFeedback(deleteFeedback, alternative, setSavingDeleteFeedback, setDeleteMessage);
+    if (!saved) return;
+
+    if (alternative === 'continue') {
+      await requestDeleteAccountCode(setRequestingDeleteCode, setDeleteStep, setDeleteMessage);
+      return;
+    }
+
+    setDeleteStep('alternative_done');
   }
 
   return (
@@ -802,11 +817,12 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
           selectedAlternative={selectedAlternative}
           requestingCode={requestingDeleteCode}
           deletingAccount={deletingAccount}
+          savingFeedback={savingDeleteFeedback}
           onClose={closeDeleteModal}
           onFeedbackChange={setDeleteFeedback}
           onCodeChange={setDeleteCode}
           onStepChange={setDeleteStep}
-          onAlternativeChange={setSelectedAlternative}
+          onSelectAlternative={(alternative) => void handleDeleteAlternative(alternative)}
           onRequestCode={() => void requestDeleteAccountCode(setRequestingDeleteCode, setDeleteStep, setDeleteMessage)}
           onDelete={() => void deleteAccount(deleteCode, setDeletingAccount)}
         />
@@ -839,11 +855,12 @@ function DeleteAccountModal({
   selectedAlternative,
   requestingCode,
   deletingAccount,
+  savingFeedback,
   onClose,
   onFeedbackChange,
   onCodeChange,
   onStepChange,
-  onAlternativeChange,
+  onSelectAlternative,
   onRequestCode,
   onDelete,
 }: {
@@ -855,11 +872,12 @@ function DeleteAccountModal({
   selectedAlternative: DeleteAlternative | null;
   requestingCode: boolean;
   deletingAccount: boolean;
+  savingFeedback: boolean;
   onClose: () => void;
   onFeedbackChange: (feedback: DeleteFeedback) => void;
   onCodeChange: (code: string) => void;
   onStepChange: (step: DeleteModalStep) => void;
-  onAlternativeChange: (alternative: DeleteAlternative | null) => void;
+  onSelectAlternative: (alternative: DeleteAlternative) => void;
   onRequestCode: () => void;
   onDelete: () => void;
 }) {
@@ -875,7 +893,7 @@ function DeleteAccountModal({
       <div className="max-h-[92vh] w-full max-w-[34rem] overflow-hidden border border-slate-300 bg-white text-[#0f172a]">
         <div className="flex h-12 items-center justify-between border-b-4 border-[#009a38] px-4">
           <h2 className="text-sm font-normal">Suppression du compte</h2>
-          <button type="button" onClick={onClose} disabled={requestingCode || deletingAccount} className="text-2xl leading-none text-slate-500 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300" aria-label="Fermer">
+          <button type="button" onClick={onClose} disabled={requestingCode || deletingAccount || savingFeedback} className="text-2xl leading-none text-slate-500 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-300" aria-label="Fermer">
             x
           </button>
         </div>
@@ -923,10 +941,10 @@ function DeleteAccountModal({
                 </label>
               </div>
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={onClose} className={profileModalSecondaryButtonClassName}>
+                <button type="button" onClick={onClose} disabled={savingFeedback} className={profileModalSecondaryButtonClassName}>
                   Annuler
                 </button>
-                <button type="button" disabled={!canContinue} onClick={() => onStepChange('alternative')} className={profileModalPrimaryButtonClassName}>
+                <button type="button" disabled={!canContinue || savingFeedback} onClick={() => onStepChange('alternative')} className={profileModalPrimaryButtonClassName}>
                   Continuer
                 </button>
               </div>
@@ -947,16 +965,8 @@ function DeleteAccountModal({
                   <button
                     key={value}
                     type="button"
-                    onClick={() => {
-                      const alternative = value as DeleteAlternative;
-                      onAlternativeChange(alternative);
-                      if (alternative === 'continue') {
-                        onRequestCode();
-                        return;
-                      }
-                      onStepChange('alternative_done');
-                    }}
-                    disabled={requestingCode}
+                    onClick={() => onSelectAlternative(value as DeleteAlternative)}
+                    disabled={requestingCode || savingFeedback}
                     className="grid gap-1 border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-[#009a38] hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <span className="text-sm font-black text-slate-900">{title}</span>
@@ -964,12 +974,13 @@ function DeleteAccountModal({
                   </button>
                 ))}
               </div>
+              {savingFeedback ? <p className="border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">Enregistrement de votre retour...</p> : null}
               {message ? <p className="border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{message}</p> : null}
               <div className="flex justify-between gap-3 pt-2">
-                <button type="button" onClick={() => onStepChange('feedback')} className={profileModalSecondaryButtonClassName}>
+                <button type="button" onClick={() => onStepChange('feedback')} disabled={savingFeedback || requestingCode} className={profileModalSecondaryButtonClassName}>
                   Retour
                 </button>
-                <button type="button" onClick={onClose} className={profileModalSecondaryButtonClassName}>
+                <button type="button" onClick={onClose} disabled={savingFeedback || requestingCode} className={profileModalSecondaryButtonClassName}>
                   Annuler
                 </button>
               </div>
@@ -1673,6 +1684,75 @@ function logout() {
   window.localStorage.removeItem('kendronics.customer.orders');
   window.dispatchEvent(new Event('kendronics:orders-updated'));
   window.location.assign('/login');
+}
+
+async function submitAccountDeletionFeedback(
+  feedback: DeleteFeedback,
+  alternative: DeleteAlternative,
+  setSaving: (value: boolean) => void,
+  setMessage: (value: string) => void,
+) {
+  if (!feedback.reason) return false;
+
+  setSaving(true);
+  setMessage('');
+  try {
+    const session = await readFreshAuthSession();
+    if (!session) {
+      window.location.assign('/login');
+      return false;
+    }
+
+    const response = await fetch(`${getApiBaseUrl()}/api/users/me/account-deletion-feedback`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(toAccountDeletionFeedbackPayload(feedback, alternative)),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Account deletion feedback failed: ${response.status}`);
+    }
+
+    return true;
+  } catch {
+    setMessage("Impossible d'enregistrer votre retour pour le moment.");
+    return false;
+  } finally {
+    setSaving(false);
+  }
+}
+
+function toAccountDeletionFeedbackPayload(feedback: DeleteFeedback, alternative: DeleteAlternative) {
+  return {
+    reason: feedback.reason,
+    details: compactRecord({
+      priceIssue: feedback.priceIssue,
+      fairPrice: feedback.fairPrice,
+      expectedDelivery: feedback.expectedDelivery,
+      processIssue: feedback.processIssue,
+      bugDescription: feedback.bugDescription,
+      device: feedback.device,
+      browser: feedback.browser,
+      supportRating: feedback.supportRating,
+      supportImprovement: feedback.supportImprovement,
+    }),
+    orderedBefore: optionalValue(feedback.orderedBefore),
+    improvementPriority: optionalValue(feedback.improvementPriority),
+    keepReason: optionalValue(feedback.keepReason),
+    alternative,
+  };
+}
+
+function compactRecord(values: Record<string, string>) {
+  return Object.fromEntries(Object.entries(values).filter(([, value]) => value.trim().length > 0));
+}
+
+function optionalValue(value: string) {
+  const trimmed = value.trim();
+  return trimmed ? trimmed : undefined;
 }
 
 async function requestDeleteAccountCode(
