@@ -698,6 +698,10 @@ function InviteSection() {
 }
 
 function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileForm; userId: string; avatarDataUrl: string }) {
+  const [deleteStep, setDeleteStep] = useState<'idle' | 'code_sent'>('idle');
+  const [deleteCode, setDeleteCode] = useState('');
+  const [deleteMessage, setDeleteMessage] = useState('');
+  const [requestingDeleteCode, setRequestingDeleteCode] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
   return (
@@ -733,9 +737,48 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
       </div>
       <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
         <h2 className="text-lg">Supprimer le compte</h2>
-        <p className="text-[#4b5563]">Suppression définitive du compte et des données associées.</p>
-        <button type="button" disabled={deletingAccount} onClick={() => void deleteAccount(setDeletingAccount)} className="text-right text-red-300 transition hover:text-red-600 active:text-red-700 disabled:cursor-not-allowed disabled:text-red-200">
-          {deletingAccount ? 'Suppression...' : 'Supprimer'}
+        <div className="space-y-3 text-[#4b5563]">
+          <p>Suppression definitive du compte, de la session et des donnees client associees.</p>
+          {deleteStep === 'code_sent' ? (
+            <div className="grid max-w-md gap-3 rounded-sm border border-red-100 bg-red-50 p-4">
+              <p className="text-sm font-semibold text-red-900">Entrez le code de verification envoye a {maskEmail(profile.email || 'votre e-mail')}.</p>
+              <input
+                value={deleteCode}
+                onChange={(event) => setDeleteCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="Code a 6 chiffres"
+                className="h-11 border border-red-200 bg-white px-3 text-sm font-semibold text-black outline-none transition focus:border-red-500"
+              />
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  disabled={deletingAccount || deleteCode.length !== 6}
+                  onClick={() => void deleteAccount(deleteCode, setDeletingAccount)}
+                  className="h-10 bg-red-600 px-4 text-sm font-black text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-200"
+                >
+                  {deletingAccount ? 'Suppression...' : 'Supprimer definitivement'}
+                </button>
+                <button
+                  type="button"
+                  disabled={requestingDeleteCode || deletingAccount}
+                  onClick={() => void requestDeleteAccountCode(setRequestingDeleteCode, setDeleteStep, setDeleteMessage)}
+                  className="h-10 border border-red-200 px-4 text-sm font-semibold text-red-700 transition hover:border-red-400 disabled:cursor-not-allowed disabled:text-red-300"
+                >
+                  Renvoyer le code
+                </button>
+              </div>
+            </div>
+          ) : null}
+          {deleteMessage ? <p className="text-sm font-semibold text-red-700">{deleteMessage}</p> : null}
+        </div>
+        <button
+          type="button"
+          disabled={requestingDeleteCode || deletingAccount}
+          onClick={() => void requestDeleteAccountCode(setRequestingDeleteCode, setDeleteStep, setDeleteMessage)}
+          className="text-right text-red-400 transition hover:text-red-600 active:text-red-700 disabled:cursor-not-allowed disabled:text-red-200"
+        >
+          {requestingDeleteCode ? 'Envoi...' : deleteStep === 'code_sent' ? 'Code envoye' : 'Supprimer'}
         </button>
       </div>
     </section>
@@ -1231,10 +1274,43 @@ function logout() {
   window.location.assign('/login');
 }
 
-async function deleteAccount(setDeleting: (value: boolean) => void) {
-  const confirmed = window.confirm('Supprimer définitivement votre compte Kendronics ? Cette action est irréversible.');
-  if (!confirmed) return;
+async function requestDeleteAccountCode(
+  setRequesting: (value: boolean) => void,
+  setStep: (value: 'idle' | 'code_sent') => void,
+  setMessage: (value: string) => void,
+) {
+  setRequesting(true);
+  setMessage('');
+  try {
+    const session = await readFreshAuthSession();
+    if (!session) {
+      window.location.assign('/login');
+      return;
+    }
 
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/profile-verification/request`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'delete' }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Delete verification request failed: ${response.status}`);
+    }
+
+    setStep('code_sent');
+    setMessage('Code envoye. Il reste valide pendant 10 minutes.');
+  } catch {
+    setMessage("Impossible d'envoyer le code de suppression pour le moment.");
+  } finally {
+    setRequesting(false);
+  }
+}
+
+async function deleteAccount(code: string, setDeleting: (value: boolean) => void) {
   setDeleting(true);
   try {
     const session = await readFreshAuthSession();
@@ -1245,7 +1321,11 @@ async function deleteAccount(setDeleting: (value: boolean) => void) {
 
     const response = await fetch(`${getApiBaseUrl()}/api/users/me`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${session.accessToken}` },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code }),
     });
 
     if (!response.ok) {

@@ -55,7 +55,23 @@ export class UsersRepository {
   }
 
   async deleteById(userId: string): Promise<void> {
-    await this.prisma.user.delete({ where: { id: userId } });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.profileVerificationCode.deleteMany({ where: { userId } });
+      await tx.passwordResetToken.deleteMany({ where: { userId } });
+      await tx.notification.deleteMany({ where: { userId } });
+      await tx.cookieConsent.deleteMany({ where: { userId } });
+      await tx.session.deleteMany({ where: { userId } });
+      await tx.adminAccess.deleteMany({ where: { userId } });
+      await tx.adminAuditLog.deleteMany({ where: { actorUserId: userId } });
+      await tx.trackingEvent.deleteMany({ where: { order: { userId } } });
+      await tx.paymentEvent.updateMany({ where: { payment: { userId } }, data: { paymentId: null } });
+      await tx.payment.deleteMany({ where: { userId } });
+      await tx.order.deleteMany({ where: { userId } });
+      await tx.quote.deleteMany({ where: { userId } });
+      await tx.gerberUpload.deleteMany({ where: { userId } });
+      await tx.supportTicket.updateMany({ where: { userId }, data: { userId: null } });
+      await tx.user.delete({ where: { id: userId } });
+    });
   }
 
   private toUser(user: {
