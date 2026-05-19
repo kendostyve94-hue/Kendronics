@@ -111,6 +111,23 @@ type DiscoverNewsItem = {
   imageUrl?: string;
 };
 
+type CommunityPost = {
+  id: string;
+  author: string;
+  avatarDataUrl: string;
+  title: string;
+  description: string;
+  kind: 'video' | 'image' | 'document' | 'tutorial';
+  mediaName: string;
+  mediaDataUrl?: string;
+  mediaType?: string;
+  createdAt: string;
+  views: number;
+  likes: number;
+  saves: number;
+  comments: number;
+};
+
 type ProfileUser = {
   id: string;
   email: string;
@@ -246,13 +263,10 @@ export default function ProfilePage() {
               <>
                 <ProductQuickGrid />
 
-                <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_330px] gap-4">
-                  <div className="min-w-0">
-                    <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
-                    <ClientCommandPanel orders={orders} />
-                    <StatusStrip counts={orderCounts(orders)} />
-                  </div>
-
+                <div className="mt-4 grid min-w-0 gap-4">
+                  <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
+                  <StatusStrip counts={orderCounts(orders)} />
+                  <CommunityPublishPanel firstName={firstName} avatarDataUrl={avatarDataUrl} />
                   <DiscoverNewsRail />
                 </div>
               </>
@@ -462,15 +476,12 @@ function ProfileViewContent({
 
 type OrderStatusKey = 'all' | 'verification' | 'payment-pending' | 'production' | 'delivery' | 'completed' | 'comments';
 
-const orderStatuses: Array<{ key: OrderStatusKey | 'payment-unfinished' | 'engineering' | 'comments'; label: string; icon?: string }> = [
-  { key: 'all', label: 'Toutes commandes' },
+const orderStatuses: Array<{ key: Extract<OrderStatusKey, 'verification' | 'payment-pending' | 'production' | 'delivery' | 'comments'>; label: string }> = [
   { key: 'verification', label: 'Verification en cours' },
   { key: 'payment-pending', label: 'Paiement en attente' },
-  { key: 'payment-unfinished', label: 'Paiement inacheve' },
-  { key: 'production', label: 'Statut de production' },
-  { key: 'engineering', label: "Questions d'ingenierie", icon: '▣' },
+  { key: 'production', label: 'Production Terminee' },
   { key: 'delivery', label: 'Livraison' },
-  { key: 'comments', label: 'Commentaires en attente' },
+  { key: 'comments', label: 'Commentaires' },
 ];
 
 function OrderReviewSection({
@@ -511,7 +522,7 @@ function OrderStatusHeader({ activeKey, counts }: { activeKey: OrderStatusKey; c
         <span className="grid h-6 w-6 place-items-center text-xl text-[#b8b8b8]">▤</span>
         <h1 className="text-xl font-normal">Mes commandes</h1>
       </div>
-      <div className="grid h-[112px] grid-cols-8 items-start px-1 pt-6">
+      <div className="grid h-[112px] grid-cols-5 items-start px-1 pt-6">
         {orderStatuses.map((status) => {
           const active = status.key === activeKey;
 
@@ -519,7 +530,6 @@ function OrderStatusHeader({ activeKey, counts }: { activeKey: OrderStatusKey; c
             <div key={status.key} className="grid min-h-[72px] place-items-center border-r border-[#e5e7eb] px-3 text-center last:border-r-0">
               <span className={`text-[28px] font-black leading-7 ${active ? 'text-[#ff5a00]' : 'text-[#1f2937]'}`}>
                 {countForStatus(status.key, counts)}
-                {status.icon ? <span className="ml-1 align-middle text-[20px] text-[#20b99a]">{status.icon}</span> : null}
               </span>
               <span className={`mt-1 text-[14px] leading-4 ${active ? 'text-[#ff5a00]' : 'text-[#8a8f98]'}`}>{status.label}</span>
             </div>
@@ -1507,45 +1517,173 @@ function ReferralBanner() {
   );
 }
 
-function ClientCommandPanel({ orders }: { orders: ProfileOrder[] }) {
-  const pendingPayment = orders.find((order) => orderMatchesStatus(order, 'payment-pending'));
-  const quotedOrder = orders.find((order) => orderMatchesStatus(order, 'verification'));
-  const primary = pendingPayment
-    ? { title: 'Paiement en attente', body: `${pendingPayment.orderNumber} peut passer en production des validation du paiement.`, href: `/orders/${pendingPayment.id}`, action: 'Finaliser' }
-    : quotedOrder
-      ? { title: 'Devis pret a verifier', body: `${quotedOrder.orderNumber} attend votre validation avant la prochaine etape.`, href: `/orders/${quotedOrder.id}`, action: 'Verifier' }
-      : { title: 'Preparer un nouveau projet', body: 'Configurez un PCB, comparez les options et gardez le controle avant commande.', href: '/quote', action: 'Commencer' };
-
-  return (
-    <section className="mt-4">
-      <article className="bg-[#102033] p-5 text-white shadow-sm">
-        <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9ee6ca]">Priorite</p>
-        <h2 className="mt-2 text-2xl font-black tracking-normal">{primary.title}</h2>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-slate-200">{primary.body}</p>
-        <a href={primary.href} className="mt-5 inline-flex border border-white/30 bg-white px-5 py-3 text-xs font-black text-[#102033] transition hover:bg-[#ecfdf5]">{primary.action}</a>
-      </article>
-    </section>
-  );
-}
-
 function StatusStrip({ counts }: { counts: ReturnType<typeof orderCounts> }) {
   const statuses = [
     [counts.verification, 'Verification en cours'],
     [counts.paymentPending, 'Paiement en attente'],
-    [counts.production, 'Statut de production'],
-    [0, "Questions d'ingenierie"],
+    [counts.production, 'Production Terminee'],
     [counts.delivery, 'Livraison'],
-    [counts.comments, 'Commentaires en attente'],
+    [counts.comments, 'Commentaires'],
   ];
 
   return (
-    <section className="mt-4 grid grid-cols-6 bg-white py-5 shadow-sm ring-1 ring-slate-200">
+    <section className="grid grid-cols-5 bg-white py-5 shadow-sm ring-1 ring-slate-200">
       {statuses.map(([value, label]) => (
         <div key={label} className="border-r border-slate-200 px-3 text-center last:border-r-0">
           <p className="text-3xl font-light text-[#111827]">{value}</p>
           <p className="mt-2 text-xs leading-4 text-[#475569]">{label}</p>
         </div>
       ))}
+    </section>
+  );
+}
+
+const communityPostsStorageKey = 'kendronics.community.posts';
+
+function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string; avatarDataUrl: string }) {
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [kind, setKind] = useState<CommunityPost['kind']>('image');
+  const [mediaName, setMediaName] = useState('');
+  const [mediaDataUrl, setMediaDataUrl] = useState('');
+  const [mediaType, setMediaType] = useState('');
+
+  useEffect(() => {
+    setPosts(readCommunityPosts());
+  }, []);
+
+  function handleMediaChange(file?: File) {
+    if (!file) {
+      setMediaName('');
+      setMediaDataUrl('');
+      setMediaType('');
+      return;
+    }
+
+    setMediaName(file.name);
+    setMediaType(file.type);
+
+    if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+      const reader = new FileReader();
+      reader.onload = () => setMediaDataUrl(typeof reader.result === 'string' ? reader.result : '');
+      reader.readAsDataURL(file);
+    } else {
+      setMediaDataUrl('');
+    }
+  }
+
+  function publishPost() {
+    if (!title.trim() || !mediaName) return;
+
+    const nextPost: CommunityPost = {
+      id: typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}`,
+      author: firstName,
+      avatarDataUrl,
+      title: title.trim(),
+      description: description.trim(),
+      kind,
+      mediaName,
+      mediaDataUrl,
+      mediaType,
+      createdAt: new Date().toISOString(),
+      views: 0,
+      likes: 0,
+      saves: 0,
+      comments: 0,
+    };
+
+    const nextPosts = [nextPost, ...posts].slice(0, 18);
+    setPosts(nextPosts);
+    persistCommunityPosts(nextPosts);
+    setTitle('');
+    setDescription('');
+    setKind('image');
+    setMediaName('');
+    setMediaDataUrl('');
+    setMediaType('');
+  }
+
+  const canPublish = title.trim().length > 2 && mediaName.length > 0;
+
+  return (
+    <section className="bg-white shadow-sm ring-1 ring-[#dbe4ee]">
+      <div className="grid gap-5 border-b border-[#e4ebf2] p-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0f8f6b]">Publication publique</p>
+          <h2 className="mt-1 text-xl font-black text-[#102033]">Partager un projet technique</h2>
+          <p className="mt-2 text-sm leading-6 text-[#64748b]">
+            Publiez une courte video, une image de prototype, un document technique ou un tuto. Le rendu est pense comme un flux public de projets hardware.
+          </p>
+        </div>
+
+        <form className="grid gap-3" onSubmit={(event) => { event.preventDefault(); publishPost(); }}>
+          <div className="grid gap-3 md:grid-cols-[1fr_180px]">
+            <input value={title} onChange={(event) => setTitle(event.target.value)} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]" placeholder="Titre du projet, tuto ou document" maxLength={72} />
+            <select value={kind} onChange={(event) => setKind(event.target.value as CommunityPost['kind'])} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]">
+              <option value="image">Image</option>
+              <option value="video">Video short</option>
+              <option value="document">Document technique</option>
+              <option value="tutorial">Tutoriel</option>
+            </select>
+          </div>
+          <textarea value={description} onChange={(event) => setDescription(event.target.value)} className="min-h-[78px] resize-y border border-[#cfd8e3] bg-white px-3 py-2 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]" placeholder="Decrivez le montage, les fichiers, les composants ou l'objectif du prototype." maxLength={220} />
+          <div className="grid gap-3 md:grid-cols-[1fr_150px]">
+            <label className="flex h-11 cursor-pointer items-center justify-between border border-dashed border-[#9fb3c8] bg-[#f8fafc] px-3 text-sm font-semibold text-[#475569] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+              <span className="truncate">{mediaName || 'Ajouter video, image, PDF, ZIP ou fichier technique'}</span>
+              <input type="file" accept="image/*,video/*,.pdf,.zip,.rar,.7z,.doc,.docx,.ppt,.pptx" className="hidden" onChange={(event) => handleMediaChange(event.target.files?.[0])} />
+            </label>
+            <button type="submit" disabled={!canPublish} className="h-11 bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
+              Publier
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {posts.length > 0 ? (
+        <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
+          {posts.map((post) => (
+            <article key={post.id} className="overflow-hidden border border-[#dbe4ee] bg-white">
+              <div className="relative aspect-[4/3] overflow-hidden bg-[#eef4f8]">
+                {post.mediaDataUrl && post.mediaType?.startsWith('video/') ? (
+                  <video src={post.mediaDataUrl} className="h-full w-full object-cover" controls muted />
+                ) : post.mediaDataUrl ? (
+                  <img src={post.mediaDataUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="grid h-full place-items-center bg-[linear-gradient(135deg,#e9f8f3,#f8fbff)] p-6 text-center text-sm font-black text-[#0f8f6b]">
+                    {post.mediaName}
+                  </div>
+                )}
+                <span className="absolute left-2 top-2 bg-[#fff2e5] px-2 py-1 text-[10px] font-black uppercase text-[#ff6a00]">{communityKindLabel(post.kind)}</span>
+              </div>
+              <div className="p-3">
+                <h3 className="line-clamp-1 text-base font-black text-[#102033]">{post.title}</h3>
+                <p className="mt-1 line-clamp-2 min-h-[38px] text-xs leading-5 text-[#64748b]">{post.description || post.mediaName}</p>
+                <div className="mt-3 flex items-center justify-between text-[11px] text-[#94a3b8]">
+                  <span>{formatCompactNumber(post.views)} vues</span>
+                  <span>{post.likes} likes</span>
+                  <span>{post.saves} favoris</span>
+                  <span>{post.comments} avis</span>
+                </div>
+                <div className="mt-3 flex items-center gap-2 border-t border-[#edf2f7] pt-3">
+                  <Avatar avatarDataUrl={post.avatarDataUrl} size="small" />
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-black text-[#102033]">{post.author}</p>
+                    <p className="text-[11px] text-[#94a3b8]">{formatDate(post.createdAt)}</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="grid min-h-[180px] place-items-center p-5 text-center">
+          <div>
+            <p className="text-base font-black text-[#102033]">Aucune publication pour le moment.</p>
+            <p className="mt-2 text-sm text-[#64748b]">Ajoutez un media technique pour alimenter le flux public de votre espace.</p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -1667,8 +1805,8 @@ function InfoList({ title, items, action, numbered }: { title: string; items: st
   );
 }
 
-function Avatar({ avatarDataUrl, size }: { avatarDataUrl: string; size: 'medium' | 'large' }) {
-  const className = size === 'large' ? 'h-16 w-16 border-2 border-[#d89b2b]' : 'h-20 w-20 border border-slate-200';
+function Avatar({ avatarDataUrl, size }: { avatarDataUrl: string; size: 'small' | 'medium' | 'large' }) {
+  const className = size === 'large' ? 'h-16 w-16 border-2 border-[#d89b2b]' : size === 'small' ? 'h-7 w-7 border border-slate-200' : 'h-20 w-20 border border-slate-200';
 
   return (
     <span className={`grid shrink-0 place-items-center overflow-hidden rounded-none bg-slate-200 ${className}`}>
@@ -1712,7 +1850,7 @@ function orderCounts(orders: ProfileOrder[]) {
   };
 }
 
-function countForStatus(key: OrderStatusKey | 'payment-unfinished' | 'engineering' | 'comments', counts: ReturnType<typeof orderCounts>) {
+function countForStatus(key: OrderStatusKey, counts: ReturnType<typeof orderCounts>) {
   if (key === 'all') return counts.all;
   if (key === 'verification') return counts.verification;
   if (key === 'payment-pending') return counts.paymentPending;
@@ -1791,6 +1929,36 @@ function formatDateTime(value: Date) {
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+}
+
+function readCommunityPosts() {
+  try {
+    return JSON.parse(window.localStorage.getItem(communityPostsStorageKey) ?? '[]') as CommunityPost[];
+  } catch {
+    return [];
+  }
+}
+
+function persistCommunityPosts(posts: CommunityPost[]) {
+  try {
+    window.localStorage.setItem(communityPostsStorageKey, JSON.stringify(posts));
+  } catch {
+    // Large media previews can exceed browser storage; keep the UI responsive even when persistence fails.
+  }
+}
+
+function communityKindLabel(kind: CommunityPost['kind']) {
+  const labels: Record<CommunityPost['kind'], string> = {
+    image: 'Image',
+    video: 'Video',
+    document: 'Doc technique',
+    tutorial: 'Tuto',
+  };
+  return labels[kind];
+}
+
+function formatCompactNumber(value: number) {
+  return new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
 }
 
 function statusMessage(status: 'loading' | 'ready' | 'signed-out' | 'error', emptyText: string) {
