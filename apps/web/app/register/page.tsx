@@ -64,7 +64,8 @@ export default function RegisterPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Registration failed.');
+        const error = await response.json().catch(() => null);
+        throw new Error(registerErrorMessage(response.status, error));
       }
 
       window.localStorage.setItem(
@@ -87,8 +88,8 @@ export default function RegisterPage() {
       window.setTimeout(() => {
         window.location.assign('/');
       }, accountCreatedRedirectDelayMs);
-    } catch {
-      setErrors({ form: 'Impossible de creer votre compte pour le moment. Reessayez.' });
+    } catch (error) {
+      setErrors({ form: error instanceof Error ? error.message : 'Impossible de creer votre compte pour le moment. Reessayez.' });
       setStatus('idle');
     }
   }
@@ -223,6 +224,20 @@ export default function RegisterPage() {
       </section>
     </main>
   );
+}
+
+function registerErrorMessage(status: number, error: unknown) {
+  const message = apiErrorMessage(error);
+  if (status === 409) return 'Un compte existe deja avec cette adresse e-mail. Connectez-vous ou utilisez une autre adresse.';
+  if (status === 400 && message) return message;
+  return 'Impossible de creer votre compte pour le moment. Reessayez.';
+}
+
+function apiErrorMessage(error: unknown) {
+  if (!error || typeof error !== 'object') return '';
+  const message = (error as { message?: unknown }).message;
+  if (Array.isArray(message)) return message.join(' ');
+  return typeof message === 'string' ? message : '';
 }
 
 function MobileRegisterScreen({
