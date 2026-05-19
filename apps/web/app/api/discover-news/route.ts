@@ -13,6 +13,8 @@ const feeds = [
   { source: 'ScienceDaily Tech', url: 'https://www.sciencedaily.com/rss/top/technology.xml' },
   { source: 'ScienceDaily Science', url: 'https://www.sciencedaily.com/rss/top/science.xml' },
   { source: 'NASA JPL', url: 'https://www.jpl.nasa.gov/feeds/news/' },
+  { source: 'MIT News', url: 'https://news.mit.edu/rss/feed' },
+  { source: 'MIT AI', url: 'https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml' },
 ];
 
 export async function GET() {
@@ -31,11 +33,13 @@ export async function GET() {
     }),
   );
 
-  const items = settledFeeds
+  const rawItems = settledFeeds
     .flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
     .filter((item) => item.title && item.link)
     .sort((left, right) => new Date(right.publishedAt).getTime() - new Date(left.publishedAt).getTime())
-    .slice(0, 8);
+    .slice(0, 12);
+
+  const items = await enrichMissingImages(rawItems);
 
   return NextResponse.json(
     {
@@ -49,6 +53,30 @@ export async function GET() {
       },
     },
   );
+}
+
+async function enrichMissingImages(items: DiscoverNewsItem[]) {
+  const settled = await Promise.allSettled(
+    items.map(async (item) => {
+      if (item.imageUrl) return item;
+
+      try {
+        const response = await fetch(item.link, {
+          headers: { Accept: 'text/html,application/xhtml+xml' },
+          cache: 'no-store',
+        });
+        if (!response.ok) return item;
+
+        const html = await response.text();
+        const imageUrl = extractPageImage(html);
+        return imageUrl ? { ...item, imageUrl } : item;
+      } catch {
+        return item;
+      }
+    }),
+  );
+
+  return settled.map((result, index) => (result.status === 'fulfilled' ? result.value : items[index]));
 }
 
 function parseRssItems(xml: string, source: string): DiscoverNewsItem[] {
@@ -82,6 +110,19 @@ function extractImageUrl(item: string) {
 
   const descriptionImage = item.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
   if (descriptionImage?.[1]) return decodeXml(descriptionImage[1]);
+
+  return undefined;
+}
+
+function extractPageImage(html: string) {
+  const ogImage = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["'][^>]*>/i);
+  if (ogImage?.[1]) return decodeXml(ogImage[1]);
+
+  const twitterImage = html.match(/<meta[^>]+name=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["'][^>]*>/i);
+  if (twitterImage?.[1]) return decodeXml(twitterImage[1]);
+
+  const firstArticleImage = html.match(/<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+  if (firstArticleImage?.[1]) return decodeXml(firstArticleImage[1]);
 
   return undefined;
 }

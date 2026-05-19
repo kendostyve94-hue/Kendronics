@@ -1720,54 +1720,124 @@ function DiscoverNewsRail() {
   }, []);
 
   const featured = items[0];
-  const secondary = items.slice(1, 4);
+  const topStory = items[1];
+  const compactStories = items.slice(2, 6);
+  const feedStories = items.slice(6, 10);
 
   return (
-    <aside className="overflow-hidden bg-white shadow-sm ring-1 ring-[#dbe4ee]">
-      <div className="flex h-12 items-center justify-between border-b border-[#e4ebf2] px-4">
-        <div className="flex items-center gap-2">
-          <span className="grid h-6 w-6 place-items-center bg-[#0f8f6b] text-xs font-black text-white">D</span>
-          <h2 className="text-base font-black text-[#102033]">Discover</h2>
+    <aside className="overflow-hidden bg-[#111827] text-white shadow-sm ring-1 ring-[#dbe4ee]">
+      <div className="flex min-h-14 items-center justify-between border-b border-white/10 px-5">
+        <div className="flex items-center gap-3">
+          <span className="grid h-7 w-7 place-items-center bg-[#0f8f6b] text-xs font-black text-white">D</span>
+          <div>
+            <h2 className="text-lg font-black">Discover</h2>
+            <p className="text-[11px] font-semibold text-white/55">Flux public science, hardware, espace et innovation</p>
+          </div>
         </div>
-        <span className="text-[11px] font-semibold text-[#64748b]">Tech & science</span>
+        <button type="button" onClick={() => window.location.reload()} className="border border-white/20 px-3 py-2 text-xs font-black text-white transition hover:border-[#0f8f6b] hover:text-[#9ee6ca]">
+          Actualiser
+        </button>
       </div>
 
-      {status === 'loading' ? <p className="p-4 text-xs font-semibold text-[#64748b]">Chargement du flux public...</p> : null}
-      {status === 'error' ? <p className="p-4 text-xs font-semibold text-red-600">Flux temporairement indisponible.</p> : null}
+      {status === 'loading' ? <p className="p-5 text-sm font-semibold text-white/65">Chargement du flux public...</p> : null}
+      {status === 'error' ? <p className="p-5 text-sm font-semibold text-red-200">Flux temporairement indisponible.</p> : null}
 
       {status === 'ready' && featured ? (
-        <div className="grid gap-3 p-3">
-          <a href={featured.link} target="_blank" rel="noreferrer" className="group relative block min-h-[176px] overflow-hidden bg-[#102033] text-white">
-            {featured.imageUrl ? <img src={featured.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-80 transition group-hover:scale-[1.025]" /> : null}
-            <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-            <span className="absolute left-3 top-3 bg-white/90 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#102033]">{featured.source}</span>
-            <span className="absolute inset-x-0 bottom-0 p-3">
-              <span className="block text-lg font-black leading-6">{featured.title}</span>
-              <span className="mt-2 block text-xs leading-5 text-slate-100">{featured.summary}</span>
-            </span>
-          </a>
-
-          <div className="grid gap-2">
-            {secondary.map((item) => (
-              <a key={`${item.source}-${item.link}`} href={item.link} target="_blank" rel="noreferrer" className="grid grid-cols-[52px_minmax(0,1fr)] gap-3 border border-[#e4ebf2] bg-[#f8fafc] p-2 transition hover:border-[#0f8f6b]">
-                <span className="grid h-12 w-12 place-items-center overflow-hidden bg-[#e7f7f0] text-xs font-black text-[#0f8f6b]">
-                  {item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : item.source.slice(0, 2)}
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-[11px] font-black text-[#0f8f6b]">{item.source}</span>
-                  <span className="line-clamp-2 block text-xs font-black leading-4 text-[#102033]">{item.title}</span>
-                </span>
-              </a>
-            ))}
+        <div className="grid gap-4 p-4">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
+            <DiscoverHeroCard item={featured} large />
+            <div className="grid gap-4">
+              {topStory ? <DiscoverHeroCard item={topStory} /> : null}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {compactStories.slice(0, 2).map((item) => (
+                  <DiscoverSmallCard key={`${item.source}-${item.link}`} item={item} />
+                ))}
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between border-t border-[#e4ebf2] pt-2 text-[11px] text-[#64748b]">
-            <span>Sources publiques verifiees</span>
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="grid gap-3 md:grid-cols-2">
+              {compactStories.slice(2).map((item) => (
+                <DiscoverStoryCard key={`${item.source}-${item.link}`} item={item} />
+              ))}
+              {feedStories.slice(0, 2).map((item) => (
+                <DiscoverStoryCard key={`${item.source}-${item.link}`} item={item} />
+              ))}
+            </div>
+
+            <section className="border border-white/10 bg-white/5 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-black">A la une</h3>
+                <span className="text-xs text-[#9ee6ca]">Tech</span>
+              </div>
+              <div className="grid gap-3">
+                {feedStories.slice(2).map((item) => (
+                  <a key={`${item.source}-${item.link}`} href={item.link} target="_blank" rel="noreferrer" className="group grid grid-cols-[40px_minmax(0,1fr)] gap-3 border-b border-white/10 pb-3 last:border-b-0 last:pb-0">
+                    <span className="grid h-10 w-10 place-items-center bg-white/10 text-[11px] font-black text-[#9ee6ca]">{sourceInitials(item.source)}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-[11px] font-black text-white/55">{item.source} - {formatRelativeTime(item.publishedAt)}</span>
+                      <span className="line-clamp-2 text-sm font-black leading-5 text-white transition group-hover:text-[#9ee6ca]">{item.title}</span>
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-white/10 pt-3 text-[11px] text-white/55">
+            <span>Sources publiques verifiees : ScienceDaily, NASA JPL, MIT News</span>
             <span>{updatedAt ? formatDate(updatedAt) : 'Direct'}</span>
           </div>
         </div>
       ) : null}
     </aside>
+  );
+}
+
+function DiscoverHeroCard({ item, large }: { item: DiscoverNewsItem; large?: boolean }) {
+  return (
+    <a href={item.link} target="_blank" rel="noreferrer" className={`group relative block overflow-hidden bg-black text-white ${large ? 'min-h-[330px]' : 'min-h-[150px]'}`}>
+      <img src={item.imageUrl || discoverFallbackImage(item.source)} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-300 group-hover:scale-[1.03]" />
+      <span className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/5" />
+      <span className="absolute left-4 top-4 bg-white/90 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#102033]">{item.source}</span>
+      <span className="absolute inset-x-0 bottom-0 p-4">
+        <span className={`block font-black leading-tight ${large ? 'text-3xl' : 'text-xl'}`}>{item.title}</span>
+        <span className={`mt-3 line-clamp-3 text-sm leading-6 text-white/85 ${large ? 'max-w-2xl' : ''}`}>{item.summary}</span>
+        <span className="mt-3 flex items-center gap-4 text-xs text-white/70">
+          <span>{formatRelativeTime(item.publishedAt)}</span>
+          <span>Voir l'article</span>
+        </span>
+      </span>
+    </a>
+  );
+}
+
+function DiscoverSmallCard({ item }: { item: DiscoverNewsItem }) {
+  return (
+    <a href={item.link} target="_blank" rel="noreferrer" className="group overflow-hidden border border-white/10 bg-white/5">
+      <div className="relative h-28 overflow-hidden bg-black">
+        <img src={item.imageUrl || discoverFallbackImage(item.source)} alt="" className="h-full w-full object-cover opacity-75 transition group-hover:scale-[1.04]" />
+        <span className="absolute left-2 top-2 bg-black/70 px-2 py-1 text-[10px] font-black text-white">{sourceInitials(item.source)}</span>
+      </div>
+      <div className="p-3">
+        <p className="truncate text-[11px] font-black text-[#9ee6ca]">{item.source} - {formatRelativeTime(item.publishedAt)}</p>
+        <h3 className="mt-1 line-clamp-2 text-sm font-black leading-5 text-white transition group-hover:text-[#9ee6ca]">{item.title}</h3>
+      </div>
+    </a>
+  );
+}
+
+function DiscoverStoryCard({ item }: { item: DiscoverNewsItem }) {
+  return (
+    <a href={item.link} target="_blank" rel="noreferrer" className="group grid min-h-[124px] grid-cols-[120px_minmax(0,1fr)] overflow-hidden border border-white/10 bg-white/5 transition hover:border-[#0f8f6b]">
+      <img src={item.imageUrl || discoverFallbackImage(item.source)} alt="" className="h-full w-full object-cover opacity-85 transition group-hover:scale-[1.03]" />
+      <span className="min-w-0 p-3">
+        <span className="block truncate text-[11px] font-black text-[#9ee6ca]">{item.source} - {formatRelativeTime(item.publishedAt)}</span>
+        <span className="mt-1 line-clamp-2 block text-base font-black leading-5 text-white transition group-hover:text-[#9ee6ca]">{item.title}</span>
+        <span className="mt-2 line-clamp-2 block text-xs leading-5 text-white/60">{item.summary}</span>
+      </span>
+    </a>
   );
 }
 
@@ -1914,6 +1984,37 @@ function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '-';
   return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+}
+
+function formatRelativeTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'recent';
+
+  const diffMs = Date.now() - date.getTime();
+  const minutes = Math.max(1, Math.round(diffMs / 60000));
+  if (minutes < 60) return `${minutes} min`;
+
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} h`;
+
+  const days = Math.round(hours / 24);
+  return `${days} j`;
+}
+
+function sourceInitials(source: string) {
+  return source
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+}
+
+function discoverFallbackImage(source: string) {
+  if (source.toLowerCase().includes('nasa')) return 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=1200&q=80';
+  if (source.toLowerCase().includes('mit')) return 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80';
+  if (source.toLowerCase().includes('science')) return 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1200&q=80';
+  return 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80';
 }
 
 function formatDateTime(value: Date) {
