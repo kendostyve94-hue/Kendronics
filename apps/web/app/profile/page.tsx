@@ -242,11 +242,8 @@ export default function ProfilePage() {
                 <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_330px] gap-4">
                   <div className="min-w-0">
                     <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
-                    <ClientCommandPanel orders={orders} profile={profile} />
+                    <ClientCommandPanel orders={orders} />
                     <StatusStrip counts={orderCounts(orders)} />
-                    <OrdersTable orders={orders} dataStatus={dataStatus} />
-                    <GiftExchange />
-                    <ReviewsPanel />
                   </div>
 
                   <RightRail orders={orders} notifications={notifications} dataStatus={dataStatus} />
@@ -1538,10 +1535,9 @@ function ReferralBanner() {
   );
 }
 
-function ClientCommandPanel({ orders, profile }: { orders: ProfileOrder[]; profile: ProfileForm }) {
+function ClientCommandPanel({ orders }: { orders: ProfileOrder[] }) {
   const pendingPayment = orders.find((order) => orderMatchesStatus(order, 'payment-pending'));
   const quotedOrder = orders.find((order) => orderMatchesStatus(order, 'verification'));
-  const profileReady = [profile.name, profile.email, profile.country].every((value) => value.trim().length > 0);
   const primary = pendingPayment
     ? { title: 'Paiement en attente', body: `${pendingPayment.orderNumber} peut passer en production des validation du paiement.`, href: `/orders/${pendingPayment.id}`, action: 'Finaliser' }
     : quotedOrder
@@ -1549,22 +1545,12 @@ function ClientCommandPanel({ orders, profile }: { orders: ProfileOrder[]; profi
       : { title: 'Preparer un nouveau projet', body: 'Configurez un PCB, comparez les options et gardez le controle avant commande.', href: '/quote', action: 'Commencer' };
 
   return (
-    <section className="mt-4 grid grid-cols-[1.15fr_0.85fr] gap-4">
+    <section className="mt-4">
       <article className="bg-[#102033] p-5 text-white shadow-sm">
         <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9ee6ca]">Priorite</p>
         <h2 className="mt-2 text-2xl font-black tracking-normal">{primary.title}</h2>
         <p className="mt-3 max-w-xl text-sm leading-6 text-slate-200">{primary.body}</p>
         <a href={primary.href} className="mt-5 inline-flex border border-white/30 bg-white px-5 py-3 text-xs font-black text-[#102033] transition hover:bg-[#ecfdf5]">{primary.action}</a>
-      </article>
-      <article className="bg-white p-5 shadow-sm ring-1 ring-[#dbe4ee]">
-        <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0f8f6b]">Compte</p>
-        <h2 className="mt-2 text-xl font-black text-[#102033]">{profileReady ? 'Informations essentielles pretes' : 'Informations a completer'}</h2>
-        <p className="mt-3 text-sm leading-6 text-[#53657a]">
-          {profileReady
-            ? 'Votre espace est pret pour les devis, commandes et suivis. Gardez vos informations a jour avant paiement.'
-            : 'Ajoutez les informations utiles pour eviter les blocages au moment de la livraison ou de la facturation.'}
-        </p>
-        <a href="/profile?view=settings" className="mt-5 inline-flex border border-[#dbe4ee] px-5 py-3 text-xs font-black text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">Ouvrir les parametres</a>
       </article>
     </section>
   );
@@ -1589,109 +1575,6 @@ function StatusStrip({ counts }: { counts: ReturnType<typeof orderCounts> }) {
         </div>
       ))}
     </section>
-  );
-}
-
-function OrdersTable({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
-  const counts = orderCounts(orders);
-  const rows = orders.slice(0, 5);
-
-  return (
-    <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-black text-[#1f2937]">Ma commande</h2>
-        <a href="/profile?view=orders" className="text-xs font-semibold text-blue-600">Plus &gt;</a>
-      </div>
-      <div className="mt-4 flex gap-8 border-b border-slate-200 text-xs">
-        {[`Toutes (${counts.all})`, `Verification (${counts.verification})`, `Production (${counts.production})`, `Livraison (${counts.delivery})`, `Termine (${counts.completed})`].map((tab, index) => (
-          <span key={tab} className={`pb-3 ${index === 0 ? 'border-b-2 border-blue-500 font-black text-blue-600' : 'text-slate-500'}`}>{tab}</span>
-        ))}
-      </div>
-      {dataStatus !== 'ready' || rows.length === 0 ? (
-        <OrdersListRows orders={rows} dataStatus={dataStatus} />
-      ) : (
-        <table className="mt-2 w-full text-left text-xs">
-          <thead className="text-[#64748b]">
-            <tr>
-              {['N Commande', 'Produit', 'Date de commande', 'Quantite', 'Statut', 'Montant', 'Action'].map((head) => (
-                <th key={head} className="py-3 font-black">{head}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((order) => (
-              <tr key={order.id} className="border-t border-slate-100">
-                <td className="py-3">{order.orderNumber}</td>
-                <td className="py-3">{orderProductLabel(order)}</td>
-                <td className="py-3">{formatDate(order.createdAt)}</td>
-                <td className="py-3">{order.quoteSnapshot?.quantity ?? '-'}</td>
-                <td className={`py-3 ${statusColor(order.status)}`}>{orderStatusLabel(order.status)}</td>
-                <td className="py-3">{formatMoney(order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0)}</td>
-                <td className="py-3"><a href={`/orders/${order.id}`} className="rounded-none border border-blue-400 px-3 py-1 text-blue-600">Voir</a></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </section>
-  );
-}
-
-function GiftExchange() {
-  return (
-    <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0f8f6b]">Avantages</p>
-          <h2 className="mt-1 text-lg font-black text-[#102033]">Coupons et credits</h2>
-        </div>
-        <a href="/profile?view=invite" className="text-xs font-black text-[#0f8f6b]">Parrainage</a>
-      </div>
-      <div className="mt-4 grid grid-cols-3 gap-3">
-        <BenefitTile title="Coupons" value="0 actif" body="Les reductions disponibles apparaitront ici automatiquement." />
-        <BenefitTile title="Credits" value="0 EUR" body="Les credits client seront utilisables avant paiement." />
-        <BenefitTile title="Parrainage" value="Pret" body="Invitez un contact lorsque votre programme sera active." />
-      </div>
-    </section>
-  );
-}
-
-function ReviewsPanel() {
-  return (
-    <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0877ff]">Services</p>
-          <h2 className="mt-1 text-lg font-black text-[#102033]">Acces rapide projet</h2>
-        </div>
-        <a href="/quote" className="bg-[#0f9f6e] px-5 py-2 text-xs font-black text-white">Nouveau devis</a>
-      </div>
-      <div className="mt-5 grid grid-cols-3 gap-3">
-        <ProjectServiceTile title="Prototype PCB" body="Pour valider rapidement une carte." href="/quote" />
-        <ProjectServiceTile title="Assemblage PCBA" body="Pour avancer vers un produit testable." href="/quote" />
-        <ProjectServiceTile title="Assistance Gerber" body="Pour verifier les fichiers avant production." href="/contact" />
-      </div>
-    </section>
-  );
-}
-
-function BenefitTile({ title, value, body }: { title: string; value: string; body: string }) {
-  return (
-    <div className="min-h-[108px] border border-[#e4ebf2] bg-[#f8fafc] p-4">
-      <p className="text-xs text-[#64748b]">{title}</p>
-      <p className="mt-2 text-xl font-black text-[#102033]">{value}</p>
-      <p className="mt-2 text-xs leading-5 text-[#53657a]">{body}</p>
-    </div>
-  );
-}
-
-function ProjectServiceTile({ title, body, href }: { title: string; body: string; href: string }) {
-  return (
-    <a href={href} className="min-h-[108px] border border-[#e4ebf2] bg-white p-4 transition hover:border-[#0f8f6b] hover:bg-[#f8fafc]">
-      <p className="text-sm font-black text-[#102033]">{title}</p>
-      <p className="mt-2 text-xs leading-5 text-[#53657a]">{body}</p>
-      <span className="mt-3 inline-flex text-xs font-black text-[#0877ff]">Ouvrir &gt;</span>
-    </a>
   );
 }
 
