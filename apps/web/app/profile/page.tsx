@@ -261,12 +261,15 @@ export default function ProfilePage() {
               <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onNotificationsChange={setNotifications} />
             ) : (
               <>
-                <ProductQuickGrid />
-
-                <div className="mt-4 grid min-w-0 gap-4">
-                  <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
-                  <StatusStrip counts={orderCounts(orders)} />
-                  <CommunityPublishPanel firstName={firstName} avatarDataUrl={avatarDataUrl} />
+                <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_330px] gap-4">
+                  <div className="min-w-0">
+                    <ProductQuickGrid />
+                    <div className="mt-4 grid min-w-0 gap-4">
+                      <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
+                      <StatusStrip counts={orderCounts(orders)} />
+                      <CommunityPublishPanel firstName={firstName} avatarDataUrl={avatarDataUrl} />
+                    </div>
+                  </div>
                   <DiscoverNewsRail />
                 </div>
               </>
@@ -1725,16 +1728,16 @@ function DiscoverNewsRail() {
   const feedStories = items.slice(6, 10);
 
   return (
-    <aside className="overflow-hidden bg-[#111827] text-white shadow-sm ring-1 ring-[#dbe4ee]">
-      <div className="flex min-h-14 items-center justify-between border-b border-white/10 px-5">
+    <aside className="sticky top-[86px] self-start overflow-hidden bg-[#111827] text-white shadow-sm ring-1 ring-[#dbe4ee]">
+      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-white/10 px-4">
         <div className="flex items-center gap-3">
           <span className="grid h-7 w-7 place-items-center bg-[#0f8f6b] text-xs font-black text-white">D</span>
-          <div>
+          <div className="min-w-0">
             <h2 className="text-lg font-black">Discover</h2>
-            <p className="text-[11px] font-semibold text-white/55">Flux public science, hardware, espace et innovation</p>
+            <p className="truncate text-[11px] font-semibold text-white/55">Science, hardware, espace</p>
           </div>
         </div>
-        <button type="button" onClick={() => window.location.reload()} className="border border-white/20 px-3 py-2 text-xs font-black text-white transition hover:border-[#0f8f6b] hover:text-[#9ee6ca]">
+        <button type="button" onClick={() => window.location.reload()} className="shrink-0 border border-white/20 px-2 py-2 text-[11px] font-black text-white transition hover:border-[#0f8f6b] hover:text-[#9ee6ca]">
           Actualiser
         </button>
       </div>
@@ -1744,49 +1747,35 @@ function DiscoverNewsRail() {
 
       {status === 'ready' && featured ? (
         <div className="grid gap-4 p-4">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
-            <DiscoverHeroCard item={featured} large />
-            <div className="grid gap-4">
-              {topStory ? <DiscoverHeroCard item={topStory} /> : null}
-              <div className="grid gap-3 sm:grid-cols-2">
-                {compactStories.slice(0, 2).map((item) => (
-                  <DiscoverSmallCard key={`${item.source}-${item.link}`} item={item} />
-                ))}
-              </div>
-            </div>
+          <DiscoverHeroCard item={featured} large />
+          {topStory ? <DiscoverStoryCard item={topStory} /> : null}
+
+          <div className="grid gap-3">
+            {compactStories.map((item) => (
+              <DiscoverSmallCard key={`${item.source}-${item.link}`} item={item} />
+            ))}
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="grid gap-3 md:grid-cols-2">
-              {compactStories.slice(2).map((item) => (
-                <DiscoverStoryCard key={`${item.source}-${item.link}`} item={item} />
-              ))}
-              {feedStories.slice(0, 2).map((item) => (
-                <DiscoverStoryCard key={`${item.source}-${item.link}`} item={item} />
+          <section className="border border-white/10 bg-white/5 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-black">A la une</h3>
+              <span className="text-xs text-[#9ee6ca]">Tech</span>
+            </div>
+            <div className="grid gap-3">
+              {feedStories.map((item) => (
+                <a key={`${item.source}-${item.link}`} href={item.link} target="_blank" rel="noreferrer" className="group grid grid-cols-[40px_minmax(0,1fr)] gap-3 border-b border-white/10 pb-3 last:border-b-0 last:pb-0">
+                  <span className="grid h-10 w-10 place-items-center bg-white/10 text-[11px] font-black text-[#9ee6ca]">{sourceInitials(item.source)}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[11px] font-black text-white/55">{item.source} - {formatRelativeTime(item.publishedAt)}</span>
+                    <span className="line-clamp-2 text-sm font-black leading-5 text-white transition group-hover:text-[#9ee6ca]">{item.title}</span>
+                  </span>
+                </a>
               ))}
             </div>
-
-            <section className="border border-white/10 bg-white/5 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-black">A la une</h3>
-                <span className="text-xs text-[#9ee6ca]">Tech</span>
-              </div>
-              <div className="grid gap-3">
-                {feedStories.slice(2).map((item) => (
-                  <a key={`${item.source}-${item.link}`} href={item.link} target="_blank" rel="noreferrer" className="group grid grid-cols-[40px_minmax(0,1fr)] gap-3 border-b border-white/10 pb-3 last:border-b-0 last:pb-0">
-                    <span className="grid h-10 w-10 place-items-center bg-white/10 text-[11px] font-black text-[#9ee6ca]">{sourceInitials(item.source)}</span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-[11px] font-black text-white/55">{item.source} - {formatRelativeTime(item.publishedAt)}</span>
-                      <span className="line-clamp-2 text-sm font-black leading-5 text-white transition group-hover:text-[#9ee6ca]">{item.title}</span>
-                    </span>
-                  </a>
-                ))}
-              </div>
-            </section>
-          </div>
+          </section>
 
           <div className="flex items-center justify-between border-t border-white/10 pt-3 text-[11px] text-white/55">
-            <span>Sources publiques verifiees : ScienceDaily, NASA JPL, MIT News</span>
+            <span>Sources verifiees</span>
             <span>{updatedAt ? formatDate(updatedAt) : 'Direct'}</span>
           </div>
         </div>
@@ -1797,13 +1786,13 @@ function DiscoverNewsRail() {
 
 function DiscoverHeroCard({ item, large }: { item: DiscoverNewsItem; large?: boolean }) {
   return (
-    <a href={item.link} target="_blank" rel="noreferrer" className={`group relative block overflow-hidden bg-black text-white ${large ? 'min-h-[330px]' : 'min-h-[150px]'}`}>
+    <a href={item.link} target="_blank" rel="noreferrer" className={`group relative block overflow-hidden bg-black text-white ${large ? 'min-h-[270px]' : 'min-h-[150px]'}`}>
       <img src={item.imageUrl || discoverFallbackImage(item.source)} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-300 group-hover:scale-[1.03]" />
       <span className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/5" />
       <span className="absolute left-4 top-4 bg-white/90 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#102033]">{item.source}</span>
       <span className="absolute inset-x-0 bottom-0 p-4">
-        <span className={`block font-black leading-tight ${large ? 'text-3xl' : 'text-xl'}`}>{item.title}</span>
-        <span className={`mt-3 line-clamp-3 text-sm leading-6 text-white/85 ${large ? 'max-w-2xl' : ''}`}>{item.summary}</span>
+        <span className={`block font-black leading-tight ${large ? 'text-[22px]' : 'text-xl'}`}>{item.title}</span>
+        <span className={`mt-3 line-clamp-3 text-sm leading-6 text-white/85 ${large ? 'max-w-sm' : ''}`}>{item.summary}</span>
         <span className="mt-3 flex items-center gap-4 text-xs text-white/70">
           <span>{formatRelativeTime(item.publishedAt)}</span>
           <span>Voir l'article</span>
