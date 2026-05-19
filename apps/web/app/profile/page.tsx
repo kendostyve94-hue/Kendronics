@@ -457,11 +457,11 @@ type OrderStatusKey = 'all' | 'verification' | 'payment-pending' | 'production' 
 
 const orderStatuses: Array<{ key: OrderStatusKey | 'payment-unfinished' | 'engineering' | 'comments'; label: string; icon?: string }> = [
   { key: 'all', label: 'Toutes commandes' },
-  { key: 'verification', label: 'Vérification en cours' },
+  { key: 'verification', label: 'Verification en cours' },
   { key: 'payment-pending', label: 'Paiement en attente' },
-  { key: 'payment-unfinished', label: 'Paiement inachevé' },
+  { key: 'payment-unfinished', label: 'Paiement inacheve' },
   { key: 'production', label: 'Statut de production' },
-  { key: 'engineering', label: "Questions d'ingénierie", icon: '▣' },
+  { key: 'engineering', label: "Questions d'ingenierie", icon: '▣' },
   { key: 'delivery', label: 'Livraison' },
   { key: 'comments', label: 'Commentaires en attente' },
 ];
@@ -528,13 +528,13 @@ function ReviewSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dat
     <>
       <div className="flex items-center justify-between py-8 text-xs text-[#8a8f98]">
         <a href="/quote" className="text-sm text-[#8a8f98] hover:text-[#009a38]">&lt; Ajouter un nouvel article</a>
-        <p>Fuseau horaire de Chine (GMT+8):&nbsp; 12/05/2026 00:12:46(Mise à jour dans 5 mins)</p>
+        <p>Derniere mise a jour Kendronics : {formatDateTime(new Date())}</p>
       </div>
       <form className="border border-[#e1e1e1] bg-white px-4 py-3" onSubmit={(event) => event.preventDefault()}>
         <div className="flex items-center gap-5 text-[13px] text-black">
-          <SearchField label="Numéro de produit:" />
+          <SearchField label="Numero de produit:" />
           <SearchField label="Nom du fichier PCB:" />
-          <SearchField label="Numéros de PO:" />
+          <SearchField label="Numero de PO:" />
           <button type="submit" className="ml-auto h-[27px] min-w-[108px] bg-[#ff8a13] px-5 text-sm font-black text-white ring-1 ring-[#f07800] transition hover:bg-[#f07800]">
             Recherche
           </button>
@@ -552,7 +552,7 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-black">
           <SearchField label="ID Commande:" />
           <SearchField label="Nom du fichier PCB:" />
-          <SearchField label="Numéros de PO:" />
+          <SearchField label="Numero de PO:" />
           <button type="submit" className="ml-4 h-[27px] min-w-[108px] bg-[#ff8a13] px-5 text-sm font-black text-white ring-1 ring-[#f07800] transition hover:bg-[#f07800]">
             Recherche
           </button>
@@ -580,7 +580,7 @@ function SearchField({ label }: { label: string }) {
 }
 
 function EmptyResult() {
-  return <p className="pt-14 text-center text-base font-black text-[#92979d]">Votre recherche ne correspond à aucune liste.</p>;
+  return <p className="pt-14 text-center text-base font-black text-[#92979d]">Votre recherche ne correspond a aucune liste.</p>;
 }
 
 function OrdersListRows({ orders, dataStatus, compact }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error'; compact?: boolean }) {
@@ -608,7 +608,7 @@ function CommentsManagementSection({ orders, dataStatus }: { orders: ProfileOrde
     <section className="min-h-[690px] bg-white text-[#111827] shadow-sm ring-1 ring-slate-200">
       <OrderStatusHeader activeKey="comments" counts={orderCounts(orders)} />
       <div className="border-t-[16px] border-[#eef0f3] px-6 pb-24 pt-5">
-        <h2 className="text-xl font-normal text-black">Gérer les commentaires</h2>
+        <h2 className="text-xl font-normal text-black">Gerer les commentaires</h2>
         <div className="mt-3 grid max-w-[906px] grid-cols-[1.2fr_1.2fr_0.6fr] bg-[#f0f0f0] px-3 py-3 text-xs text-black">
           <span>Produit</span>
           <span>Avis</span>
@@ -642,14 +642,14 @@ function NotificationsSection({
           <button type="button">Not. Product</button>
         </div>
         <button type="button" disabled={markingRead || notifications.every((notification) => notification.readAt)} onClick={() => void markAllNotificationsRead(notifications, onNotificationsChange, setMarkingRead)} className="rounded-none border border-[#b8b8b8] px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50">
-          {markingRead ? 'Mise à jour...' : 'Tout marquer comme lu'}
+          {markingRead ? 'Mise a jour...' : 'Tout marquer comme lu'}
         </button>
       </div>
       <div className="mt-5 bg-white px-5 py-4">
         <div className="grid grid-cols-[1fr_1fr_160px] bg-[#f0f0f0] px-5 py-4 text-xs font-black">
           <span>Notifications</span>
           <span>Article</span>
-          <span>Heure(GMT+8)</span>
+          <span>Date</span>
         </div>
         <NotificationsList notifications={notifications} dataStatus={dataStatus} />
       </div>
@@ -798,17 +798,17 @@ function AddressFormSection({ title, note, billing }: { title: string; note?: st
         {note ? <span className="text-xs text-[#9ca3af]">{note}</span> : null}
       </div>
       <div className="mt-3 bg-[#fff8e8] px-3 py-2 text-xs ring-1 ring-[#f4dfb4]">
-        <span className="mr-2 text-lg text-[#ff8a00]">▲</span>
+        <span className="mr-2 text-lg text-[#ff8a00]">!</span>
         {billing
-          ? "La mise à jour de l'adresse postale ne s'applique pas aux commandes confirmées (payées), cela inclus également les commandes ayant le statut « paiement incomplet »."
-          : "La mise à jour des informations d'adresse ne s'applique pas aux commandes déjà générées. Veuillez contacter votre attaché commercial pour mettre à jour les informations d'adresse."}
+          ? "La mise a jour de l'adresse de facturation ne modifie pas les commandes deja confirmees ou payees."
+          : "La mise a jour d'adresse ne modifie pas les commandes deja generees. Contactez Kendronics si une commande active doit etre corrigee."}
       </div>
-      {billing ? <p className="mt-5 text-xs text-[#6b7280]">Veuillez-vous assurer que tous les détails de facturation sont exacts et complets. Ils apparaîtront sur les factures officielles de vos achats.</p> : null}
+      {billing ? <p className="mt-5 text-xs text-[#6b7280]">Assurez-vous que les informations de facturation sont exactes. Elles seront utilisees pour les documents commerciaux Kendronics.</p> : null}
       <AddressFields />
       <p className="mt-2 text-xs text-[#6b7280]">
         {billing
-          ? "Si votre adresse de facturation n’est pas enregistrée, veuillez contacter fr-sales03@pcbway.com pour assistance."
-          : "Si vous n’arrivez pas à enregistrer votre adresse postale, veuillez contacter fr-sales03@pcbway.com."}
+          ? "Si l'adresse de facturation ne peut pas etre enregistree, contactez le support Kendronics."
+          : "Si l'adresse de livraison ne peut pas etre enregistree, contactez le support Kendronics."}
       </p>
       <button type="button" className="mt-5 bg-[#1baa4f] px-6 py-2 text-sm font-black text-white">Soumettre</button>
     </section>
@@ -818,9 +818,9 @@ function AddressFormSection({ title, note, billing }: { title: string; note?: st
 function AddressFields() {
   return (
     <form className="mt-8 grid max-w-[720px] grid-cols-2 gap-x-7 gap-y-4">
-      <ChoiceBox label="Société" />
+      <ChoiceBox label="Societe" />
       <ChoiceBox label="Particulier" active />
-      {['Prénom *', 'Nom de famille *', 'Adresse de la rue *', 'Appartement, chambre, département, bâtiment, étage, etc. (facultatif)', 'Pays/Région *', 'État/Province/Région', 'Ville *', 'Zip/Code postal', "Numéro TVA/d'identification fiscale", 'Téléphone mobile *'].map((placeholder) => (
+      {['Prenom *', 'Nom de famille *', 'Adresse de la rue *', 'Appartement, chambre, batiment, etage, etc. (facultatif)', 'Pays/Region *', 'Etat/Province/Region', 'Ville *', 'Zip/Code postal', "Numero TVA/identification fiscale", 'Telephone mobile *'].map((placeholder) => (
         <input key={placeholder} placeholder={placeholder} className="h-[46px] border border-[#d6d6d6] px-5 text-sm outline-none placeholder:text-[#b8bec8] focus:border-[#18b75b]" />
       ))}
     </form>
@@ -837,14 +837,21 @@ function ChoiceBox({ label, active }: { label: string; active?: boolean }) {
 }
 
 function InviteSection() {
+  const [referralUrl, setReferralUrl] = useState('/register');
+
+  useEffect(() => {
+    const sessionProfile = readSessionProfile();
+    setReferralUrl(`${window.location.origin}/register?ref=${encodeURIComponent(sessionProfile.id || sessionProfile.email || 'client')}`);
+  }, []);
+
   return (
     <section className="min-h-[690px] bg-[#eef0f3] text-black shadow-sm ring-1 ring-slate-200">
       <div className="bg-white">
         <h1 className="border-b border-[#e5e7eb] px-8 py-4 text-xl font-normal">Parrainer des amis et gagner de l'argent</h1>
         <div className="px-8 py-5 text-center">
-          <p className="text-base leading-5">Envoyez le lien de parrainage à vos amis et ils pourront recevoir 5 $ de crédit gratuit en tant que nouvel utilisateur.<br />Vous recevrez un <strong>coupon-rabais de 10 $</strong> pour chaque ami qui a prépayé.<br />Vous pourrez gagner également <strong>5% de ce qu'ils dépensent en argent (1er ordre).</strong></p>
+          <p className="text-base leading-5">Partagez votre lien Kendronics avec vos contacts professionnels.<br />Les avantages de parrainage seront appliques selon les regles commerciales actives de votre compte.</p>
           <div className="mx-auto mt-12 grid max-w-[760px] grid-cols-3 gap-16 text-left text-[#92979d]">
-            {['Parrainer un ami sur PCBWay', 'Des amis ont prépayé, vous gagnez un coupon de réduction de 10 $', "Lorsqu'un ami dépense de l'argent, vous gagnez 5% des dépenses"].map((text, index) => (
+            {['Partager votre lien Kendronics', 'Suivre les inscriptions associees', "Recevoir les avantages valides par l'equipe commerciale"].map((text, index) => (
               <div key={text}>
                 <span className={`mx-auto block h-[96px] w-[96px] rounded-none ${index === 0 ? 'bg-[#2cc9bb]' : index === 1 ? 'bg-[#53c7d8]' : 'bg-[#8d79b9]'}`} />
                 <p className="mt-5 text-base leading-5">{text}</p>
@@ -854,8 +861,8 @@ function InviteSection() {
           <div className="mx-auto mt-12 max-w-[992px] bg-[#f5f5f5] p-6">
             <p className="font-black">Copiez le lien suivant et partagez plus, gagnez plus :</p>
             <div className="mx-auto mt-3 flex max-w-[590px] items-center justify-between border border-dashed border-[#c9c9c9] bg-white pl-8 text-xl font-black">
-              <span>https://www.pcbway.fr/gt/S1t6V</span>
-              <button type="button" className="bg-[#06b34f] px-6 py-4 text-sm text-white">Copiez le lien</button>
+              <span className="truncate pr-4">{referralUrl}</span>
+              <button type="button" onClick={() => void navigator.clipboard?.writeText(referralUrl)} className="bg-[#06b34f] px-6 py-4 text-sm text-white">Copier le lien</button>
             </div>
           </div>
         </div>
@@ -863,7 +870,7 @@ function InviteSection() {
       <div className="mt-4 bg-white px-8 py-5">
         <h2 className="text-xl font-normal">Statistiques de références</h2>
         <div className="mt-5 grid grid-cols-4 gap-6">
-          {['0 INSCRIPTIONS', '0 PRÉPAYEMENTS', '$0.00 COUPON DE RÉDUCTION', '$0.00 GAINS'].map((item) => (
+          {['0 INSCRIPTIONS', '0 COMMANDES', '0 EUR CREDITS', '0 EUR GAINS'].map((item) => (
             <div key={item} className="grid h-[122px] place-items-center border border-[#e5e7eb] text-center text-[#92979d]">
               <strong className="block text-3xl text-[#1f2937]">{item.split(' ')[0]}</strong>{item.substring(item.indexOf(' ') + 1)}
             </div>
@@ -915,24 +922,24 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
       <div className="grid grid-cols-[140px_1fr_160px] gap-6 border-b border-[#e5e7eb] py-6">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div className="grid gap-4 text-sm">
-          <p className="text-base">{profile.name || 'Loïc NIANZE KENDONG'} <span className="rounded-none bg-[#a08d70] px-2 py-1 text-xs font-black text-white">Société</span></p>
+          <p className="text-base">{profile.name || 'Client Kendronics'} <span className="rounded-none bg-[#a08d70] px-2 py-1 text-xs font-black text-white">{profile.company ? 'Societe' : 'Client'}</span></p>
           <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
-          <p className="text-[#6b7280]">Pays/Région <span className="ml-20 text-black">FRANCE</span></p>
-          <p className="text-[#6b7280]">No de téléphone <span className="ml-16 text-black">{profile.phone || '+33753970427'}</span></p>
-          <p className="text-[#6b7280]">Catégorie de client <span className="ml-12 text-black">Design/Research/Development - PCB Designer</span></p>
+          <p className="text-[#6b7280]">Pays/Region <span className="ml-20 text-black">{profile.country || 'Non renseigne'}</span></p>
+          <p className="text-[#6b7280]">No de telephone <span className="ml-16 text-black">{profile.phone || 'Non renseigne'}</span></p>
+          <p className="text-[#6b7280]">Entreprise <span className="ml-20 text-black">{profile.company || 'Non renseignee'}</span></p>
         </div>
-        <a href="#" className="pt-12 text-sm text-[#00a651]">Modifier le profil</a>
+        <a href="/profile?view=settings" className="pt-12 text-sm text-[#00a651]">Modifier le profil</a>
       </div>
       {[
-        ['E-mail', maskEmail(profile.email || 'contact@gmail.com'), 'Changer l’e-mail'],
-        ['Mot de passe', '********', 'Changer le mot de passe'],
-        ['Adresse de livraison', 'Ajouter une adresse de livraison pour votre commande chez PCBWay.', 'Modifier'],
-        ['Détails de facturation', 'Ajouter une adresse de facturation pour votre commande chez PCBWay.', 'Modifier'],
-      ].map(([label, value, action]) => (
+        ['E-mail', profile.email ? maskEmail(profile.email) : 'Non renseigne', 'Changer l e-mail', '/reset-password'],
+        ['Mot de passe', '********', 'Changer le mot de passe', '/reset-password'],
+        ['Adresse de livraison', 'Ajouter une adresse de livraison pour vos commandes Kendronics.', 'Modifier', '/profile?view=shipping-address'],
+        ['Details de facturation', 'Ajouter une adresse de facturation pour vos documents Kendronics.', 'Modifier', '/profile?view=billing'],
+      ].map(([label, value, action, href]) => (
         <div key={label} className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
           <h2 className="text-lg">{label}</h2>
           <p className="text-[#4b5563]">{value}</p>
-          <a href="#" className="text-right text-[#00a651]">{action}</a>
+          <a href={href} className="text-right text-[#00a651]">{action}</a>
         </div>
       ))}
       <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
@@ -1347,72 +1354,6 @@ function maskEmail(email: string) {
   return `${name.slice(0, 4)}***********@${domain}`;
 }
 
-function VerificationOrdersSection() {
-  return (
-    <section className="min-h-[690px] bg-white text-[#111827] shadow-sm ring-1 ring-slate-200">
-      <div className="px-6 pt-4">
-        <div className="flex h-11 items-center gap-3 border-b border-[#e5e7eb]">
-          <span className="grid h-6 w-6 place-items-center text-xl text-[#b8b8b8]">▤</span>
-          <h1 className="text-xl font-normal">Mes commandes</h1>
-        </div>
-        <div className="grid h-[112px] grid-cols-8 items-start px-1 pt-6">
-          {[
-            ['0', 'Toutes commandes', false, ''],
-            ['0', 'Vérification en cours', true, ''],
-            ['0', 'Paiement en attente', false, ''],
-            ['0', 'Paiement inachevé', false, ''],
-            ['0', 'Statut de production', false, ''],
-            ['0', "Questions d'ingénierie", false, '▣'],
-            ['0', 'Livraison', false, ''],
-            ['0', 'Commentaires en attente', false, ''],
-          ].map(([count, label, active, icon]) => (
-            <div key={String(label)} className="grid min-h-[72px] place-items-center border-r border-[#e5e7eb] px-3 text-center last:border-r-0">
-              <span className={`text-[28px] font-black leading-7 ${active ? 'text-[#ff5a00]' : 'text-[#1f2937]'}`}>
-                {count}
-                {icon ? <span className="ml-1 align-middle text-[20px] text-[#20b99a]">{icon}</span> : null}
-              </span>
-              <span className={`mt-1 text-[14px] leading-4 ${active ? 'text-[#ff5a00]' : 'text-[#8a8f98]'}`}>{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="border-t-[16px] border-[#eef0f3] px-6 pb-24 pt-5">
-        <div className="flex h-12 items-center gap-2 border-b border-[#e5e7eb]">
-          <span className="grid h-[22px] w-[22px] place-items-center bg-[#61bd00] text-[18px] font-black leading-none text-white">✓</span>
-          <h2 className="text-xl font-normal text-black">Panier / Examen de votre commande</h2>
-        </div>
-        <div className="flex items-center justify-between py-8 text-xs text-[#8a8f98]">
-          <a href="/quote" className="text-sm text-[#8a8f98] hover:text-[#009a38]">&lt; Ajouter un nouvel article</a>
-          <p>Fuseau horaire de Chine (GMT+8):&nbsp; 11/05/2026 23:50:10(Mise à jour dans 5 mins)</p>
-        </div>
-        <form className="border border-[#e1e1e1] bg-white px-4 py-3">
-          <div className="flex items-center gap-5 text-[13px] text-black">
-            <label className="flex items-center gap-2">
-              <span>Numéro de produit:</span>
-              <input className="h-6 w-[142px] border border-[#cfcfcf] bg-white px-2 outline-none focus:border-[#ff8a00]" />
-            </label>
-            <label className="flex items-center gap-2">
-              <span>Nom du fichier PCB:</span>
-              <input className="h-6 w-[142px] border border-[#cfcfcf] bg-white px-2 outline-none focus:border-[#ff8a00]" />
-            </label>
-            <label className="flex items-center gap-2">
-              <span>Numéros de PO:</span>
-              <input className="h-6 w-[142px] border border-[#cfcfcf] bg-white px-2 outline-none focus:border-[#ff8a00]" />
-            </label>
-            <button type="submit" className="ml-auto h-[27px] min-w-[108px] bg-[#ff8a13] px-5 text-sm font-black text-white ring-1 ring-[#f07800] transition hover:bg-[#f07800]">
-              Recherche
-            </button>
-          </div>
-        </form>
-        <p className="pt-14 text-center text-base font-black text-[#92979d]">
-          Votre recherche ne correspond à aucune liste.
-        </p>
-      </div>
-    </section>
-  );
-}
-
 function ProductQuickGrid() {
   return (
     <section className="bg-white p-3 shadow-sm ring-1 ring-[#dbe4ee]">
@@ -1734,6 +1675,17 @@ function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '-';
   return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
+}
+
+function formatDateTime(value: Date) {
+  if (Number.isNaN(value.getTime())) return '-';
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(value);
 }
 
 function formatMoney(value: number) {
