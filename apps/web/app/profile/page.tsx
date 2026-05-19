@@ -1815,14 +1815,14 @@ function DiscoverHeroCard({ item, large }: { item: DiscoverNewsItem; large?: boo
 
 function DiscoverSmallCard({ item }: { item: DiscoverNewsItem }) {
   return (
-    <a href={item.link} target="_blank" rel="noreferrer" className="group overflow-hidden border border-white/10 bg-white/5">
+    <a href={item.link} target="_blank" rel="noreferrer" className="group overflow-hidden border border-white/10 bg-[#1f2937] transition hover:border-[#0f8f6b]">
       <div className="relative h-28 overflow-hidden bg-black">
         <img src={item.imageUrl || discoverFallbackImage(item.source)} alt="" className="h-full w-full object-cover opacity-75 transition group-hover:scale-[1.04]" />
         <span className="absolute left-2 top-2 bg-black/70 px-2 py-1 text-[10px] font-black text-white">{sourceInitials(item.source)}</span>
       </div>
       <div className="p-3">
         <p className="truncate text-[11px] font-black text-[#9ee6ca]">{item.source} - {formatRelativeTime(item.publishedAt)}</p>
-        <h3 className="mt-1 line-clamp-2 text-sm font-black leading-5 text-white transition group-hover:text-[#9ee6ca]">{item.title}</h3>
+        <h3 className="mt-1 line-clamp-2 min-h-[40px] text-sm font-black leading-5 text-white transition group-hover:text-[#9ee6ca]">{item.title}</h3>
       </div>
     </a>
   );
@@ -1830,12 +1830,14 @@ function DiscoverSmallCard({ item }: { item: DiscoverNewsItem }) {
 
 function DiscoverStoryCard({ item }: { item: DiscoverNewsItem }) {
   return (
-    <a href={item.link} target="_blank" rel="noreferrer" className="group grid min-h-[124px] grid-cols-[120px_minmax(0,1fr)] overflow-hidden border border-white/10 bg-white/5 transition hover:border-[#0f8f6b]">
-      <img src={item.imageUrl || discoverFallbackImage(item.source)} alt="" className="h-full w-full object-cover opacity-85 transition group-hover:scale-[1.03]" />
+    <a href={item.link} target="_blank" rel="noreferrer" className="group grid min-h-[136px] grid-cols-[128px_minmax(0,1fr)] overflow-hidden border border-white/10 bg-[#1f2937] transition hover:border-[#0f8f6b]">
+      <span className="block h-full min-h-[136px] overflow-hidden bg-black">
+        <img src={item.imageUrl || discoverFallbackImage(item.source)} alt="" className="h-full w-full object-cover opacity-85 transition group-hover:scale-[1.03]" />
+      </span>
       <span className="min-w-0 p-3">
         <span className="block truncate text-[11px] font-black text-[#9ee6ca]">{item.source} - {formatRelativeTime(item.publishedAt)}</span>
         <span className="mt-1 line-clamp-2 block text-base font-black leading-5 text-white transition group-hover:text-[#9ee6ca]">{item.title}</span>
-        <span className="mt-2 line-clamp-2 block text-xs leading-5 text-white/60">{item.summary}</span>
+        <span className="mt-2 line-clamp-2 block text-xs leading-5 text-white/70">{item.summary}</span>
       </span>
     </a>
   );
