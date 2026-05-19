@@ -264,11 +264,15 @@ export default function ProfilePage() {
             ) : (
               <>
                 <div className="grid min-w-0 gap-4">
-                  <DiscoverNewsRail />
                   <ProductQuickGrid />
-                  <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
-                  <StatusStrip counts={orderCounts(orders)} />
-                  <CommunityPublishPanel firstName={firstName} avatarDataUrl={avatarDataUrl} />
+                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_330px] gap-4">
+                    <div className="grid min-w-0 gap-4">
+                      <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
+                      <StatusStrip counts={orderCounts(orders)} />
+                      <CommunityPublishPanel firstName={firstName} avatarDataUrl={avatarDataUrl} />
+                    </div>
+                    <DiscoverNewsRail />
+                  </div>
                 </div>
               </>
             )}
@@ -1821,7 +1825,7 @@ function DiscoverNewsRail() {
   const compactStories = items.slice(2, 6);
 
   return (
-    <aside className="overflow-hidden bg-[#111827] text-white shadow-sm ring-1 ring-[#dbe4ee]">
+    <aside className="sticky top-[86px] self-start overflow-hidden bg-[#111827] text-white shadow-sm ring-1 ring-[#dbe4ee]">
       <div className="flex min-h-14 items-center justify-between gap-3 border-b border-white/10 px-4">
         <div className="flex items-center gap-3">
           <span className="grid h-7 w-7 place-items-center bg-[#0f8f6b] text-xs font-black text-white">D</span>
@@ -1840,21 +1844,12 @@ function DiscoverNewsRail() {
 
       {status === 'ready' && featured ? (
         <div className="grid gap-4 p-4">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
-            <DiscoverHeroCard item={featured} large />
-            <div className="grid gap-4">
-              {topStory ? <DiscoverStoryCard item={topStory} /> : null}
-              <div className="grid gap-3 sm:grid-cols-2">
-                {compactStories.slice(0, 2).map((item) => (
-                  <DiscoverSmallCard key={`${item.source}-${item.link}`} item={item} />
-                ))}
-              </div>
-            </div>
-          </div>
+          <DiscoverHeroCard item={featured} large />
+          {topStory ? <DiscoverStoryCard item={topStory} /> : null}
 
-          <div className="grid gap-3 md:grid-cols-2">
-            {compactStories.slice(2).map((item) => (
-              <DiscoverStoryCard key={`${item.source}-${item.link}`} item={item} />
+          <div className="grid gap-3">
+            {compactStories.map((item) => (
+              <DiscoverSmallCard key={`${item.source}-${item.link}`} item={item} />
             ))}
           </div>
 
