@@ -1418,27 +1418,36 @@ function VerificationOrdersSection() {
 
 function ProductQuickGrid() {
   return (
-    <div className="grid grid-cols-6 gap-4">
+    <section className="bg-white p-3 shadow-sm ring-1 ring-[#dbe4ee]">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#0f8f6b]">Demarrer</p>
+          <h2 className="text-base font-black text-[#102033]">Services frequents</h2>
+        </div>
+        <a href="/profile?view=services" className="text-xs font-black text-[#0f8f6b]">Tout voir</a>
+      </div>
+      <div className="grid grid-cols-6 gap-3">
       {quickProducts.map((product) => (
-        <a key={product.title} href={product.href} className="group relative block min-h-[212px] overflow-hidden bg-white ring-1 ring-slate-200 transition hover:ring-[#009a38]">
+        <a key={product.title} href={product.href} className="group relative block min-h-[154px] overflow-hidden bg-[#f8fafc] ring-1 ring-[#e4ebf2] transition hover:-translate-y-0.5 hover:ring-[#0f8f6b]">
           {product.image ? (
-            <img src={product.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]" />
+            <img src={product.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-300 group-hover:scale-[1.025] group-hover:opacity-100" />
           ) : (
             <span className="absolute inset-0 grid place-items-center" style={{ backgroundColor: `${product.color}22` }}>
-              <span className="h-20 w-24" style={{ border: `5px solid ${product.color}` }} />
+              <span className="h-14 w-16" style={{ border: `4px solid ${product.color}` }} />
             </span>
           )}
-          <span className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white via-white/86 to-white/0" />
-          <span className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white via-white/88 to-white/0" />
+          <span className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white via-white/82 to-white/0" />
+          <span className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white via-white/90 to-white/0" />
           <span className="relative z-10 block p-3">
-            <span className="block min-h-10 text-[15px] font-black leading-5 text-[#111827]">{product.title}</span>
+            <span className="block min-h-8 text-[13px] font-black leading-4 text-[#102033]">{product.title}</span>
           </span>
-          <span className="absolute inset-x-0 bottom-0 z-10 block px-3 pb-3 text-xs leading-5 text-[#33506e]">
+          <span className="absolute inset-x-0 bottom-0 z-10 block px-3 pb-3 text-[11px] font-semibold leading-4 text-[#33506e]">
             {product.subtitle} &gt;
           </span>
         </a>
       ))}
-    </div>
+      </div>
+    </section>
   );
 }
 
