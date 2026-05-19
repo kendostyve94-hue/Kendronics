@@ -113,6 +113,7 @@ type DiscoverNewsItem = {
 
 type CommunityPost = {
   id: string;
+  authorId: string;
   author: string;
   avatarDataUrl: string;
   title: string;
@@ -126,6 +127,7 @@ type CommunityPost = {
   likes: number;
   saves: number;
   comments: number;
+  commentList?: string[];
 };
 
 type ProfileUser = {
@@ -1542,9 +1544,17 @@ function StatusStrip({ counts }: { counts: ReturnType<typeof orderCounts> }) {
 }
 
 const communityPostsStorageKey = 'kendronics.community.posts';
+const communityLikesStorageKey = 'kendronics.community.likes';
+const communityFollowsStorageKey = 'kendronics.community.follows';
+type CommunityTab = 'reels' | 'following' | 'profile';
 
 function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string; avatarDataUrl: string }) {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [activeTab, setActiveTab] = useState<CommunityTab>('reels');
+  const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
+  const [followedAuthorIds, setFollowedAuthorIds] = useState<string[]>([]);
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  const [openCommentPostId, setOpenCommentPostId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [kind, setKind] = useState<CommunityPost['kind']>('image');
@@ -1554,7 +1564,11 @@ function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string
 
   useEffect(() => {
     setPosts(readCommunityPosts());
+    setLikedPostIds(readCommunityIdList(communityLikesStorageKey));
+    setFollowedAuthorIds(readCommunityIdList(communityFollowsStorageKey));
   }, []);
+
+  const currentAuthorId = `profile:${firstName.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'client'}`;
 
   function handleMediaChange(file?: File) {
     if (!file) {
@@ -1581,6 +1595,7 @@ function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string
 
     const nextPost: CommunityPost = {
       id: typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}`,
+      authorId: currentAuthorId,
       author: firstName,
       avatarDataUrl,
       title: title.trim(),
@@ -1594,6 +1609,7 @@ function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string
       likes: 0,
       saves: 0,
       comments: 0,
+      commentList: [],
     };
 
     const nextPosts = [nextPost, ...posts].slice(0, 18);
@@ -1608,44 +1624,117 @@ function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string
   }
 
   const canPublish = title.trim().length > 2 && mediaName.length > 0;
+  const profilePosts = posts.filter((post) => post.authorId === currentAuthorId);
+  const visiblePosts = activeTab === 'profile'
+    ? profilePosts
+    : activeTab === 'following'
+      ? posts.filter((post) => followedAuthorIds.includes(post.authorId) && post.authorId !== currentAuthorId)
+      : posts;
+
+  function toggleFollow(authorId: string) {
+    if (authorId === currentAuthorId) return;
+    const nextIds = followedAuthorIds.includes(authorId)
+      ? followedAuthorIds.filter((id) => id !== authorId)
+      : [...followedAuthorIds, authorId];
+    setFollowedAuthorIds(nextIds);
+    persistCommunityIdList(communityFollowsStorageKey, nextIds);
+  }
+
+  function toggleLike(postId: string) {
+    const alreadyLiked = likedPostIds.includes(postId);
+    const nextLikedIds = alreadyLiked ? likedPostIds.filter((id) => id !== postId) : [...likedPostIds, postId];
+    const nextPosts = posts.map((post) => (
+      post.id === postId ? { ...post, likes: Math.max(0, post.likes + (alreadyLiked ? -1 : 1)) } : post
+    ));
+    setLikedPostIds(nextLikedIds);
+    setPosts(nextPosts);
+    persistCommunityIdList(communityLikesStorageKey, nextLikedIds);
+    persistCommunityPosts(nextPosts);
+  }
+
+  function addComment(postId: string) {
+    const value = (commentDrafts[postId] ?? '').trim();
+    if (!value) return;
+
+    const nextPosts = posts.map((post) => (
+      post.id === postId
+        ? { ...post, comments: post.comments + 1, commentList: [...(post.commentList ?? []), value] }
+        : post
+    ));
+    setPosts(nextPosts);
+    persistCommunityPosts(nextPosts);
+    setCommentDrafts((drafts) => ({ ...drafts, [postId]: '' }));
+    setOpenCommentPostId(postId);
+  }
+
+  async function sharePost(post: CommunityPost) {
+    const shareText = `${post.title} - Kendronics`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: post.title, text: shareText, url: window.location.href });
+      } else {
+        await navigator.clipboard.writeText(`${shareText} ${window.location.href}`);
+      }
+    } catch {
+      // Sharing can be cancelled by the user; no UI error needed.
+    }
+  }
 
   return (
     <section className="bg-white shadow-sm ring-1 ring-[#dbe4ee]">
-      <div className="grid gap-5 border-b border-[#e4ebf2] p-5 lg:grid-cols-[360px_minmax(0,1fr)]">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0f8f6b]">Publication publique</p>
-          <h2 className="mt-1 text-xl font-black text-[#102033]">Partager un projet technique</h2>
-          <p className="mt-2 text-sm leading-6 text-[#64748b]">
-            Publiez une courte video, une image de prototype, un document technique ou un tuto. Le rendu est pense comme un flux public de projets hardware.
-          </p>
-        </div>
-
-        <form className="grid gap-3" onSubmit={(event) => { event.preventDefault(); publishPost(); }}>
-          <div className="grid gap-3 md:grid-cols-[1fr_180px]">
-            <input value={title} onChange={(event) => setTitle(event.target.value)} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]" placeholder="Titre du projet, tuto ou document" maxLength={72} />
-            <select value={kind} onChange={(event) => setKind(event.target.value as CommunityPost['kind'])} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]">
-              <option value="image">Image</option>
-              <option value="video">Video short</option>
-              <option value="document">Document technique</option>
-              <option value="tutorial">Tutoriel</option>
-            </select>
-          </div>
-          <textarea value={description} onChange={(event) => setDescription(event.target.value)} className="min-h-[78px] resize-y border border-[#cfd8e3] bg-white px-3 py-2 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]" placeholder="Decrivez le montage, les fichiers, les composants ou l'objectif du prototype." maxLength={220} />
-          <div className="grid gap-3 md:grid-cols-[1fr_150px]">
-            <label className="flex h-11 cursor-pointer items-center justify-between border border-dashed border-[#9fb3c8] bg-[#f8fafc] px-3 text-sm font-semibold text-[#475569] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
-              <span className="truncate">{mediaName || 'Ajouter video, image, PDF, ZIP ou fichier technique'}</span>
-              <input type="file" accept="image/*,video/*,.pdf,.zip,.rar,.7z,.doc,.docx,.ppt,.pptx" className="hidden" onChange={(event) => handleMediaChange(event.target.files?.[0])} />
-            </label>
-            <button type="submit" disabled={!canPublish} className="h-11 bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
-              Publier
+      <div className="grid gap-5 border-b border-[#e4ebf2] p-5 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <nav className="grid gap-2 bg-[#0b1220] p-3 text-white" aria-label="Rubriques publication">
+          {[
+            ['reels', 'Reels', 'Toutes les publications publiques'],
+            ['following', 'Suivis', 'Publications des comptes suivis'],
+            ['profile', 'Profil', 'Vos contenus et commentaires'],
+          ].map(([key, label, detail]) => (
+            <button key={key} type="button" onClick={() => setActiveTab(key as CommunityTab)} className={`flex items-center gap-3 px-3 py-3 text-left transition ${activeTab === key ? 'bg-[#0f8f6b] text-white' : 'hover:bg-white/10'}`}>
+              <span className="grid h-8 w-8 place-items-center border border-white/20 text-xs font-black">{label.slice(0, 1)}</span>
+              <span className="min-w-0">
+                <span className="block text-sm font-black">{label}</span>
+                <span className="block truncate text-[11px] text-white/60">{detail}</span>
+              </span>
             </button>
+          ))}
+        </nav>
+
+        <div>
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0f8f6b]">Publication publique</p>
+            <h2 className="mt-1 text-xl font-black text-[#102033]">{communityTabTitle(activeTab)}</h2>
+            <p className="mt-2 text-sm leading-6 text-[#64748b]">{communityTabDescription(activeTab)}</p>
           </div>
-        </form>
+
+          {activeTab === 'profile' ? (
+            <form className="mt-4 grid gap-3" onSubmit={(event) => { event.preventDefault(); publishPost(); }}>
+              <div className="grid gap-3 md:grid-cols-[1fr_180px]">
+                <input value={title} onChange={(event) => setTitle(event.target.value)} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]" placeholder="Titre du projet, tuto ou document" maxLength={72} />
+                <select value={kind} onChange={(event) => setKind(event.target.value as CommunityPost['kind'])} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]">
+                  <option value="image">Image</option>
+                  <option value="video">Video short</option>
+                  <option value="document">Document technique</option>
+                  <option value="tutorial">Tutoriel</option>
+                </select>
+              </div>
+              <textarea value={description} onChange={(event) => setDescription(event.target.value)} className="min-h-[78px] resize-y border border-[#cfd8e3] bg-white px-3 py-2 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]" placeholder="Decrivez le montage, les fichiers, les composants ou l'objectif du prototype." maxLength={220} />
+              <div className="grid gap-3 md:grid-cols-[1fr_150px]">
+                <label className="flex h-11 cursor-pointer items-center justify-between border border-dashed border-[#9fb3c8] bg-[#f8fafc] px-3 text-sm font-semibold text-[#475569] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+                  <span className="truncate">{mediaName || 'Ajouter video, image, PDF, ZIP ou fichier technique'}</span>
+                  <input type="file" accept="image/*,video/*,.pdf,.zip,.rar,.7z,.doc,.docx,.ppt,.pptx" className="hidden" onChange={(event) => handleMediaChange(event.target.files?.[0])} />
+                </label>
+                <button type="submit" disabled={!canPublish} className="h-11 bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
+                  Publier
+                </button>
+              </div>
+            </form>
+          ) : null}
+        </div>
       </div>
 
-      {posts.length > 0 ? (
+      {visiblePosts.length > 0 ? (
         <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
-          {posts.map((post) => (
+          {visiblePosts.map((post) => (
             <article key={post.id} className="overflow-hidden border border-[#dbe4ee] bg-white">
               <div className="relative aspect-[4/3] overflow-hidden bg-[#eef4f8]">
                 {post.mediaDataUrl && post.mediaType?.startsWith('video/') ? (
@@ -1658,15 +1747,20 @@ function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string
                   </div>
                 )}
                 <span className="absolute left-2 top-2 bg-[#fff2e5] px-2 py-1 text-[10px] font-black uppercase text-[#ff6a00]">{communityKindLabel(post.kind)}</span>
+                {post.authorId !== currentAuthorId ? (
+                  <button type="button" onClick={() => toggleFollow(post.authorId)} className="absolute right-2 top-2 bg-black/70 px-2 py-1 text-[10px] font-black text-white transition hover:bg-[#0f8f6b]">
+                    {followedAuthorIds.includes(post.authorId) ? 'Unfollow' : 'Follow'}
+                  </button>
+                ) : null}
               </div>
               <div className="p-3">
                 <h3 className="line-clamp-1 text-base font-black text-[#102033]">{post.title}</h3>
                 <p className="mt-1 line-clamp-2 min-h-[38px] text-xs leading-5 text-[#64748b]">{post.description || post.mediaName}</p>
                 <div className="mt-3 flex items-center justify-between text-[11px] text-[#94a3b8]">
                   <span>{formatCompactNumber(post.views)} vues</span>
-                  <span>{post.likes} likes</span>
-                  <span>{post.saves} favoris</span>
-                  <span>{post.comments} avis</span>
+                  <button type="button" onClick={() => toggleLike(post.id)} className={likedPostIds.includes(post.id) ? 'font-black text-[#0f8f6b]' : 'hover:text-[#0f8f6b]'}>{post.likes} likes</button>
+                  <button type="button" onClick={() => setOpenCommentPostId(openCommentPostId === post.id ? null : post.id)} className="hover:text-[#0f8f6b]">{post.comments} avis</button>
+                  <button type="button" onClick={() => void sharePost(post)} className="hover:text-[#0f8f6b]">Partager</button>
                 </div>
                 <div className="mt-3 flex items-center gap-2 border-t border-[#edf2f7] pt-3">
                   <Avatar avatarDataUrl={post.avatarDataUrl} size="small" />
@@ -1675,6 +1769,17 @@ function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string
                     <p className="text-[11px] text-[#94a3b8]">{formatDate(post.createdAt)}</p>
                   </div>
                 </div>
+                {openCommentPostId === post.id || activeTab === 'profile' ? (
+                  <div className="mt-3 border-t border-[#edf2f7] pt-3">
+                    {(post.commentList ?? []).slice(-3).map((comment, index) => (
+                      <p key={`${post.id}-comment-${index}`} className="mb-2 bg-[#f8fafc] px-2 py-1 text-[11px] leading-4 text-[#475569]">{comment}</p>
+                    ))}
+                    <div className="grid grid-cols-[1fr_64px] gap-2">
+                      <input value={commentDrafts[post.id] ?? ''} onChange={(event) => setCommentDrafts((drafts) => ({ ...drafts, [post.id]: event.target.value }))} className="h-8 border border-[#dbe4ee] px-2 text-xs outline-none focus:border-[#0f8f6b]" placeholder="Commenter..." />
+                      <button type="button" onClick={() => addComment(post.id)} className="h-8 bg-[#102033] text-xs font-black text-white">OK</button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </article>
           ))}
@@ -1682,8 +1787,8 @@ function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string
       ) : (
         <div className="grid min-h-[180px] place-items-center p-5 text-center">
           <div>
-            <p className="text-base font-black text-[#102033]">Aucune publication pour le moment.</p>
-            <p className="mt-2 text-sm text-[#64748b]">Ajoutez un media technique pour alimenter le flux public de votre espace.</p>
+            <p className="text-base font-black text-[#102033]">{communityEmptyTitle(activeTab)}</p>
+            <p className="mt-2 text-sm text-[#64748b]">{communityEmptyDescription(activeTab)}</p>
           </div>
         </div>
       )}
@@ -2025,7 +2130,27 @@ function formatMoney(value: number) {
 
 function readCommunityPosts() {
   try {
-    return JSON.parse(window.localStorage.getItem(communityPostsStorageKey) ?? '[]') as CommunityPost[];
+    const parsed = JSON.parse(window.localStorage.getItem(communityPostsStorageKey) ?? '[]') as Partial<CommunityPost>[];
+    return parsed
+      .filter((post) => post.id && post.title)
+      .map((post) => ({
+        id: post.id ?? `${Date.now()}`,
+        authorId: post.authorId ?? `profile:${(post.author ?? 'client').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+        author: post.author ?? 'Client Kendronics',
+        avatarDataUrl: post.avatarDataUrl ?? '',
+        title: post.title ?? 'Publication',
+        description: post.description ?? '',
+        kind: post.kind ?? 'image',
+        mediaName: post.mediaName ?? 'Media technique',
+        mediaDataUrl: post.mediaDataUrl,
+        mediaType: post.mediaType,
+        createdAt: post.createdAt ?? new Date().toISOString(),
+        views: post.views ?? 0,
+        likes: post.likes ?? 0,
+        saves: post.saves ?? 0,
+        comments: post.comments ?? post.commentList?.length ?? 0,
+        commentList: post.commentList ?? [],
+      }));
   } catch {
     return [];
   }
@@ -2037,6 +2162,47 @@ function persistCommunityPosts(posts: CommunityPost[]) {
   } catch {
     // Large media previews can exceed browser storage; keep the UI responsive even when persistence fails.
   }
+}
+
+function readCommunityIdList(storageKey: string) {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(storageKey) ?? '[]') as string[];
+    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistCommunityIdList(storageKey: string, ids: string[]) {
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(Array.from(new Set(ids))));
+  } catch {
+    // Keep interactions usable even if browser storage is unavailable.
+  }
+}
+
+function communityTabTitle(tab: CommunityTab) {
+  if (tab === 'following') return 'Suivis';
+  if (tab === 'profile') return 'Profil public';
+  return 'Reels techniques';
+}
+
+function communityTabDescription(tab: CommunityTab) {
+  if (tab === 'following') return 'Retrouvez uniquement les publications des comptes auxquels vous etes abonne.';
+  if (tab === 'profile') return 'Consultez vos publications, lisez les commentaires et publiez un nouveau contenu technique.';
+  return 'Explorez toutes les publications publiques des utilisateurs : videos, images, documents et tutoriels.';
+}
+
+function communityEmptyTitle(tab: CommunityTab) {
+  if (tab === 'following') return 'Aucune publication suivie.';
+  if (tab === 'profile') return 'Aucune publication sur votre profil.';
+  return 'Aucune publication publique pour le moment.';
+}
+
+function communityEmptyDescription(tab: CommunityTab) {
+  if (tab === 'following') return 'Suivez des createurs depuis Reels pour voir leurs prochaines publications ici.';
+  if (tab === 'profile') return 'Publiez un media technique pour alimenter votre profil public.';
+  return 'Les prochaines publications publiques apparaitront dans ce flux.';
 }
 
 function communityKindLabel(kind: CommunityPost['kind']) {
