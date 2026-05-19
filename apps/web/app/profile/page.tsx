@@ -112,6 +112,7 @@ type ProfileUser = {
 };
 
 type ProfileView =
+  | 'quotes'
   | 'all-orders'
   | 'verification'
   | 'payment-pending'
@@ -119,6 +120,9 @@ type ProfileView =
   | 'delivery'
   | 'completed'
   | 'comments'
+  | 'services'
+  | 'support'
+  | 'benefits'
   | 'notifications'
   | 'shipping-address'
   | 'invite'
@@ -135,19 +139,24 @@ const quickProducts: QuickProduct[] = [
   { title: 'Conception PCB', subtitle: 'Commander maintenant', href: '/services', image: '', color: '#facc15' },
 ];
 
-const sidebarGroups = [
-  {
-    title: 'Services',
-    items: ['Prototype PCB', 'Petites series', 'PCB avance', 'Assemblage PCB', 'CNC | Impression 3D', 'Conception PCB', 'Assistance Gerber'],
-  },
-  {
-    title: 'Promotions',
-    items: ['Centre de Message', 'Notifications', 'Boutique cadeaux', 'Mes coupons', 'Recompenses de Kendronics', 'Connexion', 'Inviter', 'Projets partages'],
-  },
-  {
-    title: 'Mon profil',
-    items: ['Adresse de livraison', 'Compte de collecte', 'Informations de facturation', 'Solde du compte', 'Reclamations des employes', 'Parametres'],
-  },
+type SidebarItem = {
+  label: string;
+  view: ProfileView;
+  count?: number;
+};
+
+type SidebarGroup = {
+  title: string;
+  items: SidebarItem[];
+};
+
+const serviceTiles = [
+  { title: 'Prototype PCB', body: 'Devis rapide pour valider une carte, une revision ou une petite quantite.', href: '/quote' },
+  { title: 'Assemblage PCBA', body: 'Centralisez PCB, composants et assemblage pour avancer vers un prototype testable.', href: '/quote' },
+  { title: 'CNC / Impression 3D', body: 'Pieces mecaniques, boitiers et supports pour accompagner vos cartes.', href: '/services' },
+  { title: 'Conception PCB', body: 'Accompagnement conception, reprise de schema ou preparation production.', href: '/services' },
+  { title: 'Assistance Gerber', body: 'Verification de fichiers avant commande pour reduire les erreurs de fabrication.', href: '/contact' },
+  { title: 'Petites series', body: 'Passage du prototype a une quantite pilote avec suivi plus structure.', href: '/quote' },
 ];
 
 export default function ProfilePage() {
@@ -171,9 +180,7 @@ export default function ProfilePage() {
     });
     setAccountId(sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
     setAvatarDataUrl(window.localStorage.getItem(avatarStorageKey) ?? '');
-    if (new URLSearchParams(window.location.search).get('view') === 'orders') {
-      setActiveProfileView('all-orders');
-    }
+    setActiveProfileView(viewFromSearchParam(new URLSearchParams(window.location.search).get('view')));
 
     let cancelled = false;
     async function loadProductionProfileData() {
@@ -308,45 +315,32 @@ function ProfileSidebar({
   counts: ReturnType<typeof orderCounts>;
   unreadNotifications: number;
 }) {
-  const commandItems = [
-    'Mon Espace',
-    `Verification en cours (${counts.verification})`,
-    `Paiement en attente (${counts.paymentPending})`,
-    'Paiement inacheve (0)',
-    `Statut de production (${counts.production})`,
-    `Livraison (${counts.delivery})`,
-    `Termine (${counts.completed})`,
-    `Gerer les commentaires (${counts.comments})`,
-    'Remboursements & Litiges (0)',
-    'Liste des souhaits (0)',
-  ];
-  const groups = [{ title: 'Commandes', items: commandItems }, ...sidebarGroups];
+  const groups = profileSidebarGroups(counts, unreadNotifications);
 
   return (
-    <aside className="sticky top-[86px] block self-start bg-white shadow-sm ring-1 ring-slate-200">
+    <aside className="sticky top-[86px] block self-start bg-white shadow-sm ring-1 ring-[#dbe4ee]">
       {groups.map((group) => (
-        <section key={group.title} className="border-b border-slate-200 last:border-b-0">
-          <h2 className="px-4 pb-2 pt-5 text-[12px] font-black uppercase text-[#1f2f43]">{group.title}</h2>
+        <section key={group.title} className="border-b border-[#e4ebf2] last:border-b-0">
+          <h2 className="px-4 pb-2 pt-5 text-[11px] font-black uppercase tracking-[0.14em] text-[#64748b]">{group.title}</h2>
           <div className="block px-0 pb-4">
             {group.items.map((item, index) => {
-              const view = viewForSidebarItem(group.title, item);
-              const isActive = view !== null && view === activeProfileView;
+              const isActive = item.view === activeProfileView;
 
               return (
                 <button
-                  key={item}
+                  key={item.label}
                   type="button"
-                  onClick={() => onSelectView(view)}
-                  className={`relative flex min-h-[34px] w-full items-center gap-3 rounded-none bg-transparent px-4 text-left text-[13px] hover:bg-[#f1f8f4] hover:text-[#0f9f6e] ${
-                    isActive ? 'font-black text-[#009a38]' : 'text-[#475569]'
+                  onClick={() => onSelectView(item.view)}
+                  className={`relative flex min-h-[36px] w-full items-center gap-3 rounded-none bg-transparent px-4 text-left text-[13px] transition hover:bg-[#f6faf8] hover:text-[#0f8f6b] ${
+                    isActive ? 'font-black text-[#0f8f6b]' : 'text-[#334155]'
                   }`}
                 >
-                  <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-none border text-[9px] ${
-                    isActive ? 'border-[#24ad5d] text-[#24ad5d]' : 'border-slate-300 text-slate-400'
+                  <span className={`grid h-4 w-4 shrink-0 place-items-center border text-[9px] ${
+                    isActive ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-[#dbe4ee] text-[#94a3b8]'
                   }`}>{index + 1}</span>
-                  <span className="min-w-0 truncate">{item}</span>
-                  {item === 'Notifications' && unreadNotifications > 0 ? <span className="ml-auto rounded-none bg-red-500 px-1.5 text-[10px] font-black text-white">{unreadNotifications}</span> : null}
-                  {isActive ? <span className="absolute right-0 top-0 h-full w-[5px] bg-[#27a35a]" /> : null}
+                  <span className="min-w-0 truncate">{item.label}</span>
+                  {item.count && item.count > 0 ? <span className="ml-auto bg-[#102033] px-1.5 text-[10px] font-black text-white">{item.count}</span> : null}
+                  {isActive ? <span className="absolute right-0 top-0 h-full w-[4px] bg-[#0f8f6b]" /> : null}
                 </button>
               );
             })}
@@ -357,29 +351,70 @@ function ProfileSidebar({
   );
 }
 
-function viewForSidebarItem(groupTitle: string, item: string): ProfileView {
-  if (groupTitle === 'Commandes') {
-    if (item === 'Mon Espace') return null;
-    if (item.startsWith('Verification')) return 'verification';
-    if (item.startsWith('Paiement en attente')) return 'payment-pending';
-    if (item.startsWith('Statut de production')) return 'production';
-    if (item.startsWith('Livraison')) return 'delivery';
-    if (item.startsWith('Termine')) return 'completed';
-    if (item === 'Gerer les commentaires') return 'comments';
-  }
+function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: number): SidebarGroup[] {
+  return [
+    {
+      title: 'Espace client',
+      items: [
+        { label: 'Tableau de bord', view: null },
+        { label: 'Devis', view: 'quotes' },
+        { label: 'Commandes', view: 'all-orders', count: counts.all },
+        { label: 'Notifications', view: 'notifications', count: unread },
+      ],
+    },
+    {
+      title: 'Suivi commande',
+      items: [
+        { label: 'Verification', view: 'verification', count: counts.verification },
+        { label: 'Paiement', view: 'payment-pending', count: counts.paymentPending },
+        { label: 'Production', view: 'production', count: counts.production },
+        { label: 'Livraison', view: 'delivery', count: counts.delivery },
+        { label: 'Terminees', view: 'completed', count: counts.completed },
+        { label: 'Commentaires', view: 'comments', count: counts.comments },
+      ],
+    },
+    {
+      title: 'Services',
+      items: [
+        { label: 'Services & demandes', view: 'services' },
+        { label: 'Support', view: 'support' },
+        { label: 'Avantages', view: 'benefits' },
+        { label: 'Parrainage', view: 'invite' },
+      ],
+    },
+    {
+      title: 'Profil',
+      items: [
+        { label: 'Adresse livraison', view: 'shipping-address' },
+        { label: 'Facturation', view: 'billing' },
+        { label: 'Parametres', view: 'settings' },
+      ],
+    },
+  ];
+}
 
-  if (groupTitle === 'Promotions') {
-    if (item === 'Notifications') return 'notifications';
-    if (item === 'Inviter') return 'invite';
-  }
-
-  if (groupTitle === 'Mon profil') {
-    if (item === 'Adresse de livraison') return 'shipping-address';
-    if (item === 'Informations de facturation') return 'billing';
-    if (item === 'Parametres') return 'settings';
-  }
-
-  return null;
+function viewFromSearchParam(value: string | null): ProfileView {
+  if (!value) return null;
+  const supported: Exclude<ProfileView, null>[] = [
+    'quotes',
+    'all-orders',
+    'verification',
+    'payment-pending',
+    'production',
+    'delivery',
+    'completed',
+    'comments',
+    'services',
+    'support',
+    'benefits',
+    'notifications',
+    'shipping-address',
+    'invite',
+    'billing',
+    'settings',
+  ];
+  if (value === 'orders') return 'all-orders';
+  return supported.includes(value as Exclude<ProfileView, null>) ? (value as Exclude<ProfileView, null>) : null;
 }
 
 function ProfileViewContent({
@@ -401,6 +436,7 @@ function ProfileViewContent({
   dataStatus: 'loading' | 'ready' | 'signed-out' | 'error';
   onNotificationsChange: (notifications: ProfileNotification[]) => void;
 }) {
+  if (view === 'quotes') return <QuotesHubSection orders={orders} dataStatus={dataStatus} />;
   if (view === 'all-orders') return <OrderReviewSection activeKey="all" title="Toutes commandes" mode="table" orders={orders} dataStatus={dataStatus} />;
   if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Panier / Examen de votre commande" mode="review" orders={orders} dataStatus={dataStatus} />;
   if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Panier / Examen de votre commande" mode="review" orders={orders} dataStatus={dataStatus} />;
@@ -408,6 +444,9 @@ function ProfileViewContent({
   if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="table" orders={orders} dataStatus={dataStatus} />;
   if (view === 'completed') return <OrderReviewSection activeKey="completed" title="Commande completee" mode="table" orders={orders} dataStatus={dataStatus} />;
   if (view === 'comments') return <CommentsManagementSection orders={orders} dataStatus={dataStatus} />;
+  if (view === 'services') return <ServicesHubSection />;
+  if (view === 'support') return <SupportHubSection orders={orders} dataStatus={dataStatus} />;
+  if (view === 'benefits') return <BenefitsHubSection />;
   if (view === 'notifications') return <NotificationsSection notifications={notifications} dataStatus={dataStatus} onNotificationsChange={onNotificationsChange} />;
   if (view === 'shipping-address') return <AddressFormSection title="Adresse de livraison" note="Veuillez entrer votre nouveau contact/adresse" />;
   if (view === 'invite') return <InviteSection />;
@@ -643,6 +682,114 @@ function NotificationsList({ notifications, dataStatus }: { notifications: Profi
         </div>
       ))}
     </div>
+  );
+}
+
+function QuotesHubSection({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+  const quoteOrders = orders.filter((order) => order.status === 'draft' || order.status === 'quoted');
+
+  return (
+    <section className="min-h-[690px] bg-white p-6 text-[#102033] shadow-sm ring-1 ring-[#dbe4ee]">
+      <HubHeader eyebrow="Devis" title="Devis et projets en preparation" actionLabel="Nouveau devis" actionHref="/quote" />
+      <div className="mt-5 grid grid-cols-3 gap-4">
+        <HubMetric label="Devis ouverts" value={String(quoteOrders.length)} />
+        <HubMetric label="Commandes a payer" value={String(orderCounts(orders).paymentPending)} />
+        <HubMetric label="Derniere estimation" value={quoteOrders[0] ? formatMoney(quoteOrders[0].totalPrice ?? quoteOrders[0].quoteSnapshot?.finalTotal ?? 0) : '-'} />
+      </div>
+      <div className="mt-6 border border-[#e4ebf2]">
+        <div className="grid grid-cols-[1fr_160px_160px_120px] bg-[#f8fafc] px-4 py-3 text-xs font-black text-[#64748b]">
+          <span>Projet</span>
+          <span>Quantite</span>
+          <span>Montant</span>
+          <span>Action</span>
+        </div>
+        <OrdersListRows orders={quoteOrders} dataStatus={dataStatus} />
+      </div>
+    </section>
+  );
+}
+
+function ServicesHubSection() {
+  return (
+    <section className="min-h-[690px] bg-white p-6 text-[#102033] shadow-sm ring-1 ring-[#dbe4ee]">
+      <HubHeader eyebrow="Services" title="Services disponibles dans votre espace" actionLabel="Devis immediat" actionHref="/quote" />
+      <div className="mt-5 grid grid-cols-2 gap-4">
+        {serviceTiles.map((service) => (
+          <a key={service.title} href={service.href} className="min-h-[142px] border border-[#e4ebf2] bg-white p-5 transition hover:border-[#0f8f6b] hover:bg-[#f8fafc]">
+            <h2 className="text-lg font-black text-[#102033]">{service.title}</h2>
+            <p className="mt-3 text-sm leading-6 text-[#53657a]">{service.body}</p>
+            <span className="mt-4 inline-flex text-xs font-black text-[#0f8f6b]">Ouvrir &gt;</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SupportHubSection({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+  const activeOrders = orders.filter((order) => !['delivered', 'cancelled', 'refunded'].includes(order.status)).slice(0, 3);
+
+  return (
+    <section className="min-h-[690px] bg-white p-6 text-[#102033] shadow-sm ring-1 ring-[#dbe4ee]">
+      <HubHeader eyebrow="Support" title="Aide, suivi et demandes commerciales" actionLabel="Contacter" actionHref="/contact" />
+      <div className="mt-5 grid grid-cols-3 gap-4">
+        <SupportTile title="Centre d'aide" body="Retrouvez les bases PCB, fichiers Gerber, livraison et paiement." href="/centre-aide" />
+        <SupportTile title="Contact commercial" body="Une demande specifique, une serie ou un besoin d'accompagnement." href="/contact" />
+        <SupportTile title="Suivi commande" body="Consultez les commandes actives et les prochaines etapes." href="/profile?view=orders" />
+      </div>
+      <div className="mt-6 border border-[#e4ebf2] p-5">
+        <h2 className="text-lg font-black">Commandes a surveiller</h2>
+        <div className="mt-4">
+          <OrdersListRows orders={activeOrders} dataStatus={dataStatus} compact />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BenefitsHubSection() {
+  return (
+    <section className="min-h-[690px] bg-white p-6 text-[#102033] shadow-sm ring-1 ring-[#dbe4ee]">
+      <HubHeader eyebrow="Avantages" title="Coupons, credits et parrainage" actionLabel="Parrainage" actionHref="/profile?view=invite" />
+      <div className="mt-5 grid grid-cols-3 gap-4">
+        <HubMetric label="Coupons actifs" value="0" />
+        <HubMetric label="Credits disponibles" value="0 EUR" />
+        <HubMetric label="Points" value="0" />
+      </div>
+      <div className="mt-6 bg-[#f8fafc] p-5 text-sm leading-6 text-[#53657a] ring-1 ring-[#e4ebf2]">
+        Les avantages client seront affiches ici lorsqu'ils seront disponibles. Cette section centralisera les coupons, credits, parrainage et recompenses.
+      </div>
+    </section>
+  );
+}
+
+function HubHeader({ eyebrow, title, actionLabel, actionHref }: { eyebrow: string; title: string; actionLabel: string; actionHref: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-[#e4ebf2] pb-5">
+      <div>
+        <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0f8f6b]">{eyebrow}</p>
+        <h1 className="mt-2 text-2xl font-black text-[#102033]">{title}</h1>
+      </div>
+      <a href={actionHref} className="border border-[#0f8f6b] px-5 py-3 text-xs font-black text-[#0f8f6b] transition hover:bg-[#0f8f6b] hover:text-white">{actionLabel}</a>
+    </div>
+  );
+}
+
+function HubMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-[#e4ebf2] bg-[#f8fafc] p-5">
+      <p className="text-xs text-[#64748b]">{label}</p>
+      <p className="mt-2 text-2xl font-black text-[#102033]">{value}</p>
+    </div>
+  );
+}
+
+function SupportTile({ title, body, href }: { title: string; body: string; href: string }) {
+  return (
+    <a href={href} className="min-h-[132px] border border-[#e4ebf2] p-5 transition hover:border-[#0f8f6b] hover:bg-[#f8fafc]">
+      <h2 className="text-base font-black">{title}</h2>
+      <p className="mt-3 text-sm leading-6 text-[#53657a]">{body}</p>
+    </a>
   );
 }
 
