@@ -263,16 +263,12 @@ export default function ProfilePage() {
               <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onNotificationsChange={setNotifications} />
             ) : (
               <>
-                <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_330px] gap-4">
-                  <div className="min-w-0">
-                    <ProductQuickGrid />
-                    <div className="mt-4 grid min-w-0 gap-4">
-                      <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
-                      <StatusStrip counts={orderCounts(orders)} />
-                      <CommunityPublishPanel firstName={firstName} avatarDataUrl={avatarDataUrl} />
-                    </div>
-                  </div>
+                <div className="grid min-w-0 gap-4">
                   <DiscoverNewsRail />
+                  <ProductQuickGrid />
+                  <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
+                  <StatusStrip counts={orderCounts(orders)} />
+                  <CommunityPublishPanel firstName={firstName} avatarDataUrl={avatarDataUrl} />
                 </div>
               </>
             )}
@@ -1683,8 +1679,8 @@ function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string
 
   return (
     <section className="bg-white shadow-sm ring-1 ring-[#dbe4ee]">
-      <div className="grid gap-5 border-b border-[#e4ebf2] p-5 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <nav className="grid gap-2 bg-[#0b1220] p-3 text-white" aria-label="Rubriques publication">
+      <div className="border-b border-[#e4ebf2] p-5">
+        <nav className="grid grid-cols-3 gap-2 bg-[#0b1220] p-3 text-white" aria-label="Rubriques publication">
           {[
             ['reels', 'Reels', 'Toutes les publications publiques'],
             ['following', 'Suivis', 'Publications des comptes suivis'],
@@ -1699,13 +1695,6 @@ function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string
             </button>
           ))}
         </nav>
-
-        <div>
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0f8f6b]">Publication publique</p>
-            <h2 className="mt-1 text-xl font-black text-[#102033]">{communityTabTitle(activeTab)}</h2>
-            <p className="mt-2 text-sm leading-6 text-[#64748b]">{communityTabDescription(activeTab)}</p>
-          </div>
 
           {activeTab === 'profile' ? (
             <form className="mt-4 grid gap-3" onSubmit={(event) => { event.preventDefault(); publishPost(); }}>
@@ -1730,7 +1719,6 @@ function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string
               </div>
             </form>
           ) : null}
-        </div>
       </div>
 
       {visiblePosts.length > 0 ? (
@@ -1833,7 +1821,7 @@ function DiscoverNewsRail() {
   const compactStories = items.slice(2, 6);
 
   return (
-    <aside className="sticky top-[86px] self-start overflow-hidden bg-[#111827] text-white shadow-sm ring-1 ring-[#dbe4ee]">
+    <aside className="overflow-hidden bg-[#111827] text-white shadow-sm ring-1 ring-[#dbe4ee]">
       <div className="flex min-h-14 items-center justify-between gap-3 border-b border-white/10 px-4">
         <div className="flex items-center gap-3">
           <span className="grid h-7 w-7 place-items-center bg-[#0f8f6b] text-xs font-black text-white">D</span>
@@ -1852,12 +1840,21 @@ function DiscoverNewsRail() {
 
       {status === 'ready' && featured ? (
         <div className="grid gap-4 p-4">
-          <DiscoverHeroCard item={featured} large />
-          {topStory ? <DiscoverStoryCard item={topStory} /> : null}
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
+            <DiscoverHeroCard item={featured} large />
+            <div className="grid gap-4">
+              {topStory ? <DiscoverStoryCard item={topStory} /> : null}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {compactStories.slice(0, 2).map((item) => (
+                  <DiscoverSmallCard key={`${item.source}-${item.link}`} item={item} />
+                ))}
+              </div>
+            </div>
+          </div>
 
-          <div className="grid gap-3">
-            {compactStories.map((item) => (
-              <DiscoverSmallCard key={`${item.source}-${item.link}`} item={item} />
+          <div className="grid gap-3 md:grid-cols-2">
+            {compactStories.slice(2).map((item) => (
+              <DiscoverStoryCard key={`${item.source}-${item.link}`} item={item} />
             ))}
           </div>
 
@@ -2161,18 +2158,6 @@ function persistCommunityIdList(storageKey: string, ids: string[]) {
   } catch {
     // Keep interactions usable even if browser storage is unavailable.
   }
-}
-
-function communityTabTitle(tab: CommunityTab) {
-  if (tab === 'following') return 'Suivis';
-  if (tab === 'profile') return 'Profil public';
-  return 'Reels techniques';
-}
-
-function communityTabDescription(tab: CommunityTab) {
-  if (tab === 'following') return 'Retrouvez uniquement les publications des comptes auxquels vous etes abonne.';
-  if (tab === 'profile') return 'Consultez vos publications, lisez les commentaires et publiez un nouveau contenu technique.';
-  return 'Explorez toutes les publications publiques des utilisateurs : videos, images, documents et tutoriels.';
 }
 
 function communityEmptyTitle(tab: CommunityTab) {
