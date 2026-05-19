@@ -235,7 +235,7 @@ export default function ProfilePage() {
                 <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_330px] gap-4">
                   <div className="min-w-0">
                     <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
-                    <ReferralBanner />
+                    <ClientCommandPanel orders={orders} profile={profile} />
                     <StatusStrip counts={orderCounts(orders)} />
                     <OrdersTable orders={orders} dataStatus={dataStatus} />
                     <GiftExchange />
@@ -1311,30 +1311,37 @@ function DashboardPanel({
 }) {
   const paidTotal = orders.filter((order) => order.paymentStatus === 'paid').reduce((total, order) => total + (order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0), 0);
   const pendingTotal = orders.filter((order) => order.paymentStatus !== 'paid').reduce((total, order) => total + (order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0), 0);
+  const counts = orderCounts(orders);
 
   return (
-    <section className="grid grid-cols-[170px_minmax(0,1fr)] bg-white shadow-sm ring-1 ring-slate-200">
-      <div className="grid place-items-center border-r border-slate-200 px-4 py-8 text-center">
+    <section className="grid grid-cols-[190px_minmax(0,1fr)] bg-white shadow-sm ring-1 ring-[#dbe4ee]">
+      <div className="grid place-items-center border-r border-[#e4ebf2] px-4 py-8 text-center">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div>
-          <h1 className="mt-4 text-lg font-black text-[#475569]">{firstName}</h1>
-          <p className="mt-2 text-xs text-slate-500">ID Client: {userId}</p>
-          <a href="#" className="mt-4 inline-flex text-xs font-semibold text-blue-600">Ma communaute</a>
+          <h1 className="mt-4 text-lg font-black text-[#102033]">{firstName}</h1>
+          <p className="mt-2 text-xs text-[#64748b]">ID Client: {userId}</p>
+          <a href="/profile?view=settings" className="mt-4 inline-flex text-xs font-semibold text-[#0f8f6b]">Gerer mon compte</a>
         </div>
       </div>
 
-      <div className="p-4">
-        <h2 className="text-sm font-black text-[#1f2f43]">Tableau de bord</h2>
+      <div className="p-5">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0f8f6b]">Espace client</p>
+            <h2 className="mt-1 text-xl font-black text-[#102033]">Vue d'ensemble</h2>
+          </div>
+          <a href="/quote" className="border border-[#0f8f6b] px-4 py-2 text-xs font-black text-[#0f8f6b] transition hover:bg-[#0f8f6b] hover:text-white">Nouveau devis</a>
+        </div>
         <div className="mt-4 grid grid-cols-[1fr_180px] gap-4">
-          <div className="grid grid-cols-2 border border-slate-200">
+          <div className="grid grid-cols-2 border border-[#e4ebf2]">
             <MetricCell label="Total paye (EUR)" value={formatMoney(paidTotal)} detail={`En attente: ${formatMoney(pendingTotal)}`} />
-            <MetricCell label="Commandes" value={String(orders.length)} valueClass="text-[#ff5a00]" />
-            <MetricCell label="En production" value={String(orderCounts(orders).production)} />
-            <MetricCell label="Total des remises" value="0.00 EUR" detail="Non active" />
+            <MetricCell label="Commandes" value={String(orders.length)} valueClass="text-[#102033]" />
+            <MetricCell label="En production" value={String(counts.production)} />
+            <MetricCell label="A traiter" value={String(counts.paymentPending + counts.verification)} detail="Devis ou paiement en attente" />
           </div>
           <div className="grid gap-2">
-            <SmallInfo label="Mes coupons" value="0" />
-            <SmallInfo label="Mes Points" value="0" action="Echanger" />
+            <SmallInfo label="Coupons actifs" value="0" />
+            <SmallInfo label="Points" value="0" action="Voir" />
             <SmallInfo label="Messages non lus" value={String(unreadNotifications(notifications))} danger />
           </div>
         </div>
@@ -1355,7 +1362,7 @@ function MetricCell({ label, value, detail, valueClass = 'text-[#1f2937]' }: { l
 
 function SmallInfo({ label, value, action, danger }: { label: string; value: string; action?: string; danger?: boolean }) {
   return (
-    <div className="flex min-h-[48px] items-center justify-between bg-[#f8fafc] px-4 text-xs text-[#475569]">
+    <div className="flex min-h-[48px] items-center justify-between bg-[#f8fafc] px-4 text-xs text-[#475569] ring-1 ring-[#edf2f7]">
       <span>{label}</span>
       <span className={danger ? 'rounded-none bg-red-500 px-1.5 py-0.5 font-black text-white' : 'font-black text-[#ff5a00]'}>{value}</span>
       {action ? <a href="#" className="text-[#475569]">{action}</a> : null}
@@ -1371,6 +1378,38 @@ function ReferralBanner() {
         <p className="mt-2 text-xs">Le parrainage sera active lorsque les regles commerciales seront configurees.</p>
       </div>
       <a href="/contact" className="shrink-0 rounded-none bg-white px-6 py-3 text-xs font-black text-[#ff5a00]">Contacter</a>
+    </section>
+  );
+}
+
+function ClientCommandPanel({ orders, profile }: { orders: ProfileOrder[]; profile: ProfileForm }) {
+  const pendingPayment = orders.find((order) => orderMatchesStatus(order, 'payment-pending'));
+  const quotedOrder = orders.find((order) => orderMatchesStatus(order, 'verification'));
+  const profileReady = [profile.name, profile.email, profile.country].every((value) => value.trim().length > 0);
+  const primary = pendingPayment
+    ? { title: 'Paiement en attente', body: `${pendingPayment.orderNumber} peut passer en production des validation du paiement.`, href: `/orders/${pendingPayment.id}`, action: 'Finaliser' }
+    : quotedOrder
+      ? { title: 'Devis pret a verifier', body: `${quotedOrder.orderNumber} attend votre validation avant la prochaine etape.`, href: `/orders/${quotedOrder.id}`, action: 'Verifier' }
+      : { title: 'Preparer un nouveau projet', body: 'Configurez un PCB, comparez les options et gardez le controle avant commande.', href: '/quote', action: 'Commencer' };
+
+  return (
+    <section className="mt-4 grid grid-cols-[1.15fr_0.85fr] gap-4">
+      <article className="bg-[#102033] p-5 text-white shadow-sm">
+        <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9ee6ca]">Priorite</p>
+        <h2 className="mt-2 text-2xl font-black tracking-normal">{primary.title}</h2>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-slate-200">{primary.body}</p>
+        <a href={primary.href} className="mt-5 inline-flex border border-white/30 bg-white px-5 py-3 text-xs font-black text-[#102033] transition hover:bg-[#ecfdf5]">{primary.action}</a>
+      </article>
+      <article className="bg-white p-5 shadow-sm ring-1 ring-[#dbe4ee]">
+        <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0f8f6b]">Compte</p>
+        <h2 className="mt-2 text-xl font-black text-[#102033]">{profileReady ? 'Informations essentielles pretes' : 'Informations a completer'}</h2>
+        <p className="mt-3 text-sm leading-6 text-[#53657a]">
+          {profileReady
+            ? 'Votre espace est pret pour les devis, commandes et suivis. Gardez vos informations a jour avant paiement.'
+            : 'Ajoutez les informations utiles pour eviter les blocages au moment de la livraison ou de la facturation.'}
+        </p>
+        <a href="/profile?view=settings" className="mt-5 inline-flex border border-[#dbe4ee] px-5 py-3 text-xs font-black text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">Ouvrir les parametres</a>
+      </article>
     </section>
   );
 }
@@ -1446,11 +1485,16 @@ function GiftExchange() {
   return (
     <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-black">Echanger des cadeaux</h2>
-        <span className="text-xs font-semibold text-slate-500">Non active</span>
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0f8f6b]">Avantages</p>
+          <h2 className="mt-1 text-lg font-black text-[#102033]">Coupons et credits</h2>
+        </div>
+        <a href="/profile?view=invite" className="text-xs font-black text-[#0f8f6b]">Parrainage</a>
       </div>
-      <div className="mt-4 grid min-h-[92px] place-items-center bg-[#f8fafc] text-center text-sm font-bold text-[#64748b]">
-        Aucun point cadeau n'est disponible pour ce compte.
+      <div className="mt-4 grid grid-cols-3 gap-3">
+        <BenefitTile title="Coupons" value="0 actif" body="Les reductions disponibles apparaitront ici automatiquement." />
+        <BenefitTile title="Credits" value="0 EUR" body="Les credits client seront utilisables avant paiement." />
+        <BenefitTile title="Parrainage" value="Pret" body="Invitez un contact lorsque votre programme sera active." />
       </div>
     </section>
   );
@@ -1460,16 +1504,38 @@ function ReviewsPanel() {
   return (
     <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex items-center justify-between">
-        <div className="flex gap-8 text-sm font-black">
-          <span className="border-b-2 border-[#22c55e] pb-2 text-[#16a34a]">Avis client</span>
-          <span>Programme Partenaire</span>
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0877ff]">Services</p>
+          <h2 className="mt-1 text-lg font-black text-[#102033]">Acces rapide projet</h2>
         </div>
-        <a href="/contact" className="rounded-none bg-[#0f9f6e] px-5 py-2 text-xs font-black text-white">Contacter</a>
+        <a href="/quote" className="bg-[#0f9f6e] px-5 py-2 text-xs font-black text-white">Nouveau devis</a>
       </div>
-      <div className="mt-5 grid min-h-[130px] place-items-center bg-[#f8fafc] text-center text-sm font-bold text-[#64748b]">
-        Aucun avis lie a vos commandes n'est disponible.
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <ProjectServiceTile title="Prototype PCB" body="Pour valider rapidement une carte." href="/quote" />
+        <ProjectServiceTile title="Assemblage PCBA" body="Pour avancer vers un produit testable." href="/quote" />
+        <ProjectServiceTile title="Assistance Gerber" body="Pour verifier les fichiers avant production." href="/contact" />
       </div>
     </section>
+  );
+}
+
+function BenefitTile({ title, value, body }: { title: string; value: string; body: string }) {
+  return (
+    <div className="min-h-[108px] border border-[#e4ebf2] bg-[#f8fafc] p-4">
+      <p className="text-xs text-[#64748b]">{title}</p>
+      <p className="mt-2 text-xl font-black text-[#102033]">{value}</p>
+      <p className="mt-2 text-xs leading-5 text-[#53657a]">{body}</p>
+    </div>
+  );
+}
+
+function ProjectServiceTile({ title, body, href }: { title: string; body: string; href: string }) {
+  return (
+    <a href={href} className="min-h-[108px] border border-[#e4ebf2] bg-white p-4 transition hover:border-[#0f8f6b] hover:bg-[#f8fafc]">
+      <p className="text-sm font-black text-[#102033]">{title}</p>
+      <p className="mt-2 text-xs leading-5 text-[#53657a]">{body}</p>
+      <span className="mt-3 inline-flex text-xs font-black text-[#0877ff]">Ouvrir &gt;</span>
+    </a>
   );
 }
 
