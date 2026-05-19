@@ -102,6 +102,15 @@ type ProfileNotification = {
   createdAt: string;
 };
 
+type DiscoverNewsItem = {
+  title: string;
+  link: string;
+  source: string;
+  summary: string;
+  publishedAt: string;
+  imageUrl?: string;
+};
+
 type ProfileUser = {
   id: string;
   email: string;
@@ -244,7 +253,7 @@ export default function ProfilePage() {
                     <StatusStrip counts={orderCounts(orders)} />
                   </div>
 
-                  <RightRail orders={orders} notifications={notifications} dataStatus={dataStatus} />
+                  <DiscoverNewsRail />
                 </div>
               </>
             )}
@@ -1453,12 +1462,12 @@ function DashboardPanel({
             <MetricCell label="Total paye (EUR)" value={formatMoney(paidTotal)} detail={`En attente: ${formatMoney(pendingTotal)}`} />
             <MetricCell label="Commandes" value={String(orders.length)} valueClass="text-[#102033]" />
             <MetricCell label="En production" value={String(counts.production)} />
-            <MetricCell label="A traiter" value={String(counts.paymentPending + counts.verification)} detail="Devis ou paiement en attente" />
+            <MetricCell label="A traiter" value={String(counts.paymentPending + counts.verification)} detail="Dossier a incorrect" />
           </div>
           <div className="grid gap-2">
             <SmallInfo label="Coupons actifs" value="0" />
-            <SmallInfo label="Points" value="0" action="Voir" />
-            <SmallInfo label="Messages non lus" value={String(unreadNotifications(notifications))} danger />
+            <SmallInfo label="Following" value="0" action="Voir" />
+            <SmallInfo label="Notifications" value={String(unreadNotifications(notifications))} danger />
           </div>
         </div>
       </div>
@@ -1541,15 +1550,85 @@ function StatusStrip({ counts }: { counts: ReturnType<typeof orderCounts> }) {
   );
 }
 
-function RightRail({ orders, notifications, dataStatus }: { orders: ProfileOrder[]; notifications: ProfileNotification[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
-  const recentOrders = orders.slice(0, 3).map((order) => `${order.orderNumber} - ${orderStatusLabel(order.status)}`);
-  const recentNotifications = notifications.slice(0, 4).map((notification) => notification.title);
+function DiscoverNewsRail() {
+  const [items, setItems] = useState<DiscoverNewsItem[]>([]);
+  const [updatedAt, setUpdatedAt] = useState('');
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDiscoverNews() {
+      try {
+        const response = await fetch('/api/discover-news', { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Discover news failed: ${response.status}`);
+        const payload = (await response.json()) as { updatedAt?: string; items?: DiscoverNewsItem[] };
+        if (cancelled) return;
+        setItems(payload.items ?? []);
+        setUpdatedAt(payload.updatedAt ?? '');
+        setStatus('ready');
+      } catch {
+        if (!cancelled) setStatus('error');
+      }
+    }
+
+    void loadDiscoverNews();
+    const interval = window.setInterval(() => void loadDiscoverNews(), 15 * 60 * 1000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  const featured = items[0];
+  const secondary = items.slice(1, 4);
 
   return (
-    <aside className="grid content-start gap-4">
-      <ProfileRailCard title="Commandes recentes" items={dataStatus === 'ready' ? recentOrders : []} emptyText={statusMessage(dataStatus, 'Aucune commande recente.')} />
-      <ProfileRailCard title="Notifications" items={dataStatus === 'ready' ? recentNotifications : []} emptyText={statusMessage(dataStatus, 'Aucune notification.')} />
-      <InfoList title="Support" items={['Centre d’aide', 'Contact commercial', 'Suivi commande']} />
+    <aside className="overflow-hidden bg-white shadow-sm ring-1 ring-[#dbe4ee]">
+      <div className="flex h-12 items-center justify-between border-b border-[#e4ebf2] px-4">
+        <div className="flex items-center gap-2">
+          <span className="grid h-6 w-6 place-items-center bg-[#0f8f6b] text-xs font-black text-white">D</span>
+          <h2 className="text-base font-black text-[#102033]">Discover</h2>
+        </div>
+        <span className="text-[11px] font-semibold text-[#64748b]">Tech & science</span>
+      </div>
+
+      {status === 'loading' ? <p className="p-4 text-xs font-semibold text-[#64748b]">Chargement du flux public...</p> : null}
+      {status === 'error' ? <p className="p-4 text-xs font-semibold text-red-600">Flux temporairement indisponible.</p> : null}
+
+      {status === 'ready' && featured ? (
+        <div className="grid gap-3 p-3">
+          <a href={featured.link} target="_blank" rel="noreferrer" className="group relative block min-h-[176px] overflow-hidden bg-[#102033] text-white">
+            {featured.imageUrl ? <img src={featured.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-80 transition group-hover:scale-[1.025]" /> : null}
+            <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+            <span className="absolute left-3 top-3 bg-white/90 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#102033]">{featured.source}</span>
+            <span className="absolute inset-x-0 bottom-0 p-3">
+              <span className="block text-lg font-black leading-6">{featured.title}</span>
+              <span className="mt-2 block text-xs leading-5 text-slate-100">{featured.summary}</span>
+            </span>
+          </a>
+
+          <div className="grid gap-2">
+            {secondary.map((item) => (
+              <a key={`${item.source}-${item.link}`} href={item.link} target="_blank" rel="noreferrer" className="grid grid-cols-[52px_minmax(0,1fr)] gap-3 border border-[#e4ebf2] bg-[#f8fafc] p-2 transition hover:border-[#0f8f6b]">
+                <span className="grid h-12 w-12 place-items-center overflow-hidden bg-[#e7f7f0] text-xs font-black text-[#0f8f6b]">
+                  {item.imageUrl ? <img src={item.imageUrl} alt="" className="h-full w-full object-cover" /> : item.source.slice(0, 2)}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[11px] font-black text-[#0f8f6b]">{item.source}</span>
+                  <span className="line-clamp-2 block text-xs font-black leading-4 text-[#102033]">{item.title}</span>
+                </span>
+              </a>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between border-t border-[#e4ebf2] pt-2 text-[11px] text-[#64748b]">
+            <span>Sources publiques verifiees</span>
+            <span>{updatedAt ? formatDate(updatedAt) : 'Direct'}</span>
+          </div>
+        </div>
+      ) : null}
     </aside>
   );
 }
