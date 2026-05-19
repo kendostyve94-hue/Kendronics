@@ -1387,20 +1387,21 @@ function ProductQuickGrid() {
         <a href="/profile?view=services" className="text-xs font-black text-[#0f8f6b]">Tout voir</a>
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)_302px] gap-3">
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-2">
           {quickProducts.map((product) => (
             <a key={product.title} href={product.href} className="group relative block min-h-[154px] overflow-hidden bg-[#f8fafc] ring-1 ring-[#e4ebf2] transition hover:-translate-y-0.5 hover:ring-[#0f8f6b]">
               {product.image ? (
-                <img src={product.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-300 group-hover:scale-[1.025] group-hover:opacity-100" />
+                <img src={product.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-300 group-hover:scale-[1.025] group-hover:opacity-100" />
               ) : (
                 <span className="absolute inset-0 grid place-items-center" style={{ backgroundColor: `${product.color}22` }}>
                   <span className="h-14 w-16" style={{ border: `4px solid ${product.color}` }} />
                 </span>
               )}
-              <span className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white via-white/82 to-white/0" />
-              <span className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white via-white/90 to-white/0" />
+              <span className="absolute inset-0 bg-white/20" />
+              <span className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white via-white/90 to-white/0" />
+              <span className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white via-white/95 to-white/0" />
               <span className="relative z-10 block p-3">
-                <span className="block min-h-8 text-[13px] font-black leading-4 text-[#102033]">{product.title}</span>
+                <span className="block min-h-9 text-[12px] font-black leading-[15px] text-[#102033]">{product.title}</span>
               </span>
               <span className="absolute inset-x-0 bottom-0 z-10 block px-3 pb-3 text-[11px] font-semibold leading-4 text-[#33506e]">
                 {product.subtitle} &gt;
@@ -1830,7 +1831,6 @@ function DiscoverNewsRail() {
   const featured = items[0];
   const topStory = items[1];
   const compactStories = items.slice(2, 6);
-  const feedStories = items.slice(6, 10);
 
   return (
     <aside className="sticky top-[86px] self-start overflow-hidden bg-[#111827] text-white shadow-sm ring-1 ring-[#dbe4ee]">
@@ -1860,24 +1860,6 @@ function DiscoverNewsRail() {
               <DiscoverSmallCard key={`${item.source}-${item.link}`} item={item} />
             ))}
           </div>
-
-          <section className="border border-white/10 bg-white/5 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-black">A la une</h3>
-              <span className="text-xs text-[#9ee6ca]">Tech</span>
-            </div>
-            <div className="grid gap-3">
-              {feedStories.map((item) => (
-                <a key={`${item.source}-${item.link}`} href={item.link} target="_blank" rel="noreferrer" className="group grid grid-cols-[40px_minmax(0,1fr)] gap-3 border-b border-white/10 pb-3 last:border-b-0 last:pb-0">
-                  <span className="grid h-10 w-10 place-items-center bg-white/10 text-[11px] font-black text-[#9ee6ca]">{sourceInitials(item.source)}</span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-[11px] font-black text-white/55">{item.source} - {formatRelativeTime(item.publishedAt)}</span>
-                    <span className="line-clamp-2 text-sm font-black leading-5 text-white transition group-hover:text-[#9ee6ca]">{item.title}</span>
-                  </span>
-                </a>
-              ))}
-            </div>
-          </section>
 
           <div className="flex items-center justify-between border-t border-white/10 pt-3 text-[11px] text-white/55">
             <span>Sources verifiees</span>
