@@ -234,16 +234,15 @@ export default function ProfilePage() {
 
                 <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_330px] gap-4">
                   <div className="min-w-0">
-                    <SmartActionPanel profile={profile} orders={orders} dataStatus={dataStatus} />
                     <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
-                    <ReferralBanner orders={orders} />
+                    <ReferralBanner />
                     <StatusStrip counts={orderCounts(orders)} />
                     <OrdersTable orders={orders} dataStatus={dataStatus} />
-                    <LoyaltyPanel orders={orders} profile={profile} />
-                    <ServiceGrowthPanel orders={orders} />
+                    <GiftExchange />
+                    <ReviewsPanel />
                   </div>
 
-                  <RightRail orders={orders} notifications={notifications} profile={profile} dataStatus={dataStatus} />
+                  <RightRail orders={orders} notifications={notifications} dataStatus={dataStatus} />
                 </div>
               </>
             )}
@@ -1344,85 +1343,6 @@ function DashboardPanel({
   );
 }
 
-function SmartActionPanel({ profile, orders, dataStatus }: { profile: ProfileForm; orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
-  const counts = orderCounts(orders);
-  const hasOrders = orders.length > 0;
-  const pendingPayment = orders.find((order) => orderMatchesStatus(order, 'payment-pending'));
-  const latestOrder = orders[0];
-  const profileScore = profileCompletionScore(profile);
-  const primaryAction = pendingPayment
-    ? {
-        title: 'Finaliser votre commande',
-        body: `${pendingPayment.orderNumber} attend encore le paiement. Finalisez-la pour lancer la production.`,
-        href: `/orders/${pendingPayment.id}`,
-        action: 'Payer maintenant',
-        tone: 'urgent' as const,
-      }
-    : hasOrders
-      ? {
-          title: 'Commander a nouveau plus vite',
-          body: latestOrder ? `Repartez de ${latestOrder.orderNumber} ou demandez un nouveau devis avec vos fichiers a jour.` : 'Relancez un devis en quelques minutes depuis votre espace.',
-          href: '/quote',
-          action: 'Nouveau devis',
-          tone: 'default' as const,
-        }
-      : {
-          title: 'Votre premier devis PCB vous attend',
-          body: 'Importez vos fichiers Gerber et comparez fabrication, livraison et options avant de commander.',
-          href: '/quote',
-          action: 'Créer un devis',
-          tone: 'welcome' as const,
-        };
-
-  const actions = [
-    primaryAction,
-    {
-      title: hasOrders ? 'Passer au PCBA' : 'Verifier vos fichiers avant devis',
-      body: hasOrders ? "Vous avez deja demarre avec le PCB. L'assemblage peut reduire les allers-retours fournisseur." : 'Un doute sur vos Gerber ? Demandez une revue pour eviter les erreurs de production.',
-      href: '/quote',
-      action: hasOrders ? 'Voir assemblage' : 'Demander une revue',
-      tone: 'default' as const,
-    },
-    {
-      title: profileScore < 100 ? `Profil complete a ${profileScore}%` : 'Profil pret pour commander',
-      body: profileScore < 100 ? 'Completez vos infos de livraison pour gagner du temps au moment de valider une commande.' : 'Vos informations essentielles sont pretes pour accelerer vos prochaines commandes.',
-      href: '/profile?view=settings',
-      action: profileScore < 100 ? 'Completer' : 'Voir profil',
-      tone: 'soft' as const,
-    },
-  ];
-
-  return (
-    <section className="mb-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0f9f6e]">Actions recommandees</p>
-          <h2 className="mt-1 text-2xl font-black text-[#102033]">Gagnez du temps sur votre prochaine commande</h2>
-        </div>
-        <a href="/quote" className="shrink-0 bg-[#0f9f6e] px-5 py-3 text-xs font-black text-white transition hover:bg-[#0b7f58]">Devis immediat</a>
-      </div>
-      <div className="mt-4 grid grid-cols-3 gap-3">
-        {actions.map((action) => (
-          <a key={action.title} href={action.href} className={`min-h-[132px] border p-4 transition hover:-translate-y-0.5 hover:border-[#0f9f6e] ${smartActionClass(action.tone)}`}>
-            <p className="text-base font-black text-[#102033]">{action.title}</p>
-            <p className="mt-2 min-h-[44px] text-xs leading-5 text-[#53657a]">{action.body}</p>
-            <span className="mt-3 inline-flex text-xs font-black text-[#0877ff]">{action.action} &gt;</span>
-          </a>
-        ))}
-      </div>
-      {dataStatus === 'loading' ? <p className="mt-3 text-xs text-slate-500">Chargement de vos recommandations personnalisees...</p> : null}
-      {counts.delivery > 0 ? <p className="mt-3 text-xs font-semibold text-[#0f9f6e]">Une commande est en livraison : pensez a preparer votre prochain lot pendant le transit.</p> : null}
-    </section>
-  );
-}
-
-function smartActionClass(tone: 'urgent' | 'welcome' | 'soft' | 'default') {
-  if (tone === 'urgent') return 'border-orange-200 bg-orange-50';
-  if (tone === 'welcome') return 'border-emerald-200 bg-emerald-50';
-  if (tone === 'soft') return 'border-sky-100 bg-sky-50';
-  return 'border-slate-200 bg-white';
-}
-
 function MetricCell({ label, value, detail, valueClass = 'text-[#1f2937]' }: { label: string; value: string; detail?: string; valueClass?: string }) {
   return (
     <div className="min-h-[84px] border-b border-r border-slate-200 p-4 last:border-r-0">
@@ -1443,23 +1363,14 @@ function SmallInfo({ label, value, action, danger }: { label: string; value: str
   );
 }
 
-function ReferralBanner({ orders }: { orders: ProfileOrder[] }) {
-  const hasOrders = orders.length > 0;
-
+function ReferralBanner() {
   return (
-    <section className="mt-4 flex min-h-[88px] items-center justify-between gap-4 bg-[#fff8e8] px-5 py-4 text-[#1f2937] ring-1 ring-[#f4dfb4]">
+    <section className="mt-4 flex h-[74px] min-h-[68px] items-center justify-between gap-3 bg-[#fff8e8] px-5 py-0 text-[#1f2937] ring-1 ring-[#f4dfb4]">
       <div>
         <p className="text-xl font-black leading-none">Programme de parrainage</p>
-        <p className="mt-2 text-xs leading-5">
-          {hasOrders
-            ? 'Invitez un contact et transformez votre reseau en credits Kendronics pour vos prochains prototypes.'
-            : 'Passez votre premiere commande pour debloquer votre lien de parrainage et des credits de reduction.'}
-        </p>
+        <p className="mt-2 text-xs">Le parrainage sera active lorsque les regles commerciales seront configurees.</p>
       </div>
-      <div className="flex shrink-0 gap-2">
-        <a href="/profile?view=invite" className="bg-white px-5 py-3 text-xs font-black text-[#ff5a00] ring-1 ring-[#f4dfb4]">Voir le parrainage</a>
-        <a href="/quote" className="bg-[#ff8a13] px-5 py-3 text-xs font-black text-white">Debloquer</a>
-      </div>
+      <a href="/contact" className="shrink-0 rounded-none bg-white px-6 py-3 text-xs font-black text-[#ff5a00]">Contacter</a>
     </section>
   );
 }
@@ -1562,14 +1473,12 @@ function ReviewsPanel() {
   );
 }
 
-function RightRail({ orders, notifications, profile, dataStatus }: { orders: ProfileOrder[]; notifications: ProfileNotification[]; profile: ProfileForm; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+function RightRail({ orders, notifications, dataStatus }: { orders: ProfileOrder[]; notifications: ProfileNotification[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
   const recentOrders = orders.slice(0, 3).map((order) => `${order.orderNumber} - ${orderStatusLabel(order.status)}`);
   const recentNotifications = notifications.slice(0, 4).map((notification) => notification.title);
-  const profileScore = profileCompletionScore(profile);
 
   return (
     <aside className="grid content-start gap-4">
-      <ConversionCard profileScore={profileScore} orders={orders} />
       <ProfileRailCard title="Commandes recentes" items={dataStatus === 'ready' ? recentOrders : []} emptyText={statusMessage(dataStatus, 'Aucune commande recente.')} />
       <ProfileRailCard title="Notifications" items={dataStatus === 'ready' ? recentNotifications : []} emptyText={statusMessage(dataStatus, 'Aucune notification.')} />
       <InfoList title="Support" items={['Centre d’aide', 'Contact commercial', 'Suivi commande']} />
@@ -1608,83 +1517,6 @@ function InfoList({ title, items, action, numbered }: { title: string; items: st
         ))}
       </ul>
     </section>
-  );
-}
-
-function LoyaltyPanel({ orders, profile }: { orders: ProfileOrder[]; profile: ProfileForm }) {
-  const hasOrders = orders.length > 0;
-  const profileScore = profileCompletionScore(profile);
-  const coupon = hasOrders ? '5% sur votre prochaine serie' : 'Coupon de bienvenue apres votre premier devis';
-
-  return (
-    <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#0f9f6e]">Fidelite Kendronics</p>
-          <h2 className="mt-1 text-lg font-black">Coupons, points et economies</h2>
-        </div>
-        <span className="text-xs font-semibold text-[#ff5a00]">{hasOrders ? 'Actif' : 'A debloquer'}</span>
-      </div>
-      <div className="mt-4 grid grid-cols-3 gap-3">
-        <MarketingTile title={coupon} body={hasOrders ? 'Valable sur une nouvelle demande PCB ou PCBA eligible.' : 'Creez un devis complet pour activer les avantages de bienvenue.'} action="Utiliser" href="/quote" />
-        <MarketingTile title={`${profileScore}% profil pret`} body="Un profil complet evite les blocages livraison et facturation." action="Completer" href="/profile?view=settings" />
-        <MarketingTile title="Commande groupee" body="Regroupez plusieurs prototypes pour reduire le cout unitaire et la livraison." action="Comparer" href="/quote" />
-      </div>
-    </section>
-  );
-}
-
-function ServiceGrowthPanel({ orders }: { orders: ProfileOrder[] }) {
-  const hasOrders = orders.length > 0;
-
-  return (
-    <section className="mt-4 bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-[#0877ff]">Prochaine etape</p>
-          <h2 className="mt-1 text-lg font-black">{hasOrders ? 'Passez du prototype a la petite serie' : 'Demarrez avec un prototype sans risque'}</h2>
-        </div>
-        <a href="/quote" className="bg-[#0f9f6e] px-5 py-2 text-xs font-black text-white">Demander un devis</a>
-      </div>
-      <div className="mt-5 grid grid-cols-3 gap-3">
-        <MarketingTile title="Revue Gerber" body="Faites verifier vos fichiers avant fabrication pour eviter les surprises." action="Verifier" href="/quote" />
-        <MarketingTile title="Assemblage PCBA" body="Recevez une carte plus proche du produit final, pas seulement le PCB nu." action="Explorer" href="/quote" />
-        <MarketingTile title="Support projet" body="Un doute technique ? On vous aide a choisir les options utiles." action="Contacter" href="/contact" />
-      </div>
-    </section>
-  );
-}
-
-function MarketingTile({ title, body, action, href }: { title: string; body: string; action: string; href: string }) {
-  return (
-    <a href={href} className="grid min-h-[118px] border border-slate-200 bg-[#f8fafc] p-4 transition hover:border-[#0f9f6e] hover:bg-white">
-      <span className="text-sm font-black text-[#102033]">{title}</span>
-      <span className="mt-2 text-xs leading-5 text-[#64748b]">{body}</span>
-      <span className="mt-3 text-xs font-black text-[#0877ff]">{action} &gt;</span>
-    </a>
-  );
-}
-
-function ConversionCard({ profileScore, orders }: { profileScore: number; orders: ProfileOrder[] }) {
-  const hasOrders = orders.length > 0;
-
-  return (
-    <article className="bg-[#102033] p-4 text-white shadow-sm">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-200">{hasOrders ? 'Client actif' : 'Bienvenue'}</p>
-      <h2 className="mt-2 text-xl font-black leading-6">{hasOrders ? 'Economisez sur votre prochain lot' : 'Debloquez vos avantages client'}</h2>
-      <p className="mt-3 text-xs leading-5 text-slate-200">
-        {hasOrders
-          ? 'Comparez une petite serie avec votre prochain prototype pour reduire le cout unitaire.'
-          : 'Completez votre profil et creez un devis pour activer coupons, points et suivi projet.'}
-      </p>
-      <div className="mt-4 h-2 bg-white/15">
-        <div className="h-full bg-[#0f9f6e]" style={{ width: `${profileScore}%` }} />
-      </div>
-      <p className="mt-2 text-xs text-slate-300">Profil complete a {profileScore}%</p>
-      <a href={hasOrders ? '/quote' : '/profile?view=settings'} className="mt-4 inline-flex bg-white px-4 py-2 text-xs font-black text-[#102033]">
-        {hasOrders ? 'Calculer une serie' : 'Completer mon profil'}
-      </a>
-    </article>
   );
 }
 
@@ -1808,12 +1640,6 @@ function statusMessage(status: 'loading' | 'ready' | 'signed-out' | 'error', emp
   if (status === 'signed-out') return 'Connectez-vous pour afficher ces donnees.';
   if (status === 'error') return 'Impossible de charger ces donnees.';
   return emptyText;
-}
-
-function profileCompletionScore(profile: ProfileForm) {
-  const fields = [profile.name, profile.email, profile.phone, profile.company, profile.country];
-  const completed = fields.filter((value) => value.trim().length > 0).length;
-  return Math.max(20, Math.round((completed / fields.length) * 100));
 }
 
 function readStoredProfile(): Partial<ProfileForm> {
