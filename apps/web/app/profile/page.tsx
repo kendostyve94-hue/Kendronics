@@ -132,11 +132,9 @@ type ProfileView =
 
 const quickProducts: QuickProduct[] = [
   { title: 'Prototype PCB', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-standard-pcb.png', color: '#22c55e' },
-  { title: 'FPC/Rigid-Flex', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-fpc-rigid-flex.png', color: '#ff7a1a' },
+  { title: 'FPC', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-fpc-rigid-flex.png', color: '#ff7a1a' },
+  { title: 'PCB avance / PCBA', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-advanced-pcba.png', color: '#0ea5e9' },
   { title: 'Assemblage PCB', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-assembly.png', color: '#3b82f6' },
-  { title: 'SMD-Stencil', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-smd-stencil.png', color: '#a855f7' },
-  { title: 'CNC | Impression 3D', subtitle: 'Commander maintenant', href: '/services', image: '', color: '#06b6d4' },
-  { title: 'Conception PCB', subtitle: 'Commander maintenant', href: '/services', image: '', color: '#facc15' },
 ];
 
 type SidebarItem = {
@@ -1364,28 +1362,52 @@ function ProductQuickGrid() {
         </div>
         <a href="/profile?view=services" className="text-xs font-black text-[#0f8f6b]">Tout voir</a>
       </div>
-      <div className="grid grid-cols-6 gap-3">
-      {quickProducts.map((product) => (
-        <a key={product.title} href={product.href} className="group relative block min-h-[154px] overflow-hidden bg-[#f8fafc] ring-1 ring-[#e4ebf2] transition hover:-translate-y-0.5 hover:ring-[#0f8f6b]">
-          {product.image ? (
-            <img src={product.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-300 group-hover:scale-[1.025] group-hover:opacity-100" />
-          ) : (
-            <span className="absolute inset-0 grid place-items-center" style={{ backgroundColor: `${product.color}22` }}>
-              <span className="h-14 w-16" style={{ border: `4px solid ${product.color}` }} />
-            </span>
-          )}
-          <span className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white via-white/82 to-white/0" />
-          <span className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white via-white/90 to-white/0" />
-          <span className="relative z-10 block p-3">
-            <span className="block min-h-8 text-[13px] font-black leading-4 text-[#102033]">{product.title}</span>
-          </span>
-          <span className="absolute inset-x-0 bottom-0 z-10 block px-3 pb-3 text-[11px] font-semibold leading-4 text-[#33506e]">
-            {product.subtitle} &gt;
-          </span>
-        </a>
-      ))}
+      <div className="grid grid-cols-[minmax(0,1fr)_302px] gap-3">
+        <div className="grid grid-cols-4 gap-3">
+          {quickProducts.map((product) => (
+            <a key={product.title} href={product.href} className="group relative block min-h-[154px] overflow-hidden bg-[#f8fafc] ring-1 ring-[#e4ebf2] transition hover:-translate-y-0.5 hover:ring-[#0f8f6b]">
+              {product.image ? (
+                <img src={product.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-300 group-hover:scale-[1.025] group-hover:opacity-100" />
+              ) : (
+                <span className="absolute inset-0 grid place-items-center" style={{ backgroundColor: `${product.color}22` }}>
+                  <span className="h-14 w-16" style={{ border: `4px solid ${product.color}` }} />
+                </span>
+              )}
+              <span className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white via-white/82 to-white/0" />
+              <span className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white via-white/90 to-white/0" />
+              <span className="relative z-10 block p-3">
+                <span className="block min-h-8 text-[13px] font-black leading-4 text-[#102033]">{product.title}</span>
+              </span>
+              <span className="absolute inset-x-0 bottom-0 z-10 block px-3 pb-3 text-[11px] font-semibold leading-4 text-[#33506e]">
+                {product.subtitle} &gt;
+              </span>
+            </a>
+          ))}
+        </div>
+        <LivePromoFlash />
       </div>
     </section>
+  );
+}
+
+function LivePromoFlash() {
+  return (
+    <aside className="grid min-h-[154px] overflow-hidden ring-1 ring-[#dbe4ee]" aria-label="Promotions Kendronics">
+      <a href="/quote" className="relative min-h-[76px] overflow-hidden bg-[#07143a] px-3 py-3 text-white">
+        <img src="/images/quote-product-assembly.png" alt="" className="absolute -right-4 bottom-0 h-[88px] w-[138px] object-cover opacity-90" />
+        <span className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.12),rgba(255,255,255,0)_38%)]" />
+        <span className="relative z-10 block text-[16px] font-black leading-5">PCB Assembly for 1-20 pcs</span>
+        <span className="relative z-10 mt-1 block text-[11px] font-black uppercase tracking-wide">Only <strong className="text-[25px] leading-none text-[#ff9b00]">$29</strong> in total</span>
+        <span className="relative z-10 mt-1 block text-[12px] font-semibold text-slate-100">Up to $30 Freight Deduction</span>
+      </a>
+      <a href="/quote" className="relative min-h-[78px] overflow-hidden bg-[#f8fbf5] px-3 py-3 text-[#102033]">
+        <img src="/images/quote-product-standard-pcb.png" alt="" className="absolute -right-4 bottom-0 h-[84px] w-[128px] object-cover opacity-95" />
+        <span className="relative z-10 block text-[18px] font-black leading-5">PCB Prototype Only <strong className="text-[24px] text-[#ff6a00]">$5</strong></span>
+        <span className="relative z-10 mt-2 inline-flex bg-[#dff7e5] px-2 py-1 text-[11px] font-black text-[#0f8f6b]">1-2 layers</span>
+        <span className="relative z-10 ml-1 mt-2 inline-flex bg-[#dff7e5] px-2 py-1 text-[11px] font-black text-[#0f8f6b]">Size &lt;=100x100mm</span>
+        <span className="relative z-10 mt-1 block text-[12px] text-[#53657a]">New customer gets a $5 Coupon!</span>
+      </a>
+    </aside>
   );
 }
 
