@@ -265,7 +265,7 @@ export default function ProfilePage() {
               <>
                 <div className="grid min-w-0 gap-4">
                   <ProductQuickGrid />
-                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_330px] gap-4">
+                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_300px] gap-4">
                     <div className="grid min-w-0 gap-4">
                       <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
                       <StatusStrip counts={orderCounts(orders)} />
@@ -1821,8 +1821,7 @@ function DiscoverNewsRail() {
   }, []);
 
   const featured = items[0];
-  const topStory = items[1];
-  const compactStories = items.slice(2, 6);
+  const compactStories = items.slice(1, 4);
 
   return (
     <aside className="sticky top-[86px] self-start overflow-hidden bg-[#111827] text-white shadow-sm ring-1 ring-[#dbe4ee]">
@@ -1843,11 +1842,10 @@ function DiscoverNewsRail() {
       {status === 'error' ? <p className="p-5 text-sm font-semibold text-red-200">Flux temporairement indisponible.</p> : null}
 
       {status === 'ready' && featured ? (
-        <div className="grid gap-4 p-4">
+        <div className="grid gap-3 p-3">
           <DiscoverHeroCard item={featured} large />
-          {topStory ? <DiscoverStoryCard item={topStory} /> : null}
 
-          <div className="grid gap-3">
+          <div className="grid gap-2">
             {compactStories.map((item) => (
               <DiscoverSmallCard key={`${item.source}-${item.link}`} item={item} />
             ))}
@@ -1865,14 +1863,14 @@ function DiscoverNewsRail() {
 
 function DiscoverHeroCard({ item, large }: { item: DiscoverNewsItem; large?: boolean }) {
   return (
-    <a href={item.link} target="_blank" rel="noreferrer" className={`group relative block overflow-hidden bg-black text-white ${large ? 'min-h-[270px]' : 'min-h-[150px]'}`}>
+    <a href={item.link} target="_blank" rel="noreferrer" className={`group relative block overflow-hidden bg-black text-white ${large ? 'min-h-[230px]' : 'min-h-[140px]'}`}>
       <img src={item.imageUrl || discoverFallbackImage(item.source)} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-300 group-hover:scale-[1.03]" />
       <span className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/5" />
       <span className="absolute left-4 top-4 bg-white/90 px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#102033]">{item.source}</span>
       <span className="absolute inset-x-0 bottom-0 p-4">
-        <span className={`block font-black leading-tight ${large ? 'text-[22px]' : 'text-xl'}`}>{item.title}</span>
-        <span className={`mt-3 line-clamp-3 text-sm leading-6 text-white/85 ${large ? 'max-w-sm' : ''}`}>{item.summary}</span>
-        <span className="mt-3 flex items-center gap-4 text-xs text-white/70">
+        <span className={`block font-black leading-tight ${large ? 'text-[20px]' : 'text-lg'}`}>{item.title}</span>
+        <span className={`mt-2 line-clamp-2 text-xs leading-5 text-white/85 ${large ? 'max-w-sm' : ''}`}>{item.summary}</span>
+        <span className="mt-2 flex items-center gap-4 text-xs text-white/70">
           <span>{formatRelativeTime(item.publishedAt)}</span>
           <span>Voir l'article</span>
         </span>
@@ -1883,14 +1881,13 @@ function DiscoverHeroCard({ item, large }: { item: DiscoverNewsItem; large?: boo
 
 function DiscoverSmallCard({ item }: { item: DiscoverNewsItem }) {
   return (
-    <a href={item.link} target="_blank" rel="noreferrer" className="group overflow-hidden border border-white/10 bg-[#1f2937] transition hover:border-[#0f8f6b]">
-      <div className="relative h-28 overflow-hidden bg-black">
+    <a href={item.link} target="_blank" rel="noreferrer" className="group grid min-h-[82px] grid-cols-[86px_minmax(0,1fr)] overflow-hidden border border-white/10 bg-[#1f2937] transition hover:border-[#0f8f6b]">
+      <div className="relative h-full min-h-[82px] overflow-hidden bg-black">
         <img src={item.imageUrl || discoverFallbackImage(item.source)} alt="" className="h-full w-full object-cover opacity-75 transition group-hover:scale-[1.04]" />
-        <span className="absolute left-2 top-2 bg-black/70 px-2 py-1 text-[10px] font-black text-white">{sourceInitials(item.source)}</span>
       </div>
-      <div className="p-3">
+      <div className="min-w-0 p-2">
         <p className="truncate text-[11px] font-black text-[#9ee6ca]">{item.source} - {formatRelativeTime(item.publishedAt)}</p>
-        <h3 className="mt-1 line-clamp-2 min-h-[40px] text-sm font-black leading-5 text-white transition group-hover:text-[#9ee6ca]">{item.title}</h3>
+        <h3 className="mt-1 line-clamp-2 text-[13px] font-black leading-4 text-white transition group-hover:text-[#9ee6ca]">{item.title}</h3>
       </div>
     </a>
   );
