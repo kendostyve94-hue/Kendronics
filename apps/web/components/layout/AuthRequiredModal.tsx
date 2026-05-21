@@ -54,23 +54,23 @@ export function AuthRequiredModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] grid min-h-screen place-items-center bg-[#06101f]/70 px-3 py-5 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="auth-required-title">
-      <div className="grid max-h-[calc(100vh-2.5rem)] w-full max-w-5xl overflow-y-auto border border-slate-200 bg-white text-ink sm:grid-cols-[0.92fr_1.08fr]">
-        <div className="relative hidden min-h-[520px] overflow-hidden bg-[#10233a] sm:block">
+    <div className="fixed inset-0 z-[60] grid min-h-screen place-items-center bg-[#06101f]/70 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="auth-required-title">
+      <div className="grid max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto border border-slate-200 bg-white text-ink sm:grid-cols-[0.9fr_1.1fr]">
+        <div className="relative hidden min-h-[460px] overflow-hidden bg-[#10233a] sm:block">
           <img
             src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1400&q=85"
             alt="Carte electronique imprimee"
             className="absolute inset-0 h-full w-full object-cover opacity-70"
           />
           <div className="absolute inset-0 bg-[#071526]/62" />
-          <div className="relative flex h-full flex-col justify-between p-9 text-white">
+          <div className="relative flex h-full flex-col justify-between p-8 text-white">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-100">Kendronics</p>
-              <h2 className="mt-5 max-w-sm text-4xl font-black leading-tight tracking-normal" id="auth-required-title">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100">Kendronics</p>
+              <h2 className="mt-5 max-w-xs text-3xl font-bold leading-tight tracking-normal" id="auth-required-title">
                 Creez votre compte pour acceder a la plateforme.
               </h2>
             </div>
-            <div className="grid gap-4 text-base font-semibold leading-7">
+            <div className="grid gap-3 text-sm font-medium leading-6">
               <FeatureLine text="Devis PCB et suivi de commande" />
               <FeatureLine text="Paiement, livraison et historique securises" />
               <FeatureLine text="Support lie a votre compte client" />
@@ -78,23 +78,23 @@ export function AuthRequiredModal() {
           </div>
         </div>
 
-        <div className="flex min-h-[520px] flex-col justify-center px-5 py-8 sm:px-10">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0f8f6b]">Compte requis</p>
-          <h1 className="mt-3 text-2xl font-black tracking-normal text-ink sm:text-3xl">Bienvenue sur Kendronics</h1>
+        <div className="flex min-h-[460px] flex-col justify-center px-5 py-7 sm:px-9">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0f8f6b]">Compte requis</p>
+          <h1 className="mt-3 text-2xl font-bold tracking-normal text-ink sm:text-[28px]">Bienvenue sur Kendronics</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             Pour utiliser les fonctionnalites du site, creez d'abord votre compte ou connectez-vous si vous en avez deja un.
           </p>
 
-          <div className="mt-7 grid gap-3">
-            <a href="/register" className="flex h-12 items-center justify-center border border-[#0f8f6b] bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
+          <div className="mt-6 grid gap-3">
+            <a href="/register" className="flex h-11 items-center justify-center border border-[#0f8f6b] bg-[#0f8f6b] px-5 text-sm font-semibold text-white transition hover:bg-[#0b7558]">
               Creer un nouveau compte
             </a>
-            <a href="/login" className="flex h-12 items-center justify-center border border-slate-300 bg-white px-5 text-sm font-black text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+            <a href="/login" className="flex h-11 items-center justify-center border border-slate-300 bg-white px-5 text-sm font-semibold text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
               Se connecter
             </a>
           </div>
 
-          <div className="my-7 flex items-center gap-3 text-xs font-bold text-slate-400">
+          <div className="my-6 flex items-center gap-3 text-xs font-medium text-slate-400">
             <span className="h-px flex-1 bg-slate-200" />
             <span>ou continuer avec</span>
             <span className="h-px flex-1 bg-slate-200" />
@@ -105,9 +105,9 @@ export function AuthRequiredModal() {
             <SocialProviderLink provider="apple" label="Continuer avec Apple" href={process.env.NEXT_PUBLIC_APPLE_OAUTH_URL} />
           </div>
 
-          <p className="mt-7 text-xs leading-5 text-slate-500">
-            En creant un compte, vous acceptez nos <a href="/terms" className="font-bold text-[#0f8f6b] underline">conditions d'utilisation</a> et notre{' '}
-            <a href="/privacy" className="font-bold text-[#0f8f6b] underline">politique de confidentialite</a>.
+          <p className="mt-6 text-xs leading-5 text-slate-500">
+            En creant un compte, vous acceptez nos <a href="/terms" className="font-semibold text-[#0f8f6b] underline">conditions d'utilisation</a> et notre{' '}
+            <a href="/privacy" className="font-semibold text-[#0f8f6b] underline">politique de confidentialite</a>.
           </p>
         </div>
       </div>
@@ -118,7 +118,7 @@ export function AuthRequiredModal() {
 function FeatureLine({ text }: { text: string }) {
   return (
     <p className="flex items-start gap-3">
-      <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full border border-white/70 text-[10px] font-black">OK</span>
+      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border border-white/70 text-[9px] font-semibold">OK</span>
       <span>{text}</span>
     </p>
   );
@@ -134,7 +134,7 @@ function SocialProviderLink({ provider, label, href }: { provider: 'google' | 'a
 
   if (href) {
     return (
-      <a href={href} className="flex h-11 items-center justify-center gap-3 border border-slate-300 bg-white px-4 text-sm font-black text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+      <a href={href} className="flex h-10 items-center justify-center gap-3 border border-slate-300 bg-white px-4 text-sm font-semibold text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
         {content}
       </a>
     );
@@ -144,7 +144,7 @@ function SocialProviderLink({ provider, label, href }: { provider: 'google' | 'a
     <button
       type="button"
       disabled
-      className="flex h-11 cursor-not-allowed items-center justify-center gap-3 border border-slate-200 bg-slate-50 px-4 text-sm font-black text-slate-400"
+      className="flex h-10 cursor-not-allowed items-center justify-center gap-3 border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-400"
     >
       {content}
     </button>
