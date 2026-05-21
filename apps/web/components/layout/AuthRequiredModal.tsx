@@ -36,10 +36,7 @@ const initialLoginValues: LoginFormState = {
 };
 
 type LoginMetaState = {
-  username: string;
-  confirmPassword: string;
-  country: string;
-  accountType: RegisterFormState['accountType'];
+  acceptedRequiredFields: boolean;
 };
 
 type LoginMetaErrors = Partial<Record<keyof LoginMetaState, string>>;
@@ -66,10 +63,7 @@ const initialRegisterValues: RegisterFormState = {
 };
 
 const initialLoginMetaValues: LoginMetaState = {
-  username: '',
-  confirmPassword: '',
-  country: '',
-  accountType: 'individual',
+  acceptedRequiredFields: false,
 };
 
 export function AuthRequiredModal() {
@@ -131,12 +125,12 @@ export function AuthRequiredModal() {
     event.preventDefault();
     if (loginValues.email.trim() && !isEmail(loginValues.email)) {
       setLoginErrors({ email: 'La verification SMS n’est pas encore disponible. Utilisez une adresse e-mail.' });
-      setLoginMetaErrors(validateLoginMeta(loginMetaValues, loginValues.password));
+      setLoginMetaErrors(validateLoginMeta(loginMetaValues));
       return;
     }
 
     const nextErrors = validateLoginForm(loginValues);
-    const nextMetaErrors = validateLoginMeta(loginMetaValues, loginValues.password);
+    const nextMetaErrors = validateLoginMeta(loginMetaValues);
     setLoginErrors(nextErrors);
     setLoginMetaErrors(nextMetaErrors);
 
@@ -712,50 +706,8 @@ function LoginPanel({
 
       {errors.form && <AlertBox message={errors.form} tone="error" />}
 
-      <TextInput label="Nom d'utilisateur" value={metaValues.username} error={metaErrors.username} onChange={(value) => onMetaUpdate('username', value)} />
       <TextInput label="E-mail ou numero de telephone" type="text" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
       <PasswordInput label="Mot de passe" value={values.password} error={errors.password} autoComplete="current-password" onChange={(value) => onUpdate('password', value)} />
-      <PasswordInput label="Confirmer le mot de passe" value={metaValues.confirmPassword} error={metaErrors.confirmPassword} autoComplete="current-password" onChange={(value) => onMetaUpdate('confirmPassword', value)} />
-
-      <label className="block">
-        <span className="mb-1 block text-[11px] font-semibold text-slate-600">Pays</span>
-        <select
-          value={metaValues.country}
-          onChange={(event) => onMetaUpdate('country', event.target.value)}
-          className={`h-9 w-full border bg-white px-3 text-sm text-ink outline-none focus:border-[#0f8f6b] ${metaErrors.country ? 'border-red-300' : 'border-slate-300'}`}
-        >
-          <option value="">Selectionner un pays</option>
-          {africanCountries.map((country) => (
-            <option key={country.iso2} value={country.iso2}>
-              {country.name}
-            </option>
-          ))}
-        </select>
-        {metaErrors.country && <span className="mt-1 block text-xs font-medium text-red-600">{metaErrors.country}</span>}
-      </label>
-
-      <div>
-        <span className="mb-1 block text-[11px] font-semibold text-slate-600">Type de compte</span>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            ['individual', 'Personnel'],
-            ['student', 'Etudiant'],
-            ['startup', 'Startup'],
-            ['company', 'Entreprise'],
-          ].map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => onMetaUpdate('accountType', value as LoginMetaState['accountType'])}
-              className={`h-8 border px-3 text-xs font-semibold transition ${
-                metaValues.accountType === value ? 'border-[#0f8f6b] bg-[#ecfdf5] text-[#0b7558]' : 'border-slate-300 bg-white text-slate-600 hover:border-[#0f8f6b]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <div className="flex items-center justify-between gap-3 text-xs text-slate-600">
         <label className="flex items-center gap-2">
@@ -766,6 +718,19 @@ function LoginPanel({
           Mot de passe oublie?
         </button>
       </div>
+
+      <label className="flex gap-3 text-xs leading-5 text-slate-600">
+        <input
+          type="checkbox"
+          checked={metaValues.acceptedRequiredFields}
+          onChange={(event) => onMetaUpdate('acceptedRequiredFields', event.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0"
+        />
+        <span>
+          Je confirme que les informations obligatoires de mon compte sont a jour.
+          {metaErrors.acceptedRequiredFields && <span className="mt-1 block font-medium text-red-600">{metaErrors.acceptedRequiredFields}</span>}
+        </span>
+      </label>
 
       <button type="submit" disabled={status === 'submitting'} className="h-9 w-full bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558] disabled:opacity-60">
         {status === 'submitting' ? 'Envoi du code...' : 'Se connecter'}
@@ -951,13 +916,12 @@ async function requestVerificationCode(tokens: AuthTokens) {
   }
 }
 
-function validateLoginMeta(values: LoginMetaState, password: string): LoginMetaErrors {
+function validateLoginMeta(values: LoginMetaState): LoginMetaErrors {
   const errors: LoginMetaErrors = {};
 
-  if (!values.username.trim()) errors.username = "Le nom d'utilisateur est requis.";
-  if (values.confirmPassword !== password) errors.confirmPassword = 'Les mots de passe ne correspondent pas.';
-  if (!values.country) errors.country = 'Selectionnez votre pays.';
-  if (!values.accountType) errors.accountType = 'Selectionnez le type de compte.';
+  if (!values.acceptedRequiredFields) {
+    errors.acceptedRequiredFields = 'Confirmez que les informations obligatoires de votre compte sont a jour.';
+  }
 
   return errors;
 }
