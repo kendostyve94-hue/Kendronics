@@ -35,6 +35,22 @@ const initialLoginValues: LoginFormState = {
   password: '',
 };
 
+type LoginMetaState = {
+  username: string;
+  confirmPassword: string;
+  country: string;
+  accountType: RegisterFormState['accountType'];
+};
+
+type LoginMetaErrors = Partial<Record<keyof LoginMetaState, string>>;
+
+type PendingVerification = {
+  tokens: AuthTokens;
+  remember: boolean;
+  contact: string;
+  source: 'register' | 'login';
+};
+
 const initialForgotValues: ForgotPasswordFormState = {
   email: '',
 };
@@ -49,15 +65,24 @@ const initialRegisterValues: RegisterFormState = {
   acceptedTerms: false,
 };
 
+const initialLoginMetaValues: LoginMetaState = {
+  username: '',
+  confirmPassword: '',
+  country: '',
+  accountType: 'individual',
+};
+
 export function AuthRequiredModal() {
   const pathname = usePathname() || '/';
   const [isSignedIn, setIsSignedIn] = useState(true);
   const [authStep, setAuthStep] = useState<'choice' | 'form'>('choice');
   const [activePanel, setActivePanel] = useState<'register' | 'login'>('register');
   const [loginValues, setLoginValues] = useState<LoginFormState>(initialLoginValues);
+  const [loginMetaValues, setLoginMetaValues] = useState<LoginMetaState>(initialLoginMetaValues);
   const [forgotValues, setForgotValues] = useState<ForgotPasswordFormState>(initialForgotValues);
   const [registerValues, setRegisterValues] = useState<RegisterFormState>(initialRegisterValues);
   const [loginErrors, setLoginErrors] = useState<LoginErrors>({});
+  const [loginMetaErrors, setLoginMetaErrors] = useState<LoginMetaErrors>({});
   const [forgotErrors, setForgotErrors] = useState<ForgotPasswordErrors>({});
   const [registerErrors, setRegisterErrors] = useState<RegisterErrors>({});
   const [loginMode, setLoginMode] = useState<'login' | 'forgot'>('login');
@@ -65,6 +90,10 @@ export function AuthRequiredModal() {
   const [forgotStatus, setForgotStatus] = useState<'idle' | 'submitting' | 'sent'>('idle');
   const [registerStatus, setRegisterStatus] = useState<'idle' | 'submitting'>('idle');
   const [rememberMe, setRememberMe] = useState(true);
+  const [pendingVerification, setPendingVerification] = useState<PendingVerification | null>(null);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'sending' | 'checking'>('idle');
+  const [verificationMessage, setVerificationMessage] = useState('');
 
   const isPublicPath = useMemo(
     () => publicPathPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)),
@@ -100,10 +129,18 @@ export function AuthRequiredModal() {
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextErrors = validateLoginForm(loginValues);
-    setLoginErrors(nextErrors);
+    if (loginValues.email.trim() && !isEmail(loginValues.email)) {
+      setLoginErrors({ email: 'La verification SMS n’est pas encore disponible. Utilisez une adresse e-mail.' });
+      setLoginMetaErrors(validateLoginMeta(loginMetaValues, loginValues.password));
+      return;
+    }
 
-    if (Object.keys(nextErrors).length > 0) return;
+    const nextErrors = validateLoginForm(loginValues);
+    const nextMetaErrors = validateLoginMeta(loginMetaValues, loginValues.password);
+    setLoginErrors(nextErrors);
+    setLoginMetaErrors(nextMetaErrors);
+
+    if (Object.keys(nextErrors).length > 0 || Object.keys(nextMetaErrors).length > 0) return;
 
     setLoginStatus('submitting');
 
@@ -120,7 +157,12 @@ export function AuthRequiredModal() {
       if (!response.ok) throw new Error('Login failed.');
 
       const tokens = (await response.json()) as LoginResponse;
-      completeAuth(tokens, { remember: rememberMe });
+      await startAccountVerification({
+        tokens,
+        remember: rememberMe,
+        contact: loginValues.email.trim().toLowerCase(),
+        source: 'login',
+      });
     } catch {
       setLoginErrors({ form: authApiContract.login.failureMessage });
       setLoginStatus('idle');
@@ -129,6 +171,11 @@ export function AuthRequiredModal() {
 
   async function submitRegister(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (registerValues.email.trim() && !isEmail(registerValues.email)) {
+      setRegisterErrors({ email: 'La verification SMS n’est pas encore disponible. Utilisez une adresse e-mail.' });
+      return;
+    }
+
     const nextErrors = validateRegisterForm(registerValues);
     setRegisterErrors(nextErrors);
 
@@ -168,7 +215,12 @@ export function AuthRequiredModal() {
           country: selectedCountry?.name ?? registerValues.country,
         }),
       );
-      completeAuth(tokens, { remember: true });
+      await startAccountVerification({
+        tokens,
+        remember: true,
+        contact: registerValues.email.trim().toLowerCase(),
+        source: 'register',
+      });
     } catch (error) {
       setRegisterErrors({ form: error instanceof Error ? error.message : 'Impossible de creer votre compte pour le moment. Reessayez.' });
       setRegisterStatus('idle');
@@ -202,6 +254,74 @@ export function AuthRequiredModal() {
     }
   }
 
+  async function startAccountVerification(input: PendingVerification) {
+    setVerificationStatus('sending');
+    setVerificationMessage('');
+
+    try {
+      await requestVerificationCode(input.tokens);
+      setPendingVerification(input);
+      setVerificationCode('');
+      setVerificationMessage('Code envoye par e-mail. Il reste valide pendant 10 minutes.');
+      setAuthStep('form');
+    } catch (error) {
+      setVerificationMessage(error instanceof Error ? error.message : "Impossible d'envoyer le code de verification.");
+    } finally {
+      setLoginStatus('idle');
+      setRegisterStatus('idle');
+      setVerificationStatus('idle');
+    }
+  }
+
+  async function submitVerification(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!pendingVerification) return;
+    if (!/^\d{6}$/.test(verificationCode)) {
+      setVerificationMessage('Entrez le code a 6 chiffres recu.');
+      return;
+    }
+
+    setVerificationStatus('checking');
+    setVerificationMessage('');
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/profile-verification/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${pendingVerification.tokens.tokenType} ${pendingVerification.tokens.accessToken}`,
+        },
+        body: JSON.stringify({ action: 'account', code: verificationCode }),
+      });
+
+      if (!response.ok) throw new Error('Code invalide ou expire.');
+
+      completeAuth(pendingVerification.tokens, { remember: pendingVerification.remember });
+      setPendingVerification(null);
+      setVerificationCode('');
+      setVerificationMessage('');
+    } catch (error) {
+      setVerificationMessage(error instanceof Error ? error.message : 'Verification impossible pour le moment.');
+    } finally {
+      setVerificationStatus('idle');
+    }
+  }
+
+  async function resendVerificationCode() {
+    if (!pendingVerification) return;
+    setVerificationStatus('sending');
+    setVerificationMessage('');
+
+    try {
+      await requestVerificationCode(pendingVerification.tokens);
+      setVerificationMessage('Nouveau code envoye.');
+    } catch (error) {
+      setVerificationMessage(error instanceof Error ? error.message : "Impossible d'envoyer un nouveau code.");
+    } finally {
+      setVerificationStatus('idle');
+    }
+  }
+
   function completeAuth(tokens: AuthTokens, options: { remember: boolean }) {
     persistAuthSession(tokens, options);
     window.dispatchEvent(new Event('kendronics:auth-updated'));
@@ -213,6 +333,11 @@ export function AuthRequiredModal() {
   function updateLogin<K extends keyof LoginFormState>(key: K, value: LoginFormState[K]) {
     setLoginValues((current) => ({ ...current, [key]: value }));
     setLoginErrors((current) => ({ ...current, [key]: undefined, form: undefined }));
+  }
+
+  function updateLoginMeta<K extends keyof LoginMetaState>(key: K, value: LoginMetaState[K]) {
+    setLoginMetaValues((current) => ({ ...current, [key]: value }));
+    setLoginMetaErrors((current) => ({ ...current, [key]: undefined }));
   }
 
   function updateRegister<K extends keyof RegisterFormState>(key: K, value: RegisterFormState[K]) {
@@ -240,18 +365,21 @@ export function AuthRequiredModal() {
 
   function chooseRegister() {
     setActivePanel('register');
+    setPendingVerification(null);
     setAuthStep('form');
   }
 
   function chooseLogin() {
     setActivePanel('login');
     setLoginMode('login');
+    setPendingVerification(null);
     setAuthStep('form');
   }
 
   function backToChoice() {
     setAuthStep('choice');
     setLoginMode('login');
+    setPendingVerification(null);
     setForgotStatus('idle');
     setForgotErrors({});
   }
@@ -265,8 +393,8 @@ export function AuthRequiredModal() {
       {authStep === 'choice' ? (
         <ChoicePanel onRegister={chooseRegister} onLogin={chooseLogin} />
       ) : (
-        <div className="max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto border border-slate-200 bg-white text-ink">
-          <div className="border-b border-slate-200 px-5 py-5 sm:px-8">
+        <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto border border-slate-200 bg-white text-ink">
+          <div className="border-b border-slate-200 px-5 py-4 sm:px-6">
             <button type="button" onClick={backToChoice} className="mb-3 text-xs font-semibold text-[#0f8f6b] underline">
               Retour au choix
             </button>
@@ -279,6 +407,17 @@ export function AuthRequiredModal() {
           </p>
         </div>
 
+        {pendingVerification ? (
+          <VerificationPanel
+            pending={pendingVerification}
+            code={verificationCode}
+            status={verificationStatus}
+            message={verificationMessage}
+            onCodeChange={setVerificationCode}
+            onSubmit={submitVerification}
+            onResend={() => void resendVerificationCode()}
+          />
+        ) : (
         <div className="grid gap-0 lg:grid-cols-2">
           <div className={activePanel === 'register' ? 'block' : 'hidden lg:block'}>
             <RegisterPanel
@@ -294,8 +433,10 @@ export function AuthRequiredModal() {
           <div className={`border-slate-200 lg:border-l ${activePanel === 'login' ? 'block' : 'hidden lg:block'}`}>
             <LoginPanel
               values={loginValues}
+              metaValues={loginMetaValues}
               forgotValues={forgotValues}
               errors={loginErrors}
+              metaErrors={loginMetaErrors}
               forgotErrors={forgotErrors}
               mode={loginMode}
               status={loginStatus}
@@ -305,6 +446,7 @@ export function AuthRequiredModal() {
               onSubmit={submitLogin}
               onForgotSubmit={submitForgotPassword}
               onUpdate={updateLogin}
+              onMetaUpdate={updateLoginMeta}
               onForgotUpdate={updateForgot}
               onForgotPassword={showForgotPassword}
               onBackToLogin={showLogin}
@@ -312,6 +454,7 @@ export function AuthRequiredModal() {
             />
           </div>
         </div>
+        )}
 
         <div className="border-t border-slate-200 px-5 py-4 sm:px-8">
           <div className="flex items-center gap-3 text-xs font-medium text-slate-400">
@@ -416,7 +559,7 @@ function RegisterPanel({
   onSwitch: () => void;
 }) {
   return (
-    <form onSubmit={onSubmit} className="space-y-3 px-5 py-5 sm:px-8" noValidate>
+    <form onSubmit={onSubmit} className="space-y-2.5 px-5 py-4 sm:px-6" noValidate>
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-lg font-bold text-ink">Creer un compte</h2>
         <button type="button" onClick={onSwitch} className="text-xs font-semibold text-[#0f8f6b] lg:hidden">
@@ -427,7 +570,7 @@ function RegisterPanel({
       {errors.form && <AlertBox message={errors.form} tone="error" />}
 
       <TextInput label="Nom d'utilisateur" value={values.username} error={errors.username} onChange={(value) => onUpdate('username', value)} />
-      <TextInput label="E-mail" type="email" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
+      <TextInput label="E-mail ou numero de telephone" type="text" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
       <PasswordInput label="Mot de passe" value={values.password} error={errors.password} autoComplete="new-password" onChange={(value) => onUpdate('password', value)} />
       <PasswordInput label="Confirmer le mot de passe" value={values.confirmPassword} error={errors.confirmPassword} autoComplete="new-password" onChange={(value) => onUpdate('confirmPassword', value)} />
 
@@ -436,7 +579,7 @@ function RegisterPanel({
         <select
           value={values.country}
           onChange={(event) => onUpdate('country', event.target.value)}
-          className={`h-10 w-full border bg-white px-3 text-sm text-ink outline-none focus:border-[#0f8f6b] ${errors.country ? 'border-red-300' : 'border-slate-300'}`}
+          className={`h-9 w-full border bg-white px-3 text-sm text-ink outline-none focus:border-[#0f8f6b] ${errors.country ? 'border-red-300' : 'border-slate-300'}`}
         >
           <option value="">Selectionner un pays</option>
           {africanCountries.map((country) => (
@@ -449,7 +592,7 @@ function RegisterPanel({
       </label>
 
       <div>
-        <span className="mb-2 block text-[11px] font-semibold text-slate-600">Type de compte</span>
+        <span className="mb-1 block text-[11px] font-semibold text-slate-600">Type de compte</span>
         <div className="grid grid-cols-2 gap-2">
           {[
             ['individual', 'Personnel'],
@@ -461,7 +604,7 @@ function RegisterPanel({
               key={value}
               type="button"
               onClick={() => onUpdate('accountType', value as RegisterFormState['accountType'])}
-              className={`h-9 border px-3 text-xs font-semibold transition ${
+              className={`h-8 border px-3 text-xs font-semibold transition ${
                 values.accountType === value ? 'border-[#0f8f6b] bg-[#ecfdf5] text-[#0b7558]' : 'border-slate-300 bg-white text-slate-600 hover:border-[#0f8f6b]'
               }`}
             >
@@ -485,8 +628,8 @@ function RegisterPanel({
         </span>
       </label>
 
-      <button type="submit" disabled={status === 'submitting'} className="h-10 w-full bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558] disabled:opacity-60">
-        {status === 'submitting' ? 'Creation...' : 'Creer mon compte'}
+      <button type="submit" disabled={status === 'submitting'} className="h-9 w-full bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558] disabled:opacity-60">
+        {status === 'submitting' ? 'Envoi du code...' : 'Creer mon compte'}
       </button>
     </form>
   );
@@ -494,8 +637,10 @@ function RegisterPanel({
 
 function LoginPanel({
   values,
+  metaValues,
   forgotValues,
   errors,
+  metaErrors,
   forgotErrors,
   mode,
   status,
@@ -505,14 +650,17 @@ function LoginPanel({
   onSubmit,
   onForgotSubmit,
   onUpdate,
+  onMetaUpdate,
   onForgotUpdate,
   onForgotPassword,
   onBackToLogin,
   onSwitch,
 }: {
   values: LoginFormState;
+  metaValues: LoginMetaState;
   forgotValues: ForgotPasswordFormState;
   errors: LoginErrors;
+  metaErrors: LoginMetaErrors;
   forgotErrors: ForgotPasswordErrors;
   mode: 'login' | 'forgot';
   status: 'idle' | 'submitting';
@@ -522,6 +670,7 @@ function LoginPanel({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onForgotSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onUpdate: <K extends keyof LoginFormState>(key: K, value: LoginFormState[K]) => void;
+  onMetaUpdate: <K extends keyof LoginMetaState>(key: K, value: LoginMetaState[K]) => void;
   onForgotUpdate: <K extends keyof ForgotPasswordFormState>(key: K, value: ForgotPasswordFormState[K]) => void;
   onForgotPassword: () => void;
   onBackToLogin: () => void;
@@ -553,7 +702,7 @@ function LoginPanel({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3 px-5 py-5 sm:px-8" noValidate>
+    <form onSubmit={onSubmit} className="space-y-2.5 px-5 py-4 sm:px-6" noValidate>
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-lg font-bold text-ink">Se connecter</h2>
         <button type="button" onClick={onSwitch} className="text-xs font-semibold text-[#0f8f6b] lg:hidden">
@@ -563,8 +712,50 @@ function LoginPanel({
 
       {errors.form && <AlertBox message={errors.form} tone="error" />}
 
-      <TextInput label="E-mail" type="email" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
+      <TextInput label="Nom d'utilisateur" value={metaValues.username} error={metaErrors.username} onChange={(value) => onMetaUpdate('username', value)} />
+      <TextInput label="E-mail ou numero de telephone" type="text" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
       <PasswordInput label="Mot de passe" value={values.password} error={errors.password} autoComplete="current-password" onChange={(value) => onUpdate('password', value)} />
+      <PasswordInput label="Confirmer le mot de passe" value={metaValues.confirmPassword} error={metaErrors.confirmPassword} autoComplete="current-password" onChange={(value) => onMetaUpdate('confirmPassword', value)} />
+
+      <label className="block">
+        <span className="mb-1 block text-[11px] font-semibold text-slate-600">Pays</span>
+        <select
+          value={metaValues.country}
+          onChange={(event) => onMetaUpdate('country', event.target.value)}
+          className={`h-9 w-full border bg-white px-3 text-sm text-ink outline-none focus:border-[#0f8f6b] ${metaErrors.country ? 'border-red-300' : 'border-slate-300'}`}
+        >
+          <option value="">Selectionner un pays</option>
+          {africanCountries.map((country) => (
+            <option key={country.iso2} value={country.iso2}>
+              {country.name}
+            </option>
+          ))}
+        </select>
+        {metaErrors.country && <span className="mt-1 block text-xs font-medium text-red-600">{metaErrors.country}</span>}
+      </label>
+
+      <div>
+        <span className="mb-1 block text-[11px] font-semibold text-slate-600">Type de compte</span>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            ['individual', 'Personnel'],
+            ['student', 'Etudiant'],
+            ['startup', 'Startup'],
+            ['company', 'Entreprise'],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onMetaUpdate('accountType', value as LoginMetaState['accountType'])}
+              className={`h-8 border px-3 text-xs font-semibold transition ${
+                metaValues.accountType === value ? 'border-[#0f8f6b] bg-[#ecfdf5] text-[#0b7558]' : 'border-slate-300 bg-white text-slate-600 hover:border-[#0f8f6b]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="flex items-center justify-between gap-3 text-xs text-slate-600">
         <label className="flex items-center gap-2">
@@ -576,13 +767,63 @@ function LoginPanel({
         </button>
       </div>
 
-      <button type="submit" disabled={status === 'submitting'} className="h-10 w-full bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558] disabled:opacity-60">
-        {status === 'submitting' ? 'Connexion...' : 'Se connecter'}
+      <button type="submit" disabled={status === 'submitting'} className="h-9 w-full bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558] disabled:opacity-60">
+        {status === 'submitting' ? 'Envoi du code...' : 'Se connecter'}
       </button>
 
       <p className="hidden text-xs leading-5 text-slate-500 lg:block">
         Nouveau sur Kendronics? Utilisez le formulaire de creation a gauche.
       </p>
+    </form>
+  );
+}
+
+function VerificationPanel({
+  pending,
+  code,
+  status,
+  message,
+  onCodeChange,
+  onSubmit,
+  onResend,
+}: {
+  pending: PendingVerification;
+  code: string;
+  status: 'idle' | 'sending' | 'checking';
+  message: string;
+  onCodeChange: (value: string) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onResend: () => void;
+}) {
+  return (
+    <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-3 px-5 py-6 sm:px-6" noValidate>
+      <div>
+        <h2 className="text-lg font-bold text-ink">Verifier votre compte</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          Entrez le code a 6 chiffres envoye a <span className="font-semibold text-ink">{pending.contact}</span>.
+        </p>
+      </div>
+
+      {message && <AlertBox message={message} tone={message.toLowerCase().includes('envoye') ? 'success' : 'error'} />}
+
+      <label className="block">
+        <span className="mb-1 block text-[11px] font-semibold text-slate-600">Code de verification</span>
+        <input
+          value={code}
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          placeholder="123456"
+          onChange={(event) => onCodeChange(event.target.value.replace(/\D/g, '').slice(0, 6))}
+          className="h-10 w-full border border-slate-300 bg-white px-3 text-center text-lg font-semibold tracking-[0.35em] text-ink outline-none focus:border-[#0f8f6b]"
+        />
+      </label>
+
+      <button type="submit" disabled={status === 'checking' || code.length !== 6} className="h-9 w-full bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558] disabled:opacity-60">
+        {status === 'checking' ? 'Verification...' : 'Valider le code'}
+      </button>
+      <button type="button" onClick={onResend} disabled={status === 'sending'} className="h-9 w-full border border-slate-300 bg-white px-4 text-sm font-semibold text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] disabled:opacity-60">
+        {status === 'sending' ? 'Envoi...' : 'Renvoyer le code'}
+      </button>
     </form>
   );
 }
@@ -611,7 +852,7 @@ function TextInput({
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
         onChange={(event) => onChange(event.target.value)}
-        className={`h-10 w-full border bg-white px-3 text-sm text-ink outline-none focus:border-[#0f8f6b] ${error ? 'border-red-300' : 'border-slate-300'}`}
+        className={`h-9 w-full border bg-white px-3 text-sm text-ink outline-none focus:border-[#0f8f6b] ${error ? 'border-red-300' : 'border-slate-300'}`}
       />
       {error && <span className="mt-1 block text-xs font-medium text-red-600">{error}</span>}
     </label>
@@ -693,6 +934,36 @@ function registerErrorMessage(status: number, error: unknown) {
   if (status === 409) return 'Un compte existe deja avec cette adresse e-mail. Connectez-vous ou utilisez une autre adresse.';
   if (status === 400 && message) return message;
   return 'Impossible de creer votre compte pour le moment. Reessayez.';
+}
+
+async function requestVerificationCode(tokens: AuthTokens) {
+  const response = await fetch(`${apiBaseUrl}/api/auth/profile-verification/request`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${tokens.tokenType} ${tokens.accessToken}`,
+    },
+    body: JSON.stringify({ action: 'account' }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Impossible d'envoyer le code de verification.");
+  }
+}
+
+function validateLoginMeta(values: LoginMetaState, password: string): LoginMetaErrors {
+  const errors: LoginMetaErrors = {};
+
+  if (!values.username.trim()) errors.username = "Le nom d'utilisateur est requis.";
+  if (values.confirmPassword !== password) errors.confirmPassword = 'Les mots de passe ne correspondent pas.';
+  if (!values.country) errors.country = 'Selectionnez votre pays.';
+  if (!values.accountType) errors.accountType = 'Selectionnez le type de compte.';
+
+  return errors;
+}
+
+function isEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
 function apiErrorMessage(error: unknown) {
