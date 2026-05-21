@@ -82,7 +82,7 @@ export class PaymentsRepository {
         provider: input.provider,
         providerEventId: input.providerEventId,
         eventType: input.eventType,
-        payload: input.payload as Prisma.InputJsonValue,
+        payload: sanitizePaymentPayload(input.payload) as Prisma.InputJsonValue,
       },
     });
 
@@ -152,4 +152,33 @@ export class PaymentsRepository {
       createdAt: event.createdAt,
     };
   }
+}
+
+function sanitizePaymentPayload(payload: unknown): unknown {
+  if (Array.isArray(payload)) {
+    return payload.map(sanitizePaymentPayload);
+  }
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+
+  const sensitiveKeys = new Set([
+    'billing_details',
+    'card',
+    'customer_details',
+    'customer_email',
+    'customer_name',
+    'customer_phone',
+    'email',
+    'phone',
+    'receipt_email',
+    'shipping',
+  ]);
+
+  return Object.fromEntries(
+    Object.entries(payload as Record<string, unknown>).map(([key, value]) => [
+      key,
+      sensitiveKeys.has(key) ? '[redacted]' : sanitizePaymentPayload(value),
+    ]),
+  );
 }

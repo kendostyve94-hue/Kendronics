@@ -5,6 +5,7 @@ import { Footer } from '../../components/layout/Footer';
 import { Navbar } from '../../components/layout/Navbar';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { clearAuthSession, readAuthSession, readFreshAuthSession } from '../../lib/auth-session';
+import { purgeLegacySensitiveStorage, readScopedLocalStorage, removeScopedLocalStorage, writeScopedLocalStorage } from '../../lib/user-scoped-storage';
 
 const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
@@ -194,6 +195,7 @@ export default function ProfilePage() {
   const [notifications, setNotifications] = useState<ProfileNotification[]>([]);
   const [dataStatus, setDataStatus] = useState<'loading' | 'ready' | 'signed-out' | 'error'>('loading');
   useEffect(() => {
+    purgeLegacySensitiveStorage();
     const storedProfile = readStoredProfile();
     const sessionProfile = readSessionProfile();
 
@@ -205,7 +207,7 @@ export default function ProfilePage() {
       country: storedProfile.country || '',
     });
     setAccountId(sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
-    setAvatarDataUrl(window.localStorage.getItem(avatarStorageKey) ?? '');
+    setAvatarDataUrl(readScopedLocalStorage(avatarStorageKey) ?? '');
     setActiveProfileView(viewFromSearchParam(new URLSearchParams(window.location.search).get('view')));
 
     let cancelled = false;
@@ -380,7 +382,6 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
       title: 'Espace client',
       items: [
         { label: 'Tableau de bord', view: null },
-        { label: 'Devis', view: 'quotes' },
         { label: 'Commandes', view: 'all-orders', count: counts.all },
         { label: 'Notifications', view: 'notifications', count: unread },
       ],
@@ -392,7 +393,6 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
         { label: 'Paiement', view: 'payment-pending', count: counts.paymentPending },
         { label: 'Production', view: 'production', count: counts.production },
         { label: 'Livraison', view: 'delivery', count: counts.delivery },
-        { label: 'Terminees', view: 'completed', count: counts.completed },
         { label: 'Commentaires', view: 'comments', count: counts.comments },
       ],
     },
@@ -401,7 +401,7 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
       items: [
         { label: 'Services & demandes', view: 'services' },
         { label: 'Support', view: 'support' },
-        { label: 'Avantages', view: 'benefits' },
+        { label: 'Publier', view: 'benefits' },
         { label: 'Parrainage', view: 'invite' },
       ],
     },
@@ -409,7 +409,8 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
       title: 'Profil',
       items: [
         { label: 'Adresse livraison', view: 'shipping-address' },
-        { label: 'Facturation', view: 'billing' },
+        { label: 'Historique des commandes', view: 'all-orders' },
+        { label: "Centre d'aide", view: 'support' },
         { label: 'Parametres', view: 'settings' },
       ],
     },
@@ -2101,7 +2102,7 @@ function formatMoney(value: number) {
 
 function readCommunityPosts() {
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(communityPostsStorageKey) ?? '[]') as Partial<CommunityPost>[];
+    const parsed = JSON.parse(readScopedLocalStorage(communityPostsStorageKey) ?? '[]') as Partial<CommunityPost>[];
     return parsed
       .filter((post) => post.id && post.title)
       .map((post) => ({
@@ -2129,7 +2130,7 @@ function readCommunityPosts() {
 
 function persistCommunityPosts(posts: CommunityPost[]) {
   try {
-    window.localStorage.setItem(communityPostsStorageKey, JSON.stringify(posts));
+    writeScopedLocalStorage(communityPostsStorageKey, JSON.stringify(posts));
   } catch {
     // Large media previews can exceed browser storage; keep the UI responsive even when persistence fails.
   }
@@ -2137,7 +2138,7 @@ function persistCommunityPosts(posts: CommunityPost[]) {
 
 function readCommunityIdList(storageKey: string) {
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(storageKey) ?? '[]') as string[];
+    const parsed = JSON.parse(readScopedLocalStorage(storageKey) ?? '[]') as string[];
     return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
   } catch {
     return [];
@@ -2146,7 +2147,7 @@ function readCommunityIdList(storageKey: string) {
 
 function persistCommunityIdList(storageKey: string, ids: string[]) {
   try {
-    window.localStorage.setItem(storageKey, JSON.stringify(Array.from(new Set(ids))));
+    writeScopedLocalStorage(storageKey, JSON.stringify(Array.from(new Set(ids))));
   } catch {
     // Keep interactions usable even if browser storage is unavailable.
   }
@@ -2187,7 +2188,7 @@ function statusMessage(status: 'loading' | 'ready' | 'signed-out' | 'error', emp
 
 function readStoredProfile(): Partial<ProfileForm> {
   try {
-    return JSON.parse(window.localStorage.getItem(profileStorageKey) ?? '{}') as Partial<ProfileForm>;
+    return JSON.parse(readScopedLocalStorage(profileStorageKey) ?? '{}') as Partial<ProfileForm>;
   } catch {
     return {};
   }
@@ -2224,7 +2225,7 @@ function formatUserId(seed: string) {
 
 function logout() {
   clearAuthSession();
-  window.localStorage.removeItem('kendronics.customer.orders');
+  removeScopedLocalStorage('kendronics.customer.orders');
   window.dispatchEvent(new Event('kendronics:orders-updated'));
   window.location.assign('/login');
 }
@@ -2357,9 +2358,9 @@ async function deleteAccount(code: string, setDeleting: (value: boolean) => void
     }
 
     clearAuthSession();
-    window.localStorage.removeItem(profileStorageKey);
-    window.localStorage.removeItem(avatarStorageKey);
-    window.localStorage.removeItem('kendronics.customer.orders');
+    removeScopedLocalStorage(profileStorageKey);
+    removeScopedLocalStorage(avatarStorageKey);
+    removeScopedLocalStorage('kendronics.customer.orders');
     window.location.assign('/');
   } catch {
     window.alert('Impossible de supprimer le compte pour le moment.');

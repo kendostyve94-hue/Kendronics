@@ -19,14 +19,8 @@ export function persistAuthSession(tokens: AuthTokens, options: { remember?: boo
   };
 
   const serializedSession = JSON.stringify(session);
-  if (options.remember === false) {
-    window.localStorage.removeItem(SESSION_STORAGE_KEY);
-    window.sessionStorage.setItem(SESSION_STORAGE_KEY, serializedSession);
-    return;
-  }
-
-  window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
-  window.localStorage.setItem(SESSION_STORAGE_KEY, serializedSession);
+  window.localStorage.removeItem(SESSION_STORAGE_KEY);
+  window.sessionStorage.setItem(SESSION_STORAGE_KEY, serializedSession);
 }
 
 export function readAuthSession(): StoredAuthSession | null {

@@ -10,6 +10,6 @@ import { UploadRepository } from './repositories/upload.repository';
   imports: [PrismaModule, NotificationsModule],
   controllers: [UploadsController],
   providers: [UploadsService, UploadRepository, GerberParserService],
-  exports: [UploadsService],
+  exports: [UploadsService, UploadRepository],
 })
 export class UploadsModule {}

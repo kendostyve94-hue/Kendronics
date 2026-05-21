@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { randomUUID } from 'crypto';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { PasswordService } from '../auth/password.service';
+import { UploadRepository } from '../uploads/repositories/upload.repository';
 import { AccountDeletionFeedbackDto } from './dto/account-deletion-feedback.dto';
 import { UpsertCookieConsentDto } from './dto/cookie-consent.dto';
 import { CookieConsent } from './entities/cookie-consent.entity';
@@ -20,6 +21,7 @@ export class UsersService {
     private readonly cookieConsentRepository: CookieConsentRepository,
     private readonly accountDeletionFeedbackRepository: AccountDeletionFeedbackRepository,
     private readonly passwordService: PasswordService,
+    private readonly uploadRepository: UploadRepository,
   ) {}
 
   async createUser(dto: RegisterDto): Promise<User> {
@@ -105,7 +107,13 @@ export class UsersService {
   }
 
   async deleteAccount(userId: string): Promise<void> {
+    const storageKeys = await this.usersRepository.findGerberStorageKeysByUserId(userId);
     await this.usersRepository.deleteById(userId);
+    await this.uploadRepository.deleteStorageKeys(storageKeys);
+  }
+
+  async markEmailVerified(userId: string): Promise<void> {
+    await this.usersRepository.markEmailVerified(userId);
   }
 
   async createAccountDeletionFeedback(user: { id: string; email: string }, dto: AccountDeletionFeedbackDto): Promise<{ ok: true }> {

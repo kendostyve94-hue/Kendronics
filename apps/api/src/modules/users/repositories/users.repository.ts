@@ -54,8 +54,24 @@ export class UsersRepository {
     });
   }
 
+  async markEmailVerified(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { emailVerifiedAt: new Date() },
+    });
+  }
+
+  async findGerberStorageKeysByUserId(userId: string): Promise<string[]> {
+    const uploads = await this.prisma.gerberUpload.findMany({
+      where: { userId },
+      select: { storageKey: true },
+    });
+    return uploads.map((upload) => upload.storageKey).filter(Boolean);
+  }
+
   async deleteById(userId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({ where: { id: userId }, select: { email: true } });
       await tx.profileVerificationCode.deleteMany({ where: { userId } });
       await tx.passwordResetToken.deleteMany({ where: { userId } });
       await tx.notification.deleteMany({ where: { userId } });
@@ -69,7 +85,21 @@ export class UsersRepository {
       await tx.order.deleteMany({ where: { userId } });
       await tx.quote.deleteMany({ where: { userId } });
       await tx.gerberUpload.deleteMany({ where: { userId } });
-      await tx.supportTicket.updateMany({ where: { userId }, data: { userId: null } });
+      await tx.supportTicket.updateMany({
+        where: {
+          OR: [
+            { userId },
+            ...(user?.email ? [{ requesterEmail: user.email.toLowerCase() }] : []),
+          ],
+        },
+        data: {
+          userId: null,
+          requesterName: null,
+          requesterEmail: null,
+          message: '[account deleted]',
+          attachmentName: null,
+        },
+      });
       await tx.user.delete({ where: { id: userId } });
     });
   }

@@ -16,7 +16,6 @@ import type { RegisterErrors, RegisterFormState } from '../../lib/register-valid
 const apiBaseUrl = getApiBaseUrl();
 const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
 const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
-const profileStorageKey = 'kendronics.customer.profile';
 const neutralForgotPasswordMessage =
   'Si ce compte peut recevoir un e-mail de reinitialisation, les instructions seront envoyees sous peu.';
 
@@ -124,7 +123,7 @@ export function AuthRequiredModal() {
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (loginValues.email.trim() && !isEmail(loginValues.email)) {
-      setLoginErrors({ email: 'La verification SMS n’est pas encore disponible. Utilisez une adresse e-mail.' });
+      setLoginErrors({ email: 'Utilisez une adresse e-mail valide.' });
       setLoginMetaErrors(validateLoginMeta(loginMetaValues));
       return;
     }
@@ -166,7 +165,7 @@ export function AuthRequiredModal() {
   async function submitRegister(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (registerValues.email.trim() && !isEmail(registerValues.email)) {
-      setRegisterErrors({ email: 'La verification SMS n’est pas encore disponible. Utilisez une adresse e-mail.' });
+      setRegisterErrors({ email: 'Utilisez une adresse e-mail valide.' });
       return;
     }
 
@@ -176,8 +175,6 @@ export function AuthRequiredModal() {
     if (Object.keys(nextErrors).length > 0) return;
 
     setRegisterStatus('submitting');
-
-    const selectedCountry = africanCountries.find((country) => country.iso2 === registerValues.country);
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
@@ -201,14 +198,6 @@ export function AuthRequiredModal() {
       }
 
       const tokens = (await response.json()) as AuthTokens;
-      window.localStorage.setItem(
-        profileStorageKey,
-        JSON.stringify({
-          name: registerValues.username.trim(),
-          email: registerValues.email.trim().toLowerCase(),
-          country: selectedCountry?.name ?? registerValues.country,
-        }),
-      );
       await startAccountVerification({
         tokens,
         remember: true,
@@ -564,7 +553,7 @@ function RegisterPanel({
       {errors.form && <AlertBox message={errors.form} tone="error" />}
 
       <TextInput label="Nom d'utilisateur" value={values.username} error={errors.username} onChange={(value) => onUpdate('username', value)} />
-      <TextInput label="E-mail ou numero de telephone" type="text" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
+      <TextInput label="E-mail" type="email" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
       <PasswordInput label="Mot de passe" value={values.password} error={errors.password} autoComplete="new-password" onChange={(value) => onUpdate('password', value)} />
       <PasswordInput label="Confirmer le mot de passe" value={values.confirmPassword} error={errors.confirmPassword} autoComplete="new-password" onChange={(value) => onUpdate('confirmPassword', value)} />
 
@@ -706,7 +695,7 @@ function LoginPanel({
 
       {errors.form && <AlertBox message={errors.form} tone="error" />}
 
-      <TextInput label="E-mail ou numero de telephone" type="text" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
+      <TextInput label="E-mail" type="email" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
       <PasswordInput label="Mot de passe" value={values.password} error={errors.password} autoComplete="current-password" onChange={(value) => onUpdate('password', value)} />
 
       <div className="flex items-center justify-between gap-3 text-xs text-slate-600">

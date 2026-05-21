@@ -19,8 +19,6 @@ const initialValues: RegisterFormState = {
   acceptedTerms: false,
 };
 const apiBaseUrl = getApiBaseUrl();
-const profileStorageKey = 'kendronics.customer.profile';
-const newsletterStorageKey = 'kendronics.newsletter.consent';
 const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
 const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
 const accountCreatedRedirectDelayMs = 3500;
@@ -68,22 +66,6 @@ export default function RegisterPage() {
         throw new Error(registerErrorMessage(response.status, error));
       }
 
-      window.localStorage.setItem(
-        profileStorageKey,
-        JSON.stringify({
-          name: values.username.trim(),
-          email: values.email.trim().toLowerCase(),
-          country: selectedCountry?.name ?? values.country,
-        }),
-      );
-      window.localStorage.setItem(
-        newsletterStorageKey,
-        JSON.stringify({
-          email: values.email.trim().toLowerCase(),
-          subscribed: newsletter,
-          updatedAt: new Date().toISOString(),
-        }),
-      );
       setStatus('account_created');
       window.setTimeout(() => {
         window.location.assign('/');

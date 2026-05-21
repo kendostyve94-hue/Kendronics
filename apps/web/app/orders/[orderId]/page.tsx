@@ -7,6 +7,7 @@ import { Card } from '../../../components/ui/Card';
 import { getApiBaseUrl } from '../../../lib/api-base-url';
 import { africanCountries } from '../../../lib/african-countries';
 import { readAuthSession, readFreshAuthSession } from '../../../lib/auth-session';
+import { readScopedLocalStorage, writeScopedLocalStorage } from '../../../lib/user-scoped-storage';
 import {
   isCustomerTrackingStatus,
   orderDetailApiContract,
@@ -520,12 +521,12 @@ function forgetCustomerOrder(orderId: string) {
   if (typeof window === 'undefined') return;
 
   try {
-    const current = JSON.parse(window.localStorage.getItem(customerOrdersStorageKey) ?? '[]') as string[];
+    const current = JSON.parse(readScopedLocalStorage(customerOrdersStorageKey) ?? '[]') as string[];
     const next = Array.isArray(current) ? current.filter((id) => id !== orderId) : [];
-    window.localStorage.setItem(customerOrdersStorageKey, JSON.stringify(next));
+    writeScopedLocalStorage(customerOrdersStorageKey, JSON.stringify(next));
     window.dispatchEvent(new Event('kendronics:orders-updated'));
   } catch {
-    window.localStorage.setItem(customerOrdersStorageKey, JSON.stringify([]));
+    writeScopedLocalStorage(customerOrdersStorageKey, JSON.stringify([]));
     window.dispatchEvent(new Event('kendronics:orders-updated'));
   }
 }

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmailNotificationService } from '../support/email-notification.service';
+import { UsersService } from '../users/users.service';
 import { ProfileVerificationAction } from './dto/profile-verification.dto';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class ProfileVerificationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailNotificationService: EmailNotificationService,
+    private readonly usersService: UsersService,
   ) {}
 
   async requestCode(input: { userId: string; email: string; action: ProfileVerificationAction }): Promise<{ ok: true }> {
@@ -72,6 +74,9 @@ export class ProfileVerificationService {
     }
 
     await this.deleteCode(input.userId, input.action);
+    if (input.action === 'account') {
+      await this.usersService.markEmailVerified(input.userId);
+    }
     return { ok: true };
   }
 

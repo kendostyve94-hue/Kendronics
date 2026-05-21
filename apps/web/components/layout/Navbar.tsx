@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { readAuthSession } from '../../lib/auth-session';
+import { purgeLegacySensitiveStorage, readScopedLocalStorage, writeScopedLocalStorage } from '../../lib/user-scoped-storage';
 import { useI18n, type TranslationKey } from './LanguageRuntime';
 const ORDER_STORAGE_KEY = 'kendronics.customer.orders';
 const AVATAR_STORAGE_KEY = 'kendronics.customer.avatar';
@@ -95,8 +96,9 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
 
   useEffect(() => {
     function refreshClientState() {
+      purgeLegacySensitiveStorage();
       try {
-        const parsedOrders = JSON.parse(window.localStorage.getItem(ORDER_STORAGE_KEY) ?? '[]') as string[];
+        const parsedOrders = JSON.parse(readScopedLocalStorage(ORDER_STORAGE_KEY) ?? '[]') as string[];
         setOrders(Array.isArray(parsedOrders) ? parsedOrders.filter(Boolean) : []);
       } catch {
         setOrders([]);
@@ -107,7 +109,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
       const sessionEmail = readSessionEmail(session?.accessToken ?? '');
       setIsSignedIn(Boolean(session));
       if (!session) setIsAdmin(false);
-      setAvatarDataUrl(window.localStorage.getItem(AVATAR_STORAGE_KEY) ?? '');
+      setAvatarDataUrl(readScopedLocalStorage(AVATAR_STORAGE_KEY) ?? '');
       setFirstName(firstNameOf(storedProfile.name || emailName(sessionEmail || storedProfile.email || '') || 'Rafale'));
     }
 
@@ -125,7 +127,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         if (!response.ok) return;
         const payload = (await response.json()) as Array<{ id?: string }>;
         const ids = payload.map((order) => order.id).filter((id): id is string => Boolean(id));
-        window.localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(ids.slice(0, 20)));
+        writeScopedLocalStorage(ORDER_STORAGE_KEY, JSON.stringify(ids.slice(0, 20)));
         setOrders(ids);
       } catch {
         // The dock keeps the last local cart state if the API is temporarily unavailable.
@@ -564,7 +566,7 @@ function CartIcon() {
 
 function readStoredProfile(): { name?: string; email?: string } {
   try {
-    return JSON.parse(window.localStorage.getItem(PROFILE_STORAGE_KEY) ?? '{}') as { name?: string; email?: string };
+    return JSON.parse(readScopedLocalStorage(PROFILE_STORAGE_KEY) ?? '{}') as { name?: string; email?: string };
   } catch {
     return {};
   }

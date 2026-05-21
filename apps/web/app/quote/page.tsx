@@ -7,6 +7,7 @@ import { PricingSummary } from '../../components/quote/PricingSummary';
 import { africanCountries } from '../../lib/african-countries';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { readFreshAuthSession } from '../../lib/auth-session';
+import { readScopedLocalStorage, writeScopedLocalStorage } from '../../lib/user-scoped-storage';
 import { calculatePCBQuote } from '../../lib/pricing';
 import { validateQuoteConfig } from '../../lib/quote-pricing';
 import type { PricingBreakdown, QuoteConfig } from '../../lib/quote-types';
@@ -1038,12 +1039,12 @@ function rememberCustomerOrder(orderId: string) {
   if (typeof window === 'undefined') return;
 
   try {
-    const current = JSON.parse(window.localStorage.getItem(customerOrdersStorageKey) ?? '[]') as string[];
+    const current = JSON.parse(readScopedLocalStorage(customerOrdersStorageKey) ?? '[]') as string[];
     const next = [orderId, ...current.filter((id) => id !== orderId)].slice(0, 20);
-    window.localStorage.setItem(customerOrdersStorageKey, JSON.stringify(next));
+    writeScopedLocalStorage(customerOrdersStorageKey, JSON.stringify(next));
     window.dispatchEvent(new Event('kendronics:orders-updated'));
   } catch {
-    window.localStorage.setItem(customerOrdersStorageKey, JSON.stringify([orderId]));
+    writeScopedLocalStorage(customerOrdersStorageKey, JSON.stringify([orderId]));
     window.dispatchEvent(new Event('kendronics:orders-updated'));
   }
 }

@@ -160,6 +160,22 @@ export class UploadRepository {
     };
   }
 
+  async deleteStorageKeys(storageKeys: string[]): Promise<void> {
+    const uniqueStorageKeys = Array.from(new Set(storageKeys.filter(Boolean)));
+    await Promise.all(
+      uniqueStorageKeys.map(async (storageKey) => {
+        try {
+          const response = await fetch(this.createPresignedDeleteUrl(storageKey), { method: 'DELETE' });
+          if (!response.ok && response.status !== 404) {
+            console.error(`Private storage rejected delete for ${storageKey} (${response.status}).`);
+          }
+        } catch (error) {
+          console.error(`Private storage delete failed for ${storageKey}:`, error instanceof Error ? error.message : String(error));
+        }
+      }),
+    );
+  }
+
   private createPresignedPutUrl(storageKey: string): string {
     return this.createPresignedUrl(storageKey, 'PUT');
   }
@@ -168,7 +184,11 @@ export class UploadRepository {
     return this.createPresignedUrl(storageKey, 'GET');
   }
 
-  private createPresignedUrl(storageKey: string, method: 'GET' | 'PUT'): string {
+  private createPresignedDeleteUrl(storageKey: string): string {
+    return this.createPresignedUrl(storageKey, 'DELETE');
+  }
+
+  private createPresignedUrl(storageKey: string, method: 'GET' | 'PUT' | 'DELETE'): string {
     const bucket = this.configValue('S3_BUCKET');
     const region = this.configValue('S3_REGION');
     const accessKeyId = this.configValue('S3_ACCESS_KEY_ID');
