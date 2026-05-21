@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { AuthRequiredModal } from '../components/layout/AuthRequiredModal';
 import { CookieConsentBanner } from '../components/layout/CookieConsentBanner';
 import { LanguageRuntime } from '../components/layout/LanguageRuntime';
 import './globals.css';
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <LanguageRuntime>
           {children}
+          <AuthRequiredModal />
           <CookieConsentBanner />
         </LanguageRuntime>
       </body>

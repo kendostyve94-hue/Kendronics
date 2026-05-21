@@ -38,18 +38,6 @@ export function CookieConsentBanner() {
       }
 
       const savedConsent = readLocalConsent();
-      const serverConsent = await readServerConsent();
-
-      if (cancelled) return;
-
-      if (serverConsent) {
-        persistLocalConsent(serverConsent);
-        setDraftConsent(serverConsent);
-        setIsVisible(false);
-        setIsReady(true);
-        return;
-      }
-
       if (savedConsent) {
         setDraftConsent(savedConsent);
         setIsVisible(false);
@@ -60,6 +48,14 @@ export function CookieConsentBanner() {
 
       setIsVisible(true);
       setIsReady(true);
+
+      const serverConsent = await readServerConsent();
+
+      if (cancelled || !serverConsent) return;
+
+      persistLocalConsent(serverConsent);
+      setDraftConsent(serverConsent);
+      setIsVisible(false);
     }
 
     void hydrateConsent();
@@ -90,7 +86,7 @@ export function CookieConsentBanner() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-[4.75rem] z-[70] px-3 pb-3 lg:bottom-0 lg:px-6 lg:pb-6">
+    <div className="fixed inset-x-0 bottom-[4.75rem] z-[80] px-3 pb-3 lg:bottom-0 lg:px-6 lg:pb-6">
       <div className="mx-auto max-w-[1120px] border border-[#b8c9d9] bg-white p-4 text-[#0b1724] sm:p-5">
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
           <div>
