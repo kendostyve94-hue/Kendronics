@@ -86,10 +86,10 @@ export function CookieConsentBanner() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-[4.75rem] z-[80] px-3 pb-3 lg:bottom-0 lg:px-6 lg:pb-6">
-      <div className="mx-auto max-w-[1120px] border border-[#b8c9d9] bg-white p-4 text-[#0b1724] sm:p-5">
-        <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
-          <div>
+    <div className="fixed inset-x-0 bottom-0 z-[80] px-3 pb-3 sm:px-5 sm:pb-5">
+      <div className="mx-auto max-h-[58vh] max-w-4xl overflow-y-auto border border-[#b8c9d9] bg-white p-4 text-[#0b1724] sm:p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0 md:max-w-2xl">
             <p className="text-xs uppercase tracking-[0.16em] text-[#0f8f6b]">Cookies</p>
             <h2 className="mt-2 text-lg font-semibold">Gestion des cookies Kendronics</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
@@ -100,24 +100,24 @@ export function CookieConsentBanner() {
             </a>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+          <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-3 md:w-44 md:grid-cols-1">
             <button
               type="button"
-              className="h-10 border border-[#0f8f6b] bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558]"
+              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#0f8f6b] bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558]"
               onClick={() => saveConsent({ ...defaultConsent, analytics: true, preferences: true })}
             >
               Accepter
             </button>
             <button
               type="button"
-              className="h-10 border border-[#b8c9d9] bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]"
+              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#b8c9d9] bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]"
               onClick={() => saveConsent(defaultConsent)}
             >
               Refuser
             </button>
             <button
               type="button"
-              className="h-10 border border-[#b8c9d9] bg-[#eef6fb] px-4 text-sm font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]"
+              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#b8c9d9] bg-[#eef6fb] px-4 text-sm font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]"
               onClick={() => setIsCustomizing((current) => !current)}
             >
               Personnaliser
@@ -126,7 +126,7 @@ export function CookieConsentBanner() {
         </div>
 
         {isCustomizing ? (
-          <div className="mt-4 grid gap-3 border-t border-[#b8c9d9] pt-4 sm:grid-cols-3">
+          <div className="mt-4 grid gap-3 border-t border-[#b8c9d9] pt-4 md:grid-cols-3">
             <CookieChoice label="Necessaires" checked disabled description="Connexion, panier, securite et fonctionnement du site." />
             <CookieChoice
               label="Mesure d’audience"
@@ -140,10 +140,10 @@ export function CookieConsentBanner() {
               description="Langue et choix d’interface."
               onChange={(checked) => setDraftConsent((current) => ({ ...current, preferences: checked }))}
             />
-            <div className="sm:col-span-3">
+            <div className="md:col-span-3">
               <button
                 type="button"
-                className="h-10 border border-[#0f8f6b] bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558]"
+                className="h-10 w-full border border-[#0f8f6b] bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558] sm:w-auto"
                 onClick={() => saveConsent(draftConsent)}
               >
                 Enregistrer mes choix
