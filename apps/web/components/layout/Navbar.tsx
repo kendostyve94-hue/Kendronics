@@ -194,9 +194,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
     return () => document.removeEventListener('pointerdown', closeMobilePanels);
   }, [isMenuOpen, isSearchOpen]);
 
-  const cartHref = useMemo(() => {
-    return orders[0] ? `/orders/${orders[0]}` : '/quote';
-  }, [orders]);
+  const cartHref = useMemo(() => '/profile?view=orders', []);
 
   const visibleProfileNavItems = useMemo(() => {
     return profileNavItems.filter((item) => item.href !== '/admin' || isAdmin);

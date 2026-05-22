@@ -303,7 +303,7 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
           <ProfileNavLink href="/profile?view=orders" label="Mes commandes" />
           <ProfileNavLink href="/profile" label="Parametres" />
         </nav>
-        <a href="/cart" className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Panier">
+        <a href="/profile?view=orders" className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Panier">
           <CartIcon />
           <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-none bg-[#14c469] px-1 text-[11px] font-black leading-none text-white">0</span>
         </a>
