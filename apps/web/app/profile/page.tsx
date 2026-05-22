@@ -569,28 +569,169 @@ function ReviewSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dat
 }
 
 function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+  const selectedOrders = orders.filter((order) => order.status !== 'cancelled' && order.status !== 'refunded');
+  const merchandiseTotal = selectedOrders.reduce((total, order) => total + orderTotal(order), 0);
+  const shippingEstimate = selectedOrders.length > 0 ? Math.max(8.75, selectedOrders.length * 6.25) : 0;
+  const payableTotal = merchandiseTotal + shippingEstimate;
+
   return (
-    <>
-      <form className="mt-4 max-w-[906px] border border-[#e1e1e1] bg-white px-4 py-3" onSubmit={(event) => event.preventDefault()}>
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-black">
-          <SearchField label="ID Commande:" />
-          <SearchField label="Nom du fichier PCB:" />
-          <SearchField label="Numero de PO:" />
-          <button type="submit" className="ml-4 h-[27px] min-w-[108px] bg-[#ff8a13] px-5 text-sm font-black text-white ring-1 ring-[#f07800] transition hover:bg-[#f07800]">
-            Recherche
-          </button>
+    <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
+      <div className="min-w-0">
+        <div className="border border-[#e5e7eb] bg-white">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5e7eb] px-5 py-4">
+            <div className="flex flex-wrap items-center gap-7 text-sm font-black text-black">
+              <button type="button" className="text-[#0877ff]">All ({orders.length})</button>
+              <button type="button">JLCPCB ({orders.length})</button>
+              <button type="button">JLC3DP (0)</button>
+              <button type="button">JLCCNC (0)</button>
+              <button type="button">JLCMC (0)</button>
+              <button type="button">Flex Heater (0)</button>
+            </div>
+            <label className="flex h-9 w-[180px] items-center gap-2 border border-[#d1d5db] bg-white px-3 text-sm text-[#8a8f98]">
+              <input className="min-w-0 flex-1 outline-none" placeholder="Rechercher" />
+              <span className="text-lg leading-none">Q</span>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-[32px_minmax(0,1fr)_140px_150px_120px_32px] items-center bg-[#f4f5f7] px-5 py-3 text-sm font-black text-black">
+            <input type="checkbox" checked readOnly className="h-4 w-4 accent-[#0877ff]" aria-label="Selectionner toutes les commandes" />
+            <span>Article</span>
+            <span>Qte</span>
+            <span>Delais prod</span>
+            <span>Prix</span>
+            <span className="text-center text-[#9ca3af]">x</span>
+          </div>
+
+          {dataStatus === 'loading' ? (
+            <p className="px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement des commandes...</p>
+          ) : dataStatus === 'signed-out' ? (
+            <p className="px-5 py-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher vos commandes.</p>
+          ) : dataStatus === 'error' ? (
+            <p className="px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les commandes.</p>
+          ) : orders.length === 0 ? (
+            <div className="px-5 py-12 text-center">
+              <p className="text-base font-black text-[#92979d]">Votre panier est vide.</p>
+              <a href="/quote" className="mt-4 inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white hover:bg-[#0b7558]">Ajouter un nouvel article</a>
+            </div>
+          ) : (
+            <div className="divide-y divide-[#e5e7eb]">
+              {orders.map((order) => (
+                <div key={order.id} className="grid grid-cols-[32px_minmax(0,1fr)_140px_150px_120px_32px] items-start px-5 py-5 text-sm text-[#1f2f43]">
+                  <input type="checkbox" checked={order.status !== 'cancelled' && order.status !== 'refunded'} readOnly className="mt-10 h-4 w-4 accent-[#0877ff]" aria-label={`Selectionner ${order.orderNumber}`} />
+                  <div className="flex min-w-0 gap-5">
+                    <div className="grid h-[116px] w-[116px] shrink-0 place-items-center bg-[#f1f4f7] text-lg font-black text-[#c8cfd6]">JLCPCB</div>
+                    <div className="min-w-0 py-1">
+                      <p className="font-black text-black">{orderGerberLabel(order)}</p>
+                      <p className="mt-1 text-sm text-[#44546a]">{orderProductLabel(order)}: {order.orderNumber}</p>
+                      <p className="mt-1 text-sm text-[#44546a]">{orderStatusLabel(order.status)}</p>
+                      <div className="mt-3 flex flex-wrap gap-4 text-sm">
+                        <a href={`/orders/${order.id}`} className="text-[#44546a] hover:text-[#0877ff]">Details du produit</a>
+                        <a href={`/orders/${order.id}`} className="text-[#44546a] hover:text-[#0877ff]">Modifier la commande</a>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pt-5">
+                    <select className="h-9 w-[100px] border border-[#d1d5db] bg-white px-3 text-sm outline-none">
+                      <option>{orderQuantity(order)}</option>
+                    </select>
+                  </div>
+                  <span className="pt-6 text-sm text-black">{orderLeadTime(order)}</span>
+                  <div className="pt-6">
+                    <p className="font-black text-[#ff7a00]">{formatMoney(orderTotal(order))}</p>
+                    <p className="mt-1 text-xs text-[#8a8f98] line-through">{formatMoney(orderTotal(order) * 1.18)}</p>
+                  </div>
+                  <a href={`/orders/${order.id}`} className="pt-6 text-center text-[#9ca3af] hover:text-red-600" aria-label={`Voir ${order.orderNumber}`}>x</a>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </form>
-      <div className="mt-3 grid max-w-[906px] grid-cols-4 bg-[#f0f0f0] px-3 py-3 text-xs text-black">
-        <span>Produit</span>
-        <span>Action du Produit</span>
-        <span>Status de la commande</span>
-        <span>Action de la commande</span>
+
+        <div className="mt-3 border border-[#e5e7eb] bg-white p-3">
+          <div className="mb-3 flex items-center gap-2 text-sm font-black text-black">
+            <span>Recommended Deals For You</span>
+            <button type="button" className="text-xs font-normal text-[#0877ff]">Refresh</button>
+          </div>
+          <div className="grid gap-3 lg:grid-cols-3">
+            {quickProducts.slice(0, 3).map((product) => (
+              <a key={product.title} href={product.href} className="flex min-h-[72px] items-center gap-3 bg-[#f6f7f9] p-2">
+                <img src={product.image} alt="" className="h-14 w-14 object-cover" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-black text-black">{product.title}</span>
+                  <span className="mt-1 block text-xs text-[#ff7a00]">Des {formatMoney(0.009)}</span>
+                </span>
+                <span className="shrink-0 rounded-full border border-[#0877ff] px-3 py-1 text-xs text-[#0877ff]">Passer commande</span>
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
-      <OrdersListRows orders={orders} dataStatus={dataStatus} />
-      <div className="mt-20 h-10 max-w-[906px] bg-[#f7f7f7]" />
-    </>
+
+      <aside className="border border-[#e5e7eb] bg-white p-5 text-black">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-black">RESUME</h3>
+          <span className="text-sm text-[#0877ff]">{selectedOrders.length} Article&gt;</span>
+        </div>
+        <div className="mt-5 space-y-4 text-sm">
+          <div className="flex justify-between gap-4">
+            <span>Total marchandises</span>
+            <span>{formatMoney(merchandiseTotal)}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span>Estimation des frais de port</span>
+            <span>{formatMoney(shippingEstimate)}</span>
+          </div>
+          <div className="flex justify-between gap-4 border-t border-[#e5e7eb] pt-4 text-base font-black">
+            <span>Total</span>
+            <span className="text-[#ff7a00]">{formatMoney(payableTotal)}</span>
+          </div>
+          <div className="border-t border-[#e5e7eb] pt-4">
+            <div className="flex justify-between gap-4">
+              <span>Date d'expedition estimee</span>
+              <span>{estimatedShippingDate()}</span>
+            </div>
+            <p className="mt-3 text-sm leading-5 text-[#8a8f98]">La commande ne sera pas expediee tant que tous les articles ne seront pas prets.</p>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span>Poids</span>
+            <span>{Math.max(0.29, selectedOrders.length * 0.29).toFixed(2)}kg</span>
+          </div>
+        </div>
+        <a href={selectedOrders[0] ? `/orders/${selectedOrders[0].id}` : '/quote'} className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#0877ff] px-5 text-base font-black text-white hover:bg-[#0068e8]">
+          Paiement securise
+        </a>
+        <a href="/quote" className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-full border border-[#0877ff] px-5 text-base text-[#0877ff] hover:bg-[#eef6ff]">
+          +Ajouter un nouvel article
+        </a>
+      </aside>
+    </div>
   );
+}
+
+function orderTotal(order: ProfileOrder) {
+  return order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0;
+}
+
+function orderQuantity(order: ProfileOrder) {
+  return order.quoteSnapshot?.quantity ?? 1;
+}
+
+function orderLeadTime(order: ProfileOrder) {
+  if (order.status === 'delivered') return 'Termine';
+  if (order.status === 'cancelled' || order.status === 'refunded') return '-';
+  return '2 days';
+}
+
+function orderGerberLabel(order: ProfileOrder) {
+  const gerberId = order.quoteSnapshot?.gerberFileId?.trim();
+  if (gerberId) return `pcb-gbr-files_${gerberId.slice(0, 10)}`;
+  return `pcb-gbr-files_${order.orderNumber}`;
+}
+
+function estimatedShippingDate() {
+  const date = new Date();
+  date.setDate(date.getDate() + 2);
+  return date.toISOString().slice(0, 10);
 }
 
 function SearchField({ label }: { label: string }) {
