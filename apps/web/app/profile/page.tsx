@@ -569,17 +569,40 @@ function ReviewSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dat
 }
 
 function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
-  const selectedOrders = orders.filter((order) => order.status !== 'cancelled' && order.status !== 'refunded');
+  const [query, setQuery] = useState('');
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const visibleOrders = orders.filter((order) => orderMatchesQuery(order, query));
+  const selectedOrders = orders.filter((order) => selectedOrderIds.includes(order.id) && isSelectableCartOrder(order));
+  const allVisibleSelected = visibleOrders.filter(isSelectableCartOrder).every((order) => selectedOrderIds.includes(order.id));
   const merchandiseTotal = selectedOrders.reduce((total, order) => total + orderTotal(order), 0);
   const shippingEstimate = selectedOrders.length > 0 ? Math.max(8.75, selectedOrders.length * 6.25) : 0;
   const payableTotal = merchandiseTotal + shippingEstimate;
+
+  useEffect(() => {
+    setSelectedOrderIds(orders.filter(isSelectableCartOrder).map((order) => order.id));
+  }, [orders]);
+
+  function toggleOrderSelection(orderId: string) {
+    setSelectedOrderIds((current) => (current.includes(orderId) ? current.filter((id) => id !== orderId) : [...current, orderId]));
+  }
+
+  function toggleVisibleSelection() {
+    const visibleSelectableIds = visibleOrders.filter(isSelectableCartOrder).map((order) => order.id);
+    if (visibleSelectableIds.length === 0) return;
+
+    setSelectedOrderIds((current) => {
+      const shouldClear = visibleSelectableIds.every((id) => current.includes(id));
+      if (shouldClear) return current.filter((id) => !visibleSelectableIds.includes(id));
+      return Array.from(new Set([...current, ...visibleSelectableIds]));
+    });
+  }
 
   return (
     <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
       <div className="min-w-0">
         <div className="border border-[#e5e7eb] bg-white">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5e7eb] px-5 py-4">
-            <div className="flex flex-wrap items-center gap-7 text-sm font-black text-black">
+            <div className="flex flex-wrap items-center gap-7 text-sm font-semibold text-black">
               <button type="button" className="text-[#0877ff]">All ({orders.length})</button>
               <button type="button">JLCPCB ({orders.length})</button>
               <button type="button">JLC3DP (0)</button>
@@ -588,13 +611,13 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
               <button type="button">Flex Heater (0)</button>
             </div>
             <label className="flex h-9 w-[180px] items-center gap-2 border border-[#d1d5db] bg-white px-3 text-sm text-[#8a8f98]">
-              <input className="min-w-0 flex-1 outline-none" placeholder="Rechercher" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} className="min-w-0 flex-1 outline-none" placeholder="Rechercher" />
               <span className="text-lg leading-none">Q</span>
             </label>
           </div>
 
-          <div className="grid grid-cols-[32px_minmax(0,1fr)_140px_150px_120px_32px] items-center bg-[#f4f5f7] px-5 py-3 text-sm font-black text-black">
-            <input type="checkbox" checked readOnly className="h-4 w-4 accent-[#0877ff]" aria-label="Selectionner toutes les commandes" />
+          <div className="grid grid-cols-[32px_minmax(0,1fr)_140px_150px_120px_32px] items-center bg-[#f4f5f7] px-5 py-3 text-sm font-semibold text-black">
+            <input type="checkbox" checked={visibleOrders.length > 0 && allVisibleSelected} onChange={toggleVisibleSelection} className="h-4 w-4 accent-[#0877ff]" aria-label="Selectionner toutes les commandes visibles" />
             <span>Article</span>
             <span>Qte</span>
             <span>Delais prod</span>
@@ -610,18 +633,22 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
             <p className="px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les commandes.</p>
           ) : orders.length === 0 ? (
             <div className="px-5 py-12 text-center">
-              <p className="text-base font-black text-[#92979d]">Votre panier est vide.</p>
-              <a href="/quote" className="mt-4 inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white hover:bg-[#0b7558]">Ajouter un nouvel article</a>
+              <p className="text-base font-semibold text-[#92979d]">Votre panier est vide.</p>
+              <a href="/quote" className="mt-4 inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-semibold text-white hover:bg-[#0b7558]">Ajouter un nouvel article</a>
+            </div>
+          ) : visibleOrders.length === 0 ? (
+            <div className="px-5 py-12 text-center">
+              <p className="text-base font-semibold text-[#92979d]">Votre recherche ne correspond a aucune commande.</p>
             </div>
           ) : (
             <div className="divide-y divide-[#e5e7eb]">
-              {orders.map((order) => (
+              {visibleOrders.map((order) => (
                 <div key={order.id} className="grid grid-cols-[32px_minmax(0,1fr)_140px_150px_120px_32px] items-start px-5 py-5 text-sm text-[#1f2f43]">
-                  <input type="checkbox" checked={order.status !== 'cancelled' && order.status !== 'refunded'} readOnly className="mt-10 h-4 w-4 accent-[#0877ff]" aria-label={`Selectionner ${order.orderNumber}`} />
+                  <input type="checkbox" checked={selectedOrderIds.includes(order.id)} disabled={!isSelectableCartOrder(order)} onChange={() => toggleOrderSelection(order.id)} className="mt-10 h-4 w-4 accent-[#0877ff]" aria-label={`Selectionner ${order.orderNumber}`} />
                   <div className="flex min-w-0 gap-5">
-                    <div className="grid h-[116px] w-[116px] shrink-0 place-items-center bg-[#f1f4f7] text-lg font-black text-[#c8cfd6]">JLCPCB</div>
+                    <div className="grid h-[116px] w-[116px] shrink-0 place-items-center bg-[#f1f4f7] text-lg font-semibold text-[#c8cfd6]">JLCPCB</div>
                     <div className="min-w-0 py-1">
-                      <p className="font-black text-black">{orderGerberLabel(order)}</p>
+                      <p className="font-semibold text-black">{orderGerberLabel(order)}</p>
                       <p className="mt-1 text-sm text-[#44546a]">{orderProductLabel(order)}: {order.orderNumber}</p>
                       <p className="mt-1 text-sm text-[#44546a]">{orderStatusLabel(order.status)}</p>
                       <div className="mt-3 flex flex-wrap gap-4 text-sm">
@@ -637,7 +664,7 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
                   </div>
                   <span className="pt-6 text-sm text-black">{orderLeadTime(order)}</span>
                   <div className="pt-6">
-                    <p className="font-black text-[#ff7a00]">{formatMoney(orderTotal(order))}</p>
+                    <p className="font-semibold text-[#ff7a00]">{formatMoney(orderTotal(order))}</p>
                     <p className="mt-1 text-xs text-[#8a8f98] line-through">{formatMoney(orderTotal(order) * 1.18)}</p>
                   </div>
                   <a href={`/orders/${order.id}`} className="pt-6 text-center text-[#9ca3af] hover:text-red-600" aria-label={`Voir ${order.orderNumber}`}>x</a>
@@ -648,7 +675,7 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
         </div>
 
         <div className="mt-3 border border-[#e5e7eb] bg-white p-3">
-          <div className="mb-3 flex items-center gap-2 text-sm font-black text-black">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-black">
             <span>Recommended Deals For You</span>
             <button type="button" className="text-xs font-normal text-[#0877ff]">Refresh</button>
           </div>
@@ -657,7 +684,7 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
               <a key={product.title} href={product.href} className="flex min-h-[72px] items-center gap-3 bg-[#f6f7f9] p-2">
                 <img src={product.image} alt="" className="h-14 w-14 object-cover" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-black text-black">{product.title}</span>
+                  <span className="block truncate text-xs font-semibold text-black">{product.title}</span>
                   <span className="mt-1 block text-xs text-[#ff7a00]">Des {formatMoney(0.009)}</span>
                 </span>
                 <span className="shrink-0 rounded-full border border-[#0877ff] px-3 py-1 text-xs text-[#0877ff]">Passer commande</span>
@@ -669,7 +696,7 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
 
       <aside className="border border-[#e5e7eb] bg-white p-5 text-black">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-black">RESUME</h3>
+          <h3 className="text-lg font-semibold">RESUME</h3>
           <span className="text-sm text-[#0877ff]">{selectedOrders.length} Article&gt;</span>
         </div>
         <div className="mt-5 space-y-4 text-sm">
@@ -681,7 +708,7 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
             <span>Estimation des frais de port</span>
             <span>{formatMoney(shippingEstimate)}</span>
           </div>
-          <div className="flex justify-between gap-4 border-t border-[#e5e7eb] pt-4 text-base font-black">
+          <div className="flex justify-between gap-4 border-t border-[#e5e7eb] pt-4 text-base font-semibold">
             <span>Total</span>
             <span className="text-[#ff7a00]">{formatMoney(payableTotal)}</span>
           </div>
@@ -697,9 +724,15 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
             <span>{Math.max(0.29, selectedOrders.length * 0.29).toFixed(2)}kg</span>
           </div>
         </div>
-        <a href={selectedOrders[0] ? `/orders/${selectedOrders[0].id}` : '/quote'} className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#0877ff] px-5 text-base font-black text-white hover:bg-[#0068e8]">
-          Paiement securise
-        </a>
+        {selectedOrders[0] ? (
+          <a href={`/orders/${selectedOrders[0].id}`} className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#0877ff] px-5 text-base font-semibold text-white hover:bg-[#0068e8]">
+            Paiement securise
+          </a>
+        ) : (
+          <span className="mt-5 inline-flex h-12 w-full cursor-not-allowed items-center justify-center rounded-full bg-[#cbd5e1] px-5 text-base font-semibold text-white">
+            Selectionnez un article
+          </span>
+        )}
         <a href="/quote" className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-full border border-[#0877ff] px-5 text-base text-[#0877ff] hover:bg-[#eef6ff]">
           +Ajouter un nouvel article
         </a>
@@ -710,6 +743,19 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
 
 function orderTotal(order: ProfileOrder) {
   return order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0;
+}
+
+function isSelectableCartOrder(order: ProfileOrder) {
+  return order.status !== 'cancelled' && order.status !== 'refunded';
+}
+
+function orderMatchesQuery(order: ProfileOrder, query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return true;
+
+  return [order.orderNumber, order.id, order.quoteSnapshot?.gerberFileId, orderProductLabel(order), orderStatusLabel(order.status)]
+    .filter(Boolean)
+    .some((value) => String(value).toLowerCase().includes(normalizedQuery));
 }
 
 function orderQuantity(order: ProfileOrder) {
