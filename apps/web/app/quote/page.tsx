@@ -948,6 +948,7 @@ export default function QuotePage() {
             saveState={quoteSave.status}
             productionSpeed={config.productionSpeed}
             onProductionSpeedChange={(value) => update('productionSpeed', value)}
+            quantity={config.quantity}
             countries={africanCountries}
             destinationCountry={config.destinationCountry}
             onDestinationCountryChange={updateDestinationCountry}

@@ -48,6 +48,7 @@ export function PricingSummary({
   saveState = 'idle',
   productionSpeed,
   onProductionSpeedChange,
+  quantity,
   countries,
   destinationCountry,
   onDestinationCountryChange,
@@ -63,6 +64,7 @@ export function PricingSummary({
   saveState?: 'idle' | 'saving' | 'saved' | 'error';
   productionSpeed: 'standard' | 'express_24h' | 'pcba_24h';
   onProductionSpeedChange: (value: 'standard' | 'express_24h' | 'pcba_24h') => void;
+  quantity: number;
   countries: AfricanCountry[];
   destinationCountry: string;
   onDestinationCountryChange: (value: string) => void;
@@ -146,6 +148,10 @@ export function PricingSummary({
 
   const activeShippingMethod =
     shippingMethods.find((method) => (method.live ? selectedLiveShippingRateId === method.id : !selectedLiveShippingRateId && method.mode === shippingMode)) ?? shippingMethods[0];
+  const shipmentAt = addBusinessDays(new Date(), Math.max(1, extractLastNumber(pricing.estimatedLeadTime) || 1));
+  const deliveryAt = addBusinessDays(shipmentAt, Math.max(1, extractLastNumber(activeShippingMethod.transitTime) || 4));
+  const shipmentDate = formatBusinessDate(shipmentAt);
+  const deliveryDate = formatBusinessDate(deliveryAt);
 
   useEffect(() => {
     function closeOnOutsideClick(event: MouseEvent) {
@@ -208,35 +214,35 @@ export function PricingSummary({
     <aside className="space-y-3">
       <div className="hidden border border-slate-300 bg-white lg:block">
         <div className="border-b border-slate-300 bg-slate-100 px-3 py-2">
-          <h2 className="text-sm font-black text-slate-900">Pricing And Build Time</h2>
+          <h2 className="text-sm font-semibold text-slate-900">Pricing And Build Time</h2>
         </div>
 
         <div className="p-3">
           <div className="mb-3">
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="text-slate-700">PCB Price</span>
-              <button type="button" className="inline-flex items-center gap-1 border border-slate-300 bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-800">
-                <span className="text-base leading-none text-slate-500">=</span>
-                Price Comparison Matrix
+              <button type="button" onClick={() => setPriceDetailsOpen(true)} className="inline-flex items-center gap-1 border border-slate-300 bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-700">
+                <span className="text-sm leading-none text-slate-500">i</span>
+                Price details
               </button>
             </div>
 
             <div className="bg-slate-100 p-1">
-              <div className="grid grid-cols-[1fr_3rem_4.5rem] px-2 pb-1 text-center text-xs font-bold text-slate-400">
+              <div className="grid grid-cols-[1fr_3rem_4.5rem] px-2 pb-1 text-center text-xs font-medium text-slate-500">
                 <span>Build Time</span>
                 <span>Qty</span>
                 <span>Total</span>
               </div>
               <BuildTimeOption
                 label="24hours"
-                qty={5}
+                qty={quantity}
                 price={standardBuildPrice}
                 active={productionSpeed === 'standard'}
                 onClick={() => onProductionSpeedChange('standard')}
               />
               <BuildTimeOption
                 label="Extra Urgent!"
-                qty={5}
+                qty={quantity}
                 price={urgentBuildPrice}
                 active={productionSpeed === 'express_24h'}
                 muted
@@ -244,12 +250,12 @@ export function PricingSummary({
               />
             </div>
 
-            <p className="mt-3 text-[11px] font-bold text-[#ff7a00]">Final price is subject to our review.</p>
+            <p className="mt-3 text-[11px] font-medium text-[#ff7a00]">Final price is subject to our review.</p>
           </div>
 
           <div className="mb-3">
             <div className="mb-1 flex items-center justify-between text-sm">
-              <span className="font-bold text-slate-700">Shipping Cost:</span>
+              <span className="font-semibold text-slate-700">Shipping Cost:</span>
               <span className="text-slate-700">${pricing.franceToAfricaDelivery.toFixed(2)}</span>
             </div>
             <div className="grid grid-cols-[1fr_5rem] gap-2">
@@ -272,7 +278,7 @@ export function PricingSummary({
               <button
                 type="button"
                 onClick={() => setShippingDialogOpen(true)}
-                className="flex h-7 items-center justify-between border border-slate-300 bg-white px-1.5 text-left text-xs font-bold text-slate-800"
+                className="flex h-7 items-center justify-between border border-slate-300 bg-white px-1.5 text-left text-xs font-medium text-slate-800"
               >
                 <CarrierLogo label={activeShippingMethod.logo} />
                 <span className="text-slate-500">v</span>
@@ -283,24 +289,24 @@ export function PricingSummary({
             </button>
           </div>
 
-          <div className="mb-3 grid grid-cols-2 border border-[#d7efcf] bg-[#e4f6de] text-[11px] font-semibold text-slate-500">
-            <DateBox title="Shipment Date" value={formatDateOffset(1)} />
-            <DateBox title="Delivery Date" value={formatDateOffset(4)} />
+          <div className="mb-3 grid grid-cols-2 border border-[#d7efcf] bg-[#e4f6de] text-[11px] font-medium text-slate-600">
+            <DateBox title="Shipment Date" value={shipmentDate} />
+            <DateBox title="Delivery Date" value={deliveryDate} />
           </div>
 
           <div className="space-y-1 border-b border-slate-200 pb-3 text-sm">
             <FeeLine label="PCB Cost:" value={pcbClientPrice} />
             <FeeLine label="Shipping:" value={pricing.franceToAfricaDelivery} />
-            <div className="flex items-center justify-between pt-1 font-black">
+            <div className="flex items-center justify-between pt-1 font-semibold">
               <span className="text-slate-700">Total:</span>
-              <span className="text-lg text-black">${pricing.finalTotal.toFixed(2)}</span>
+              <span className="text-lg font-bold text-black">${pricing.finalTotal.toFixed(2)}</span>
             </div>
             <p className="pt-2 text-right text-[10px] text-slate-500">Notice: Customs duties and VAT are not included!</p>
           </div>
 
           {errors.length > 0 ? (
             <div className="mt-3 border border-red-200 bg-red-50 p-2">
-              <p className="text-xs font-black text-red-700">Configuration a verifier</p>
+              <p className="text-xs font-semibold text-red-700">Configuration a verifier</p>
               <ul className="mt-1 space-y-1 text-xs leading-4 text-red-700">
                 {errors.map((error) => (
                   <li key={error}>{error}</li>
@@ -313,11 +319,10 @@ export function PricingSummary({
             type="button"
             onClick={onSave}
             disabled={!canSave}
-            className={`mt-3 grid h-9 w-full grid-cols-[3rem_1fr] items-center overflow-hidden rounded-sm text-sm font-black text-white transition ${
+            className={`mt-3 h-9 w-full rounded-sm text-sm font-semibold text-white transition ${
               canSave ? 'bg-[#29ad62] hover:bg-[#198c4b]' : 'cursor-not-allowed bg-[#29ad62]/35 text-white/80'
             }`}
           >
-            <span className="grid h-full place-items-center border-r border-white/20 text-lg">Cart</span>
             <span>{saveState === 'saving' ? 'Saving...' : saveState === 'saved' ? 'Saved' : 'Save to Cart'}</span>
           </button>
         </div>
@@ -338,19 +343,19 @@ export function PricingSummary({
         <div className="mx-auto max-w-md">
           <div className="flex items-center gap-3">
             <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Afficher le detail du prix" aria-expanded={priceDetailsOpen}>
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Total estime</p>
-              <p className={`mt-0.5 text-[10px] font-black uppercase tracking-[0.1em] ${
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total estime</p>
+              <p className={`mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] ${
                 pricingPreview.status === 'live' ? 'text-[#0f8f6b]' : pricingPreview.status === 'error' ? 'text-[#c45100]' : 'text-slate-500'
               }`}>
                 {pricingPreview.status === 'live' ? 'PCBWay live' : pricingPreview.status === 'loading' ? 'Live...' : pricingPreview.status === 'error' ? 'A verifier' : 'Local'}
               </p>
-              <p className="mt-0.5 text-lg font-black text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
+              <p className="mt-0.5 text-lg font-bold text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
             </button>
             <button
               type="button"
               onClick={onSave}
               disabled={!canSave}
-              className={`h-11 shrink-0 rounded-sm px-5 text-xs font-black uppercase text-white transition ${
+              className={`h-11 shrink-0 rounded-sm px-5 text-xs font-semibold uppercase text-white transition ${
                 canSave ? 'bg-[#0f8f6b] hover:bg-[#0b7558]' : 'cursor-not-allowed bg-[#0f8f6b]/25 text-white/80 blur-[0.35px]'
               }`}
             >
@@ -363,10 +368,10 @@ export function PricingSummary({
               <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-slate-300" />
               <div className="mb-2 flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-sm font-black text-slate-950">Pricing And Build Time</h2>
+                  <h2 className="text-sm font-semibold text-slate-950">Pricing And Build Time</h2>
                   <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{isSupplierPrice ? 'Prix live Kendronics.' : 'Prix estime avec livraison integree.'}</p>
                 </div>
-                <button type="button" className="grid h-8 w-8 place-items-center rounded-full bg-white text-base font-black text-slate-700" onClick={() => setPriceDetailsOpen(false)} aria-label="Fermer">
+                <button type="button" className="grid h-8 w-8 place-items-center rounded-full bg-white text-base font-medium text-slate-700" onClick={() => setPriceDetailsOpen(false)} aria-label="Fermer">
                   x
                 </button>
               </div>
@@ -375,13 +380,13 @@ export function PricingSummary({
                 <div className="space-y-2 border-b border-slate-200 pb-2 text-xs">
                   <FeeLine label="PCB Cost:" value={pcbClientPrice} />
                   <FeeLine label="Shipping:" value={pricing.franceToAfricaDelivery} />
-                  <div className="flex items-center justify-between font-black">
+                  <div className="flex items-center justify-between font-semibold">
                     <span>Total:</span>
                     <span>${pricing.finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
 
-                <button type="button" onClick={() => setShippingDialogOpen(true)} className="mt-3 flex w-full items-center justify-between border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-bold">
+                <button type="button" onClick={() => setShippingDialogOpen(true)} className="mt-3 flex w-full items-center justify-between border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium">
                   <span>{activeShippingMethod.carrier} / {activeShippingMethod.transitTime}</span>
                   <span>${pricing.franceToAfricaDelivery.toFixed(2)}</span>
                 </button>
@@ -389,7 +394,7 @@ export function PricingSummary({
 
               {errors.length > 0 ? (
                 <div className="mt-2 rounded-sm border border-red-200 bg-red-50 p-2.5">
-                  <p className="text-xs font-black text-red-700">Configuration a verifier</p>
+                  <p className="text-xs font-semibold text-red-700">Configuration a verifier</p>
                   <ul className="mt-1 space-y-1 text-xs leading-4 text-red-700">
                     {errors.map((error) => (
                       <li key={error}>{error}</li>
@@ -401,6 +406,29 @@ export function PricingSummary({
           ) : null}
         </div>
       </div>
+
+      {priceDetailsOpen ? (
+        <div className="fixed inset-0 z-[75] hidden items-center justify-center bg-black/35 px-4 lg:flex" role="dialog" aria-modal="true" aria-label="Price details">
+          <div className="w-full max-w-sm border border-slate-200 bg-white p-4">
+            <div className="mb-3 flex items-center justify-between gap-4">
+              <h3 className="text-sm font-semibold text-slate-950">Price details</h3>
+              <button type="button" onClick={() => setPriceDetailsOpen(false)} className="grid h-8 w-8 place-items-center text-xl font-light text-slate-500" aria-label="Close price details">
+                x
+              </button>
+            </div>
+            <div className="space-y-2 text-sm">
+              <FeeLine label="PCB Cost:" value={pcbClientPrice} />
+              <FeeLine label="Shipping:" value={pricing.franceToAfricaDelivery} />
+              <FeeLine label="Service:" value={pricing.kendronicsServiceFee} />
+              <div className="flex items-center justify-between border-t border-slate-200 pt-2 font-semibold">
+                <span>Total:</span>
+                <span>${pricing.finalTotal.toFixed(2)}</span>
+              </div>
+            </div>
+            <p className="mt-3 text-xs leading-5 text-slate-500">{pricingPreview.message}</p>
+          </div>
+        </div>
+      ) : null}
 
       {shippingDialogOpen ? (
         <ShippingMethodDialog
@@ -451,15 +479,15 @@ function BuildTimeOption({
         active ? 'bg-white text-slate-900' : muted ? 'bg-[#e9ecef] text-slate-500' : 'bg-white text-slate-700'
       }`}
     >
-      <span className="flex items-center gap-2 font-black">
-        <span className={`grid h-6 w-6 place-items-center rounded-full text-xs ${active ? 'bg-[#43bf4d] text-white' : 'border border-slate-300 bg-white text-transparent'}`}>
-          {active ? 'OK' : ''}
+      <span className="flex items-center gap-2 font-medium">
+        <span className={`grid h-6 w-6 place-items-center rounded-full border ${active ? 'border-[#43bf4d] bg-[#43bf4d]' : 'border-slate-300 bg-white'}`} aria-hidden="true">
+          {active ? <span className="h-2.5 w-2.5 rounded-full bg-white" /> : null}
         </span>
         {label}
-        <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-[#a7cf8c] text-[10px] font-black text-white">?</span>
+        <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-[#a7cf8c] text-[10px] font-semibold text-white">?</span>
       </span>
       <span className="text-center">{qty}</span>
-      <span className="text-right font-black">${price.toFixed(2)}</span>
+      <span className="text-right font-semibold">${price.toFixed(2)}</span>
     </button>
   );
 }
@@ -500,7 +528,7 @@ function ShippingMethodDialog({
       <div className="mx-auto max-h-[82vh] max-w-[700px] overflow-y-auto rounded-lg bg-white p-5 shadow-2xl">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div className="grid flex-1 grid-cols-[3.5rem_1fr] items-center gap-3">
-            <span className="text-sm font-black text-slate-900">Ship to</span>
+            <span className="text-sm font-semibold text-slate-900">Ship to</span>
             <CountryDropdown
               countries={countries}
               filteredCountries={filteredCountries}
@@ -519,7 +547,7 @@ function ShippingMethodDialog({
           </button>
         </div>
 
-        <div className="grid grid-cols-[1fr_9rem_10rem] bg-slate-100 px-7 py-3 text-sm font-black text-slate-700">
+        <div className="grid grid-cols-[1fr_9rem_10rem] bg-slate-100 px-7 py-3 text-sm font-semibold text-slate-700">
           <span>Shipping method</span>
           <span>Costs</span>
           <span>Delivery Time</span>
@@ -537,19 +565,19 @@ function ShippingMethodDialog({
               <span className="flex min-w-0 items-center gap-2">
                 <CarrierLogo label={method.logo} />
                 <span className="truncate">{method.service}</span>
-                {method.live ? <span className="rounded-full bg-[#a7cf8c] px-1 text-[10px] font-black text-white">live</span> : null}
+                {method.live ? <span className="rounded-full bg-[#a7cf8c] px-1 text-[10px] font-semibold text-white">live</span> : null}
               </span>
-              <span className="font-bold">${method.amount.toFixed(2)}</span>
-              <span className="font-bold">{method.transitTime}</span>
+              <span className="font-medium">${method.amount.toFixed(2)}</span>
+              <span className="font-medium">{method.transitTime}</span>
             </button>
           ))}
         </div>
 
-        {ratesState === 'loading' ? <p className="mt-2 text-center text-xs font-bold text-slate-500">Loading live carrier rates...</p> : null}
-        {ratesState === 'error' ? <p className="mt-2 text-center text-xs font-bold text-red-600">Live carrier rates unavailable. Default methods remain selectable.</p> : null}
+        {ratesState === 'loading' ? <p className="mt-2 text-center text-xs font-medium text-slate-500">Loading live carrier rates...</p> : null}
+        {ratesState === 'error' ? <p className="mt-2 text-center text-xs font-medium text-red-600">Live carrier rates unavailable. Default methods remain selectable.</p> : null}
 
         <div className="mt-5 flex justify-center">
-          <button type="button" onClick={onClose} className="h-9 min-w-28 rounded bg-[#29ad62] px-8 text-sm font-black text-white hover:bg-[#198c4b]">
+          <button type="button" onClick={onClose} className="h-9 min-w-28 rounded bg-[#29ad62] px-8 text-sm font-semibold text-white hover:bg-[#198c4b]">
             Apply
           </button>
         </div>
@@ -583,7 +611,7 @@ function CountryDropdown({
 }) {
   return (
     <div ref={menuRef} className="relative">
-      {!compact ? <label className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-slate-500">Pays de destination</label> : null}
+      {!compact ? <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Pays de destination</label> : null}
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
@@ -619,7 +647,7 @@ function CountryDropdown({
                 type="button"
                 onClick={() => onSelect(country)}
                 className={`flex h-9 w-full items-center gap-2 px-3 text-left text-xs transition ${
-                  country.iso2 === selectedCountry.iso2 ? 'bg-[#eaf2fb] font-black text-slate-950' : 'text-slate-800 hover:bg-slate-100'
+                  country.iso2 === selectedCountry.iso2 ? 'bg-[#eaf2fb] font-semibold text-slate-950' : 'text-slate-800 hover:bg-slate-100'
                 }`}
               >
                 <span className="text-sm leading-none">{countryFlag(country.iso2)}</span>
@@ -635,8 +663,8 @@ function CountryDropdown({
 
 function DateBox({ title, value }: { title: string; value: string }) {
   return (
-    <div className="flex min-h-12 items-center gap-2 border-r border-[#b8d9ae] px-2 last:border-r-0">
-      <span className="grid h-7 w-7 place-items-center border border-slate-400 bg-white text-[10px] text-slate-500">cal</span>
+    <div className="flex min-h-12 items-center gap-2 border-r border-[#b8d9ae] px-3 last:border-r-0">
+      <span className="h-7 w-1.5 rounded-full bg-[#9ac58c]" aria-hidden="true" />
       <span>
         <span className="block leading-3">{title}</span>
         <span className="block leading-3">{value}</span>
@@ -661,7 +689,7 @@ function CarrierLogo({ label }: { label: string }) {
 
   return (
     <span
-      className={`inline-flex h-5 min-w-16 shrink-0 items-center justify-center border px-1 text-[11px] font-black italic leading-none ${
+      className={`inline-flex h-5 min-w-16 shrink-0 items-center justify-center border px-1 text-[11px] font-semibold italic leading-none ${
         isDhl
           ? 'border-[#f2c300] bg-[#ffd51d] text-[#d71920]'
           : isFedex
@@ -674,9 +702,25 @@ function CarrierLogo({ label }: { label: string }) {
   );
 }
 
-function formatDateOffset(offsetDays: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() + offsetDays);
+function addBusinessDays(startDate: Date, days: number): Date {
+  const date = new Date(startDate);
+  let remaining = days;
+  while (remaining > 0) {
+    date.setDate(date.getDate() + 1);
+    const day = date.getDay();
+    if (day !== 0 && day !== 6) remaining -= 1;
+  }
+
+  return date;
+}
+
+function extractLastNumber(value: string): number | null {
+  const matches = value.match(/\d+/g);
+  if (!matches || matches.length === 0) return null;
+  return Number(matches[matches.length - 1]);
+}
+
+function formatBusinessDate(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
