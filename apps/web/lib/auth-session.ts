@@ -8,7 +8,7 @@ export interface StoredAuthSession extends AuthTokens {
   accessTokenExpiresAt: string;
 }
 
-export function persistAuthSession(tokens: AuthTokens, options: { remember?: boolean } = {}) {
+export function persistAuthSession(tokens: AuthTokens, _options: { remember?: boolean } = {}) {
   if (typeof window === 'undefined') return;
 
   const issuedAt = new Date();
@@ -19,8 +19,8 @@ export function persistAuthSession(tokens: AuthTokens, options: { remember?: boo
   };
 
   const serializedSession = JSON.stringify(session);
-  window.localStorage.removeItem(SESSION_STORAGE_KEY);
-  window.sessionStorage.setItem(SESSION_STORAGE_KEY, serializedSession);
+  window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+  window.localStorage.setItem(SESSION_STORAGE_KEY, serializedSession);
 }
 
 export function readAuthSession(): StoredAuthSession | null {
@@ -31,7 +31,12 @@ export function readAuthSession(): StoredAuthSession | null {
   if (!rawSession) return null;
 
   try {
-    return JSON.parse(rawSession) as StoredAuthSession;
+    const session = JSON.parse(rawSession) as StoredAuthSession;
+    if (storage === window.sessionStorage) {
+      window.localStorage.setItem(SESSION_STORAGE_KEY, rawSession);
+      window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    }
+    return session;
   } catch {
     window.localStorage.removeItem(SESSION_STORAGE_KEY);
     window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
@@ -44,6 +49,24 @@ export function clearAuthSession() {
   window.localStorage.removeItem(SESSION_STORAGE_KEY);
   window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
   window.dispatchEvent(new Event('kendronics:auth-updated'));
+}
+
+export async function revokeAuthSession() {
+  const session = readAuthSession();
+  if (session?.refreshToken) {
+    try {
+      await fetch(`${getApiBaseUrl()}/api/auth/logout`, {
+        method: 'POST',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: session.refreshToken }),
+      });
+    } catch {
+      // Local logout must still complete even if the network is unavailable.
+    }
+  }
+
+  clearAuthSession();
 }
 
 export async function readFreshAuthSession(): Promise<StoredAuthSession | null> {

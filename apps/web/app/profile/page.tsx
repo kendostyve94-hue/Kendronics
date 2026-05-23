@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { Navbar } from '../../components/layout/Navbar';
 import { getApiBaseUrl } from '../../lib/api-base-url';
-import { clearAuthSession, readAuthSession, readFreshAuthSession } from '../../lib/auth-session';
+import { clearAuthSession, readAuthSession, readFreshAuthSession, revokeAuthSession } from '../../lib/auth-session';
 import { purgeLegacySensitiveStorage, readScopedLocalStorage, removeScopedLocalStorage, writeScopedLocalStorage } from '../../lib/user-scoped-storage';
 
 const profileStorageKey = 'kendronics.customer.profile';
@@ -2411,7 +2411,7 @@ function formatUserId(seed: string) {
 }
 
 function logout() {
-  clearAuthSession();
+  void revokeAuthSession();
   removeScopedLocalStorage('kendronics.customer.orders');
   window.dispatchEvent(new Event('kendronics:orders-updated'));
   window.location.assign('/login');
