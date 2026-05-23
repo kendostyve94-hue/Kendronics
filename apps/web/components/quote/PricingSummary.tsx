@@ -484,7 +484,6 @@ function BuildTimeOption({
           {active ? <span className="h-2.5 w-2.5 rounded-full bg-white" /> : null}
         </span>
         {label}
-        <span className="grid h-3.5 w-3.5 place-items-center rounded-full bg-[#a7cf8c] text-[10px] font-semibold text-white">?</span>
       </span>
       <span className="text-center">{qty}</span>
       <span className="text-right font-semibold">${price.toFixed(2)}</span>
