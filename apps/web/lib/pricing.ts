@@ -180,6 +180,7 @@ function calculateLocalCalibratedQuote(config: QuoteConfig): PricingBreakdown {
   const paymentProcessingFee = 0;
   const pcbClientPrice = supplierEstimatedPrice * smartBufferMultiplier + kendronicsServiceFee;
   const finalTotal = pcbClientPrice + franceToAfricaDelivery;
+  const productionBuildDays = getProductionBuildDays(config);
   const leadTimeDays = getLeadTimeDays(config, country.logisticsZone);
   const displayTotalBeforeAdjustment = finalTotal;
 
@@ -206,6 +207,9 @@ function calculateLocalCalibratedQuote(config: QuoteConfig): PricingBreakdown {
     shippingCarrier: getShippingCarrierLabel(config),
     estimatedShippingTime: config.liveShippingTransitTime ?? (config.shippingMode === 'express' ? '2-4 business days' : config.shippingMode === 'economy' ? '7-12 business days' : '4-7 business days'),
     estimatedLeadTime: `${leadTimeDays} business days`,
+    supplierLeadTimeDays: productionBuildDays,
+    productionBuildDays,
+    buildOptions: getBuildOptions(config, supplierEstimatedPrice),
     pricingSource: 'local_calibrated',
     transparencyNote,
   };
@@ -363,6 +367,51 @@ function getProductionSpeedFee(config: QuoteConfig): number {
   return 0;
 }
 
+function getBuildOptions(config: QuoteConfig, supplierEstimatedPrice: number): PricingBreakdown['buildOptions'] {
+  const standardConfig = { ...config, productionSpeed: 'standard' as const };
+  const expressConfig = { ...config, productionSpeed: 'express_24h' as const };
+  const standardDays = getProductionBuildDays(standardConfig);
+  const expressDays = getProductionBuildDays(expressConfig);
+  const options: NonNullable<PricingBreakdown['buildOptions']> = [
+    {
+      id: 'local-standard',
+      label: 'Standard build',
+      buildDays: standardDays,
+      price: round(supplierEstimatedPrice - getProductionSpeedFee(config)),
+      currency: 'EUR',
+      speed: 'standard',
+      source: 'local_calibrated',
+    },
+  ];
+
+  if (expressDays < standardDays) {
+    options.push({
+      id: 'local-express',
+      label: 'Express build',
+      buildDays: expressDays,
+      price: round(supplierEstimatedPrice - getProductionSpeedFee(config) + getProductionSpeedFee(expressConfig)),
+      currency: 'EUR',
+      speed: 'express_24h',
+      source: 'local_calibrated',
+    });
+  }
+
+  if (config.productType === 'pcb_assembly' || config.assemblyRequired) {
+    const pcbaConfig = { ...config, productionSpeed: 'pcba_24h' as const };
+    options.push({
+      id: 'local-pcba-rush',
+      label: 'Assembly rush review',
+      buildDays: getProductionBuildDays(pcbaConfig),
+      price: round(supplierEstimatedPrice - getProductionSpeedFee(config) + getProductionSpeedFee(pcbaConfig)),
+      currency: 'EUR',
+      speed: 'pcba_24h',
+      source: 'local_calibrated',
+    });
+  }
+
+  return options;
+}
+
 function getThicknessMultiplier(thickness: string): number {
   return {
     '0.8mm': 1.08,
@@ -433,8 +482,15 @@ function estimateGrossWeightKg(lengthMm: number, widthMm: number, thickness: str
 }
 
 function getLeadTimeDays(config: QuoteConfig, logisticsZone: string): number {
+  const productionDays = getProductionBuildDays(config);
+  const logisticsDays = zoneDeliveryDays[logisticsZone] ?? 16;
+  const modeDays = config.shippingMode === 'express' ? -4 : config.shippingMode === 'economy' ? 4 : 0;
+  return Math.max(2, productionDays) + Math.max(2, logisticsDays + modeDays);
+}
+
+function getProductionBuildDays(config: QuoteConfig): number {
   const productionDays =
-    (config.productionSpeed === 'express_24h' ? 1 : 2) +
+    (config.productionSpeed === 'express_24h' || config.productionSpeed === 'pcba_24h' ? 1 : 2) +
     (config.layers > 2 ? 2 : 0) +
     (config.layers > 6 ? 3 : 0) +
     (config.baseMaterial !== 'FR4' ? 3 : 0) +
@@ -443,10 +499,7 @@ function getLeadTimeDays(config: QuoteConfig, logisticsZone: string): number {
     (config.productType === 'cnc_3d' ? 4 : 0) +
     (config.productType === 'smt_stencil' ? -1 : 0) +
     countTrue([config.impedanceControl, config.blindBuriedVias, config.viaInPad]) * 2;
-  const logisticsDays = zoneDeliveryDays[logisticsZone] ?? 16;
-  const speedDays = config.productionSpeed === 'express_24h' ? -1 : 0;
-  const modeDays = config.shippingMode === 'express' ? -4 : config.shippingMode === 'economy' ? 4 : 0;
-  return Math.max(6, productionDays + logisticsDays + modeDays + speedDays);
+  return Math.max(1, productionDays);
 }
 
 function boardTypeFor(format: QuoteConfig['deliveryFormat']): string {

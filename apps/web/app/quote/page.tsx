@@ -251,6 +251,9 @@ type ApiPricingPreview = {
   smartBufferRiskScore?: number;
   smartBufferConfidence?: 'low' | 'medium' | 'high';
   smartBufferBucketKey?: string;
+  supplierLeadTimeDays?: number;
+  productionBuildDays?: number;
+  buildOptions?: PricingBreakdown['buildOptions'];
 };
 
 type PricingPreviewState = {
@@ -403,7 +406,13 @@ export default function QuotePage() {
   function update<K extends keyof QuoteConfig>(key: K, value: QuoteConfig[K]) {
     setSaved(false);
     setQuoteSave({ status: 'idle' });
-    setConfig((current) => ({ ...current, [key]: value }));
+    setConfig((current) => ({
+      ...current,
+      [key]: value,
+      ...(key === 'buildTimeOptionId' || key === 'buildTimeDays' || key === 'buildTimeLabel'
+        ? {}
+        : { buildTimeOptionId: undefined, buildTimeDays: undefined, buildTimeLabel: undefined }),
+    }));
   }
 
   function selectProduct(product: (typeof productCards)[number]) {
@@ -421,6 +430,9 @@ export default function QuotePage() {
       liveShippingAmount: undefined,
       liveShippingCurrency: undefined,
       liveShippingTransitTime: undefined,
+      buildTimeOptionId: undefined,
+      buildTimeDays: undefined,
+      buildTimeLabel: undefined,
     }));
   }
 
@@ -462,6 +474,17 @@ export default function QuotePage() {
       liveShippingAmount: rate.amount,
       liveShippingCurrency: rate.currency,
       liveShippingTransitTime: rate.transitTime,
+    }));
+  }
+
+  function selectBuildTimeOption(option: NonNullable<PricingBreakdown['buildOptions']>[number]) {
+    setSaved(false);
+    setConfig((current) => ({
+      ...current,
+      productionSpeed: option.speed,
+      buildTimeOptionId: option.id,
+      buildTimeDays: option.buildDays,
+      buildTimeLabel: option.label,
     }));
   }
 
@@ -948,6 +971,8 @@ export default function QuotePage() {
             saveState={quoteSave.status}
             productionSpeed={config.productionSpeed}
             onProductionSpeedChange={(value) => update('productionSpeed', value)}
+            selectedBuildTimeOptionId={config.buildTimeOptionId}
+            onBuildTimeOptionSelect={selectBuildTimeOption}
             quantity={config.quantity}
             countries={africanCountries}
             destinationCountry={config.destinationCountry}
@@ -1019,7 +1044,10 @@ function normalizeApiPricingPreview(data: ApiPricingPreview, fallback: PricingBr
     deliveryWeightKg: fallback.deliveryWeightKg,
     shippingCarrier: fallback.shippingCarrier,
     estimatedShippingTime: fallback.estimatedShippingTime,
-    estimatedLeadTime: fallback.estimatedLeadTime,
+    estimatedLeadTime: data.supplierLeadTimeDays ? `${data.supplierLeadTimeDays} build days` : fallback.estimatedLeadTime,
+    supplierLeadTimeDays: data.supplierLeadTimeDays ?? fallback.supplierLeadTimeDays,
+    productionBuildDays: data.productionBuildDays ?? data.supplierLeadTimeDays ?? fallback.productionBuildDays,
+    buildOptions: data.buildOptions ?? fallback.buildOptions,
     pricingSource,
     transparencyNote:
       pricingSource === 'supplier_api'

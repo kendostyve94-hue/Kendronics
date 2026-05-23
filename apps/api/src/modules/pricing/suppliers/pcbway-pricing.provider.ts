@@ -1,6 +1,7 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { CreateQuoteDto } from '../dto/create-quote.dto';
 import {
+  SupplierBuildOption,
   SupplierPricingProvider,
   SupplierQuote,
   toSupplierPcbPayload,
@@ -43,6 +44,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
       shippingPrice: round(Number.isFinite(shippingPrice) ? shippingPrice : 0),
       currency: 'EUR',
       leadTimeDays: Number(priceItem?.BuildDays ?? data.BuildDays) || undefined,
+      buildOptions: this.buildOptions(data.priceList ?? [], data.BuildDays),
       rawResponse: data as Record<string, unknown>,
     };
   }
@@ -230,8 +232,38 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
 
   private selectPriceItem(items: PcbWayPriceItem[], dto: CreateQuoteDto): PcbWayPriceItem | undefined {
     if (items.length === 0) return undefined;
-    if (dto.configSnapshot?.productionSpeed === 'rush') return items.find((item) => item.Express) ?? items[0];
+    const requestedBuildDays = Number(dto.configSnapshot?.buildTimeDays);
+    if (Number.isFinite(requestedBuildDays) && requestedBuildDays > 0) {
+      const exactBuildDayMatch = items.find((item) => Number(item.BuildDays) === requestedBuildDays);
+      if (exactBuildDayMatch) return exactBuildDayMatch;
+    }
+
+    if (dto.configSnapshot?.productionSpeed === 'express_24h' || dto.configSnapshot?.productionSpeed === 'pcba_24h') return items.find((item) => item.Express) ?? items[0];
     return items.find((item) => item.Standard) ?? items[0];
+  }
+
+  private buildOptions(items: PcbWayPriceItem[], fallbackBuildDays?: number): SupplierBuildOption[] | undefined {
+    const options: SupplierBuildOption[] = [];
+
+    items.forEach((item, index) => {
+      const price = Number(item.Price);
+      const buildDays = Number(item.BuildDays ?? fallbackBuildDays);
+      if (!Number.isFinite(price) || price <= 0 || !Number.isFinite(buildDays) || buildDays <= 0) return;
+
+      const speed: SupplierBuildOption['speed'] = item.Express ? 'express_24h' : 'standard';
+      const label = item.BuildText?.trim() || (item.Express ? 'PCBWay Express' : item.Standard ? 'PCBWay Standard' : `PCBWay Build ${index + 1}`);
+      options.push({
+        id: `pcbway-${speed}-${buildDays}-${index}`,
+        label,
+        buildDays,
+        price: round(price),
+        currency: 'EUR',
+        speed,
+        source: this.name,
+      });
+    });
+
+    return options.length > 0 ? options : undefined;
   }
 
   private isErrorResponse(data: PcbWayQuoteResponse): boolean {

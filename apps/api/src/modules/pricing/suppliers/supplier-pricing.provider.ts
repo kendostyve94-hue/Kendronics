@@ -7,7 +7,18 @@ export interface SupplierQuote {
   shippingPrice: number;
   currency: 'EUR' | 'USD';
   leadTimeDays?: number;
+  buildOptions?: SupplierBuildOption[];
   rawResponse?: Record<string, unknown>;
+}
+
+export interface SupplierBuildOption {
+  id: string;
+  label: string;
+  buildDays: number;
+  price: number;
+  currency: 'EUR' | 'USD';
+  speed: 'standard' | 'express_24h' | 'pcba_24h';
+  source: string;
 }
 
 export interface SupplierPricingProvider {

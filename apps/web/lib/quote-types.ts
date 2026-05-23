@@ -16,6 +16,9 @@ export interface QuoteConfig {
   surfaceFinish: string;
   viaCovering: string;
   productionSpeed: 'standard' | 'express_24h' | 'pcba_24h';
+  buildTimeOptionId?: string;
+  buildTimeDays?: number;
+  buildTimeLabel?: string;
   outerCopperWeight: string;
   innerCopperWeight: string;
   impedanceControl: boolean;
@@ -101,6 +104,19 @@ export interface PricingBreakdown {
   shippingCarrier: string;
   estimatedShippingTime: string;
   estimatedLeadTime: string;
+  supplierLeadTimeDays?: number;
+  productionBuildDays?: number;
+  buildOptions?: BuildTimeOption[];
   pricingSource: 'local_calibrated' | 'supplier_api';
   transparencyNote: string;
+}
+
+export interface BuildTimeOption {
+  id: string;
+  label: string;
+  buildDays: number;
+  price: number;
+  currency: 'EUR' | 'USD';
+  speed: 'standard' | 'express_24h' | 'pcba_24h';
+  source: string;
 }

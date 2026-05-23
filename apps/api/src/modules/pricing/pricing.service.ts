@@ -33,7 +33,7 @@ export class PricingService {
       supplierEstimatedPrice: supplierQuote.manufacturingPrice,
       shippingPrice: this.customerShippingPrice(effectiveDto, supplierQuote.shippingPrice),
     });
-    const quote = await this.persistQuote(userId, effectiveDto, this.toSmartBufferBreakdown(smartPrice), smartPrice);
+    const quote = await this.persistQuote(userId, effectiveDto, this.toSmartBufferBreakdown(smartPrice, supplierQuote), smartPrice);
     await this.notificationsService.create({
       userId,
       type: 'quote.created',
@@ -60,7 +60,7 @@ export class PricingService {
       shippingPrice: this.customerShippingPrice(supplierDto, supplierQuote.shippingPrice),
     });
 
-    return this.toSmartBufferBreakdown(smartPrice);
+    return this.toSmartBufferBreakdown(smartPrice, supplierQuote);
   }
 
   private async applyGerberAnalysis(userId: string, dto: CreateQuoteDto): Promise<CreateQuoteDto> {
@@ -159,7 +159,7 @@ export class PricingService {
     };
   }
 
-  private toSmartBufferBreakdown(result: SmartBufferResult): PricingBreakdown {
+  private toSmartBufferBreakdown(result: SmartBufferResult, supplierQuote?: { leadTimeDays?: number; buildOptions?: PricingBreakdown['buildOptions'] }): PricingBreakdown {
     const bufferAmount = result.pcbClientPrice - result.supplierEstimatedPrice - result.serviceFee;
     return {
       partnerManufacturingCost: round(result.supplierEstimatedPrice),
@@ -182,6 +182,9 @@ export class PricingService {
       smartBufferBucketKey: result.bucketKey,
       smartBufferFormulaVersion: result.formulaVersion,
       smartBufferReasons: result.reasons,
+      supplierLeadTimeDays: supplierQuote?.leadTimeDays,
+      productionBuildDays: supplierQuote?.leadTimeDays,
+      buildOptions: supplierQuote?.buildOptions,
     };
   }
 

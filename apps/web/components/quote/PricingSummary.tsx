@@ -48,6 +48,8 @@ export function PricingSummary({
   saveState = 'idle',
   productionSpeed,
   onProductionSpeedChange,
+  selectedBuildTimeOptionId,
+  onBuildTimeOptionSelect,
   quantity,
   countries,
   destinationCountry,
@@ -64,6 +66,8 @@ export function PricingSummary({
   saveState?: 'idle' | 'saving' | 'saved' | 'error';
   productionSpeed: 'standard' | 'express_24h' | 'pcba_24h';
   onProductionSpeedChange: (value: 'standard' | 'express_24h' | 'pcba_24h') => void;
+  selectedBuildTimeOptionId?: string;
+  onBuildTimeOptionSelect: (option: NonNullable<PricingBreakdown['buildOptions']>[number]) => void;
   quantity: number;
   countries: AfricanCountry[];
   destinationCountry: string;
@@ -89,6 +93,28 @@ export function PricingSummary({
   const pcbClientPrice = pricing.pcbClientPrice ?? supplierEstimatedPrice + pricing.kendronicsServiceFee;
   const standardBuildPrice = Math.max(5, supplierEstimatedPrice);
   const urgentBuildPrice = Math.max(standardBuildPrice + pricing.productionSpeedFee + 7.5, standardBuildPrice * 1.65);
+  const buildOptions = pricing.buildOptions?.length
+    ? pricing.buildOptions
+    : [
+        {
+          id: 'standard',
+          label: 'Standard build',
+          buildDays: Math.max(1, pricing.productionBuildDays ?? extractLastNumber(pricing.estimatedLeadTime) ?? 2),
+          price: standardBuildPrice,
+          currency: 'EUR' as const,
+          speed: 'standard' as const,
+          source: pricing.pricingSource,
+        },
+        {
+          id: 'express',
+          label: 'Express build',
+          buildDays: 1,
+          price: urgentBuildPrice,
+          currency: 'EUR' as const,
+          speed: 'express_24h' as const,
+          source: pricing.pricingSource,
+        },
+      ];
 
   const filteredCountries = useMemo(() => {
     const query = countryQuery.trim().toLowerCase();
@@ -148,7 +174,8 @@ export function PricingSummary({
 
   const activeShippingMethod =
     shippingMethods.find((method) => (method.live ? selectedLiveShippingRateId === method.id : !selectedLiveShippingRateId && method.mode === shippingMode)) ?? shippingMethods[0];
-  const shipmentAt = addBusinessDays(new Date(), Math.max(1, extractLastNumber(pricing.estimatedLeadTime) || 1));
+  const activeBuildOption = buildOptions.find((option) => option.id === selectedBuildTimeOptionId) ?? buildOptions.find((option) => option.speed === productionSpeed) ?? buildOptions[0];
+  const shipmentAt = addBusinessDays(new Date(), Math.max(1, activeBuildOption.buildDays || pricing.productionBuildDays || pricing.supplierLeadTimeDays || 1));
   const deliveryAt = addBusinessDays(shipmentAt, Math.max(1, extractLastNumber(activeShippingMethod.transitTime) || 4));
   const shipmentDate = formatBusinessDate(shipmentAt);
   const deliveryDate = formatBusinessDate(deliveryAt);
@@ -233,24 +260,26 @@ export function PricingSummary({
                 <span>Qty</span>
                 <span>Total</span>
               </div>
-              <BuildTimeOption
-                label="24hours"
-                qty={quantity}
-                price={standardBuildPrice}
-                active={productionSpeed === 'standard'}
-                onClick={() => onProductionSpeedChange('standard')}
-              />
-              <BuildTimeOption
-                label="Extra Urgent!"
-                qty={quantity}
-                price={urgentBuildPrice}
-                active={productionSpeed === 'express_24h'}
-                muted
-                onClick={() => onProductionSpeedChange('express_24h')}
-              />
+              {buildOptions.map((option) => (
+                <BuildTimeOption
+                  key={option.id}
+                  label={option.label}
+                  days={option.buildDays}
+                  qty={quantity}
+                  price={option.price}
+                  active={activeBuildOption.id === option.id}
+                  muted={activeBuildOption.id !== option.id}
+                  onClick={() => {
+                    onProductionSpeedChange(option.speed);
+                    onBuildTimeOptionSelect(option);
+                  }}
+                />
+              ))}
             </div>
 
-            <p className="mt-3 text-[11px] font-medium text-[#ff7a00]">Final price is subject to our review.</p>
+            <p className="mt-3 text-[11px] font-medium text-[#ff7a00]">
+              {pricing.pricingSource === 'supplier_api' ? 'Build times are returned by the supplier quote.' : 'Build times update from the board options and Gerber analysis.'}
+            </p>
           </div>
 
           <div className="mb-3">
@@ -458,6 +487,7 @@ export function PricingSummary({
 
 function BuildTimeOption({
   label,
+  days,
   qty,
   price,
   active,
@@ -465,6 +495,7 @@ function BuildTimeOption({
   onClick,
 }: {
   label: string;
+  days: number;
   qty: number;
   price: number;
   active: boolean;
@@ -483,7 +514,10 @@ function BuildTimeOption({
         <span className={`grid h-6 w-6 place-items-center rounded-full border ${active ? 'border-[#43bf4d] bg-[#43bf4d]' : 'border-slate-300 bg-white'}`} aria-hidden="true">
           {active ? <span className="h-2.5 w-2.5 rounded-full bg-white" /> : null}
         </span>
-        {label}
+        <span>
+          <span className="block leading-4">{label}</span>
+          <span className="block text-[11px] leading-4 text-slate-500">{days} business day{days > 1 ? 's' : ''}</span>
+        </span>
       </span>
       <span className="text-center">{qty}</span>
       <span className="text-right font-semibold">${price.toFixed(2)}</span>

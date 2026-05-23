@@ -19,6 +19,17 @@ export interface PricingBreakdown {
   smartBufferBucketKey?: string;
   smartBufferFormulaVersion?: string;
   smartBufferReasons?: Array<{ code: string; label: string; adjustment: number }>;
+  supplierLeadTimeDays?: number;
+  productionBuildDays?: number;
+  buildOptions?: Array<{
+    id: string;
+    label: string;
+    buildDays: number;
+    price: number;
+    currency: 'EUR' | 'USD';
+    speed: 'standard' | 'express_24h' | 'pcba_24h';
+    source: string;
+  }>;
 }
 
 export interface Quote {

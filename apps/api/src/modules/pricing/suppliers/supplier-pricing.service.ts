@@ -126,6 +126,8 @@ export class SupplierPricingService {
       manufacturingPrice: round(manufacturingPrice),
       shippingPrice: rules.zoneBaseDeliveryFee,
       currency: 'EUR',
+      leadTimeDays: localProductionDays(dto),
+      buildOptions: localBuildOptions(dto, round(manufacturingPrice)),
     };
   }
 
@@ -151,4 +153,67 @@ function productMultiplier(productType: string): number {
     smt_stencil: 0.72,
     cnc_3d: 1.65,
   }[productType] ?? 1;
+}
+
+function localBuildOptions(dto: CreateQuoteDto, manufacturingPrice: number): SupplierQuote['buildOptions'] {
+  const standardDays = localProductionDays({ ...dto, configSnapshot: { ...(dto.configSnapshot ?? {}), productionSpeed: 'standard' } });
+  const expressDays = localProductionDays({ ...dto, configSnapshot: { ...(dto.configSnapshot ?? {}), productionSpeed: 'express_24h' } });
+  const options: NonNullable<SupplierQuote['buildOptions']> = [
+    {
+      id: 'local-standard',
+      label: 'Standard build',
+      buildDays: standardDays,
+      price: manufacturingPrice,
+      currency: 'EUR',
+      speed: 'standard',
+      source: 'local_calibrated_supplier_estimate',
+    },
+  ];
+
+  if (expressDays < standardDays) {
+    options.push({
+      id: 'local-express',
+      label: 'Express build',
+      buildDays: expressDays,
+      price: round(manufacturingPrice + 7.5 + (dto.layers > 2 ? 9 : 0)),
+      currency: 'EUR',
+      speed: 'express_24h',
+      source: 'local_calibrated_supplier_estimate',
+    });
+  }
+
+  if (dto.productType === 'pcb_assembly' || dto.configSnapshot?.assemblyRequired === true) {
+    options.push({
+      id: 'local-pcba-rush',
+      label: 'Assembly rush review',
+      buildDays: Math.max(2, expressDays + 3),
+      price: round(manufacturingPrice + 12),
+      currency: 'EUR',
+      speed: 'pcba_24h',
+      source: 'local_calibrated_supplier_estimate',
+    });
+  }
+
+  return options;
+}
+
+function localProductionDays(dto: CreateQuoteDto): number {
+  const config = dto.configSnapshot ?? {};
+  const productionSpeed = String(config.productionSpeed ?? 'standard');
+  const baseDays =
+    (productionSpeed === 'express_24h' || productionSpeed === 'pcba_24h' ? 1 : 2) +
+    (dto.layers > 2 ? 2 : 0) +
+    (dto.layers > 6 ? 3 : 0) +
+    (String(config.baseMaterial ?? 'FR4') !== 'FR4' ? 3 : 0) +
+    (dto.productType === 'fpc_rigid_flex' ? 3 : 0) +
+    (dto.productType === 'cnc_3d' ? 4 : 0) +
+    (dto.productType === 'smt_stencil' ? -1 : 0) +
+    (dto.productType === 'pcb_assembly' || config.assemblyRequired === true ? 4 : 0) +
+    countTruthy([config.impedanceControl, config.blindBuriedVias, config.viaInPad]) * 2;
+
+  return Math.max(1, baseDays);
+}
+
+function countTruthy(values: unknown[]): number {
+  return values.filter((value) => value === true).length;
 }
