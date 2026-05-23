@@ -7,7 +7,7 @@ import { africanCountries } from '../../lib/african-countries';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { authApiContract } from '../../lib/auth-contract';
 import type { AuthTokens, LoginResponse } from '../../lib/auth-contract';
-import { persistAuthSession, readAuthSession } from '../../lib/auth-session';
+import { persistAuthSession, readFreshAuthSession } from '../../lib/auth-session';
 import { validateForgotPasswordForm, validateLoginForm } from '../../lib/login-validation';
 import type { ForgotPasswordErrors, ForgotPasswordFormState, LoginErrors, LoginFormState } from '../../lib/login-validation';
 import { validateRegisterForm } from '../../lib/register-validation';
@@ -67,7 +67,7 @@ const initialLoginMetaValues: LoginMetaState = {
 
 export function AuthRequiredModal() {
   const pathname = usePathname() || '/';
-  const [isSignedIn, setIsSignedIn] = useState(true);
+  const [authStatus, setAuthStatus] = useState<'checking' | 'signed_in' | 'signed_out'>('checking');
   const [authStep, setAuthStep] = useState<'choice' | 'form'>('choice');
   const [activePanel, setActivePanel] = useState<'register' | 'login'>('register');
   const [loginValues, setLoginValues] = useState<LoginFormState>(initialLoginValues);
@@ -92,22 +92,34 @@ export function AuthRequiredModal() {
     () => publicPathPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)),
     [pathname],
   );
-  const shouldShow = !isPublicPath && !isSignedIn;
+  const shouldShow = !isPublicPath && authStatus === 'signed_out';
 
   useEffect(() => {
-    function refreshSession() {
-      setIsSignedIn(Boolean(readAuthSession()));
+    let cancelled = false;
+
+    async function refreshSession() {
+      if (isPublicPath) {
+        setAuthStatus('signed_in');
+        return;
+      }
+
+      setAuthStatus('checking');
+      const session = await readFreshAuthSession();
+      if (!cancelled) {
+        setAuthStatus(session ? 'signed_in' : 'signed_out');
+      }
     }
 
-    refreshSession();
+    void refreshSession();
     window.addEventListener('kendronics:auth-updated', refreshSession);
     window.addEventListener('storage', refreshSession);
 
     return () => {
+      cancelled = true;
       window.removeEventListener('kendronics:auth-updated', refreshSession);
       window.removeEventListener('storage', refreshSession);
     };
-  }, []);
+  }, [isPublicPath]);
 
   useEffect(() => {
     if (!shouldShow) return;
@@ -307,8 +319,7 @@ export function AuthRequiredModal() {
 
   function completeAuth(tokens: AuthTokens, options: { remember: boolean }) {
     persistAuthSession(tokens, options);
-    window.dispatchEvent(new Event('kendronics:auth-updated'));
-    setIsSignedIn(true);
+    setAuthStatus('signed_in');
     setLoginStatus('idle');
     setRegisterStatus('idle');
   }

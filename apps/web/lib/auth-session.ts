@@ -2,6 +2,7 @@ import { AuthTokens } from './auth-contract';
 import { getApiBaseUrl } from './api-base-url';
 
 const SESSION_STORAGE_KEY = 'kendronics.auth.session';
+let refreshInFlight: Promise<StoredAuthSession | null> | null = null;
 
 export interface StoredAuthSession extends AuthTokens {
   issuedAt: string;
@@ -21,6 +22,7 @@ export function persistAuthSession(tokens: AuthTokens, _options: { remember?: bo
   const serializedSession = JSON.stringify(session);
   window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
   window.localStorage.setItem(SESSION_STORAGE_KEY, serializedSession);
+  window.dispatchEvent(new Event('kendronics:auth-updated'));
 }
 
 export function readAuthSession(): StoredAuthSession | null {
@@ -79,6 +81,17 @@ export async function readFreshAuthSession(): Promise<StoredAuthSession | null> 
     return session;
   }
 
+  if (refreshInFlight) return refreshInFlight;
+
+  refreshInFlight = refreshAuthSession(session);
+  try {
+    return await refreshInFlight;
+  } finally {
+    refreshInFlight = null;
+  }
+}
+
+async function refreshAuthSession(session: StoredAuthSession): Promise<StoredAuthSession | null> {
   try {
     const response = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
       method: 'POST',
@@ -87,7 +100,7 @@ export async function readFreshAuthSession(): Promise<StoredAuthSession | null> 
     });
 
     if (!response.ok) {
-      clearAuthSession();
+      clearAuthSessionIfCurrent(session.refreshToken);
       return null;
     }
 
@@ -95,7 +108,14 @@ export async function readFreshAuthSession(): Promise<StoredAuthSession | null> 
     persistAuthSession(tokens);
     return readAuthSession();
   } catch {
-    clearAuthSession();
+    clearAuthSessionIfCurrent(session.refreshToken);
     return null;
+  }
+}
+
+function clearAuthSessionIfCurrent(refreshToken: string) {
+  const current = readAuthSession();
+  if (!current || current.refreshToken === refreshToken) {
+    clearAuthSession();
   }
 }
