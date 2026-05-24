@@ -22,6 +22,7 @@ const neutralForgotPasswordMessage =
 const publicPathPrefixes = [
   '/login',
   '/register',
+  '/reset-password',
   '/terms',
   '/privacy',
   '/cookie-policy',

@@ -86,38 +86,38 @@ export function CookieConsentBanner() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[80] px-3 pb-3 sm:px-5 sm:pb-5">
-      <div className="mx-auto max-h-[58vh] max-w-4xl overflow-y-auto border border-[#b8c9d9] bg-white p-4 text-[#0b1724] sm:p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0 md:max-w-2xl">
+    <div className="fixed inset-x-0 bottom-0 z-[80] px-2 pb-2 sm:px-4 sm:pb-4" data-i18n-skip="true">
+      <div className="mx-auto max-h-[46vh] w-full max-w-7xl overflow-y-auto border border-[#b8c9d9] bg-white px-4 py-3 text-[#0b1724] sm:px-5 sm:py-4">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] lg:items-center">
+          <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.16em] text-[#0f8f6b]">Cookies</p>
-            <h2 className="mt-2 text-lg font-semibold">Gestion des cookies Kendronics</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+            <h2 className="mt-1 text-base font-semibold sm:text-lg">Gestion des cookies Kendronics</h2>
+            <p className="mt-1 max-w-4xl text-xs leading-5 text-slate-600 sm:text-sm">
               Nous utilisons les cookies necessaires au fonctionnement du site. Les cookies de mesure d’audience et de preferences sont actives uniquement avec votre accord.
             </p>
-            <a href="/terms/politique-cookies" className="mt-2 inline-flex text-sm text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline">
+            <a href="/terms/politique-cookies" className="mt-1 inline-flex text-xs text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline sm:text-sm">
               Politique de cookies
             </a>
           </div>
 
-          <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-3 md:w-44 md:grid-cols-1">
+          <div className="grid min-w-0 grid-cols-3 gap-2">
             <button
               type="button"
-              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#0f8f6b] bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558]"
+              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#0f8f6b] bg-[#0f8f6b] px-2 text-xs font-semibold text-white transition hover:bg-[#0b7558] sm:px-4 sm:text-sm"
               onClick={() => saveConsent({ ...defaultConsent, analytics: true, preferences: true })}
             >
               Accepter
             </button>
             <button
               type="button"
-              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#b8c9d9] bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]"
+              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#b8c9d9] bg-white px-2 text-xs font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] sm:px-4 sm:text-sm"
               onClick={() => saveConsent(defaultConsent)}
             >
               Refuser
             </button>
             <button
               type="button"
-              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#b8c9d9] bg-[#eef6fb] px-4 text-sm font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]"
+              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#b8c9d9] bg-[#eef6fb] px-2 text-xs font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] sm:px-4 sm:text-sm"
               onClick={() => setIsCustomizing((current) => !current)}
             >
               Personnaliser
