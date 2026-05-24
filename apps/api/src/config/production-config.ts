@@ -29,4 +29,11 @@ export function validateProductionConfig() {
   if (process.env.STRIPE_WEBHOOK_SECRET && !process.env.STRIPE_WEBHOOK_SECRET.startsWith('whsec_')) {
     throw new Error('STRIPE_WEBHOOK_SECRET must be a Stripe webhook signing secret.');
   }
+
+  if (process.env.ONESIGNAL_REQUIRED === 'true') {
+    const missingOneSignal = ['ONESIGNAL_APP_ID', 'ONESIGNAL_REST_API_KEY'].filter((key) => !process.env[key]);
+    if (missingOneSignal.length > 0) {
+      throw new Error(`Missing OneSignal production environment variables: ${missingOneSignal.join(', ')}`);
+    }
+  }
 }
