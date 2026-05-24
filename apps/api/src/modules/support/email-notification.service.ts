@@ -140,7 +140,7 @@ async function sendOperationalMail(message: EmailMessage): Promise<void> {
     return;
   }
 
-  if (process.env.RESEND_FOR_OPERATIONAL_EMAIL === 'true' && process.env.RESEND_API_KEY) {
+  if (process.env.RESEND_API_KEY && process.env.RESEND_FOR_OPERATIONAL_EMAIL !== 'false') {
     await sendResendMail(process.env.RESEND_API_KEY, message);
     return;
   }

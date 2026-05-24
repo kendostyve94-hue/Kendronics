@@ -163,7 +163,12 @@ export function AuthRequiredModal() {
       if (!response.ok) throw new Error('Login failed.');
 
       const tokens = (await response.json()) as LoginResponse;
-      completeAuth(tokens, { remember: rememberMe });
+      await startAccountVerification({
+        tokens,
+        remember: rememberMe,
+        contact: loginValues.email.trim().toLowerCase(),
+        source: 'login',
+      });
     } catch {
       setLoginErrors({ form: authApiContract.login.failureMessage });
       setLoginStatus('idle');
