@@ -200,9 +200,8 @@ type ProfileView =
 
 const quickProducts: QuickProduct[] = [
   { title: 'Prototype PCB', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-standard-pcb.png', color: '#22c55e' },
-  { title: 'FPC', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-fpc-rigid-flex.png', color: '#ff7a1a' },
-  { title: 'PCB avance / PCBA', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-advanced-pcba.png', color: '#0ea5e9' },
-  { title: 'Assemblage PCB', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-assembly.png', color: '#3b82f6' },
+  { title: 'PCB avancé / PCBA', subtitle: 'Préparer un devis', href: '/quote', image: '/images/quote-product-advanced-pcba.png', color: '#0ea5e9' },
+  { title: 'Assemblage PCB', subtitle: 'Lancer un projet', href: '/quote', image: '/images/quote-product-assembly.png', color: '#3b82f6' },
 ];
 
 type SidebarItem = {
@@ -362,7 +361,7 @@ export default function ProfilePage() {
                   <ProductQuickGrid />
                   <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_300px] gap-4">
                     <div className="grid min-w-0 gap-4">
-                      <DashboardPanel firstName={firstName} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
+                      <DashboardPanel firstName={firstName} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
                       <StatusStrip counts={orderCounts(orders)} />
                       <CommunityPublishPanel firstName={firstName} avatarDataUrl={avatarDataUrl} />
                     </div>
@@ -389,12 +388,12 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
         </a>
         <nav className="flex min-w-0 flex-1 snap-x items-center justify-between gap-2 text-[15px] text-[#111827]">
           <ProfileNavLink href="/profile" label="Mon compte" />
-          <ProfileNavLink href="/quote" label="Devis immediat" />
+          <ProfileNavLink href="/quote" label="Devis immédiat" />
           <ProfileNavLink href="/quote" label="Assemblage PCB" />
           <ProfileNavLink href="/services" label="Impression 3D" />
           <ProfileNavLink href="/services" label="Conception PCB" />
           <ProfileNavLink href="/profile?view=orders" label="Mes commandes" />
-          <ProfileNavLink href="/profile" label="Parametres" />
+          <ProfileNavLink href="/profile" label="Paramètres" />
         </nav>
         <a href="/profile?view=orders" className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Panier">
           <CartIcon />
@@ -482,7 +481,7 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
     {
       title: 'Suivi commande',
       items: [
-        { label: 'Verification', view: 'verification', count: counts.verification },
+        { label: 'Vérification', view: 'verification', count: counts.verification },
         { label: 'Paiement', view: 'payment-pending', count: counts.paymentPending },
         { label: 'Production', view: 'production', count: counts.production },
         { label: 'Livraison', view: 'delivery', count: counts.delivery },
@@ -492,7 +491,7 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
     {
       title: 'Services',
       items: [
-        { label: 'Services & demandes', view: 'services' },
+        { label: 'Services et demandes', view: 'services' },
         { label: 'Support', view: 'support' },
         { label: 'Publier', view: 'benefits' },
         { label: 'Parrainage', view: 'invite' },
@@ -504,7 +503,7 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
         { label: 'Adresse livraison', view: 'shipping-address' },
         { label: 'Historique des commandes', view: 'all-orders' },
         { label: "Centre d'aide", view: 'support' },
-        { label: 'Parametres', view: 'settings' },
+        { label: 'Paramètres', view: 'settings' },
       ],
     },
   ];
@@ -580,9 +579,9 @@ function ProfileViewContent({
 type OrderStatusKey = 'all' | 'verification' | 'payment-pending' | 'production' | 'delivery' | 'completed' | 'comments';
 
 const orderStatuses: Array<{ key: Extract<OrderStatusKey, 'verification' | 'payment-pending' | 'production' | 'delivery' | 'comments'>; label: string }> = [
-  { key: 'verification', label: 'Verification en cours' },
+  { key: 'verification', label: 'Vérification en cours' },
   { key: 'payment-pending', label: 'Paiement en attente' },
-  { key: 'production', label: 'Production Terminee' },
+  { key: 'production', label: 'Production terminée' },
   { key: 'delivery', label: 'Livraison' },
   { key: 'comments', label: 'Commentaires' },
 ];
@@ -1016,7 +1015,7 @@ function QuotesHubSection({ orders, dataStatus }: { orders: ProfileOrder[]; data
 function ServicesHubSection() {
   return (
     <section className="min-h-[690px] bg-white p-6 text-[#102033] shadow-sm ring-1 ring-[#dbe4ee]">
-      <HubHeader eyebrow="Services" title="Services disponibles dans votre espace" actionLabel="Devis immediat" actionHref="/quote" />
+      <HubHeader eyebrow="Services" title="Services disponibles dans votre espace" actionLabel="Devis immédiat" actionHref="/quote" />
       <div className="mt-5 grid grid-cols-2 gap-4">
         {serviceTiles.map((service) => (
           <a key={service.title} href={service.href} className="min-h-[142px] border border-[#e4ebf2] bg-white p-5 transition hover:border-[#0f8f6b] hover:bg-[#f8fafc]">
@@ -2074,15 +2073,15 @@ function ProductQuickGrid() {
     <section className="bg-white p-3 shadow-sm ring-1 ring-[#dbe4ee]">
       <div className="mb-3 flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#0f8f6b]">Demarrer</p>
-          <h2 className="text-base font-black text-[#102033]">Services frequents</h2>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0f8f6b]">Démarrer</p>
+          <h2 className="text-base font-semibold text-[#102033]">Services fréquents</h2>
         </div>
         <a href="/profile?view=services" className="text-xs font-black text-[#0f8f6b]">Tout voir</a>
       </div>
       <div className="grid grid-cols-[minmax(0,1fr)_302px] gap-3">
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-3">
           {quickProducts.map((product) => (
-            <a key={product.title} href={product.href} className="group relative block min-h-[154px] overflow-hidden bg-[#f8fafc] ring-1 ring-[#e4ebf2] transition hover:-translate-y-0.5 hover:ring-[#0f8f6b]">
+            <a key={product.title} href={product.href} className="group relative block min-h-[174px] overflow-hidden bg-[#f8fafc] ring-1 ring-[#d4e2ee] transition hover:-translate-y-0.5 hover:ring-[#0f8f6b]">
               {product.image ? (
                 <img src={product.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-300 group-hover:scale-[1.025] group-hover:opacity-100" />
               ) : (
@@ -2093,10 +2092,10 @@ function ProductQuickGrid() {
               <span className="absolute inset-0 bg-white/20" />
               <span className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white via-white/90 to-white/0" />
               <span className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white via-white/95 to-white/0" />
-              <span className="relative z-10 block p-3">
-                <span className="block min-h-9 text-[12px] font-black leading-[15px] text-[#102033]">{product.title}</span>
+              <span className="relative z-10 block p-4">
+                <span className="block min-h-9 text-sm font-semibold leading-5 text-[#102033]">{product.title}</span>
               </span>
-              <span className="absolute inset-x-0 bottom-0 z-10 block px-3 pb-3 text-[11px] font-semibold leading-4 text-[#33506e]">
+              <span className="absolute inset-x-0 bottom-0 z-10 block px-4 pb-4 text-xs font-semibold leading-4 text-[#33506e]">
                 {product.subtitle} &gt;
               </span>
             </a>
@@ -2131,12 +2130,14 @@ function LivePromoFlash() {
 
 function DashboardPanel({
   firstName,
+  profile,
   userId,
   avatarDataUrl,
   orders,
   notifications,
 }: {
   firstName: string;
+  profile: ProfileForm;
   userId: string;
   avatarDataUrl: string;
   orders: ProfileOrder[];
@@ -2146,36 +2147,42 @@ function DashboardPanel({
   const paidTotal = orders.filter((order) => order.paymentStatus === 'paid').reduce((total, order) => total + (order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0), 0);
   const pendingTotal = orders.filter((order) => order.paymentStatus !== 'paid').reduce((total, order) => total + (order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0), 0);
   const counts = orderCounts(orders);
+  const displayName = profile.name || firstName || 'Client Kendronics';
+  const companyOrType = profile.company || 'Compte client';
+  const location = profile.country || 'Pays non renseigné';
 
   return (
     <section className="grid grid-cols-[190px_minmax(0,1fr)] bg-white shadow-sm ring-1 ring-[#dbe4ee]">
       <div className="grid place-items-center border-r border-[#e4ebf2] px-4 py-8 text-center">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div>
-          <h1 className="mt-4 text-lg font-black text-[#102033]">{firstName}</h1>
+          <h1 className="mt-4 text-lg font-semibold text-[#102033]">{displayName}</h1>
+          <p className="mt-1 text-xs font-semibold text-[#0f8f6b]">{companyOrType}</p>
           <p className="mt-2 text-xs text-[#64748b]">ID Client: {userId}</p>
-          <a href="/profile?view=settings" className="mt-4 inline-flex text-xs font-semibold text-[#0f8f6b]">Gerer mon compte</a>
+          <p className="mt-1 truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : location}</p>
+          <p className="mt-1 text-xs text-[#64748b]">{location}</p>
+          <a href="/profile?view=settings" className="mt-4 inline-flex text-xs font-semibold text-[#0f8f6b]">Gérer mon compte</a>
         </div>
       </div>
 
       <div className="p-5">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0f8f6b]">Espace client</p>
-            <h2 className="mt-1 text-xl font-black text-[#102033]">Vue d'ensemble</h2>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0f8f6b]">Espace client</p>
+            <h2 className="mt-1 text-xl font-semibold text-[#102033]">Vue d'ensemble</h2>
           </div>
-          <a href="/quote" className="border border-[#0f8f6b] px-4 py-2 text-xs font-black text-[#0f8f6b] transition hover:bg-[#0f8f6b] hover:text-white">Nouveau devis</a>
+          <a href="/quote" className="border border-[#0f8f6b] px-4 py-2 text-xs font-semibold text-[#0f8f6b] transition hover:bg-[#0f8f6b] hover:text-white">Nouveau devis</a>
         </div>
         <div className="mt-4 grid grid-cols-[1fr_180px] gap-4">
           <div className="grid grid-cols-2 border border-[#e4ebf2]">
-            <MetricCell label="Total paye (EUR)" value={formatMoney(paidTotal)} detail={`En attente: ${formatMoney(pendingTotal)}`} />
+            <MetricCell label="Total payé (EUR)" value={formatMoney(paidTotal)} detail={`En attente : ${formatMoney(pendingTotal)}`} />
             <MetricCell label="Commandes" value={String(orders.length)} valueClass="text-[#102033]" />
             <MetricCell label="En production" value={String(counts.production)} />
-            <MetricCell label="A traiter" value={String(counts.paymentPending + counts.verification)} detail="Dossier a incorrect" />
+            <MetricCell label="À traiter" value={String(counts.paymentPending + counts.verification)} detail="Dossier à corriger" />
           </div>
           <div className="grid gap-2">
             <SmallInfo label="Coupons actifs" value="0" />
-            <SmallInfo label="Following" value="0" action="Voir" />
+            <SmallInfo label="Suivis" value="0" action="Voir" />
             <SmallInfo label="Notifications" value={String(unreadNotifications(notifications))} danger />
           </div>
         </div>
@@ -2218,9 +2225,9 @@ function ReferralBanner() {
 
 function StatusStrip({ counts }: { counts: ReturnType<typeof orderCounts> }) {
   const statuses = [
-    [counts.verification, 'Verification en cours'],
+    [counts.verification, 'Vérification en cours'],
     [counts.paymentPending, 'Paiement en attente'],
-    [counts.production, 'Production Terminee'],
+    [counts.production, 'Production terminée'],
     [counts.delivery, 'Livraison'],
     [counts.comments, 'Commentaires'],
   ];
@@ -2522,8 +2529,8 @@ function DiscoverNewsRail() {
         <div className="flex items-center gap-3">
           <span className="grid h-7 w-7 place-items-center bg-[#0f8f6b] text-xs font-black text-white">D</span>
           <div className="min-w-0">
-            <h2 className="text-lg font-black">Discover</h2>
-            <p className="truncate text-[11px] font-semibold text-white/55">Science, hardware, espace</p>
+            <h2 className="text-lg font-semibold">Discover</h2>
+            <p className="truncate text-[11px] font-semibold text-white/55">Technologie, IA, électronique</p>
           </div>
         </div>
         <button type="button" onClick={() => window.location.reload()} className="shrink-0 border border-white/20 px-2 py-2 text-[11px] font-black text-white transition hover:border-[#0f8f6b] hover:text-[#9ee6ca]">
@@ -2531,7 +2538,7 @@ function DiscoverNewsRail() {
         </button>
       </div>
 
-      {status === 'loading' ? <p className="p-5 text-sm font-semibold text-white/65">Chargement du flux public...</p> : null}
+      {status === 'loading' ? <p className="p-5 text-sm font-semibold text-white/65">Chargement des actualités technologie...</p> : null}
       {status === 'error' ? <p className="p-5 text-sm font-semibold text-red-200">Flux temporairement indisponible.</p> : null}
 
       {status === 'ready' && featured ? (
@@ -2545,7 +2552,7 @@ function DiscoverNewsRail() {
           </div>
 
           <div className="flex items-center justify-between border-t border-white/10 pt-3 text-[11px] text-white/55">
-            <span>Sources verifiees</span>
+            <span>Sources vérifiées</span>
             <span>{updatedAt ? formatDate(updatedAt) : 'Direct'}</span>
           </div>
         </div>

@@ -11,10 +11,36 @@ type DiscoverNewsItem = {
 
 const feeds = [
   { source: 'ScienceDaily Tech', url: 'https://www.sciencedaily.com/rss/top/technology.xml' },
-  { source: 'ScienceDaily Science', url: 'https://www.sciencedaily.com/rss/top/science.xml' },
-  { source: 'NASA JPL', url: 'https://www.jpl.nasa.gov/feeds/news/' },
-  { source: 'MIT News', url: 'https://news.mit.edu/rss/feed' },
   { source: 'MIT AI', url: 'https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml' },
+  { source: 'MIT Electronics', url: 'https://news.mit.edu/topic/electronics-rss.xml' },
+  { source: 'MIT Robotics', url: 'https://news.mit.edu/topic/robotics-rss.xml' },
+  { source: 'NASA Technology', url: 'https://www.nasa.gov/technology/feed/' },
+];
+
+const technologyKeywords = [
+  'ai',
+  'artificial intelligence',
+  'automation',
+  'battery',
+  'chip',
+  'circuit',
+  'computer',
+  'computing',
+  'device',
+  'electronics',
+  'engineering',
+  'hardware',
+  'innovation',
+  'machine learning',
+  'manufacturing',
+  'microchip',
+  'processor',
+  'quantum',
+  'robot',
+  'semiconductor',
+  'sensor',
+  'software',
+  'technology',
 ];
 
 export async function GET() {
@@ -36,6 +62,7 @@ export async function GET() {
   const rawItems = settledFeeds
     .flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
     .filter((item) => item.title && item.link)
+    .filter(isTechnologyItem)
     .sort((left, right) => new Date(right.publishedAt).getTime() - new Date(left.publishedAt).getTime())
     .slice(0, 12);
 
@@ -93,6 +120,11 @@ function parseRssItems(xml: string, source: string): DiscoverNewsItem[] {
       imageUrl: extractImageUrl(item),
     };
   });
+}
+
+function isTechnologyItem(item: DiscoverNewsItem) {
+  const haystack = `${item.source} ${item.title} ${item.summary}`.toLowerCase();
+  return technologyKeywords.some((keyword) => haystack.includes(keyword));
 }
 
 function extractTag(xml: string, tag: string) {
