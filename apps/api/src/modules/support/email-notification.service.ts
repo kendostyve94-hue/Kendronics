@@ -62,7 +62,7 @@ export class EmailNotificationService {
     ].join('\n');
 
     try {
-      await sendTransactionalMail({
+      await sendOperationalMail({
         to: input.to,
         subject,
         text: body,
@@ -87,7 +87,7 @@ export class EmailNotificationService {
     ].join('\n');
 
     try {
-      await sendTransactionalMail({
+      await sendOperationalMail({
         to: input.to,
         subject,
         text: body,
@@ -134,6 +134,22 @@ async function sendTransactionalMail(message: EmailMessage): Promise<void> {
   await sendSmtpMail(getSmtpConfig(), message);
 }
 
+async function sendOperationalMail(message: EmailMessage): Promise<void> {
+  if (isSmtpConfigured()) {
+    await sendSmtpMail(getSmtpConfig(), message);
+    return;
+  }
+
+  if (process.env.RESEND_FOR_OPERATIONAL_EMAIL === 'true' && process.env.RESEND_API_KEY) {
+    await sendResendMail(process.env.RESEND_API_KEY, message);
+    return;
+  }
+
+  throw new ServiceUnavailableException(
+    'Operational SMTP is not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS to deliver verification codes by email.',
+  );
+}
+
 function smtpErrorDetails(error: unknown): string {
   if (error instanceof AggregateError) {
     const details = error.errors
@@ -155,6 +171,10 @@ function labelForAction(action: string) {
   if (action === 'contacts') return 'Changement des contacts';
   if (action === 'delete') return 'Suppression du compte';
   return 'Verification du compte';
+}
+
+function isSmtpConfigured(): boolean {
+  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
 function getSmtpConfig(): SmtpConfig {

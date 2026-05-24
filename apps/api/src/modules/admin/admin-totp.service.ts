@@ -3,6 +3,7 @@ import { createHmac, pbkdf2Sync, randomBytes, randomInt, timingSafeEqual } from 
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { UserRole } from '../../common/types/user-role.enum';
+import { NotificationsService } from '../notifications/notifications.service';
 import { EmailNotificationService } from '../support/email-notification.service';
 import { AdminAuditRepository } from './repositories/admin-audit.repository';
 
@@ -20,6 +21,7 @@ export class AdminTotpService {
     private readonly prisma: PrismaService,
     private readonly emailNotificationService: EmailNotificationService,
     private readonly auditRepository: AdminAuditRepository,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   isRequired(): boolean {
@@ -48,7 +50,7 @@ export class AdminTotpService {
       },
     });
 
-    await this.emailNotificationService.sendAdminSetupCode({ to: access.professionalEmail, code: setupCode });
+    await this.sendAdminSetupCode(user.id, access.professionalEmail, setupCode);
     await this.auditRepository.record(user.id, 'admin.access.code.setup.sent', 'adminAccess', access.id, { ipAddress });
     return { status: 'setup_code_sent', expiresAt: setupCodeExpiresAt.toISOString() };
   }
@@ -154,7 +156,7 @@ export class AdminTotpService {
       },
     });
 
-    await this.emailNotificationService.sendAdminSetupCode({ to: updated.professionalEmail, code: setupCode });
+    await this.sendAdminSetupCode(updated.userId, updated.professionalEmail, setupCode);
     await this.auditRepository.record(admin.id, 'admin.access.code.reset', 'adminAccess', updated.id, { ipAddress });
     return { ok: true, expiresAt: setupCodeExpiresAt.toISOString() };
   }
@@ -264,6 +266,24 @@ export class AdminTotpService {
     const left = Buffer.from(a);
     const right = Buffer.from(b);
     return left.length === right.length && timingSafeEqual(left, right);
+  }
+
+  private async sendAdminSetupCode(userId: string, professionalEmail: string, code: string): Promise<void> {
+    await this.notificationsService.create({
+      userId,
+      type: 'admin.verification.code',
+      title: 'Code administrateur Kendronics',
+      body: `Code admin ${code}. Il expire dans 10 minutes.`,
+    });
+
+    try {
+      await this.emailNotificationService.sendAdminSetupCode({ to: professionalEmail, code });
+    } catch (error) {
+      console.warn('Admin verification email fallback failed:', error instanceof Error ? error.message : String(error));
+      if (process.env.VERIFICATION_CODE_EMAIL_REQUIRED === 'true') {
+        throw error;
+      }
+    }
   }
 }
 

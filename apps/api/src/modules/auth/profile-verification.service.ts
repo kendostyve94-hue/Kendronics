@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { EmailNotificationService } from '../support/email-notification.service';
 import { UsersService } from '../users/users.service';
 import { ProfileVerificationAction } from './dto/profile-verification.dto';
@@ -10,6 +11,7 @@ export class ProfileVerificationService {
     private readonly prisma: PrismaService,
     private readonly emailNotificationService: EmailNotificationService,
     private readonly usersService: UsersService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async requestCode(input: { userId: string; email: string; action: ProfileVerificationAction }): Promise<{ ok: true }> {
@@ -37,6 +39,13 @@ export class ProfileVerificationService {
       },
     });
 
+    await this.notificationsService.create({
+      userId: input.userId,
+      type: `verification.${input.action}.code`,
+      title: 'Code de verification Kendronics',
+      body: `Code ${code} pour ${labelForAction(input.action).toLowerCase()}. Il expire dans 10 minutes.`,
+    });
+
     try {
       await this.emailNotificationService.sendProfileVerificationCode({
         to: input.email,
@@ -44,11 +53,13 @@ export class ProfileVerificationService {
         action: input.action,
       });
     } catch (error) {
-      await this.deleteCode(input.userId, input.action);
-      if (error instanceof ServiceUnavailableException) throw error;
       const message = smtpErrorDetails(error);
-      console.error('Profile verification email failed:', message);
-      throw new ServiceUnavailableException(`Unable to send profile verification email. ${message}`);
+      console.warn('Profile verification email fallback failed:', message);
+      if (process.env.VERIFICATION_CODE_EMAIL_REQUIRED === 'true') {
+        await this.deleteCode(input.userId, input.action);
+        if (error instanceof ServiceUnavailableException) throw error;
+        throw new ServiceUnavailableException(`Unable to send profile verification email. ${message}`);
+      }
     }
 
     return { ok: true };
@@ -105,4 +116,11 @@ function smtpErrorDetails(error: unknown): string {
   }
 
   return String(error || 'Unknown SMTP error');
+}
+
+function labelForAction(action: string) {
+  if (action === 'account') return 'Modification du compte';
+  if (action === 'contacts') return 'Changement des contacts';
+  if (action === 'delete') return 'Suppression du compte';
+  return 'Verification du compte';
 }
