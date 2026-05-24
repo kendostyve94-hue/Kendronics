@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OrdersModule } from '../orders/orders.module';
+import { PaymentsModule } from '../payments/payments.module';
 import { PricingModule } from '../pricing/pricing.module';
 import { SupportModule } from '../support/support.module';
 import { TrackingModule } from '../tracking/tracking.module';
@@ -11,7 +12,7 @@ import { AdminTotpService } from './admin-totp.service';
 import { AdminAuditRepository } from './repositories/admin-audit.repository';
 
 @Module({
-  imports: [OrdersModule, PricingModule, TrackingModule, SupportModule, UsersModule],
+  imports: [OrdersModule, PaymentsModule, PricingModule, TrackingModule, SupportModule, UsersModule],
   controllers: [AdminController],
   providers: [AdminService, AdminAuditRepository, AdminTotpService, AdminTotpGuard],
 })

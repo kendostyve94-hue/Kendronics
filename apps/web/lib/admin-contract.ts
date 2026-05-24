@@ -416,6 +416,9 @@ export const adminApiContract = {
 
 export const adminOrderStatuses: AdminOrderStatus[] = [
   'awaiting_payment',
+  'payment_authorized',
+  'supplier_review_pending',
+  'supplier_files_rejected',
   'paid',
   'supplier_order_pending',
   'supplier_ordered',
@@ -431,6 +434,9 @@ export const adminOrderStatuses: AdminOrderStatus[] = [
 
 export const adminStatusLabels: Record<AdminOrderStatus, string> = {
   awaiting_payment: 'Awaiting payment',
+  payment_authorized: 'Paiement autorise',
+  supplier_review_pending: 'Verification fournisseur',
+  supplier_files_rejected: 'Fichiers refuses',
   paid: 'Paid',
   supplier_order_pending: 'Commande fournisseur a passer',
   supplier_ordered: 'Commande fournisseur passee',

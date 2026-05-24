@@ -4,6 +4,9 @@ import { OrderStatus } from '../entities/order.entity';
 export class UpdateOrderStatusDto {
   @IsIn([
     'paid',
+    'payment_authorized',
+    'supplier_review_pending',
+    'supplier_files_rejected',
     'supplier_order_pending',
     'supplier_ordered',
     'supplier_in_production',

@@ -38,10 +38,12 @@ export class StripePaymentProvider {
       cancel_url: input.cancelUrl,
       customer_email: input.customerEmail,
       client_reference_id: input.orderId,
-      invoice_creation: {
-        enabled: true,
-        invoice_data: {
-          description: `Kendronics PCB order ${input.orderId}`,
+      payment_method_types: ['card'],
+      payment_intent_data: {
+        capture_method: 'manual',
+        metadata: {
+          paymentId: input.paymentId,
+          orderId: input.orderId,
         },
       },
       metadata: {
@@ -107,19 +109,47 @@ export class StripePaymentProvider {
       id: event.id,
       type: event.type,
       providerPaymentId: event.providerPaymentId,
+      providerIntentId: event.providerIntentId,
+      localPaymentId: event.localPaymentId,
+      captureBefore: event.captureBefore ? new Date(event.captureBefore) : undefined,
       paymentStatus: event.paymentStatus,
       raw: parsedBody,
     };
   }
 
+  async capturePaymentIntent(paymentIntentId: string) {
+    if (!this.stripe) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new ServiceUnavailableException('Stripe is not configured for production payments.');
+      }
+      return;
+    }
+
+    await this.stripe.paymentIntents.capture(paymentIntentId);
+  }
+
+  async cancelPaymentIntent(paymentIntentId: string) {
+    if (!this.stripe) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new ServiceUnavailableException('Stripe is not configured for production payments.');
+      }
+      return;
+    }
+
+    await this.stripe.paymentIntents.cancel(paymentIntentId);
+  }
+
   private mapStripeEvent(event: Stripe.Event): VerifiedStripePaymentEvent {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
+      const paymentIntentId = stringId(session.payment_intent);
       return {
         id: event.id,
         type: event.type,
         providerPaymentId: session.id,
-        paymentStatus: session.payment_status === 'paid' ? 'succeeded' : 'pending',
+        providerIntentId: paymentIntentId,
+        localPaymentId: stringMetadata(session.metadata?.paymentId),
+        paymentStatus: session.payment_status === 'paid' ? 'succeeded' : paymentIntentId ? 'authorized' : 'pending',
         raw: event,
       };
     }
@@ -130,6 +160,8 @@ export class StripePaymentProvider {
         id: event.id,
         type: event.type,
         providerPaymentId: session.id,
+        providerIntentId: stringId(session.payment_intent),
+        localPaymentId: stringMetadata(session.metadata?.paymentId),
         paymentStatus: 'succeeded',
         raw: event,
       };
@@ -144,7 +176,35 @@ export class StripePaymentProvider {
         id: event.id,
         type: event.type,
         providerPaymentId: session.id,
+        providerIntentId: stringId(session.payment_intent),
+        localPaymentId: stringMetadata(session.metadata?.paymentId),
         paymentStatus: 'failed',
+        raw: event,
+      };
+    }
+
+    if (
+      event.type === 'payment_intent.amount_capturable_updated' ||
+      event.type === 'payment_intent.succeeded' ||
+      event.type === 'payment_intent.canceled' ||
+      event.type === 'payment_intent.payment_failed'
+    ) {
+      const intent = event.data.object as Stripe.PaymentIntent;
+      return {
+        id: event.id,
+        type: event.type,
+        providerPaymentId: intent.id,
+        providerIntentId: intent.id,
+        localPaymentId: stringMetadata(intent.metadata?.paymentId),
+        captureBefore: captureBeforeFromPaymentIntent(intent),
+        paymentStatus:
+          event.type === 'payment_intent.amount_capturable_updated'
+            ? 'authorized'
+            : event.type === 'payment_intent.succeeded'
+              ? 'succeeded'
+              : event.type === 'payment_intent.canceled'
+                ? cancelStatus(intent)
+                : 'failed',
         raw: event,
       };
     }
@@ -157,4 +217,24 @@ export class StripePaymentProvider {
       raw: event,
     };
   }
+}
+
+function stringId(value: string | Stripe.PaymentIntent | null): string | undefined {
+  if (!value) return undefined;
+  return typeof value === 'string' ? value : value.id;
+}
+
+function stringMetadata(value: string | undefined): string | undefined {
+  return value?.trim() || undefined;
+}
+
+function cancelStatus(intent: Stripe.PaymentIntent): 'canceled' | 'expired' {
+  return intent.cancellation_reason === 'abandoned' ? 'expired' : 'canceled';
+}
+
+function captureBeforeFromPaymentIntent(intent: Stripe.PaymentIntent): Date | undefined {
+  const latestCharge = intent.latest_charge;
+  if (!latestCharge || typeof latestCharge === 'string') return undefined;
+  const captureBefore = latestCharge.payment_method_details?.card?.capture_before;
+  return captureBefore ? new Date(captureBefore * 1000) : undefined;
 }

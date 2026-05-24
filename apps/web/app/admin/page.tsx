@@ -3766,8 +3766,11 @@ function clientLabel(userId: string): string {
 function paymentLabel(status: PaymentStatus): string {
   const labels: Record<PaymentStatus, string> = {
     pending: 'En attente',
+    authorized: 'Autorise',
     paid: 'Paye',
     failed: 'Echoue',
+    canceled: 'Annule',
+    expired: 'Expire',
     refunded: 'Rembourse',
   };
   return labels[status] ?? status;
@@ -3776,8 +3779,11 @@ function paymentLabel(status: PaymentStatus): string {
 function paymentColor(status: PaymentStatus): string {
   const colors: Record<PaymentStatus, string> = {
     pending: '#f6ad2f',
+    authorized: '#38bdf8',
     paid: '#2edf7f',
     failed: '#f43f5e',
+    canceled: '#94a3b8',
+    expired: '#fb7185',
     refunded: '#8aa4b7',
   };
   return colors[status] ?? '#8aa4b7';
@@ -3971,6 +3977,9 @@ function transactionToneForOrder(order: AdminOrderRow, paymentStatus: PaymentSta
 function progressForOrder(order: AdminOrderRow): number {
   const map: Record<AdminOrderStatus, number> = {
     awaiting_payment: 10,
+    payment_authorized: 18,
+    supplier_review_pending: 22,
+    supplier_files_rejected: 15,
     paid: 25,
     supplier_order_pending: 35,
     supplier_ordered: 45,

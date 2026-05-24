@@ -2,6 +2,9 @@ export type OrderStatus =
   | 'draft'
   | 'quoted'
   | 'awaiting_payment'
+  | 'payment_authorized'
+  | 'supplier_review_pending'
+  | 'supplier_files_rejected'
   | 'paid'
   | 'supplier_order_pending'
   | 'supplier_ordered'
@@ -23,7 +26,7 @@ export interface Order {
   status: OrderStatus;
   totalPrice?: number;
   currency?: 'EUR';
-  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentStatus?: 'pending' | 'authorized' | 'paid' | 'failed' | 'canceled' | 'expired' | 'refunded';
   externalManufacturingPartner?: string;
   externalSupplierOrderId?: string;
   carrierName?: string;

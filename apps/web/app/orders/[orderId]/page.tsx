@@ -18,6 +18,7 @@ import type {
   CustomerTrackingStatus,
   GerberFileInfo,
   OrderDetailResponse,
+  PaymentStatus,
   PcbSpecs,
   PricingLineItem,
   TrackingTimelineItem,
@@ -382,7 +383,7 @@ function SummaryCard({
               : 'cursor-not-allowed bg-slate-300'
           }`}
         >
-          {checkoutStatus === 'loading' ? 'Ouverture de Stripe...' : order.paymentStatus === 'paid' ? 'Paiement confirme' : 'Payer par carte'}
+          {stripeButtonLabel(order.paymentStatus, checkoutStatus)}
         </button>
       ) : (
         <div className="mt-4 space-y-3">
@@ -420,7 +421,7 @@ function SummaryCard({
                 : 'cursor-not-allowed bg-slate-300'
             }`}
           >
-            {mobileMoneyStatus === 'loading' ? 'Demande en cours...' : order.paymentStatus === 'paid' ? 'Paiement confirme' : 'Payer par Mobile Money'}
+            {mobileMoneyButtonLabel(order.paymentStatus, mobileMoneyStatus)}
           </button>
           {mobileMoneyStatus === 'pending' ? (
             <p className="rounded-sm border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-700">
@@ -595,7 +596,7 @@ function PricingBreakdownCard({
         ))}
       </div>
       <div className="mt-4 flex items-center justify-between rounded-sm bg-deepblue p-4 text-white">
-        <span className="text-sm font-black">{order.paymentStatus === 'paid' ? 'Total payé' : 'Total à payer'}</span>
+        <span className="text-sm font-black">{paymentTotalLabel(order.paymentStatus)}</span>
         <span className="text-xl font-black">{formatMoney(order.totalPrice, order.currency)}</span>
       </div>
     </Card>
@@ -746,6 +747,31 @@ function productLabel(value: string): string {
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+function stripeButtonLabel(paymentStatus: PaymentStatus, checkoutStatus: CheckoutStatus): string {
+  if (checkoutStatus === 'loading') return 'Ouverture de Stripe...';
+  return paymentActionLabel(paymentStatus, 'Payer par carte');
+}
+
+function mobileMoneyButtonLabel(paymentStatus: PaymentStatus, mobileMoneyStatus: MobileMoneyStatus): string {
+  if (mobileMoneyStatus === 'loading') return 'Demande en cours...';
+  return paymentActionLabel(paymentStatus, 'Payer par Mobile Money');
+}
+
+function paymentActionLabel(paymentStatus: PaymentStatus, defaultLabel: string): string {
+  if (paymentStatus === 'paid') return 'Paiement confirme';
+  if (paymentStatus === 'authorized') return 'Paiement autorise';
+  if (paymentStatus === 'canceled') return 'Autorisation annulee';
+  if (paymentStatus === 'expired') return 'Autorisation expiree';
+  if (paymentStatus === 'failed') return 'Paiement refuse';
+  return defaultLabel;
+}
+
+function paymentTotalLabel(paymentStatus: PaymentStatus): string {
+  if (paymentStatus === 'paid') return 'Total paye';
+  if (paymentStatus === 'authorized') return 'Montant autorise';
+  return 'Total a payer';
 }
 
 function numberValue(value: unknown): number | undefined {

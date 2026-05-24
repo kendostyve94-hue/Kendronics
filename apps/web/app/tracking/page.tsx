@@ -304,6 +304,9 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
 
 function defaultTimelineDescription(status: PublicTrackingStatus): string {
   const descriptions: Record<PublicTrackingStatus, string> = {
+    payment_authorized: 'Le paiement est autorise. Aucun encaissement final n est effectue avant validation fournisseur.',
+    supplier_review_pending: 'Les fichiers sont en verification fournisseur.',
+    supplier_files_rejected: 'Le fournisseur a demande une correction des fichiers avant production.',
     paid: 'Le paiement est confirme et la preparation peut commencer.',
     supplier_order_pending: 'Kendronics prepare la commande de production.',
     supplier_ordered: 'La commande de production a ete transmise a un partenaire valide.',

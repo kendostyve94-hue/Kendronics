@@ -59,6 +59,32 @@ export class OrdersService {
     return this.ordersRepository.updateStatus(orderId, 'paid');
   }
 
+  async markPaymentAuthorizedFromVerifiedPayment(orderId: string): Promise<Order> {
+    const order = await this.ordersRepository.findById(orderId);
+    if (!order) {
+      throw new NotFoundException('Order not found.');
+    }
+
+    if (order.status === 'awaiting_payment') {
+      return this.ordersRepository.updateStatus(orderId, 'payment_authorized');
+    }
+
+    return order;
+  }
+
+  async cancelAfterPaymentAuthorizationReleased(orderId: string): Promise<Order> {
+    const order = await this.ordersRepository.findById(orderId);
+    if (!order) {
+      throw new NotFoundException('Order not found.');
+    }
+
+    if (['payment_authorized', 'supplier_review_pending', 'supplier_files_rejected', 'awaiting_payment'].includes(order.status)) {
+      return this.ordersRepository.updateStatus(orderId, 'cancelled');
+    }
+
+    return order;
+  }
+
   async updateStatusFromAdmin(orderId: string, dto: UpdateOrderStatusDto): Promise<Order> {
     const order = await this.findByIdForInternal(orderId);
     if (!canTransitionOrderStatus(order.status, dto.status)) {

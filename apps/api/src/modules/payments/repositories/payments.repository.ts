@@ -36,6 +36,19 @@ export class PaymentsRepository {
     return this.toPayment(payment);
   }
 
+  async attachProviderIntent(paymentId: string, providerIntentId: string, captureBefore?: Date): Promise<Payment> {
+    const payment = await this.prisma.payment.update({
+      where: { id: paymentId },
+      data: { providerIntentId, captureBefore },
+    });
+    return this.toPayment(payment);
+  }
+
+  async findById(id: string): Promise<Payment | null> {
+    const payment = await this.prisma.payment.findUnique({ where: { id } });
+    return payment ? this.toPayment(payment) : null;
+  }
+
   async findByProviderReference(provider: PaymentProvider, providerPaymentId: string): Promise<Payment | null> {
     const payment = await this.prisma.payment.findFirst({
       where: { provider, providerPaymentId },
@@ -43,13 +56,32 @@ export class PaymentsRepository {
     return payment ? this.toPayment(payment) : null;
   }
 
-  async updateStatus(paymentId: string, status: PaymentStatus): Promise<Payment> {
+  async findByProviderIntent(provider: PaymentProvider, providerIntentId: string): Promise<Payment | null> {
+    const payment = await this.prisma.payment.findFirst({
+      where: { provider, providerIntentId },
+    });
+    return payment ? this.toPayment(payment) : null;
+  }
+
+  async findLatestAuthorizedByOrderId(orderId: string): Promise<Payment | null> {
+    const payment = await this.prisma.payment.findFirst({
+      where: { orderId, provider: 'stripe', status: 'authorized', providerIntentId: { not: null } },
+      orderBy: { authorizedAt: 'desc' },
+    });
+    return payment ? this.toPayment(payment) : null;
+  }
+
+  async updateStatus(paymentId: string, status: PaymentStatus, input: { providerIntentId?: string; captureBefore?: Date } = {}): Promise<Payment> {
     const payment = await this.prisma.payment.update({
       where: { id: paymentId },
       data: {
         status,
+        providerIntentId: input.providerIntentId,
+        captureBefore: input.captureBefore,
+        authorizedAt: status === 'authorized' ? new Date() : undefined,
         succeededAt: status === 'succeeded' ? new Date() : undefined,
         failedAt: status === 'failed' ? new Date() : undefined,
+        canceledAt: status === 'canceled' || status === 'expired' ? new Date() : undefined,
       },
     });
 
@@ -105,13 +137,17 @@ export class PaymentsRepository {
     userId: string;
     provider: string;
     providerPaymentId: string | null;
+    providerIntentId: string | null;
     status: string;
     amount: Prisma.Decimal;
     currency: string;
     createdAt: Date;
     updatedAt: Date;
+    authorizedAt: Date | null;
+    captureBefore: Date | null;
     succeededAt: Date | null;
     failedAt: Date | null;
+    canceledAt: Date | null;
   }): Payment {
     return {
       id: payment.id,
@@ -119,13 +155,17 @@ export class PaymentsRepository {
       userId: payment.userId,
       provider: payment.provider as PaymentProvider,
       providerPaymentId: payment.providerPaymentId ?? undefined,
+      providerIntentId: payment.providerIntentId ?? undefined,
       status: payment.status as PaymentStatus,
       amount: payment.amount.toNumber(),
       currency: payment.currency as 'EUR',
       createdAt: payment.createdAt,
       updatedAt: payment.updatedAt,
+      authorizedAt: payment.authorizedAt ?? undefined,
+      captureBefore: payment.captureBefore ?? undefined,
       succeededAt: payment.succeededAt ?? undefined,
       failedAt: payment.failedAt ?? undefined,
+      canceledAt: payment.canceledAt ?? undefined,
     };
   }
 

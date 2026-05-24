@@ -91,6 +91,28 @@ export class PaymentsService {
     return this.webhookHandler.handleStripeEvent(event);
   }
 
+  async captureAuthorizedStripePaymentForOrder(orderId: string) {
+    const payment = await this.paymentsRepository.findLatestAuthorizedByOrderId(orderId);
+    if (!payment?.providerIntentId) {
+      throw new BadRequestException('No authorized Stripe payment is available for capture.');
+    }
+
+    await this.stripeProvider.capturePaymentIntent(payment.providerIntentId);
+    await this.paymentsRepository.updateStatus(payment.id, 'succeeded');
+    return { ok: true, paymentId: payment.id, providerIntentId: payment.providerIntentId };
+  }
+
+  async cancelAuthorizedStripePaymentForOrder(orderId: string) {
+    const payment = await this.paymentsRepository.findLatestAuthorizedByOrderId(orderId);
+    if (!payment?.providerIntentId) {
+      return { ok: true, skipped: true };
+    }
+
+    await this.stripeProvider.cancelPaymentIntent(payment.providerIntentId);
+    await this.paymentsRepository.updateStatus(payment.id, 'canceled');
+    return { ok: true, paymentId: payment.id, providerIntentId: payment.providerIntentId };
+  }
+
   handleMobileMoneyCallback(dto: MobileMoneyCallbackDto) {
     return this.webhookHandler.handleMobileMoneyEvent(dto);
   }

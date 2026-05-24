@@ -7,6 +7,7 @@ import {
   UpdateShipmentDto,
 } from '../orders/dto/admin-order-update.dto';
 import { OrdersService } from '../orders/orders.service';
+import { PaymentsService } from '../payments/payments.service';
 import { UpsertPricingRuleDto } from '../pricing/dto/upsert-pricing-rule.dto';
 import { PrepareSupplierOrderDto } from '../pricing/dto/prepare-supplier-order.dto';
 import { RecordSupplierRealPriceDto } from '../pricing/dto/record-supplier-real-price.dto';
@@ -26,6 +27,7 @@ import { AdminAuditRepository } from './repositories/admin-audit.repository';
 export class AdminService {
   constructor(
     private readonly ordersService: OrdersService,
+    private readonly paymentsService: PaymentsService,
     private readonly pricingRules: PricingRuleRepository,
     private readonly pricingIntelligence: PricingIntelligenceRepository,
     private readonly smartBuffer: SmartBufferService,
@@ -142,6 +144,12 @@ export class AdminService {
   }
 
   async updateOrderStatus(admin: AuthenticatedUser, orderId: string, dto: UpdateOrderStatusDto) {
+    if (dto.status === 'paid') {
+      await this.paymentsService.captureAuthorizedStripePaymentForOrder(orderId);
+    }
+    if (dto.status === 'cancelled') {
+      await this.paymentsService.cancelAuthorizedStripePaymentForOrder(orderId);
+    }
     const order = await this.ordersService.updateStatusFromAdmin(orderId, dto);
     await this.trackingService.addAdminStatusEvent(orderId, dto.status, dto.note);
     await this.auditRepository.record(admin.id, 'admin.orders.status.update', 'order', orderId);

@@ -16,7 +16,7 @@ export class PaymentWebhookHandler {
   ) {}
 
   async handleStripeEvent(event: VerifiedStripePaymentEvent) {
-    const payment = await this.paymentsRepository.findByProviderReference('stripe', event.providerPaymentId);
+    const payment = await this.findStripePayment(event);
     const { duplicate } = await this.paymentsRepository.recordWebhookEvent({
       provider: 'stripe',
       providerEventId: event.id,
@@ -43,14 +43,37 @@ export class PaymentWebhookHandler {
       throw new NotFoundException('Payment not found for Stripe event.');
     }
 
+    if (event.providerIntentId && payment.providerIntentId !== event.providerIntentId) {
+      await this.paymentsRepository.attachProviderIntent(payment.id, event.providerIntentId, event.captureBefore);
+    }
+
+    if (event.paymentStatus === 'authorized') {
+      await this.paymentsRepository.updateStatus(payment.id, 'authorized', {
+        providerIntentId: event.providerIntentId,
+        captureBefore: event.captureBefore,
+      });
+      await this.ordersService.markPaymentAuthorizedFromVerifiedPayment(payment.orderId);
+      await this.notificationsService.create({
+        userId: payment.userId,
+        type: 'payment.authorized',
+        title: 'Paiement autorise',
+        body: `Votre paiement de ${payment.amount.toFixed(2)} ${payment.currency} est autorise. Les fichiers passent en verification fournisseur avant encaissement.`,
+      });
+      await this.trackingService.addAdminStatusEvent(
+        payment.orderId,
+        'payment_authorized',
+        'Payment authorized by Stripe. Supplier file review can start before capture.',
+      );
+    }
+
     if (event.paymentStatus === 'succeeded') {
       await this.paymentsRepository.updateStatus(payment.id, 'succeeded');
       await this.ordersService.markPaidFromVerifiedPayment(payment.orderId);
       await this.notificationsService.create({
         userId: payment.userId,
         type: 'payment.succeeded',
-        title: 'Paiement confirme',
-        body: `Votre paiement de ${payment.amount.toFixed(2)} ${payment.currency} a ete confirme.`,
+        title: 'Paiement capture',
+        body: `Votre paiement de ${payment.amount.toFixed(2)} ${payment.currency} a ete capture apres validation fournisseur.`,
       });
       await this.trackingService.addAdminStatusEvent(
         payment.orderId,
@@ -69,8 +92,33 @@ export class PaymentWebhookHandler {
       });
     }
 
+    if (event.paymentStatus === 'canceled' || event.paymentStatus === 'expired') {
+      await this.paymentsRepository.updateStatus(payment.id, event.paymentStatus);
+      await this.ordersService.cancelAfterPaymentAuthorizationReleased(payment.orderId);
+      await this.notificationsService.create({
+        userId: payment.userId,
+        type: `payment.${event.paymentStatus}`,
+        title: event.paymentStatus === 'expired' ? 'Autorisation expiree' : 'Autorisation annulee',
+        body: 'Votre autorisation de paiement Stripe a ete liberee. Aucun montant n a ete encaisse.',
+      });
+    }
+
     await this.paymentsRepository.markEventProcessed('stripe', event.id);
     return { received: true, duplicate: false };
+  }
+
+  private async findStripePayment(event: VerifiedStripePaymentEvent) {
+    if (event.localPaymentId) {
+      const byId = await this.paymentsRepository.findById(event.localPaymentId);
+      if (byId) return byId;
+    }
+
+    if (event.providerIntentId) {
+      const byIntent = await this.paymentsRepository.findByProviderIntent('stripe', event.providerIntentId);
+      if (byIntent) return byIntent;
+    }
+
+    return this.paymentsRepository.findByProviderReference('stripe', event.providerPaymentId);
   }
 
   async handleMobileMoneyEvent(event: MobileMoneyCallbackDto) {

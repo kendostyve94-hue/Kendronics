@@ -263,13 +263,17 @@ model Payment {
   userId            String
   provider          String
   providerPaymentId String?
+  providerIntentId  String?
   status            String    @default("pending")
   amount            Decimal   @db.Decimal(12, 2)
   currency          String    @default("EUR")
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  authorizedAt      DateTime?
+  captureBefore     DateTime?
   succeededAt       DateTime?
   failedAt          DateTime?
+  canceledAt        DateTime?
 
   order  Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -277,6 +281,7 @@ model Payment {
 
   @@index([orderId])
   @@index([userId])
+  @@index([providerIntentId])
   @@unique([provider, providerPaymentId])
 }
 

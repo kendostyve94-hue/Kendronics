@@ -1,5 +1,8 @@
 export const customerTrackingStatuses = [
   'awaiting_payment',
+  'payment_authorized',
+  'supplier_review_pending',
+  'supplier_files_rejected',
   'paid',
   'supplier_order_pending',
   'supplier_ordered',
@@ -13,7 +16,7 @@ export const customerTrackingStatuses = [
 
 export type CustomerTrackingStatus = (typeof customerTrackingStatuses)[number];
 
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export type PaymentStatus = 'pending' | 'authorized' | 'paid' | 'failed' | 'canceled' | 'expired' | 'refunded';
 
 export interface CustomerOrderSummary {
   id: string;
@@ -110,6 +113,9 @@ export const orderDetailApiContract = {
 
 export const statusLabels: Record<CustomerTrackingStatus, string> = {
   awaiting_payment: 'Awaiting payment',
+  payment_authorized: 'Payment authorized',
+  supplier_review_pending: 'Supplier file review',
+  supplier_files_rejected: 'Files rejected',
   paid: 'Paid',
   supplier_order_pending: 'Partner order pending',
   supplier_ordered: 'Partner order placed',

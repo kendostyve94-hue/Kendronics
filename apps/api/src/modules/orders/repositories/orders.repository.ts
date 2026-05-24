@@ -135,8 +135,14 @@ export class OrdersRepository {
     const paymentStatus =
       order.status === 'paid' || latestPayment?.status === 'succeeded'
         ? 'paid'
+        : latestPayment?.status === 'authorized'
+          ? 'authorized'
         : latestPayment?.status === 'failed'
           ? 'failed'
+          : latestPayment?.status === 'canceled'
+            ? 'canceled'
+            : latestPayment?.status === 'expired'
+              ? 'expired'
           : 'pending';
 
     return {

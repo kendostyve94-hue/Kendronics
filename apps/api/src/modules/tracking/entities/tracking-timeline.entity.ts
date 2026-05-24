@@ -2,6 +2,9 @@ import { OrderStatus } from '../../orders/entities/order.entity';
 import { TrackingEvent } from './tracking-event.entity';
 
 const publicTrackingStatuses = new Set<OrderStatus>([
+  'payment_authorized',
+  'supplier_review_pending',
+  'supplier_files_rejected',
   'paid',
   'supplier_order_pending',
   'supplier_ordered',

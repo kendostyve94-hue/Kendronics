@@ -1,6 +1,9 @@
 import { OrderStatus } from './order.entity';
 
 export const ORDER_STATUS_FLOW: OrderStatus[] = [
+  'payment_authorized',
+  'supplier_review_pending',
+  'supplier_files_rejected',
   'paid',
   'supplier_order_pending',
   'supplier_ordered',
