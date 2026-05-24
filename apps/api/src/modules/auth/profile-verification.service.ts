@@ -46,20 +46,27 @@ export class ProfileVerificationService {
       body: `Code ${code} pour ${labelForAction(input.action).toLowerCase()}. Il expire dans 10 minutes.`,
     });
 
-    try {
-      await this.emailNotificationService.sendProfileVerificationCode({
+    if (process.env.VERIFICATION_CODE_EMAIL_REQUIRED === 'true') {
+      try {
+        await this.emailNotificationService.sendProfileVerificationCode({
+          to: input.email,
+          code,
+          action: input.action,
+        });
+      } catch (error) {
+        await this.deleteCode(input.userId, input.action);
+        if (error instanceof ServiceUnavailableException) throw error;
+        const message = smtpErrorDetails(error);
+        throw new ServiceUnavailableException(`Unable to send profile verification email. ${message}`);
+      }
+    } else {
+      void this.emailNotificationService.sendProfileVerificationCode({
         to: input.email,
         code,
         action: input.action,
+      }).catch((error) => {
+        console.warn('Profile verification email fallback failed:', smtpErrorDetails(error));
       });
-    } catch (error) {
-      const message = smtpErrorDetails(error);
-      console.warn('Profile verification email fallback failed:', message);
-      if (process.env.VERIFICATION_CODE_EMAIL_REQUIRED === 'true') {
-        await this.deleteCode(input.userId, input.action);
-        if (error instanceof ServiceUnavailableException) throw error;
-        throw new ServiceUnavailableException(`Unable to send profile verification email. ${message}`);
-      }
     }
 
     return { ok: true };

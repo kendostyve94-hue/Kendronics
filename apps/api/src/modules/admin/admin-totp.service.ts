@@ -276,14 +276,14 @@ export class AdminTotpService {
       body: `Code admin ${code}. Il expire dans 10 minutes.`,
     });
 
-    try {
+    if (process.env.VERIFICATION_CODE_EMAIL_REQUIRED === 'true') {
       await this.emailNotificationService.sendAdminSetupCode({ to: professionalEmail, code });
-    } catch (error) {
-      console.warn('Admin verification email fallback failed:', error instanceof Error ? error.message : String(error));
-      if (process.env.VERIFICATION_CODE_EMAIL_REQUIRED === 'true') {
-        throw error;
-      }
+      return;
     }
+
+    void this.emailNotificationService.sendAdminSetupCode({ to: professionalEmail, code }).catch((error) => {
+      console.warn('Admin verification email fallback failed:', error instanceof Error ? error.message : String(error));
+    });
   }
 }
 

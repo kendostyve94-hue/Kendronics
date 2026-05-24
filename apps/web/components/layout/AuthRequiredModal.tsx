@@ -258,7 +258,7 @@ export function AuthRequiredModal() {
       await requestVerificationCode(input.tokens);
       setPendingVerification(input);
       setVerificationCode('');
-      setVerificationMessage('Code envoye par e-mail. Il reste valide pendant 10 minutes.');
+      setVerificationMessage('Code envoye par notification et dans votre espace client. Il reste valide pendant 10 minutes.');
       setAuthStep('form');
     } catch (error) {
       setVerificationMessage(error instanceof Error ? error.message : "Impossible d'envoyer le code de verification.");
@@ -310,7 +310,7 @@ export function AuthRequiredModal() {
 
     try {
       await requestVerificationCode(pendingVerification.tokens);
-      setVerificationMessage('Nouveau code envoye.');
+      setVerificationMessage('Nouveau code envoye par notification.');
     } catch (error) {
       setVerificationMessage(error instanceof Error ? error.message : "Impossible d'envoyer un nouveau code.");
     } finally {
@@ -903,6 +903,7 @@ function registerErrorMessage(status: number, error: unknown) {
 async function requestVerificationCode(tokens: AuthTokens) {
   const response = await fetch(`${apiBaseUrl}/api/auth/profile-verification/request`, {
     method: 'POST',
+    signal: requestTimeoutSignal(15000),
     headers: {
       'Content-Type': 'application/json',
       Authorization: `${tokens.tokenType} ${tokens.accessToken}`,
@@ -913,6 +914,12 @@ async function requestVerificationCode(tokens: AuthTokens) {
   if (!response.ok) {
     throw new Error("Impossible d'envoyer le code de verification.");
   }
+}
+
+function requestTimeoutSignal(timeoutMs: number): AbortSignal {
+  const controller = new AbortController();
+  window.setTimeout(() => controller.abort(), timeoutMs);
+  return controller.signal;
 }
 
 function validateLoginMeta(values: LoginMetaState): LoginMetaErrors {
