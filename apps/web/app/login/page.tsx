@@ -19,6 +19,12 @@ import type {
   LoginFormState,
 } from '../../lib/login-validation';
 
+type PendingVerification = {
+  tokens: AuthTokens;
+  remember: boolean;
+  contact: string;
+};
+
 const initialLoginValues: LoginFormState = {
   email: '',
   password: '',
@@ -39,6 +45,10 @@ export default function LoginPage() {
   const [forgotErrors, setForgotErrors] = useState<ForgotPasswordErrors>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'authenticated' | 'reset_sent'>('idle');
   const [rememberMe, setRememberMe] = useState(true);
+  const [pendingVerification, setPendingVerification] = useState<PendingVerification | null>(null);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'sending' | 'checking'>('idle');
+  const [verificationMessage, setVerificationMessage] = useState('');
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.location.hash) return;
@@ -89,8 +99,11 @@ export default function LoginPage() {
       }
 
       const tokens = (await response.json()) as LoginResponse;
-      persistAuthSession(tokens, { remember: rememberMe });
-      window.location.assign(postAuthRedirectPath);
+      await startVerification({
+        tokens,
+        remember: rememberMe,
+        contact: loginValues.email.trim().toLowerCase(),
+      });
     } catch {
       setLoginErrors({ form: authApiContract.login.failureMessage });
       setStatus('idle');
@@ -126,6 +139,80 @@ export default function LoginPage() {
       setForgotErrors({ form: 'Impossible de traiter la demande pour le moment. Reessayez.' });
       setStatus('idle');
     }
+  }
+
+  async function startVerification(input: PendingVerification) {
+    setPendingVerification(input);
+    setVerificationCode('');
+    setVerificationMessage('');
+    setVerificationStatus('sending');
+    persistAuthSession(input.tokens, { remember: input.remember });
+
+    try {
+      await requestVerificationCode(input.tokens);
+      setVerificationMessage('Code envoye. Verifiez vos notifications ou votre e-mail.');
+    } catch (error) {
+      setVerificationMessage(error instanceof Error ? error.message : "Impossible d'envoyer le code de verification.");
+    } finally {
+      setStatus('idle');
+      setVerificationStatus('idle');
+    }
+  }
+
+  async function submitVerification(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!pendingVerification) return;
+    if (!/^\d{6}$/.test(verificationCode)) {
+      setVerificationMessage('Entrez le code a 6 chiffres recu.');
+      return;
+    }
+
+    setVerificationStatus('checking');
+    setVerificationMessage('');
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/auth/profile-verification/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${pendingVerification.tokens.tokenType} ${pendingVerification.tokens.accessToken}`,
+        },
+        body: JSON.stringify({ action: 'account', code: verificationCode }),
+      });
+
+      if (!response.ok) throw new Error('Code invalide ou expire.');
+
+      persistAuthSession(pendingVerification.tokens, { remember: pendingVerification.remember });
+      window.location.assign(postAuthRedirectPath);
+    } catch (error) {
+      setVerificationMessage(error instanceof Error ? error.message : 'Verification impossible pour le moment.');
+    } finally {
+      setVerificationStatus('idle');
+    }
+  }
+
+  async function resendVerificationCode() {
+    if (!pendingVerification) return;
+    setVerificationStatus('sending');
+    setVerificationMessage('');
+
+    try {
+      await requestVerificationCode(pendingVerification.tokens);
+      setVerificationCode('');
+      setVerificationMessage('Nouveau code envoye.');
+    } catch (error) {
+      setVerificationMessage(error instanceof Error ? error.message : "Impossible d'envoyer un nouveau code.");
+    } finally {
+      setVerificationStatus('idle');
+    }
+  }
+
+  function cancelVerification() {
+    setPendingVerification(null);
+    setVerificationCode('');
+    setVerificationMessage('');
+    setVerificationStatus('idle');
+    setStatus('idle');
   }
 
   function updateLogin<K extends keyof LoginFormState>(key: K, value: LoginFormState[K]) {
@@ -165,10 +252,18 @@ export default function LoginPage() {
         forgotErrors={forgotErrors}
         status={status}
         rememberMe={rememberMe}
+        pendingVerification={pendingVerification}
+        verificationCode={verificationCode}
+        verificationStatus={verificationStatus}
+        verificationMessage={verificationMessage}
         googleOAuthUrl={googleOAuthUrl}
         appleOAuthUrl={appleOAuthUrl}
         onRememberMe={setRememberMe}
         onSubmit={submitLogin}
+        onVerificationSubmit={submitVerification}
+        onVerificationCodeChange={setVerificationCode}
+        onVerificationResend={() => void resendVerificationCode()}
+        onVerificationCancel={cancelVerification}
         onForgotSubmit={submitForgotPassword}
         onForgotPassword={showForgotPassword}
         onBack={showLogin}
@@ -265,10 +360,18 @@ function MobileLoginScreen({
   forgotErrors,
   status,
   rememberMe,
+  pendingVerification,
+  verificationCode,
+  verificationStatus,
+  verificationMessage,
   googleOAuthUrl,
   appleOAuthUrl,
   onRememberMe,
   onSubmit,
+  onVerificationSubmit,
+  onVerificationCodeChange,
+  onVerificationResend,
+  onVerificationCancel,
   onForgotSubmit,
   onForgotPassword,
   onBack,
@@ -282,10 +385,18 @@ function MobileLoginScreen({
   forgotErrors: ForgotPasswordErrors;
   status: 'idle' | 'submitting' | 'authenticated' | 'reset_sent';
   rememberMe: boolean;
+  pendingVerification: PendingVerification | null;
+  verificationCode: string;
+  verificationStatus: 'idle' | 'sending' | 'checking';
+  verificationMessage: string;
   googleOAuthUrl?: string;
   appleOAuthUrl?: string;
   onRememberMe: (value: boolean) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onVerificationSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onVerificationCodeChange: (value: string) => void;
+  onVerificationResend: () => void;
+  onVerificationCancel: () => void;
   onForgotSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onForgotPassword: () => void;
   onBack: () => void;
@@ -296,6 +407,23 @@ function MobileLoginScreen({
     return (
       <section className="auth-neumo mx-auto max-w-md px-4 pb-8 pt-28 sm:px-0 sm:pt-32">
         <AuthenticatedState />
+      </section>
+    );
+  }
+
+  if (pendingVerification) {
+    return (
+      <section className="auth-neumo mx-auto max-w-md px-4 pb-8 pt-28 sm:px-0 sm:pt-32">
+        <VerificationForm
+          contact={pendingVerification.contact}
+          code={verificationCode}
+          status={verificationStatus}
+          message={verificationMessage}
+          onSubmit={onVerificationSubmit}
+          onCodeChange={onVerificationCodeChange}
+          onResend={onVerificationResend}
+          onCancel={onVerificationCancel}
+        />
       </section>
     );
   }
@@ -420,6 +548,59 @@ function MobileInput({
       </span>
       {error && <span className="mt-2 block text-sm font-medium text-red-600">{error}</span>}
     </label>
+  );
+}
+
+function VerificationForm({
+  contact,
+  code,
+  status,
+  message,
+  onSubmit,
+  onCodeChange,
+  onResend,
+  onCancel,
+}: {
+  contact: string;
+  code: string;
+  status: 'idle' | 'sending' | 'checking';
+  message: string;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onCodeChange: (value: string) => void;
+  onResend: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <>
+      <h1 className="text-[30px] font-black leading-none tracking-normal text-ink">Verification du compte</h1>
+      <p className="mt-3 text-sm leading-6 text-slate-600">
+        Entrez le code a 6 chiffres envoye a <span className="font-black text-ink">{contact}</span>.
+      </p>
+      <form onSubmit={onSubmit} className="mt-7 space-y-3" noValidate>
+        {message ? <AlertBox tone={isSuccessVerificationMessage(message) ? 'success' : 'error'} message={message} /> : null}
+        <label className="block">
+          <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">Code de verification</span>
+          <input
+            value={code}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="123456"
+            onChange={(event) => onCodeChange(event.target.value.replace(/\D/g, '').slice(0, 6))}
+            className="h-12 w-full rounded-xl border border-slate-200 bg-[#edf3f8] px-4 text-center text-lg font-black tracking-[0.35em] text-ink outline-none ring-1 ring-white/70 focus:border-deepblue"
+          />
+        </label>
+        <button type="submit" disabled={status === 'checking' || code.length !== 6} className="h-11 w-full rounded-xl bg-deepblue text-base font-black text-white ring-1 ring-white/60 disabled:opacity-60">
+          {status === 'checking' ? 'Verification...' : 'Valider le code'}
+        </button>
+        <button type="button" onClick={onResend} disabled={status === 'sending'} className="h-11 w-full rounded-xl border border-slate-200 bg-[#f1f5f9] text-base font-bold text-slate-600 ring-1 ring-white/70 disabled:opacity-60">
+          {status === 'sending' ? 'Envoi...' : 'Renvoyer le code'}
+        </button>
+        <button type="button" onClick={onCancel} className="h-11 w-full text-sm font-black text-deepblue">
+          Retour a la connexion
+        </button>
+      </form>
+      <AuthFooter />
+    </>
   );
 }
 
@@ -695,6 +876,11 @@ function AlertBox({ message, tone }: { message: string; tone: 'error' | 'success
   return <div className={`rounded-2xl border p-3 text-xs font-bold sm:p-4 sm:text-sm ${classes}`}>{message}</div>;
 }
 
+function isSuccessVerificationMessage(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return normalized.includes('envoye') || normalized.includes('envoyé');
+}
+
 function AuthenticatedState() {
   return (
     <div className="py-8 text-center">
@@ -713,5 +899,27 @@ function AuthenticatedState() {
       </a>
     </div>
   );
+}
+
+async function requestVerificationCode(tokens: AuthTokens) {
+  const response = await fetch(`${apiBaseUrl}/api/auth/profile-verification/request`, {
+    method: 'POST',
+    signal: requestTimeoutSignal(15000),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `${tokens.tokenType} ${tokens.accessToken}`,
+    },
+    body: JSON.stringify({ action: 'account' }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Impossible d'envoyer le code de verification.");
+  }
+}
+
+function requestTimeoutSignal(timeoutMs: number): AbortSignal {
+  const controller = new AbortController();
+  window.setTimeout(() => controller.abort(), timeoutMs);
+  return controller.signal;
 }
 
