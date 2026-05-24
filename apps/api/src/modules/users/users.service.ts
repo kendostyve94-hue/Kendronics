@@ -4,6 +4,7 @@ import { RegisterDto } from '../auth/dto/register.dto';
 import { PasswordService } from '../auth/password.service';
 import { UploadRepository } from '../uploads/repositories/upload.repository';
 import { AccountDeletionFeedbackDto } from './dto/account-deletion-feedback.dto';
+import { UpdateAccountAddressDto, UpdateAccountProfileDto } from './dto/update-account-settings.dto';
 import { UpsertCookieConsentDto } from './dto/cookie-consent.dto';
 import { CookieConsent } from './entities/cookie-consent.entity';
 import { User } from './entities/user.entity';
@@ -106,6 +107,34 @@ export class UsersService {
     await this.usersRepository.updatePasswordHash(userId, await this.passwordService.hash(password));
   }
 
+  async updateProfile(userId: string, dto: UpdateAccountProfileDto): Promise<User> {
+    const current = await this.usersRepository.findById(userId);
+    if (!current) {
+      throw new NotFoundException('User not found.');
+    }
+
+    const nextEmail = dto.email?.trim().toLowerCase();
+    if (nextEmail && nextEmail !== current.email) {
+      const existing = await this.usersRepository.findByEmail(nextEmail);
+      if (existing && existing.id !== userId) {
+        throw new ConflictException('An account already exists for this email.');
+      }
+    }
+
+    return this.usersRepository.updateProfile(userId, {
+      fullName: cleanString(dto.fullName) ?? current.fullName,
+      email: nextEmail ?? current.email,
+      phone: cleanString(dto.phone) ?? null,
+      companyName: cleanString(dto.companyName) ?? null,
+      country: cleanString(dto.country) ?? null,
+      emailVerifiedAt: nextEmail && nextEmail !== current.email ? null : current.emailVerifiedAt ?? null,
+    });
+  }
+
+  updateAddress(userId: string, kind: 'shippingAddress' | 'billingAddress', dto: UpdateAccountAddressDto): Promise<User> {
+    return this.usersRepository.updateAddress(userId, kind, sanitizeAddress(dto.address));
+  }
+
   async deleteAccount(userId: string): Promise<void> {
     const storageKeys = await this.usersRepository.findGerberStorageKeysByUserId(userId);
     await this.usersRepository.deleteById(userId);
@@ -141,6 +170,32 @@ export class UsersService {
 
     return adminEmails.includes(email) ? [UserRole.User, UserRole.Admin] : [UserRole.User];
   }
+}
+
+function cleanString(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+function sanitizeAddress(address: Record<string, unknown>): Record<string, string> {
+  const allowedKeys = [
+    'accountType',
+    'firstName',
+    'lastName',
+    'company',
+    'street',
+    'apartment',
+    'country',
+    'region',
+    'city',
+    'postalCode',
+    'taxId',
+    'phone',
+  ];
+
+  return Object.fromEntries(
+    allowedKeys.map((key) => [key, typeof address[key] === 'string' ? String(address[key]).trim().slice(0, 180) : '']),
+  );
 }
 
 function uniqueRoles(roles: UserRole[]): UserRole[] {

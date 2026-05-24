@@ -47,6 +47,32 @@ export class UsersRepository {
     return this.toUser(user);
   }
 
+  async updateProfile(
+    userId: string,
+    input: {
+      fullName?: string;
+      email?: string;
+      phone?: string | null;
+      companyName?: string | null;
+      country?: string | null;
+      emailVerifiedAt?: Date | null;
+    },
+  ): Promise<User> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: input,
+    });
+    return this.toUser(user);
+  }
+
+  async updateAddress(userId: string, kind: 'shippingAddress' | 'billingAddress', address: Record<string, unknown>): Promise<User> {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { [kind]: address },
+    });
+    return this.toUser(user);
+  }
+
   async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },
@@ -110,9 +136,14 @@ export class UsersRepository {
     passwordHash: string;
     fullName: string;
     companyName: string | null;
+    phone: string | null;
+    country: string | null;
+    shippingAddress: unknown;
+    billingAddress: unknown;
     roles: string[];
     emailVerifiedAt: Date | null;
     createdAt: Date;
+    updatedAt?: Date;
   }): User {
     return {
       id: user.id,
@@ -120,9 +151,18 @@ export class UsersRepository {
       passwordHash: user.passwordHash,
       fullName: user.fullName,
       companyName: user.companyName ?? undefined,
+      phone: user.phone ?? undefined,
+      country: user.country ?? undefined,
+      shippingAddress: objectValue(user.shippingAddress),
+      billingAddress: objectValue(user.billingAddress),
       roles: user.roles as UserRole[],
       emailVerifiedAt: user.emailVerifiedAt ?? undefined,
       createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
+}
+
+function objectValue(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined;
 }

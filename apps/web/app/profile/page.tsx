@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { Navbar } from '../../components/layout/Navbar';
 import { getApiBaseUrl } from '../../lib/api-base-url';
@@ -16,6 +16,23 @@ type ProfileForm = {
   phone: string;
   company: string;
   country: string;
+  shippingAddress?: AccountAddress;
+  billingAddress?: AccountAddress;
+};
+
+type AccountAddress = {
+  accountType: string;
+  firstName: string;
+  lastName: string;
+  company: string;
+  street: string;
+  apartment: string;
+  country: string;
+  region: string;
+  city: string;
+  postalCode: string;
+  taxId: string;
+  phone: string;
 };
 
 type DeleteReason =
@@ -136,6 +153,10 @@ type ProfileUser = {
   email: string;
   fullName: string;
   companyName?: string;
+  phone?: string;
+  country?: string;
+  shippingAddress?: AccountAddress;
+  billingAddress?: AccountAddress;
   emailVerifiedAt?: string;
   createdAt: string;
 };
@@ -205,6 +226,8 @@ export default function ProfilePage() {
       phone: storedProfile.phone || '',
       company: storedProfile.company || '',
       country: storedProfile.country || '',
+      shippingAddress: normalizeAddress(storedProfile.shippingAddress),
+      billingAddress: normalizeAddress(storedProfile.billingAddress),
     });
     setAccountId(sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
     setAvatarDataUrl(readScopedLocalStorage(avatarStorageKey) ?? '');
@@ -230,9 +253,11 @@ export default function ProfilePage() {
         setProfile((current) => ({
           name: userResponse.fullName || current.name,
           email: userResponse.email || current.email,
-          phone: current.phone,
+          phone: userResponse.phone || current.phone,
           company: userResponse.companyName || current.company,
-          country: current.country,
+          country: userResponse.country || current.country,
+          shippingAddress: normalizeAddress(userResponse.shippingAddress ?? current.shippingAddress),
+          billingAddress: normalizeAddress(userResponse.billingAddress ?? current.billingAddress),
         }));
         setAccountId(userResponse.id || sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
         setOrders(ordersResponse);
@@ -262,7 +287,7 @@ export default function ProfilePage() {
 
           <section className="min-w-0">
             {activeProfileView ? (
-              <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onNotificationsChange={setNotifications} />
+              <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onProfileChange={setProfile} onNotificationsChange={setNotifications} />
             ) : (
               <>
                 <div className="grid min-w-0 gap-4">
@@ -449,6 +474,7 @@ function ProfileViewContent({
   orders,
   notifications,
   dataStatus,
+  onProfileChange,
   onNotificationsChange,
 }: {
   view: Exclude<ProfileView, null>;
@@ -458,6 +484,7 @@ function ProfileViewContent({
   orders: ProfileOrder[];
   notifications: ProfileNotification[];
   dataStatus: 'loading' | 'ready' | 'signed-out' | 'error';
+  onProfileChange: (profile: ProfileForm | ((current: ProfileForm) => ProfileForm)) => void;
   onNotificationsChange: (notifications: ProfileNotification[]) => void;
 }) {
   if (view === 'quotes') return <QuotesHubSection orders={orders} dataStatus={dataStatus} />;
@@ -472,10 +499,10 @@ function ProfileViewContent({
   if (view === 'support') return <SupportHubSection orders={orders} dataStatus={dataStatus} />;
   if (view === 'benefits') return <BenefitsHubSection />;
   if (view === 'notifications') return <NotificationsSection notifications={notifications} dataStatus={dataStatus} onNotificationsChange={onNotificationsChange} />;
-  if (view === 'shipping-address') return <AddressFormSection title="Adresse de livraison" note="Veuillez entrer votre nouveau contact/adresse" />;
+  if (view === 'shipping-address') return <AddressFormSection title="Adresse de livraison" note="Veuillez entrer votre nouveau contact/adresse" kind="shippingAddress" initialAddress={profile.shippingAddress} onSaved={(address) => onProfileChange((current) => ({ ...current, shippingAddress: address }))} />;
   if (view === 'invite') return <InviteSection />;
-  if (view === 'billing') return <AddressFormSection title="Informations de facturation" billing />;
-  if (view === 'settings') return <SettingsSection profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} />;
+  if (view === 'billing') return <AddressFormSection title="Informations de facturation" kind="billingAddress" initialAddress={profile.billingAddress} onSaved={(address) => onProfileChange((current) => ({ ...current, billingAddress: address }))} billing />;
+  if (view === 'settings') return <SettingsSection profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} onProfileChange={onProfileChange} />;
 
   return null;
 }
@@ -1000,7 +1027,59 @@ function SupportTile({ title, body, href }: { title: string; body: string; href:
   );
 }
 
-function AddressFormSection({ title, note, billing }: { title: string; note?: string; billing?: boolean }) {
+function AddressFormSection({
+  title,
+  note,
+  billing,
+  kind,
+  initialAddress,
+  onSaved,
+}: {
+  title: string;
+  note?: string;
+  billing?: boolean;
+  kind: 'shippingAddress' | 'billingAddress';
+  initialAddress?: AccountAddress;
+  onSaved: (address: AccountAddress) => void;
+}) {
+  const [address, setAddress] = useState<AccountAddress>(() => normalizeAddress(initialAddress));
+  const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  function update<K extends keyof AccountAddress>(key: K, value: AccountAddress[K]) {
+    setAddress((current) => ({ ...current, [key]: value }));
+    setStatus('idle');
+  }
+
+  async function submitAddress(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus('saving');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+
+      const response = await fetch(`${getApiBaseUrl()}/api/users/me/${kind === 'shippingAddress' ? 'shipping-address' : 'billing-address'}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address }),
+      });
+
+      if (!response.ok) throw new Error(`Address update failed: ${response.status}`);
+      const user = (await response.json()) as ProfileUser;
+      const savedAddress = normalizeAddress(kind === 'shippingAddress' ? user.shippingAddress : user.billingAddress);
+      setAddress(savedAddress);
+      onSaved(savedAddress);
+      setStatus('saved');
+    } catch {
+      setStatus('error');
+    }
+  }
+
   return (
     <section className="min-h-[690px] bg-white p-5 text-black shadow-sm ring-1 ring-slate-200">
       <div className="flex items-end gap-3">
@@ -1014,32 +1093,66 @@ function AddressFormSection({ title, note, billing }: { title: string; note?: st
           : "La mise a jour d'adresse ne modifie pas les commandes deja generees. Contactez Kendronics si une commande active doit etre corrigee."}
       </div>
       {billing ? <p className="mt-5 text-xs text-[#6b7280]">Assurez-vous que les informations de facturation sont exactes. Elles seront utilisees pour les documents commerciaux Kendronics.</p> : null}
-      <AddressFields />
+      <AddressFields formId={`${kind}-form`} address={address} onUpdate={update} onSubmit={submitAddress} />
       <p className="mt-2 text-xs text-[#6b7280]">
         {billing
           ? "Si l'adresse de facturation ne peut pas etre enregistree, contactez le support Kendronics."
           : "Si l'adresse de livraison ne peut pas etre enregistree, contactez le support Kendronics."}
       </p>
-      <button type="button" className="mt-5 bg-[#1baa4f] px-6 py-2 text-sm font-black text-white">Soumettre</button>
+      {status === 'saved' ? <p className="mt-3 text-sm font-semibold text-[#0f8f6b]">Adresse enregistree.</p> : null}
+      {status === 'error' ? <p className="mt-3 text-sm font-semibold text-red-600">Impossible d'enregistrer cette adresse.</p> : null}
+      <button form={`${kind}-form`} type="submit" disabled={status === 'saving'} className="mt-5 bg-[#1baa4f] px-6 py-2 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-300">
+        {status === 'saving' ? 'Enregistrement...' : 'Soumettre'}
+      </button>
     </section>
   );
 }
 
-function AddressFields() {
+function AddressFields({
+  address,
+  formId,
+  onUpdate,
+  onSubmit,
+}: {
+  address: AccountAddress;
+  formId: string;
+  onUpdate: <K extends keyof AccountAddress>(key: K, value: AccountAddress[K]) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  const fields: Array<[keyof AccountAddress, string, boolean?]> = [
+    ['firstName', 'Prenom *', true],
+    ['lastName', 'Nom de famille *', true],
+    ['street', 'Adresse de la rue *', true],
+    ['apartment', 'Appartement, chambre, batiment, etage, etc. (facultatif)'],
+    ['country', 'Pays/Region *', true],
+    ['region', 'Etat/Province/Region'],
+    ['city', 'Ville *', true],
+    ['postalCode', 'Zip/Code postal'],
+    ['taxId', 'Numero TVA/identification fiscale'],
+    ['phone', 'Telephone mobile *', true],
+  ];
+
   return (
-    <form className="mt-8 grid max-w-[720px] grid-cols-2 gap-x-7 gap-y-4">
-      <ChoiceBox label="Societe" />
-      <ChoiceBox label="Particulier" active />
-      {['Prenom *', 'Nom de famille *', 'Adresse de la rue *', 'Appartement, chambre, batiment, etage, etc. (facultatif)', 'Pays/Region *', 'Etat/Province/Region', 'Ville *', 'Zip/Code postal', "Numero TVA/identification fiscale", 'Telephone mobile *'].map((placeholder) => (
-        <input key={placeholder} placeholder={placeholder} className="h-[46px] border border-[#d6d6d6] px-5 text-sm outline-none placeholder:text-[#b8bec8] focus:border-[#18b75b]" />
+    <form id={formId} onSubmit={onSubmit} className="mt-8 grid max-w-[720px] grid-cols-2 gap-x-7 gap-y-4">
+      <ChoiceBox label="Societe" active={address.accountType === 'company'} onClick={() => onUpdate('accountType', 'company')} />
+      <ChoiceBox label="Particulier" active={address.accountType !== 'company'} onClick={() => onUpdate('accountType', 'individual')} />
+      {fields.map(([key, placeholder, required]) => (
+        <input
+          key={key}
+          required={required}
+          value={address[key]}
+          onChange={(event) => onUpdate(key, event.target.value)}
+          placeholder={placeholder}
+          className="h-[46px] border border-[#d6d6d6] px-5 text-sm outline-none placeholder:text-[#b8bec8] focus:border-[#18b75b]"
+        />
       ))}
     </form>
   );
 }
 
-function ChoiceBox({ label, active }: { label: string; active?: boolean }) {
+function ChoiceBox({ label, active, onClick }: { label: string; active?: boolean; onClick: () => void }) {
   return (
-    <button type="button" className={`flex h-10 items-center gap-4 border px-4 text-sm font-black ${active ? 'border-[#11b957] bg-[#eefbf4]' : 'border-[#d6d6d6]'}`}>
+    <button type="button" onClick={onClick} className={`flex h-10 items-center gap-4 border px-4 text-sm font-black ${active ? 'border-[#11b957] bg-[#eefbf4]' : 'border-[#d6d6d6]'}`}>
       <span className={`h-5 w-5 rounded-none border ${active ? 'border-[#11b957] bg-[#11b957]' : 'border-[#cfd3d8]'}`} />
       {label}
     </button>
@@ -1091,7 +1204,17 @@ function InviteSection() {
   );
 }
 
-function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileForm; userId: string; avatarDataUrl: string }) {
+function SettingsSection({
+  profile,
+  userId,
+  avatarDataUrl,
+  onProfileChange,
+}: {
+  profile: ProfileForm;
+  userId: string;
+  avatarDataUrl: string;
+  onProfileChange: (profile: ProfileForm | ((current: ProfileForm) => ProfileForm)) => void;
+}) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteStep, setDeleteStep] = useState<DeleteModalStep>('feedback');
   const [deleteCode, setDeleteCode] = useState('');
@@ -1101,6 +1224,62 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
   const [savingDeleteFeedback, setSavingDeleteFeedback] = useState(false);
   const [selectedAlternative, setSelectedAlternative] = useState<DeleteAlternative | null>(null);
   const [deleteFeedback, setDeleteFeedback] = useState<DeleteFeedback>(createEmptyDeleteFeedback());
+  const [form, setForm] = useState<ProfileForm>(profile);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
+
+  useEffect(() => {
+    setForm(profile);
+  }, [profile]);
+
+  function updateForm<K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) {
+    setForm((current) => ({ ...current, [key]: value }));
+    setProfileMessage('');
+  }
+
+  async function saveProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingProfile(true);
+    setProfileMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+
+      const response = await fetch(`${getApiBaseUrl()}/api/users/me/profile`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: form.name,
+          email: form.email,
+          phone: form.phone,
+          companyName: form.company,
+          country: form.country,
+        }),
+      });
+
+      if (!response.ok) throw new Error(`Profile update failed: ${response.status}`);
+      const user = (await response.json()) as ProfileUser;
+      onProfileChange((current) => ({
+        ...current,
+        name: user.fullName || form.name,
+        email: user.email || form.email,
+        phone: user.phone || form.phone,
+        company: user.companyName || form.company,
+        country: user.country || form.country,
+      }));
+      setProfileMessage(user.email !== profile.email ? 'Profil enregistre. Verifiez votre nouvel e-mail si necessaire.' : 'Profil enregistre.');
+    } catch {
+      setProfileMessage("Impossible d'enregistrer le profil.");
+    } finally {
+      setSavingProfile(false);
+    }
+  }
 
   function closeDeleteModal() {
     if (requestingDeleteCode || deletingAccount || savingDeleteFeedback) return;
@@ -1129,19 +1308,26 @@ function SettingsSection({ profile, userId, avatarDataUrl }: { profile: ProfileF
   return (
     <section className="min-h-[690px] bg-white p-6 text-black shadow-sm ring-1 ring-slate-200">
       <h1 className="border-b border-[#e5e7eb] pb-4 text-xl font-normal">Paramètres du compte</h1>
-      <div className="grid grid-cols-[140px_1fr_160px] gap-6 border-b border-[#e5e7eb] py-6">
+      <form onSubmit={saveProfile} className="grid grid-cols-[140px_1fr_160px] gap-6 border-b border-[#e5e7eb] py-6">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
-        <div className="grid gap-4 text-sm">
+        <div className="grid gap-3 text-sm">
           <p className="text-base">{profile.name || 'Client Kendronics'} <span className="rounded-none bg-[#a08d70] px-2 py-1 text-xs font-black text-white">{profile.company ? 'Societe' : 'Client'}</span></p>
           <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
-          <p className="text-[#6b7280]">Pays/Region <span className="ml-20 text-black">{profile.country || 'Non renseigne'}</span></p>
-          <p className="text-[#6b7280]">No de telephone <span className="ml-16 text-black">{profile.phone || 'Non renseigne'}</span></p>
-          <p className="text-[#6b7280]">Entreprise <span className="ml-20 text-black">{profile.company || 'Non renseignee'}</span></p>
+          <div className="grid grid-cols-2 gap-3">
+            <SettingsInput label="Nom complet" value={form.name} onChange={(value) => updateForm('name', value)} required />
+            <SettingsInput label="E-mail" type="email" value={form.email} onChange={(value) => updateForm('email', value)} required />
+            <SettingsInput label="Pays/Region" value={form.country} onChange={(value) => updateForm('country', value)} />
+            <SettingsInput label="No de telephone" value={form.phone} onChange={(value) => updateForm('phone', value)} />
+            <SettingsInput label="Entreprise" value={form.company} onChange={(value) => updateForm('company', value)} />
+          </div>
+          {profileMessage ? <p className={`text-xs font-semibold ${profileMessage.includes('Impossible') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{profileMessage}</p> : null}
         </div>
-        <a href="/profile?view=settings" className="pt-12 text-sm text-[#00a651]">Modifier le profil</a>
-      </div>
+        <button type="submit" disabled={savingProfile} className="self-start pt-12 text-right text-sm text-[#00a651] disabled:cursor-not-allowed disabled:text-slate-300">
+          {savingProfile ? 'Enregistrement...' : 'Enregistrer'}
+        </button>
+      </form>
       {[
-        ['E-mail', profile.email ? maskEmail(profile.email) : 'Non renseigne', 'Changer l e-mail', '/reset-password'],
+        ['E-mail', profile.email ? maskEmail(profile.email) : 'Non renseigne', 'Modifier ci-dessus', '/profile?view=settings'],
         ['Mot de passe', '********', 'Changer le mot de passe', '/reset-password'],
         ['Adresse de livraison', 'Ajouter une adresse de livraison pour vos commandes Kendronics.', 'Modifier', '/profile?view=shipping-address'],
         ['Details de facturation', 'Ajouter une adresse de facturation pour vos documents Kendronics.', 'Modifier', '/profile?view=billing'],
@@ -1206,6 +1392,33 @@ const deleteReasonOptions: { value: DeleteReason; label: string }[] = [
   { value: 'privacy_security', label: 'Preoccupations liees a la confidentialite / securite' },
   { value: 'other', label: 'Autre' },
 ];
+
+function SettingsInput({
+  label,
+  value,
+  type = 'text',
+  required = false,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  type?: string;
+  required?: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="grid gap-1">
+      <span className="text-xs text-[#6b7280]">{label}</span>
+      <input
+        type={type}
+        required={required}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-10 border border-[#d6d6d6] px-3 text-sm text-black outline-none focus:border-[#18b75b]"
+      />
+    </label>
+  );
+}
 
 function DeleteAccountModal({
   profile,
@@ -2379,6 +2592,28 @@ function readStoredProfile(): Partial<ProfileForm> {
   } catch {
     return {};
   }
+}
+
+function normalizeAddress(value: unknown): AccountAddress {
+  const source = value && typeof value === 'object' && !Array.isArray(value) ? (value as Partial<Record<keyof AccountAddress, unknown>>) : {};
+  return {
+    accountType: stringValue(source.accountType) || 'individual',
+    firstName: stringValue(source.firstName),
+    lastName: stringValue(source.lastName),
+    company: stringValue(source.company),
+    street: stringValue(source.street),
+    apartment: stringValue(source.apartment),
+    country: stringValue(source.country),
+    region: stringValue(source.region),
+    city: stringValue(source.city),
+    postalCode: stringValue(source.postalCode),
+    taxId: stringValue(source.taxId),
+    phone: stringValue(source.phone),
+  };
+}
+
+function stringValue(value: unknown): string {
+  return typeof value === 'string' ? value : '';
 }
 
 function readSessionProfile(): { id: string; email: string } {

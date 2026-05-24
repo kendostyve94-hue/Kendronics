@@ -6,6 +6,7 @@ import { ProfileVerificationService } from '../auth/profile-verification.service
 import { AccountDeletionFeedbackDto } from './dto/account-deletion-feedback.dto';
 import { UpsertCookieConsentDto } from './dto/cookie-consent.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
+import { UpdateAccountAddressDto, UpdateAccountProfileDto } from './dto/update-account-settings.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
@@ -19,6 +20,21 @@ export class UsersController {
   @Get('me')
   me(@CurrentUser() user: AuthenticatedUser) {
     return this.usersService.findById(user.id);
+  }
+
+  @Put('me/profile')
+  updateProfile(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateAccountProfileDto) {
+    return this.usersService.updateProfile(user.id, dto);
+  }
+
+  @Put('me/shipping-address')
+  updateShippingAddress(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateAccountAddressDto) {
+    return this.usersService.updateAddress(user.id, 'shippingAddress', dto);
+  }
+
+  @Put('me/billing-address')
+  updateBillingAddress(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateAccountAddressDto) {
+    return this.usersService.updateAddress(user.id, 'billingAddress', dto);
   }
 
   @Get('me/cookie-consent')
