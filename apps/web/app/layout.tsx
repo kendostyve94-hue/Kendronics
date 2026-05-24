@@ -2,10 +2,12 @@ import type { Metadata, Viewport } from 'next';
 import { AuthRequiredModal } from '../components/layout/AuthRequiredModal';
 import { CookieConsentBanner } from '../components/layout/CookieConsentBanner';
 import { LanguageRuntime } from '../components/layout/LanguageRuntime';
+import { ViewportScaleRuntime } from '../components/layout/ViewportScaleRuntime';
 import './globals.css';
 
 export const viewport: Viewport = {
   width: 1328,
+  initialScale: 0.29,
 };
 
 export const metadata: Metadata = {
@@ -61,6 +63,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="fr">
       <body>
         <LanguageRuntime>
+          <ViewportScaleRuntime />
           {children}
           <AuthRequiredModal />
           <CookieConsentBanner />
