@@ -2978,11 +2978,11 @@ function formatUserId(seed: string) {
   return `KD-${hash.toString(16).toUpperCase().padStart(7, '0').slice(0, 7)}`;
 }
 
-function logout() {
-  void revokeAuthSession();
+async function logout() {
+  await revokeAuthSession();
   removeScopedLocalStorage('kendronics.customer.orders');
   window.dispatchEvent(new Event('kendronics:orders-updated'));
-  window.location.assign('/login');
+  window.location.assign('/');
 }
 
 async function submitAccountDeletionFeedback(
