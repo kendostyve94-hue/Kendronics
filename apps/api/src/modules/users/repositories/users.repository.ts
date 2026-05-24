@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UserRole } from '../../../common/types/user-role.enum';
 import { User } from '../entities/user.entity';
@@ -55,6 +56,8 @@ export class UsersRepository {
       phone?: string | null;
       companyName?: string | null;
       country?: string | null;
+      avatarDataUrl?: string | null;
+      profileDetails?: Prisma.InputJsonValue;
       emailVerifiedAt?: Date | null;
     },
   ): Promise<User> {
@@ -65,7 +68,7 @@ export class UsersRepository {
     return this.toUser(user);
   }
 
-  async updateAddress(userId: string, kind: 'shippingAddress' | 'billingAddress', address: Record<string, unknown>): Promise<User> {
+  async updateAddress(userId: string, kind: 'shippingAddress' | 'billingAddress', address: Prisma.InputJsonValue): Promise<User> {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: { [kind]: address },
@@ -138,6 +141,8 @@ export class UsersRepository {
     companyName: string | null;
     phone: string | null;
     country: string | null;
+    avatarDataUrl: string | null;
+    profileDetails: unknown;
     shippingAddress: unknown;
     billingAddress: unknown;
     roles: string[];
@@ -153,6 +158,8 @@ export class UsersRepository {
       companyName: user.companyName ?? undefined,
       phone: user.phone ?? undefined,
       country: user.country ?? undefined,
+      avatarDataUrl: user.avatarDataUrl ?? undefined,
+      profileDetails: objectValue(user.profileDetails),
       shippingAddress: objectValue(user.shippingAddress),
       billingAddress: objectValue(user.billingAddress),
       roles: user.roles as UserRole[],

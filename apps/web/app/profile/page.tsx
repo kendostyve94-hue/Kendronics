@@ -16,8 +16,24 @@ type ProfileForm = {
   phone: string;
   company: string;
   country: string;
+  avatarDataUrl?: string;
+  profileDetails?: ProfileDetails;
   shippingAddress?: AccountAddress;
   billingAddress?: AccountAddress;
+};
+
+type ProfileDetails = {
+  accountType: string;
+  customerType: string;
+  industry: string;
+  orderPreference: string[];
+  productInterests: string[];
+  hearAboutUs: string;
+  firstName: string;
+  lastName: string;
+  gender: string;
+  website: string;
+  birthday: string;
 };
 
 type AccountAddress = {
@@ -155,6 +171,8 @@ type ProfileUser = {
   companyName?: string;
   phone?: string;
   country?: string;
+  avatarDataUrl?: string;
+  profileDetails?: ProfileDetails;
   shippingAddress?: AccountAddress;
   billingAddress?: AccountAddress;
   emailVerifiedAt?: string;
@@ -207,6 +225,51 @@ const serviceTiles = [
   { title: 'Petites series', body: 'Passage du prototype a une quantite pilote avec suivi plus structure.', href: '/quote' },
 ];
 
+const customerTypeOptions = [
+  'Design/Research/Development >> PCB Designer',
+  'Electronic Manufacturing Services',
+  'Education / University / Laboratory',
+  'Repair / Maintenance',
+  'Startup / Product Development',
+  'Purchasing / Sourcing',
+];
+
+const industryOptions = [
+  'Industrial products & Agricultural technology >>',
+  'Consumer electronics',
+  'Communication / IoT',
+  'Medical electronics',
+  'Automotive electronics',
+  'Aerospace / Defense',
+  'Energy / Power electronics',
+  'Education / Research',
+];
+
+const orderPreferenceOptions = ['Prototyping', 'Small Batch', 'Bulk Order'];
+
+const productInterestOptions = [
+  'Standard FR4 PCB',
+  'HDI PCB',
+  'Aluminum PCB',
+  'Rogers PCB',
+  'Flex PCB',
+  'Rigid-flex PCB',
+  'Stencil',
+  'Assembly',
+  'CNC machining/Sheet metal/3D printing/Injection molding',
+  'Other',
+];
+
+const hearAboutOptions = [
+  'Search Engine (Google/Yahoo/Bing/etc.)',
+  'Social media',
+  'Friend / Colleague recommendation',
+  'Online advertisement',
+  'Exhibition / Event',
+  'Existing customer',
+  'Other',
+];
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileForm>({ name: '', email: '', phone: '', company: '', country: '' });
   const [accountId, setAccountId] = useState('');
@@ -226,11 +289,13 @@ export default function ProfilePage() {
       phone: storedProfile.phone || '',
       company: storedProfile.company || '',
       country: storedProfile.country || '',
+      avatarDataUrl: storedProfile.avatarDataUrl || '',
+      profileDetails: normalizeProfileDetails(storedProfile.profileDetails, storedProfile.name, storedProfile.company),
       shippingAddress: normalizeAddress(storedProfile.shippingAddress),
       billingAddress: normalizeAddress(storedProfile.billingAddress),
     });
     setAccountId(sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
-    setAvatarDataUrl(readScopedLocalStorage(avatarStorageKey) ?? '');
+    setAvatarDataUrl(storedProfile.avatarDataUrl || readScopedLocalStorage(avatarStorageKey) || '');
     setActiveProfileView(viewFromSearchParam(new URLSearchParams(window.location.search).get('view')));
 
     let cancelled = false;
@@ -256,9 +321,12 @@ export default function ProfilePage() {
           phone: userResponse.phone || current.phone,
           company: userResponse.companyName || current.company,
           country: userResponse.country || current.country,
+          avatarDataUrl: userResponse.avatarDataUrl || current.avatarDataUrl,
+          profileDetails: normalizeProfileDetails(userResponse.profileDetails ?? current.profileDetails, userResponse.fullName || current.name, userResponse.companyName || current.company),
           shippingAddress: normalizeAddress(userResponse.shippingAddress ?? current.shippingAddress),
           billingAddress: normalizeAddress(userResponse.billingAddress ?? current.billingAddress),
         }));
+        if (userResponse.avatarDataUrl) setAvatarDataUrl(userResponse.avatarDataUrl);
         setAccountId(userResponse.id || sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
         setOrders(ordersResponse);
         setNotifications(notificationsResponse);
@@ -287,7 +355,7 @@ export default function ProfilePage() {
 
           <section className="min-w-0">
             {activeProfileView ? (
-              <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onProfileChange={setProfile} onNotificationsChange={setNotifications} />
+              <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onProfileChange={setProfile} onAvatarChange={setAvatarDataUrl} onNotificationsChange={setNotifications} />
             ) : (
               <>
                 <div className="grid min-w-0 gap-4">
@@ -475,6 +543,7 @@ function ProfileViewContent({
   notifications,
   dataStatus,
   onProfileChange,
+  onAvatarChange,
   onNotificationsChange,
 }: {
   view: Exclude<ProfileView, null>;
@@ -485,6 +554,7 @@ function ProfileViewContent({
   notifications: ProfileNotification[];
   dataStatus: 'loading' | 'ready' | 'signed-out' | 'error';
   onProfileChange: (profile: ProfileForm | ((current: ProfileForm) => ProfileForm)) => void;
+  onAvatarChange: (avatarDataUrl: string) => void;
   onNotificationsChange: (notifications: ProfileNotification[]) => void;
 }) {
   if (view === 'quotes') return <QuotesHubSection orders={orders} dataStatus={dataStatus} />;
@@ -502,7 +572,7 @@ function ProfileViewContent({
   if (view === 'shipping-address') return <AddressFormSection title="Adresse de livraison" note="Veuillez entrer votre nouveau contact/adresse" kind="shippingAddress" initialAddress={profile.shippingAddress} onSaved={(address) => onProfileChange((current) => ({ ...current, shippingAddress: address }))} />;
   if (view === 'invite') return <InviteSection />;
   if (view === 'billing') return <AddressFormSection title="Informations de facturation" kind="billingAddress" initialAddress={profile.billingAddress} onSaved={(address) => onProfileChange((current) => ({ ...current, billingAddress: address }))} billing />;
-  if (view === 'settings') return <SettingsSection profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} onProfileChange={onProfileChange} />;
+  if (view === 'settings') return <SettingsSection profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} onProfileChange={onProfileChange} onAvatarChange={onAvatarChange} />;
 
   return null;
 }
@@ -1209,12 +1279,15 @@ function SettingsSection({
   userId,
   avatarDataUrl,
   onProfileChange,
+  onAvatarChange,
 }: {
   profile: ProfileForm;
   userId: string;
   avatarDataUrl: string;
   onProfileChange: (profile: ProfileForm | ((current: ProfileForm) => ProfileForm)) => void;
+  onAvatarChange: (avatarDataUrl: string) => void;
 }) {
+  const [editingProfile, setEditingProfile] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteStep, setDeleteStep] = useState<DeleteModalStep>('feedback');
   const [deleteCode, setDeleteCode] = useState('');
@@ -1224,62 +1297,6 @@ function SettingsSection({
   const [savingDeleteFeedback, setSavingDeleteFeedback] = useState(false);
   const [selectedAlternative, setSelectedAlternative] = useState<DeleteAlternative | null>(null);
   const [deleteFeedback, setDeleteFeedback] = useState<DeleteFeedback>(createEmptyDeleteFeedback());
-  const [form, setForm] = useState<ProfileForm>(profile);
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [profileMessage, setProfileMessage] = useState('');
-
-  useEffect(() => {
-    setForm(profile);
-  }, [profile]);
-
-  function updateForm<K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) {
-    setForm((current) => ({ ...current, [key]: value }));
-    setProfileMessage('');
-  }
-
-  async function saveProfile(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSavingProfile(true);
-    setProfileMessage('');
-    try {
-      const session = await readFreshAuthSession();
-      if (!session) {
-        window.location.assign('/login');
-        return;
-      }
-
-      const response = await fetch(`${getApiBaseUrl()}/api/users/me/profile`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName: form.name,
-          email: form.email,
-          phone: form.phone,
-          companyName: form.company,
-          country: form.country,
-        }),
-      });
-
-      if (!response.ok) throw new Error(`Profile update failed: ${response.status}`);
-      const user = (await response.json()) as ProfileUser;
-      onProfileChange((current) => ({
-        ...current,
-        name: user.fullName || form.name,
-        email: user.email || form.email,
-        phone: user.phone || form.phone,
-        company: user.companyName || form.company,
-        country: user.country || form.country,
-      }));
-      setProfileMessage(user.email !== profile.email ? 'Profil enregistre. Verifiez votre nouvel e-mail si necessaire.' : 'Profil enregistre.');
-    } catch {
-      setProfileMessage("Impossible d'enregistrer le profil.");
-    } finally {
-      setSavingProfile(false);
-    }
-  }
 
   function closeDeleteModal() {
     if (requestingDeleteCode || deletingAccount || savingDeleteFeedback) return;
@@ -1305,27 +1322,38 @@ function SettingsSection({
     setDeleteStep('alternative_done');
   }
 
+  if (editingProfile) {
+    return (
+      <AccountProfileEditForm
+        profile={profile}
+        userId={userId}
+        avatarDataUrl={avatarDataUrl}
+        onCancel={() => setEditingProfile(false)}
+        onSaved={(nextProfile) => {
+          onProfileChange(nextProfile);
+          onAvatarChange(nextProfile.avatarDataUrl || '');
+          setEditingProfile(false);
+        }}
+      />
+    );
+  }
+
   return (
     <section className="min-h-[690px] bg-white p-6 text-black shadow-sm ring-1 ring-slate-200">
       <h1 className="border-b border-[#e5e7eb] pb-4 text-xl font-normal">Paramètres du compte</h1>
-      <form onSubmit={saveProfile} className="grid grid-cols-[140px_1fr_160px] gap-6 border-b border-[#e5e7eb] py-6">
+      <div className="grid grid-cols-[140px_1fr_160px] gap-6 border-b border-[#e5e7eb] py-6">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div className="grid gap-3 text-sm">
           <p className="text-base">{profile.name || 'Client Kendronics'} <span className="rounded-none bg-[#a08d70] px-2 py-1 text-xs font-black text-white">{profile.company ? 'Societe' : 'Client'}</span></p>
           <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
-          <div className="grid grid-cols-2 gap-3">
-            <SettingsInput label="Nom complet" value={form.name} onChange={(value) => updateForm('name', value)} required />
-            <SettingsInput label="E-mail" type="email" value={form.email} onChange={(value) => updateForm('email', value)} required />
-            <SettingsInput label="Pays/Region" value={form.country} onChange={(value) => updateForm('country', value)} />
-            <SettingsInput label="No de telephone" value={form.phone} onChange={(value) => updateForm('phone', value)} />
-            <SettingsInput label="Entreprise" value={form.company} onChange={(value) => updateForm('company', value)} />
-          </div>
-          {profileMessage ? <p className={`text-xs font-semibold ${profileMessage.includes('Impossible') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{profileMessage}</p> : null}
+          <p className="text-[#6b7280]">Pays/Region <span className="ml-20 text-black">{profile.country || 'Non renseigne'}</span></p>
+          <p className="text-[#6b7280]">No de telephone <span className="ml-16 text-black">{profile.phone || 'Non renseigne'}</span></p>
+          <p className="text-[#6b7280]">Entreprise <span className="ml-20 text-black">{profile.company || 'Non renseignee'}</span></p>
         </div>
-        <button type="submit" disabled={savingProfile} className="self-start pt-12 text-right text-sm text-[#00a651] disabled:cursor-not-allowed disabled:text-slate-300">
-          {savingProfile ? 'Enregistrement...' : 'Enregistrer'}
+        <button type="button" onClick={() => setEditingProfile(true)} className="self-start pt-12 text-right text-sm text-[#00a651]">
+          Modifier le profil
         </button>
-      </form>
+      </div>
       {[
         ['E-mail', profile.email ? maskEmail(profile.email) : 'Non renseigne', 'Modifier ci-dessus', '/profile?view=settings'],
         ['Mot de passe', '********', 'Changer le mot de passe', '/reset-password'],
@@ -1378,6 +1406,297 @@ function SettingsSection({
   );
 }
 
+function AccountProfileEditForm({
+  profile,
+  userId,
+  avatarDataUrl,
+  onCancel,
+  onSaved,
+}: {
+  profile: ProfileForm;
+  userId: string;
+  avatarDataUrl: string;
+  onCancel: () => void;
+  onSaved: (profile: ProfileForm) => void;
+}) {
+  const initialDetails = normalizeProfileDetails(profile.profileDetails, profile.name, profile.company);
+  const [email, setEmail] = useState(profile.email);
+  const [company, setCompany] = useState(profile.company);
+  const [phone, setPhone] = useState(profile.phone);
+  const [country, setCountry] = useState(profile.country || 'FRANCE');
+  const [details, setDetails] = useState<ProfileDetails>(initialDetails);
+  const [picture, setPicture] = useState(profile.avatarDataUrl || avatarDataUrl);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+
+  function updateDetails<K extends keyof ProfileDetails>(key: K, value: ProfileDetails[K]) {
+    setDetails((current) => ({ ...current, [key]: value }));
+    setMessage('');
+  }
+
+  function toggleListValue(key: 'orderPreference' | 'productInterests', value: string) {
+    setDetails((current) => {
+      const values = current[key].includes(value) ? current[key].filter((item) => item !== value) : [...current[key], value];
+      return { ...current, [key]: values };
+    });
+    setMessage('');
+  }
+
+  function handlePictureUpload(file: File | undefined) {
+    setMessage('');
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setMessage('Format image accepte: PNG, JPG ou WEBP.');
+      return;
+    }
+    if (file.size > 500 * 1024) {
+      setMessage('Image trop lourde. Maximum 500Kb.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') setPicture(reader.result);
+    };
+    reader.onerror = () => setMessage("Impossible de charger l'image.");
+    reader.readAsDataURL(file);
+  }
+
+  async function saveProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSaving(true);
+    setMessage('');
+
+    const fullName = [details.firstName, details.lastName].map((value) => value.trim()).filter(Boolean).join(' ') || profile.name;
+    const payloadDetails = { ...details };
+
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+
+      const response = await fetch(`${getApiBaseUrl()}/api/users/me/profile`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName,
+          email,
+          phone,
+          companyName: company,
+          country,
+          avatarDataUrl: picture,
+          profileDetails: payloadDetails,
+        }),
+      });
+
+      if (!response.ok) throw new Error(`Profile update failed: ${response.status}`);
+      const user = (await response.json()) as ProfileUser;
+      const nextProfile: ProfileForm = {
+        ...profile,
+        name: user.fullName || fullName,
+        email: user.email || email,
+        phone: user.phone || phone,
+        company: user.companyName || company,
+        country: user.country || country,
+        avatarDataUrl: user.avatarDataUrl || picture,
+        profileDetails: normalizeProfileDetails(user.profileDetails ?? payloadDetails, user.fullName || fullName, user.companyName || company),
+        shippingAddress: normalizeAddress(user.shippingAddress ?? profile.shippingAddress),
+        billingAddress: normalizeAddress(user.billingAddress ?? profile.billingAddress),
+      };
+
+      writeScopedLocalStorage(profileStorageKey, JSON.stringify(nextProfile));
+      if (nextProfile.avatarDataUrl) writeScopedLocalStorage(avatarStorageKey, nextProfile.avatarDataUrl);
+      onSaved(nextProfile);
+    } catch {
+      setMessage("Impossible d'enregistrer le profil pour le moment.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="min-h-[690px] bg-white p-6 text-black shadow-sm ring-1 ring-slate-200">
+      <form onSubmit={saveProfile} className="grid gap-7">
+        <div>
+          <h1 className="border-l-4 border-[#00a651] pl-3 text-lg font-semibold">Basic Information</h1>
+          <div className="mt-5 grid grid-cols-[170px_1fr] items-center gap-x-8 gap-y-4 border-b border-[#e5e7eb] pb-7">
+            <div className="flex justify-end">
+              <Avatar avatarDataUrl={picture} size="large" />
+            </div>
+            <div>
+              <label className="inline-flex h-9 cursor-pointer items-center bg-[#22b457] px-6 text-sm font-semibold text-white transition hover:bg-[#159c46]">
+                Upload Picture
+                <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => handlePictureUpload(event.target.files?.[0])} />
+              </label>
+              <p className="mt-4 text-xs text-[#8b949e]">Maximum 500Kb or 1:1 in size.</p>
+            </div>
+
+            <ProfileReadonlyRow label="User ID" value={userId} />
+            <div className="col-span-2 grid grid-cols-[170px_minmax(0,320px)_1fr] items-center gap-4 text-sm">
+              <span className="text-right text-[#8b949e]">Email</span>
+              <input value={email} onChange={(event) => setEmail(event.target.value)} className={profileEditInputClassName} type="email" required />
+              <span className="text-[#00a651]">Verified | Change registered email</span>
+            </div>
+
+            <div className="col-span-2 grid grid-cols-[170px_1fr] items-center gap-4 text-sm">
+              <span className="text-right text-[#8b949e]"><span className="text-red-500">*</span>Account type</span>
+              <div className="flex gap-8">
+                {[
+                  ['company', 'Company'],
+                  ['individual', 'Individual Customer'],
+                ].map(([value, label]) => (
+                  <ProfileRadio key={value} checked={details.accountType === value} label={label} onChange={() => updateDetails('accountType', value)} />
+                ))}
+              </div>
+            </div>
+
+            <ProfileTextField label="*Company Name" value={company} onChange={setCompany} required={details.accountType === 'company'} />
+            <ProfileSelectField label="* Customer Type" value={details.customerType} options={customerTypeOptions} onChange={(value) => updateDetails('customerType', value)} />
+            <ProfileSelectField label="* Industries" value={details.industry} options={industryOptions} onChange={(value) => updateDetails('industry', value)} />
+
+            <div className="col-span-2 grid grid-cols-[170px_1fr] items-start gap-4 text-sm">
+              <span className="pt-2 text-right text-[#8b949e]"><span className="text-red-500">*</span> Order Preference</span>
+              <div className="flex flex-wrap gap-3">
+                {orderPreferenceOptions.map((option) => (
+                  <ProfileCheckbox key={option} checked={details.orderPreference.includes(option)} label={option} onChange={() => toggleListValue('orderPreference', option)} compact />
+                ))}
+                <span className="px-2 py-2 text-xs text-[#a0a7af]">Multiple choices</span>
+              </div>
+            </div>
+
+            <div className="col-span-2 grid grid-cols-[170px_1fr] items-start gap-4 text-sm">
+              <span />
+              <div className="flex flex-wrap gap-x-5 gap-y-3">
+                {productInterestOptions.map((option) => (
+                  <ProfileCheckbox key={option} checked={details.productInterests.includes(option)} label={option} onChange={() => toggleListValue('productInterests', option)} />
+                ))}
+              </div>
+            </div>
+
+            <ProfileSelectField label="How do you hear about us?" value={details.hearAboutUs} options={hearAboutOptions} onChange={(value) => updateDetails('hearAboutUs', value)} />
+          </div>
+        </div>
+
+        <div>
+          <h2 className="border-l-4 border-[#00a651] pl-3 text-lg font-semibold">Contact Information</h2>
+          <div className="mt-7 grid grid-cols-[170px_minmax(0,1fr)_170px_minmax(0,1fr)] items-center gap-x-6 gap-y-4 text-sm">
+            <span className="text-right text-[#8b949e]">First name</span>
+            <input value={details.firstName} onChange={(event) => updateDetails('firstName', event.target.value)} className={profileEditInputClassName} />
+            <span className="text-right text-[#8b949e]">Last name</span>
+            <input value={details.lastName} onChange={(event) => updateDetails('lastName', event.target.value)} className={profileEditInputClassName} />
+
+            <span className="text-right text-[#8b949e]"><span className="text-red-500">*</span> Country/Region</span>
+            <select value={country} onChange={(event) => setCountry(event.target.value)} className={`${profileEditInputClassName} col-span-3 max-w-[420px]`}>
+              {['FRANCE', 'UNITED STATES OF AMERICA', 'CANADA', 'UNITED KINGDOM', 'GERMANY', 'ITALY', 'SPAIN', 'SWITZERLAND', 'CAMEROON'].map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+
+            <span className="text-right text-[#8b949e]">Gender</span>
+            <div className="col-span-3 flex gap-8">
+              {['Male', 'Female', 'Secrecy'].map((option) => (
+                <ProfileRadio key={option} checked={details.gender === option} label={option} onChange={() => updateDetails('gender', option)} />
+              ))}
+            </div>
+
+            <ProfileTextField label="Telephone No." value={phone} onChange={setPhone} />
+            <ProfileTextField label="Website" value={details.website} onChange={(value) => updateDetails('website', value)} />
+            <ProfileTextField label="Your Birthday" value={details.birthday} type="date" onChange={(value) => updateDetails('birthday', value)} />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-4 border-t border-[#e5e7eb] pt-5">
+          <button type="button" onClick={onCancel} disabled={saving} className="h-10 border border-[#cbd5e1] bg-white px-8 text-sm text-[#475569] transition hover:border-[#94a3b8] disabled:opacity-60">
+            Annuler
+          </button>
+          <button type="submit" disabled={saving} className="h-10 min-w-[168px] bg-[#22b457] px-8 text-sm font-semibold text-white transition hover:bg-[#159c46] disabled:cursor-not-allowed disabled:bg-slate-300">
+            {saving ? 'Updating...' : 'Update Information'}
+          </button>
+        </div>
+        {message ? <p className="text-center text-sm text-red-600">{message}</p> : null}
+      </form>
+    </section>
+  );
+}
+
+const profileEditInputClassName = 'h-9 border border-[#c9c9c9] bg-white px-3 text-sm text-black outline-none transition focus:border-[#00a651]';
+
+function ProfileReadonlyRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="col-span-2 grid grid-cols-[170px_1fr] items-center gap-4 text-sm">
+      <span className="text-right text-[#8b949e]">{label}</span>
+      <span className="text-[#4b5563]">{value}</span>
+    </div>
+  );
+}
+
+function ProfileTextField({
+  label,
+  value,
+  type = 'text',
+  required = false,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  type?: string;
+  required?: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="col-span-2 grid grid-cols-[170px_minmax(0,320px)] items-center gap-4 text-sm">
+      <span className="text-right text-[#8b949e]">{label.startsWith('*') ? <><span className="text-red-500">*</span>{label.slice(1)}</> : label}</span>
+      <input type={type} required={required} value={value} onChange={(event) => onChange(event.target.value)} className={profileEditInputClassName} />
+    </div>
+  );
+}
+
+function ProfileSelectField({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="col-span-2 grid grid-cols-[170px_minmax(0,320px)] items-center gap-4 text-sm">
+      <span className="text-right text-[#8b949e]">{label.startsWith('*') ? <><span className="text-red-500">*</span>{label.slice(1)}</> : label}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value)} className={profileEditInputClassName}>
+        {options.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function ProfileRadio({ checked, label, onChange }: { checked: boolean; label: string; onChange: () => void }) {
+  return (
+    <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
+      <input type="radio" checked={checked} onChange={onChange} className="h-5 w-5 accent-[#00a651]" />
+      <span>{label}</span>
+    </label>
+  );
+}
+
+function ProfileCheckbox({ checked, label, compact = false, onChange }: { checked: boolean; label: string; compact?: boolean; onChange: () => void }) {
+  return (
+    <label className={`inline-flex cursor-pointer items-center gap-2 text-sm ${compact ? 'border border-[#00a651] px-3 py-2' : ''}`}>
+      <input type="checkbox" checked={checked} onChange={onChange} className="h-5 w-5 accent-[#00a651]" />
+      <span>{label}</span>
+    </label>
+  );
+}
+
 const deleteReasonOptions: { value: DeleteReason; label: string }[] = [
   { value: 'unused', label: "Je n'utilise plus le service" },
   { value: 'not_found', label: "Je n'ai pas trouve ce que je cherchais" },
@@ -1392,33 +1711,6 @@ const deleteReasonOptions: { value: DeleteReason; label: string }[] = [
   { value: 'privacy_security', label: 'Preoccupations liees a la confidentialite / securite' },
   { value: 'other', label: 'Autre' },
 ];
-
-function SettingsInput({
-  label,
-  value,
-  type = 'text',
-  required = false,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  type?: string;
-  required?: boolean;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="grid gap-1">
-      <span className="text-xs text-[#6b7280]">{label}</span>
-      <input
-        type={type}
-        required={required}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-10 border border-[#d6d6d6] px-3 text-sm text-black outline-none focus:border-[#18b75b]"
-      />
-    </label>
-  );
-}
 
 function DeleteAccountModal({
   profile,
@@ -2594,6 +2886,29 @@ function readStoredProfile(): Partial<ProfileForm> {
   }
 }
 
+function normalizeProfileDetails(value: unknown, fullName = '', companyName = ''): ProfileDetails {
+  const source = value && typeof value === 'object' && !Array.isArray(value) ? (value as Partial<Record<keyof ProfileDetails, unknown>>) : {};
+  const [firstName, lastName] = splitProfileName(fullName);
+  const orderPreference = stringListValue(source.orderPreference);
+  const productInterests = stringListValue(source.productInterests);
+
+  return {
+    accountType: stringValue(source.accountType) || (companyName ? 'company' : 'individual'),
+    customerType: stringValue(source.customerType) || customerTypeOptions[0],
+    industry: stringValue(source.industry) || industryOptions[0],
+    orderPreference: orderPreference.length > 0 ? orderPreference : ['Prototyping', 'Small Batch'],
+    productInterests: productInterests.length > 0
+      ? productInterests
+      : ['Standard FR4 PCB', 'HDI PCB', 'Aluminum PCB', 'Flex PCB', 'Rigid-flex PCB', 'Stencil', 'Assembly', 'CNC machining/Sheet metal/3D printing/Injection molding'],
+    hearAboutUs: stringValue(source.hearAboutUs) || hearAboutOptions[0],
+    firstName: stringValue(source.firstName) || firstName,
+    lastName: stringValue(source.lastName) || lastName,
+    gender: stringValue(source.gender) || 'Male',
+    website: stringValue(source.website),
+    birthday: stringValue(source.birthday),
+  };
+}
+
 function normalizeAddress(value: unknown): AccountAddress {
   const source = value && typeof value === 'object' && !Array.isArray(value) ? (value as Partial<Record<keyof AccountAddress, unknown>>) : {};
   return {
@@ -2614,6 +2929,17 @@ function normalizeAddress(value: unknown): AccountAddress {
 
 function stringValue(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function stringListValue(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0) : [];
+}
+
+function splitProfileName(value: string): [string, string] {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return ['', ''];
+  if (parts.length === 1) return [parts[0], ''];
+  return [parts[0], parts.slice(1).join(' ')];
 }
 
 function readSessionProfile(): { id: string; email: string } {

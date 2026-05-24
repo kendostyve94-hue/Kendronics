@@ -15,6 +15,8 @@ model User {
   companyName     String?
   phone           String?
   country         String?
+  avatarDataUrl   String?
+  profileDetails  Json?
   shippingAddress Json?
   billingAddress  Json?
   roles           String[]  @default(["user"])

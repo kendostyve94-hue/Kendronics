@@ -25,10 +25,18 @@ export class UpdateAccountProfileDto {
   @IsString()
   @MaxLength(80)
   country?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(750000)
+  avatarDataUrl?: string;
+
+  @IsOptional()
+  @IsObject()
+  profileDetails?: Record<string, unknown>;
 }
 
 export class UpdateAccountAddressDto {
   @IsObject()
   address!: Record<string, unknown>;
 }
-

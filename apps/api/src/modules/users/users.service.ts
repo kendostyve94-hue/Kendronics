@@ -127,6 +127,8 @@ export class UsersService {
       phone: cleanString(dto.phone) ?? null,
       companyName: cleanString(dto.companyName) ?? null,
       country: cleanString(dto.country) ?? null,
+      avatarDataUrl: validAvatarDataUrl(dto.avatarDataUrl) ? dto.avatarDataUrl : current.avatarDataUrl ?? null,
+      profileDetails: sanitizeProfileDetails(dto.profileDetails),
       emailVerifiedAt: nextEmail && nextEmail !== current.email ? null : current.emailVerifiedAt ?? null,
     });
   }
@@ -196,6 +198,40 @@ function sanitizeAddress(address: Record<string, unknown>): Record<string, strin
   return Object.fromEntries(
     allowedKeys.map((key) => [key, typeof address[key] === 'string' ? String(address[key]).trim().slice(0, 180) : '']),
   );
+}
+
+function sanitizeProfileDetails(details: Record<string, unknown> | undefined): Record<string, string | string[]> {
+  const source = details ?? {};
+  const stringKeys = [
+    'accountType',
+    'customerType',
+    'industry',
+    'hearAboutUs',
+    'firstName',
+    'lastName',
+    'gender',
+    'website',
+    'birthday',
+  ];
+  const listKeys = ['orderPreference', 'productInterests'];
+  const output: Record<string, string | string[]> = {};
+
+  for (const key of stringKeys) {
+    output[key] = typeof source[key] === 'string' ? String(source[key]).trim().slice(0, 180) : '';
+  }
+
+  for (const key of listKeys) {
+    output[key] = Array.isArray(source[key])
+      ? (source[key] as unknown[]).filter((item): item is string => typeof item === 'string').map((item) => item.trim().slice(0, 80)).filter(Boolean).slice(0, 20)
+      : [];
+  }
+
+  return output;
+}
+
+function validAvatarDataUrl(value: string | undefined): boolean {
+  if (!value) return false;
+  return /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(value) && value.length <= 750000;
 }
 
 function uniqueRoles(roles: UserRole[]): UserRole[] {

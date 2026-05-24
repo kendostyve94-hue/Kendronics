@@ -8,6 +8,8 @@ export interface User {
   companyName?: string;
   phone?: string;
   country?: string;
+  avatarDataUrl?: string;
+  profileDetails?: Record<string, unknown>;
   shippingAddress?: Record<string, unknown>;
   billingAddress?: Record<string, unknown>;
   roles: UserRole[];
