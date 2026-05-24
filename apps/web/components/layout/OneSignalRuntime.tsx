@@ -21,10 +21,11 @@ declare global {
 let scriptPromise: Promise<void> | null = null;
 let initialized = false;
 let currentExternalId: string | null = null;
+const fallbackOneSignalAppId = '402b63b7-1fb8-480d-9212-0017b8a9db21';
 
 export function OneSignalRuntime() {
   useEffect(() => {
-    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
+    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || fallbackOneSignalAppId;
     if (!appId || typeof window === 'undefined' || !('Notification' in window)) return;
 
     let disposed = false;

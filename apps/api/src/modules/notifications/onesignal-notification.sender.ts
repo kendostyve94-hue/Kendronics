@@ -6,7 +6,7 @@ export class OneSignalNotificationSender {
   private readonly logger = new Logger(OneSignalNotificationSender.name);
 
   async send(notification: Notification): Promise<void> {
-    const appId = process.env.ONESIGNAL_APP_ID?.trim();
+    const appId = process.env.ONESIGNAL_APP_ID?.trim() || '402b63b7-1fb8-480d-9212-0017b8a9db21';
     const apiKey = process.env.ONESIGNAL_REST_API_KEY?.trim();
     if (!appId || !apiKey) {
       if (process.env.ONESIGNAL_REQUIRED === 'true') {
