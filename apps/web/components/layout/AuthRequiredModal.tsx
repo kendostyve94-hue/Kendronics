@@ -48,12 +48,6 @@ type PendingVerification = {
   source: 'register' | 'login';
 };
 
-type VerificationNotification = {
-  type: string;
-  body?: string;
-  createdAt: string;
-};
-
 const initialForgotValues: ForgotPasswordFormState = {
   email: '',
 };
@@ -99,7 +93,7 @@ export function AuthRequiredModal() {
     () => publicPathPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)),
     [pathname],
   );
-  const shouldShow = !isPublicPath && (authStatus === 'signed_out' || pendingVerification !== null);
+  const shouldShow = !isPublicPath && authStatus === 'signed_out';
 
   useEffect(() => {
     let cancelled = false;
@@ -169,12 +163,7 @@ export function AuthRequiredModal() {
       if (!response.ok) throw new Error('Login failed.');
 
       const tokens = (await response.json()) as LoginResponse;
-      await startAccountVerification({
-        tokens,
-        remember: rememberMe,
-        contact: loginValues.email.trim().toLowerCase(),
-        source: 'login',
-      });
+      completeAuth(tokens, { remember: rememberMe });
     } catch {
       setLoginErrors({ form: authApiContract.login.failureMessage });
       setLoginStatus('idle');
@@ -265,13 +254,8 @@ export function AuthRequiredModal() {
 
     try {
       await requestVerificationCode(input.tokens);
-      const code = await readLatestVerificationCode(input.tokens);
-      setVerificationCode(code ?? '');
-      setVerificationMessage(
-        code
-          ? 'Code recupere depuis vos notifications Kendronics. Validez pour continuer.'
-          : 'Code envoye par notification et dans votre espace client. Il reste valide pendant 10 minutes.',
-      );
+      setVerificationCode('');
+      setVerificationMessage('Code envoye. Verifiez vos notifications ou votre e-mail. Il reste valide pendant 10 minutes.');
     } catch (error) {
       setVerificationMessage(error instanceof Error ? error.message : "Impossible d'envoyer le code de verification.");
     } finally {
@@ -322,13 +306,8 @@ export function AuthRequiredModal() {
 
     try {
       await requestVerificationCode(pendingVerification.tokens);
-      const code = await readLatestVerificationCode(pendingVerification.tokens);
-      setVerificationCode(code ?? '');
-      setVerificationMessage(
-        code
-          ? 'Nouveau code recupere depuis vos notifications Kendronics.'
-          : 'Nouveau code envoye par notification.',
-      );
+      setVerificationCode('');
+      setVerificationMessage('Nouveau code envoye.');
     } catch (error) {
       setVerificationMessage(error instanceof Error ? error.message : "Impossible d'envoyer un nouveau code.");
     } finally {
@@ -786,7 +765,7 @@ function VerificationPanel({
         </p>
       </div>
 
-      {message && <AlertBox message={message} tone={message.toLowerCase().includes('envoye') ? 'success' : 'error'} />}
+      {message && <AlertBox message={message} tone={isSuccessVerificationMessage(message) ? 'success' : 'error'} />}
 
       <label className="block">
         <span className="mb-1 block text-[11px] font-semibold text-slate-600">Code de verification</span>
@@ -865,6 +844,11 @@ function AlertBox({ message, tone }: { message: string; tone: 'error' | 'success
   return <div className={`border p-3 text-xs font-medium leading-5 ${classes}`}>{message}</div>;
 }
 
+function isSuccessVerificationMessage(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return normalized.includes('envoye') || normalized.includes('envoyé');
+}
+
 function SocialProviderLink({ provider, label, href }: { provider: 'google' | 'apple'; label: string; href?: string }) {
   const content = (
     <>
@@ -931,25 +915,6 @@ async function requestVerificationCode(tokens: AuthTokens) {
 
   if (!response.ok) {
     throw new Error("Impossible d'envoyer le code de verification.");
-  }
-}
-
-async function readLatestVerificationCode(tokens: AuthTokens): Promise<string | null> {
-  try {
-    const response = await fetch(`${apiBaseUrl}/api/notifications`, {
-      headers: {
-        Authorization: `${tokens.tokenType} ${tokens.accessToken}`,
-      },
-      signal: requestTimeoutSignal(8000),
-    });
-    if (!response.ok) return null;
-
-    const notifications = (await response.json()) as VerificationNotification[];
-    const notification = notifications.find((item) => item.type === 'verification.account.code' && item.body);
-    const match = notification?.body?.match(/\b(\d{6})\b/);
-    return match?.[1] ?? null;
-  } catch {
-    return null;
   }
 }
 
