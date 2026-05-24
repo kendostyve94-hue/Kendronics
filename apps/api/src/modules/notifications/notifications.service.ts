@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Notification } from './entities/notification.entity';
+import { Notification, NotificationPayload } from './entities/notification.entity';
 import { OneSignalNotificationSender } from './onesignal-notification.sender';
 import { NotificationRepository } from './repositories/notification.repository';
 
@@ -20,11 +20,21 @@ export class NotificationsService {
     return this.notificationRepository.markRead(userId, id);
   }
 
-  async create(input: { userId: string; type: string; title: string; body?: string }): Promise<Notification> {
+  deleteSensitiveForUser(userId: string): Promise<void> {
+    return this.notificationRepository.deleteSensitiveForUser(userId);
+  }
+
+  async create(input: NotificationPayload): Promise<Notification> {
     const notification = await this.notificationRepository.create(input);
     void this.oneSignalSender.send(notification).catch((error) => {
       this.logger.warn(`OneSignal notification delivery failed: ${error instanceof Error ? error.message : String(error)}`);
     });
     return notification;
+  }
+
+  async sendEphemeral(input: NotificationPayload): Promise<void> {
+    void this.oneSignalSender.send(input).catch((error) => {
+      this.logger.warn(`OneSignal ephemeral delivery failed: ${error instanceof Error ? error.message : String(error)}`);
+    });
   }
 }

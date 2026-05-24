@@ -39,7 +39,8 @@ export class ProfileVerificationService {
       },
     });
 
-    await this.notificationsService.create({
+    await this.notificationsService.deleteSensitiveForUser(input.userId);
+    await this.notificationsService.sendEphemeral({
       userId: input.userId,
       type: `verification.${input.action}.code`,
       title: 'Code de verification Kendronics',

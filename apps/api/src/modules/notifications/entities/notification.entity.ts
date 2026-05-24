@@ -7,3 +7,10 @@ export interface Notification {
   readAt?: Date;
   createdAt: Date;
 }
+
+export type NotificationPayload = {
+  userId: string;
+  type: string;
+  title: string;
+  body?: string;
+};

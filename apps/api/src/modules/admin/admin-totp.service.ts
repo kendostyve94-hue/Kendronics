@@ -269,7 +269,8 @@ export class AdminTotpService {
   }
 
   private async sendAdminSetupCode(userId: string, professionalEmail: string, code: string): Promise<void> {
-    await this.notificationsService.create({
+    await this.notificationsService.deleteSensitiveForUser(userId);
+    await this.notificationsService.sendEphemeral({
       userId,
       type: 'admin.verification.code',
       title: 'Code administrateur Kendronics',

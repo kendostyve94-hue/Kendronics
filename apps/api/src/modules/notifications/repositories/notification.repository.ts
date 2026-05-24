@@ -16,7 +16,10 @@ export class NotificationRepository {
 
   async findByUserId(userId: string): Promise<Notification[]> {
     const notifications = await this.prisma.notification.findMany({
-      where: { userId },
+      where: {
+        userId,
+        NOT: sensitiveNotificationWhere(),
+      },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -51,6 +54,24 @@ export class NotificationRepository {
 
     return toNotification(notification);
   }
+
+  async deleteSensitiveForUser(userId: string): Promise<void> {
+    await this.prisma.notification.deleteMany({
+      where: {
+        userId,
+        OR: sensitiveNotificationWhere().OR,
+      },
+    });
+  }
+}
+
+function sensitiveNotificationWhere() {
+  return {
+    OR: [
+      { type: { startsWith: 'verification.' } },
+      { type: 'admin.verification.code' },
+    ],
+  };
 }
 
 function toNotification(notification: PrismaNotification): Notification {
