@@ -472,11 +472,9 @@ function ChoicePanel({ onRegister, onLogin }: { onRegister: () => void; onLogin:
   return (
     <div className="grid max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto border border-slate-200 bg-white text-ink sm:grid-cols-[0.9fr_1.1fr]">
       <div className="relative hidden min-h-[460px] overflow-hidden bg-[#10233a] sm:block">
-        <img
-          src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1400&q=85"
-          alt="Carte electronique imprimee"
-          className="absolute inset-0 h-full w-full object-cover opacity-70"
-        />
+        <video className="absolute inset-0 h-full w-full object-cover opacity-80" autoPlay muted loop playsInline preload="metadata" aria-label="Video Kendronics">
+          <source src="/videos/auth-required-background.mov" type="video/quicktime" />
+        </video>
         <div className="absolute inset-0 bg-[#071526]/62" />
         <div className="relative flex h-full flex-col justify-between p-8 text-white">
           <div>
