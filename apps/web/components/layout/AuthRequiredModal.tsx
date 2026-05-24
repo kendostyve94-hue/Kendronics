@@ -48,6 +48,12 @@ type PendingVerification = {
   source: 'register' | 'login';
 };
 
+type VerificationNotification = {
+  type: string;
+  body?: string;
+  createdAt: string;
+};
+
 const initialForgotValues: ForgotPasswordFormState = {
   email: '',
 };
@@ -93,7 +99,7 @@ export function AuthRequiredModal() {
     () => publicPathPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)),
     [pathname],
   );
-  const shouldShow = !isPublicPath && authStatus === 'signed_out';
+  const shouldShow = !isPublicPath && (authStatus === 'signed_out' || pendingVerification !== null);
 
   useEffect(() => {
     let cancelled = false;
@@ -253,13 +259,19 @@ export function AuthRequiredModal() {
   async function startAccountVerification(input: PendingVerification) {
     setVerificationStatus('sending');
     setVerificationMessage('');
+    setPendingVerification(input);
+    setAuthStep('form');
+    persistAuthSession(input.tokens, { remember: input.remember });
 
     try {
       await requestVerificationCode(input.tokens);
-      setPendingVerification(input);
-      setVerificationCode('');
-      setVerificationMessage('Code envoye par notification et dans votre espace client. Il reste valide pendant 10 minutes.');
-      setAuthStep('form');
+      const code = await readLatestVerificationCode(input.tokens);
+      setVerificationCode(code ?? '');
+      setVerificationMessage(
+        code
+          ? 'Code recupere depuis vos notifications Kendronics. Validez pour continuer.'
+          : 'Code envoye par notification et dans votre espace client. Il reste valide pendant 10 minutes.',
+      );
     } catch (error) {
       setVerificationMessage(error instanceof Error ? error.message : "Impossible d'envoyer le code de verification.");
     } finally {
@@ -310,7 +322,13 @@ export function AuthRequiredModal() {
 
     try {
       await requestVerificationCode(pendingVerification.tokens);
-      setVerificationMessage('Nouveau code envoye par notification.');
+      const code = await readLatestVerificationCode(pendingVerification.tokens);
+      setVerificationCode(code ?? '');
+      setVerificationMessage(
+        code
+          ? 'Nouveau code recupere depuis vos notifications Kendronics.'
+          : 'Nouveau code envoye par notification.',
+      );
     } catch (error) {
       setVerificationMessage(error instanceof Error ? error.message : "Impossible d'envoyer un nouveau code.");
     } finally {
@@ -913,6 +931,25 @@ async function requestVerificationCode(tokens: AuthTokens) {
 
   if (!response.ok) {
     throw new Error("Impossible d'envoyer le code de verification.");
+  }
+}
+
+async function readLatestVerificationCode(tokens: AuthTokens): Promise<string | null> {
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/notifications`, {
+      headers: {
+        Authorization: `${tokens.tokenType} ${tokens.accessToken}`,
+      },
+      signal: requestTimeoutSignal(8000),
+    });
+    if (!response.ok) return null;
+
+    const notifications = (await response.json()) as VerificationNotification[];
+    const notification = notifications.find((item) => item.type === 'verification.account.code' && item.body);
+    const match = notification?.body?.match(/\b(\d{6})\b/);
+    return match?.[1] ?? null;
+  } catch {
+    return null;
   }
 }
 
