@@ -135,13 +135,13 @@ async function sendTransactionalMail(message: EmailMessage): Promise<void> {
 }
 
 async function sendOperationalMail(message: EmailMessage): Promise<void> {
-  if (isSmtpConfigured()) {
-    await sendSmtpMail(getSmtpConfig(), message);
+  if (process.env.RESEND_API_KEY && process.env.RESEND_FOR_OPERATIONAL_EMAIL !== 'false') {
+    await sendResendMail(process.env.RESEND_API_KEY, message);
     return;
   }
 
-  if (process.env.RESEND_API_KEY && process.env.RESEND_FOR_OPERATIONAL_EMAIL !== 'false') {
-    await sendResendMail(process.env.RESEND_API_KEY, message);
+  if (isSmtpConfigured()) {
+    await sendSmtpMail(getSmtpConfig(), message);
     return;
   }
 

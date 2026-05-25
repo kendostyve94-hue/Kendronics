@@ -7,7 +7,7 @@ import { africanCountries } from '../../lib/african-countries';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { authApiContract } from '../../lib/auth-contract';
 import type { AuthTokens, LoginResponse } from '../../lib/auth-contract';
-import { persistAuthSession, readFreshAuthSession } from '../../lib/auth-session';
+import { clearAuthSession, persistAuthSession, readFreshAuthSession } from '../../lib/auth-session';
 import { validateForgotPasswordForm, validateLoginForm } from '../../lib/login-validation';
 import type { ForgotPasswordErrors, ForgotPasswordFormState, LoginErrors, LoginFormState } from '../../lib/login-validation';
 import { validateRegisterForm } from '../../lib/register-validation';
@@ -374,9 +374,16 @@ export function AuthRequiredModal() {
   }
 
   function backToChoice() {
+    if (pendingVerification) {
+      clearAuthSession();
+      setAuthStatus('signed_out');
+    }
     setAuthStep('choice');
     setLoginMode('login');
     setPendingVerification(null);
+    setVerificationCode('');
+    setVerificationMessage('');
+    setVerificationStatus('idle');
     setForgotStatus('idle');
     setForgotErrors({});
   }
@@ -453,17 +460,19 @@ export function AuthRequiredModal() {
         </div>
         )}
 
-        <div className="border-t border-slate-200 px-5 py-4 sm:px-8">
-          <div className="flex items-center gap-3 text-xs font-medium text-slate-400">
-            <span className="h-px flex-1 bg-slate-200" />
-            <span>ou continuer avec</span>
-            <span className="h-px flex-1 bg-slate-200" />
+        {!pendingVerification ? (
+          <div className="border-t border-slate-200 px-5 py-4 sm:px-8">
+            <div className="flex items-center gap-3 text-xs font-medium text-slate-400">
+              <span className="h-px flex-1 bg-slate-200" />
+              <span>ou continuer avec</span>
+              <span className="h-px flex-1 bg-slate-200" />
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <SocialProviderLink provider="google" label="Continuer avec Google" href={googleOAuthUrl} />
+              <SocialProviderLink provider="apple" label="Continuer avec Apple" href={appleOAuthUrl} />
+            </div>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <SocialProviderLink provider="google" label="Continuer avec Google" href={googleOAuthUrl} />
-            <SocialProviderLink provider="apple" label="Continuer avec Apple" href={appleOAuthUrl} />
-          </div>
-        </div>
+        ) : null}
       </div>
       )}
     </div>
@@ -910,7 +919,6 @@ function registerErrorMessage(status: number, error: unknown) {
 async function requestVerificationCode(tokens: AuthTokens) {
   const response = await fetch(`${apiBaseUrl}/api/auth/profile-verification/request`, {
     method: 'POST',
-    signal: requestTimeoutSignal(15000),
     headers: {
       'Content-Type': 'application/json',
       Authorization: `${tokens.tokenType} ${tokens.accessToken}`,
@@ -923,11 +931,6 @@ async function requestVerificationCode(tokens: AuthTokens) {
   }
 }
 
-function requestTimeoutSignal(timeoutMs: number): AbortSignal {
-  const controller = new AbortController();
-  window.setTimeout(() => controller.abort(), timeoutMs);
-  return controller.signal;
-}
 
 function validateLoginMeta(values: LoginMetaState): LoginMetaErrors {
   const errors: LoginMetaErrors = {};

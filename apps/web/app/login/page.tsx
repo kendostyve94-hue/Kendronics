@@ -7,7 +7,7 @@ import { getApiBaseUrl } from '../../lib/api-base-url';
 import { authApiContract } from '../../lib/auth-contract';
 import type { ForgotPasswordResponse, LoginResponse } from '../../lib/auth-contract';
 import type { AuthTokens } from '../../lib/auth-contract';
-import { persistAuthSession } from '../../lib/auth-session';
+import { clearAuthSession, persistAuthSession } from '../../lib/auth-session';
 import {
   validateForgotPasswordForm,
   validateLoginForm,
@@ -208,6 +208,7 @@ export default function LoginPage() {
   }
 
   function cancelVerification() {
+    clearAuthSession();
     setPendingVerification(null);
     setVerificationCode('');
     setVerificationMessage('');
@@ -904,7 +905,6 @@ function AuthenticatedState() {
 async function requestVerificationCode(tokens: AuthTokens) {
   const response = await fetch(`${apiBaseUrl}/api/auth/profile-verification/request`, {
     method: 'POST',
-    signal: requestTimeoutSignal(15000),
     headers: {
       'Content-Type': 'application/json',
       Authorization: `${tokens.tokenType} ${tokens.accessToken}`,
@@ -915,11 +915,5 @@ async function requestVerificationCode(tokens: AuthTokens) {
   if (!response.ok) {
     throw new Error("Impossible d'envoyer le code de verification.");
   }
-}
-
-function requestTimeoutSignal(timeoutMs: number): AbortSignal {
-  const controller = new AbortController();
-  window.setTimeout(() => controller.abort(), timeoutMs);
-  return controller.signal;
 }
 
