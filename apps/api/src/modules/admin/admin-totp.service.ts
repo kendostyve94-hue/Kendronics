@@ -277,7 +277,7 @@ export class AdminTotpService {
       body: `Code admin ${code}. Il expire dans 10 minutes.`,
     });
 
-    if (process.env.VERIFICATION_CODE_EMAIL_REQUIRED === 'true') {
+    if (shouldAwaitVerificationEmail()) {
       await this.emailNotificationService.sendAdminSetupCode({ to: professionalEmail, code });
       return;
     }
@@ -311,4 +311,8 @@ function addMonths(date: Date, months: number): Date {
   const next = new Date(date);
   next.setMonth(next.getMonth() + months);
   return next;
+}
+
+function shouldAwaitVerificationEmail(): boolean {
+  return process.env.NODE_ENV === 'production' || process.env.VERIFICATION_CODE_EMAIL_REQUIRED === 'true';
 }

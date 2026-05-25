@@ -93,7 +93,7 @@ export function AuthRequiredModal() {
     () => publicPathPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)),
     [pathname],
   );
-  const shouldShow = !isPublicPath && authStatus === 'signed_out';
+  const shouldShow = !isPublicPath && (authStatus === 'signed_out' || pendingVerification !== null);
 
   useEffect(() => {
     let cancelled = false;

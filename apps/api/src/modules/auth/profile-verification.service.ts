@@ -47,7 +47,7 @@ export class ProfileVerificationService {
       body: `Code ${code} pour ${labelForAction(input.action).toLowerCase()}. Il expire dans 10 minutes.`,
     });
 
-    if (process.env.VERIFICATION_CODE_EMAIL_REQUIRED === 'true') {
+    if (shouldAwaitVerificationEmail()) {
       try {
         await this.emailNotificationService.sendProfileVerificationCode({
           to: input.email,
@@ -131,4 +131,8 @@ function labelForAction(action: string) {
   if (action === 'contacts') return 'Changement des contacts';
   if (action === 'delete') return 'Suppression du compte';
   return 'Verification du compte';
+}
+
+function shouldAwaitVerificationEmail(): boolean {
+  return process.env.NODE_ENV === 'production' || process.env.VERIFICATION_CODE_EMAIL_REQUIRED === 'true';
 }
