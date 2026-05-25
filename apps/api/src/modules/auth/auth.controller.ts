@@ -10,6 +10,7 @@ import { RequestProfileVerificationDto, VerifyProfileVerificationDto } from './d
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ProfileVerificationService } from './profile-verification.service';
+import { UsersService } from '../users/users.service';
 
 @Controller('auth')
 export class AuthController {
@@ -17,6 +18,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly profileVerificationService: ProfileVerificationService,
     private readonly googleOAuthService: GoogleOAuthService,
+    private readonly usersService: UsersService,
   ) {}
 
   @Post('register')
@@ -73,10 +75,11 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('profile-verification/request')
-  requestProfileVerification(@CurrentUser() user: AuthenticatedUser, @Body() dto: RequestProfileVerificationDto) {
+  async requestProfileVerification(@CurrentUser() user: AuthenticatedUser, @Body() dto: RequestProfileVerificationDto) {
+    const currentUser = await this.usersService.findById(user.id);
     return this.profileVerificationService.requestCode({
       userId: user.id,
-      email: user.email,
+      email: currentUser?.email ?? user.email,
       action: dto.action,
     });
   }

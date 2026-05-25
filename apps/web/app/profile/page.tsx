@@ -20,6 +20,7 @@ type ProfileForm = {
   profileDetails?: ProfileDetails;
   shippingAddress?: AccountAddress;
   billingAddress?: AccountAddress;
+  emailVerifiedAt?: string;
 };
 
 type ProfileDetails = {
@@ -225,26 +226,26 @@ const serviceTiles = [
 ];
 
 const customerTypeOptions = [
-  'Design/Research/Development >> PCB Designer',
-  'Electronic Manufacturing Services',
-  'Education / University / Laboratory',
-  'Repair / Maintenance',
-  'Startup / Product Development',
-  'Purchasing / Sourcing',
+  'Conception / recherche / developpement',
+  'Fabrication electronique',
+  'Education / universite / laboratoire',
+  'Reparation / maintenance',
+  'Startup / developpement produit',
+  'Achats / approvisionnement',
 ];
 
 const industryOptions = [
-  'Industrial products & Agricultural technology >>',
-  'Consumer electronics',
+  'Produits industriels / technologie agricole',
+  'Electronique grand public',
   'Communication / IoT',
-  'Medical electronics',
-  'Automotive electronics',
-  'Aerospace / Defense',
-  'Energy / Power electronics',
-  'Education / Research',
+  'Electronique medicale',
+  'Electronique automobile',
+  'Aerospatial / defense',
+  'Energie / electronique de puissance',
+  'Education / recherche',
 ];
 
-const orderPreferenceOptions = ['Prototyping', 'Small Batch', 'Bulk Order'];
+const orderPreferenceOptions = ['Prototype', 'Petite serie', 'Commande en volume'];
 
 const productInterestOptions = [
   'Standard FR4 PCB',
@@ -256,17 +257,17 @@ const productInterestOptions = [
   'Stencil',
   'Assembly',
   'CNC machining/Sheet metal/3D printing/Injection molding',
-  'Other',
+  'Autre',
 ];
 
 const hearAboutOptions = [
-  'Search Engine (Google/Yahoo/Bing/etc.)',
-  'Social media',
-  'Friend / Colleague recommendation',
-  'Online advertisement',
-  'Exhibition / Event',
-  'Existing customer',
-  'Other',
+  'Moteur de recherche',
+  'Reseaux sociaux',
+  'Recommandation',
+  'Publicite en ligne',
+  'Salon / evenement',
+  'Client existant',
+  'Autre',
 ];
 
 export default function ProfilePage() {
@@ -292,6 +293,7 @@ export default function ProfilePage() {
       profileDetails: normalizeProfileDetails(storedProfile.profileDetails, storedProfile.name, storedProfile.company),
       shippingAddress: normalizeAddress(storedProfile.shippingAddress),
       billingAddress: normalizeAddress(storedProfile.billingAddress),
+      emailVerifiedAt: storedProfile.emailVerifiedAt || '',
     });
     setAccountId(sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
     setAvatarDataUrl(storedProfile.avatarDataUrl || readScopedLocalStorage(avatarStorageKey) || '');
@@ -324,6 +326,7 @@ export default function ProfilePage() {
           profileDetails: normalizeProfileDetails(userResponse.profileDetails ?? current.profileDetails, userResponse.fullName || current.name, userResponse.companyName || current.company),
           shippingAddress: normalizeAddress(userResponse.shippingAddress ?? current.shippingAddress),
           billingAddress: normalizeAddress(userResponse.billingAddress ?? current.billingAddress),
+          emailVerifiedAt: userResponse.emailVerifiedAt || '',
         }));
         if (userResponse.avatarDataUrl) setAvatarDataUrl(userResponse.avatarDataUrl);
         setAccountId(userResponse.id || sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
@@ -1287,6 +1290,9 @@ function SettingsSection({
   onAvatarChange: (avatarDataUrl: string) => void;
 }) {
   const [editingProfile, setEditingProfile] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'sending' | 'sent' | 'verifying' | 'verified' | 'error'>('idle');
+  const [verificationMessage, setVerificationMessage] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteStep, setDeleteStep] = useState<DeleteModalStep>('feedback');
   const [deleteCode, setDeleteCode] = useState('');
@@ -1321,6 +1327,71 @@ function SettingsSection({
     setDeleteStep('alternative_done');
   }
 
+  async function requestAccountVerificationCode() {
+    setVerificationStatus('sending');
+    setVerificationMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/profile-verification/request`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'account' }),
+      });
+
+      if (!response.ok) throw new Error(`Account verification request failed: ${response.status}`);
+      setVerificationStatus('sent');
+      setVerificationMessage('Code envoye par e-mail. Il reste valide pendant 10 minutes.');
+    } catch {
+      setVerificationStatus('error');
+      setVerificationMessage("Impossible d'envoyer le code de verification pour le moment.");
+    }
+  }
+
+  async function verifyAccountCode() {
+    if (verificationCode.trim().length !== 6) {
+      setVerificationMessage('Entrez le code a 6 chiffres.');
+      return;
+    }
+
+    setVerificationStatus('verifying');
+    setVerificationMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/profile-verification/verify`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'account', code: verificationCode.trim() }),
+      });
+
+      if (!response.ok) throw new Error(`Account verification failed: ${response.status}`);
+      const verifiedAt = new Date().toISOString();
+      onProfileChange((current) => ({ ...current, emailVerifiedAt: verifiedAt }));
+      writeScopedLocalStorage(profileStorageKey, JSON.stringify({ ...profile, emailVerifiedAt: verifiedAt }));
+      setVerificationCode('');
+      setVerificationStatus('verified');
+      setVerificationMessage('Compte verifie.');
+    } catch {
+      setVerificationStatus('error');
+      setVerificationMessage('Code invalide ou expire.');
+    }
+  }
+
   if (editingProfile) {
     return (
       <AccountProfileEditForm
@@ -1343,21 +1414,22 @@ function SettingsSection({
       <div className="grid grid-cols-[140px_1fr_160px] gap-6 border-b border-[#e5e7eb] py-6">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div className="grid gap-3 text-sm">
-          <p className="text-base">{profile.name || 'Client Kendronics'} <span className="rounded-none bg-[#a08d70] px-2 py-1 text-xs font-black text-white">{profile.company ? 'Societe' : 'Client'}</span></p>
+          <p className="text-base">
+            {profile.name || 'Client Kendronics'} <AccountTypeBadge profile={profile} />
+          </p>
           <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
-          <p className="text-[#6b7280]">Pays/Region <span className="ml-20 text-black">{profile.country || 'Non renseigne'}</span></p>
-          <p className="text-[#6b7280]">No de telephone <span className="ml-16 text-black">{profile.phone || 'Non renseigne'}</span></p>
-          <p className="text-[#6b7280]">Entreprise <span className="ml-20 text-black">{profile.company || 'Non renseignee'}</span></p>
+          <p className="text-[#6b7280]">Pays/region <span className="ml-20 text-black">{profile.country || 'Non renseigne'}</span></p>
+          <p className="text-[#6b7280]">Telephone <span className="ml-20 text-black">{profile.phone || 'Non renseigne'}</span></p>
+          {profile.profileDetails?.accountType === 'company' ? <p className="text-[#6b7280]">Societe <span className="ml-24 text-black">{profile.company || 'Non renseignee'}</span></p> : null}
         </div>
         <button type="button" onClick={() => setEditingProfile(true)} className="self-start pt-12 text-right text-sm text-[#00a651]">
           Modifier le profil
         </button>
       </div>
       {[
-        ['E-mail', profile.email ? maskEmail(profile.email) : 'Non renseigne', 'Modifier ci-dessus', '/profile?view=settings'],
+        ['E-mail', profile.email ? maskEmail(profile.email) : 'Non renseigne', profile.emailVerifiedAt ? 'Verifie' : 'A verifier', '/profile?view=settings'],
         ['Mot de passe', '********', 'Changer le mot de passe', '/reset-password'],
         ['Adresse de livraison', 'Ajouter une adresse de livraison pour vos commandes Kendronics.', 'Modifier', '/profile?view=shipping-address'],
-        ['Details de facturation', 'Ajouter une adresse de facturation pour vos documents Kendronics.', 'Modifier', '/profile?view=billing'],
       ].map(([label, value, action, href]) => (
         <div key={label} className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
           <h2 className="text-lg">{label}</h2>
@@ -1365,6 +1437,31 @@ function SettingsSection({
           <a href={href} className="text-right text-[#00a651]">{action}</a>
         </div>
       ))}
+      <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
+        <h2 className="text-lg">Verification</h2>
+        <div className="grid gap-3 text-[#4b5563]">
+          <p>E-mail: <span className={profile.emailVerifiedAt ? 'text-[#00a651]' : 'text-[#d97706]'}>{profile.emailVerifiedAt ? 'compte verifie' : 'verification requise'}</span></p>
+          <p>Telephone: <span className="text-[#64748b]">SMS non configure</span></p>
+          {verificationStatus === 'sent' || verificationStatus === 'verifying' || verificationStatus === 'error' ? (
+            <div className="flex max-w-md gap-2">
+              <input
+                value={verificationCode}
+                onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                inputMode="numeric"
+                className="h-10 flex-1 border border-[#cbd5e1] px-3 text-center text-lg tracking-[0.35em] outline-none focus:border-[#00a651]"
+                placeholder="000000"
+              />
+              <button type="button" onClick={() => void verifyAccountCode()} disabled={verificationStatus === 'verifying'} className="h-10 bg-[#00a651] px-4 text-sm font-semibold text-white disabled:bg-slate-300">
+                Valider
+              </button>
+            </div>
+          ) : null}
+          {verificationMessage ? <p className={verificationStatus === 'error' ? 'text-red-600' : 'text-[#00a651]'}>{verificationMessage}</p> : null}
+        </div>
+        <button type="button" onClick={() => void requestAccountVerificationCode()} disabled={verificationStatus === 'sending' || verificationStatus === 'verifying'} className="text-right text-[#00a651] disabled:text-slate-300">
+          {profile.emailVerifiedAt ? 'Renvoyer un code' : verificationStatus === 'sending' ? 'Envoi...' : 'Verifier'}
+        </button>
+      </div>
       <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
         <h2 className="text-lg">Déconnexion</h2>
         <p className="text-[#4b5563]">Fermer la session sur cet appareil.</p>
@@ -1422,7 +1519,7 @@ function AccountProfileEditForm({
   const [email, setEmail] = useState(profile.email);
   const [company, setCompany] = useState(profile.company);
   const [phone, setPhone] = useState(profile.phone);
-  const [country, setCountry] = useState(profile.country || 'FRANCE');
+  const [country, setCountry] = useState(profile.country || '');
   const [details, setDetails] = useState<ProfileDetails>(initialDetails);
   const [picture, setPicture] = useState(profile.avatarDataUrl || avatarDataUrl);
   const [saving, setSaving] = useState(false);
@@ -1466,8 +1563,31 @@ function AccountProfileEditForm({
     setSaving(true);
     setMessage('');
 
+    if (!details.accountType) {
+      setSaving(false);
+      setMessage('Selectionnez un type de compte.');
+      return;
+    }
+
+    if (details.accountType === 'company' && !company.trim()) {
+      setSaving(false);
+      setMessage('Renseignez le nom de la societe.');
+      return;
+    }
+
+    if (details.accountType === 'company' && (!details.customerType || !details.industry)) {
+      setSaving(false);
+      setMessage("Selectionnez l'activite client et le secteur de la societe.");
+      return;
+    }
+
     const fullName = [details.firstName, details.lastName].map((value) => value.trim()).filter(Boolean).join(' ') || profile.name;
-    const payloadDetails = { ...details };
+    const payloadDetails = {
+      ...details,
+      companyName: details.accountType === 'company' ? company.trim() : '',
+      customerType: details.accountType === 'company' ? details.customerType : '',
+      industry: details.accountType === 'company' ? details.industry : '',
+    };
 
     try {
       const session = await readFreshAuthSession();
@@ -1486,7 +1606,7 @@ function AccountProfileEditForm({
           fullName,
           email,
           phone,
-          companyName: company,
+          companyName: details.accountType === 'company' ? company : '',
           country,
           avatarDataUrl: picture,
           profileDetails: payloadDetails,
@@ -1500,12 +1620,13 @@ function AccountProfileEditForm({
         name: user.fullName || fullName,
         email: user.email || email,
         phone: user.phone || phone,
-        company: user.companyName || company,
+        company: user.companyName || (details.accountType === 'company' ? company : ''),
         country: user.country || country,
         avatarDataUrl: user.avatarDataUrl || picture,
         profileDetails: normalizeProfileDetails(user.profileDetails ?? payloadDetails, user.fullName || fullName, user.companyName || company),
         shippingAddress: normalizeAddress(user.shippingAddress ?? profile.shippingAddress),
         billingAddress: normalizeAddress(user.billingAddress ?? profile.billingAddress),
+        emailVerifiedAt: user.emailVerifiedAt || profile.emailVerifiedAt || '',
       };
 
       writeScopedLocalStorage(profileStorageKey, JSON.stringify(nextProfile));
@@ -1522,44 +1643,50 @@ function AccountProfileEditForm({
     <section className="min-h-[690px] bg-white p-6 text-black shadow-sm ring-1 ring-slate-200">
       <form onSubmit={saveProfile} className="grid gap-7">
         <div>
-          <h1 className="border-l-4 border-[#00a651] pl-3 text-lg font-semibold">Basic Information</h1>
+          <h1 className="border-l-4 border-[#00a651] pl-3 text-lg font-semibold">Informations de base</h1>
           <div className="mt-5 grid grid-cols-[170px_1fr] items-center gap-x-8 gap-y-4 border-b border-[#e5e7eb] pb-7">
             <div className="flex justify-end">
               <Avatar avatarDataUrl={picture} size="large" />
             </div>
             <div>
               <label className="inline-flex h-9 cursor-pointer items-center bg-[#22b457] px-6 text-sm font-semibold text-white transition hover:bg-[#159c46]">
-                Upload Picture
+                Importer une photo
                 <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => handlePictureUpload(event.target.files?.[0])} />
               </label>
-              <p className="mt-4 text-xs text-[#8b949e]">Maximum 500Kb or 1:1 in size.</p>
+              <p className="mt-4 text-xs text-[#8b949e]">Maximum 500 Ko, format carre recommande.</p>
             </div>
 
             <ProfileReadonlyRow label="User ID" value={userId} />
             <div className="col-span-2 grid grid-cols-[170px_minmax(0,320px)_1fr] items-center gap-4 text-sm">
               <span className="text-right text-[#8b949e]">Email</span>
               <input value={email} onChange={(event) => setEmail(event.target.value)} className={profileEditInputClassName} type="email" required />
-              <span className="text-[#00a651]">Verified | Change registered email</span>
+              <span className={profile.emailVerifiedAt ? 'text-[#00a651]' : 'text-[#d97706]'}>
+                {profile.emailVerifiedAt ? 'E-mail verifie' : 'E-mail a verifier apres enregistrement'}
+              </span>
             </div>
 
             <div className="col-span-2 grid grid-cols-[170px_1fr] items-center gap-4 text-sm">
-              <span className="text-right text-[#8b949e]"><span className="text-red-500">*</span>Account type</span>
+              <span className="text-right text-[#8b949e]"><span className="text-red-500">*</span>Type de compte</span>
               <div className="flex gap-8">
                 {[
-                  ['company', 'Company'],
-                  ['individual', 'Individual Customer'],
+                  ['individual', 'Compte individuel', '#2563eb'],
+                  ['company', 'Societe / professionnel', '#00a651'],
                 ].map(([value, label]) => (
-                  <ProfileRadio key={value} checked={details.accountType === value} label={label} onChange={() => updateDetails('accountType', value)} />
+                  <ProfileRadio key={value} checked={details.accountType === value} label={label} color={value === 'individual' ? '#2563eb' : '#00a651'} onChange={() => updateDetails('accountType', value)} />
                 ))}
               </div>
             </div>
 
-            <ProfileTextField label="*Company Name" value={company} onChange={setCompany} required={details.accountType === 'company'} />
-            <ProfileSelectField label="* Customer Type" value={details.customerType} options={customerTypeOptions} onChange={(value) => updateDetails('customerType', value)} />
-            <ProfileSelectField label="* Industries" value={details.industry} options={industryOptions} onChange={(value) => updateDetails('industry', value)} />
+            {details.accountType === 'company' ? (
+              <>
+                <ProfileTextField label="* Societe" value={company} onChange={setCompany} required />
+                <ProfileSelectField label="* Activite client" value={details.customerType} options={customerTypeOptions} placeholder="Selectionner une activite" onChange={(value) => updateDetails('customerType', value)} />
+                <ProfileSelectField label="* Secteur" value={details.industry} options={industryOptions} placeholder="Selectionner un secteur" onChange={(value) => updateDetails('industry', value)} />
+              </>
+            ) : null}
 
             <div className="col-span-2 grid grid-cols-[170px_1fr] items-start gap-4 text-sm">
-              <span className="pt-2 text-right text-[#8b949e]"><span className="text-red-500">*</span> Order Preference</span>
+              <span className="pt-2 text-right text-[#8b949e]">Preference de commande</span>
               <div className="flex flex-wrap gap-3">
                 {orderPreferenceOptions.map((option) => (
                   <ProfileCheckbox key={option} checked={details.orderPreference.includes(option)} label={option} onChange={() => toggleListValue('orderPreference', option)} compact />
@@ -1577,35 +1704,36 @@ function AccountProfileEditForm({
               </div>
             </div>
 
-            <ProfileSelectField label="How do you hear about us?" value={details.hearAboutUs} options={hearAboutOptions} onChange={(value) => updateDetails('hearAboutUs', value)} />
+            <ProfileSelectField label="Comment nous avez-vous connus ?" value={details.hearAboutUs} options={hearAboutOptions} placeholder="Selectionner une source" onChange={(value) => updateDetails('hearAboutUs', value)} />
           </div>
         </div>
 
         <div>
-          <h2 className="border-l-4 border-[#00a651] pl-3 text-lg font-semibold">Contact Information</h2>
+          <h2 className="border-l-4 border-[#00a651] pl-3 text-lg font-semibold">Coordonnees</h2>
           <div className="mt-7 grid grid-cols-[170px_minmax(0,1fr)_170px_minmax(0,1fr)] items-center gap-x-6 gap-y-4 text-sm">
-            <span className="text-right text-[#8b949e]">First name</span>
+            <span className="text-right text-[#8b949e]">Prenom</span>
             <input value={details.firstName} onChange={(event) => updateDetails('firstName', event.target.value)} className={profileEditInputClassName} />
-            <span className="text-right text-[#8b949e]">Last name</span>
+            <span className="text-right text-[#8b949e]">Nom</span>
             <input value={details.lastName} onChange={(event) => updateDetails('lastName', event.target.value)} className={profileEditInputClassName} />
 
-            <span className="text-right text-[#8b949e]"><span className="text-red-500">*</span> Country/Region</span>
-            <select value={country} onChange={(event) => setCountry(event.target.value)} className={`${profileEditInputClassName} col-span-3 max-w-[420px]`}>
+            <span className="text-right text-[#8b949e]"><span className="text-red-500">*</span> Pays/region</span>
+            <select value={country} onChange={(event) => setCountry(event.target.value)} required className={`${profileEditInputClassName} col-span-3 max-w-[420px]`}>
+              <option value="">Selectionner un pays</option>
               {['FRANCE', 'UNITED STATES OF AMERICA', 'CANADA', 'UNITED KINGDOM', 'GERMANY', 'ITALY', 'SPAIN', 'SWITZERLAND', 'CAMEROON'].map((option) => (
                 <option key={option} value={option}>{option}</option>
               ))}
             </select>
 
-            <span className="text-right text-[#8b949e]">Gender</span>
+            <span className="text-right text-[#8b949e]">Genre</span>
             <div className="col-span-3 flex gap-8">
-              {['Male', 'Female', 'Secrecy'].map((option) => (
+              {['Homme', 'Femme', 'Non precise'].map((option) => (
                 <ProfileRadio key={option} checked={details.gender === option} label={option} onChange={() => updateDetails('gender', option)} />
               ))}
             </div>
 
-            <ProfileTextField label="Telephone No." value={phone} onChange={setPhone} />
-            <ProfileTextField label="Website" value={details.website} onChange={(value) => updateDetails('website', value)} />
-            <ProfileTextField label="Your Birthday" value={details.birthday} type="date" onChange={(value) => updateDetails('birthday', value)} />
+            <ProfileTextField label="Telephone" value={phone} onChange={setPhone} />
+            <ProfileTextField label="Site web" value={details.website} onChange={(value) => updateDetails('website', value)} />
+            <ProfileTextField label="Date de naissance" value={details.birthday} type="date" onChange={(value) => updateDetails('birthday', value)} />
           </div>
         </div>
 
@@ -1614,7 +1742,7 @@ function AccountProfileEditForm({
             Annuler
           </button>
           <button type="submit" disabled={saving} className="h-10 min-w-[168px] bg-[#22b457] px-8 text-sm font-semibold text-white transition hover:bg-[#159c46] disabled:cursor-not-allowed disabled:bg-slate-300">
-            {saving ? 'Updating...' : 'Update Information'}
+            {saving ? 'Enregistrement...' : 'Enregistrer'}
           </button>
         </div>
         {message ? <p className="text-center text-sm text-red-600">{message}</p> : null}
@@ -1632,6 +1760,19 @@ function ProfileReadonlyRow({ label, value }: { label: string; value: string }) 
       <span className="text-[#4b5563]">{value}</span>
     </div>
   );
+}
+
+function AccountTypeBadge({ profile }: { profile: ProfileForm }) {
+  const accountType = profile.profileDetails?.accountType;
+  if (accountType === 'individual') {
+    return <span className="ml-2 rounded-none bg-[#2563eb] px-2 py-1 text-xs font-black text-white">Individuel</span>;
+  }
+
+  if (accountType === 'company' || profile.company) {
+    return <span className="ml-2 rounded-none bg-[#00a651] px-2 py-1 text-xs font-black text-white">Societe</span>;
+  }
+
+  return <span className="ml-2 rounded-none bg-[#94a3b8] px-2 py-1 text-xs font-black text-white">A configurer</span>;
 }
 
 function ProfileTextField({
@@ -1659,17 +1800,20 @@ function ProfileSelectField({
   label,
   value,
   options,
+  placeholder,
   onChange,
 }: {
   label: string;
   value: string;
   options: string[];
+  placeholder?: string;
   onChange: (value: string) => void;
 }) {
   return (
     <div className="col-span-2 grid grid-cols-[170px_minmax(0,320px)] items-center gap-4 text-sm">
       <span className="text-right text-[#8b949e]">{label.startsWith('*') ? <><span className="text-red-500">*</span>{label.slice(1)}</> : label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} className={profileEditInputClassName}>
+        {placeholder ? <option value="">{placeholder}</option> : null}
         {options.map((option) => (
           <option key={option} value={option}>{option}</option>
         ))}
@@ -1678,10 +1822,10 @@ function ProfileSelectField({
   );
 }
 
-function ProfileRadio({ checked, label, onChange }: { checked: boolean; label: string; onChange: () => void }) {
+function ProfileRadio({ checked, label, color = '#00a651', onChange }: { checked: boolean; label: string; color?: string; onChange: () => void }) {
   return (
     <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
-      <input type="radio" checked={checked} onChange={onChange} className="h-5 w-5 accent-[#00a651]" />
+      <input type="radio" checked={checked} onChange={onChange} className="h-5 w-5" style={{ accentColor: color }} />
       <span>{label}</span>
     </label>
   );
@@ -2900,17 +3044,15 @@ function normalizeProfileDetails(value: unknown, fullName = '', companyName = ''
   const productInterests = stringListValue(source.productInterests);
 
   return {
-    accountType: stringValue(source.accountType) || (companyName ? 'company' : 'individual'),
-    customerType: stringValue(source.customerType) || customerTypeOptions[0],
-    industry: stringValue(source.industry) || industryOptions[0],
-    orderPreference: orderPreference.length > 0 ? orderPreference : ['Prototyping', 'Small Batch'],
-    productInterests: productInterests.length > 0
-      ? productInterests
-      : ['Standard FR4 PCB', 'HDI PCB', 'Aluminum PCB', 'Flex PCB', 'Rigid-flex PCB', 'Stencil', 'Assembly', 'CNC machining/Sheet metal/3D printing/Injection molding'],
-    hearAboutUs: stringValue(source.hearAboutUs) || hearAboutOptions[0],
+    accountType: stringValue(source.accountType) || (companyName ? 'company' : ''),
+    customerType: stringValue(source.customerType),
+    industry: stringValue(source.industry),
+    orderPreference,
+    productInterests,
+    hearAboutUs: stringValue(source.hearAboutUs),
     firstName: stringValue(source.firstName) || firstName,
     lastName: stringValue(source.lastName) || lastName,
-    gender: stringValue(source.gender) || 'Male',
+    gender: stringValue(source.gender),
     website: stringValue(source.website),
     birthday: stringValue(source.birthday),
   };
