@@ -296,12 +296,12 @@ function HomeCapabilityMatrix() {
     <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
       <div className="mx-auto max-w-none overflow-hidden border border-slate-300 bg-white">
         <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(18rem,24rem)_1fr]">
-          <div className="border-b border-slate-200 p-5 sm:p-6 lg:border-b-0 lg:border-r">
-            <span className="mb-4 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
+          <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
+            <span className="mb-3 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
             <h2 className="text-xl font-black leading-tight tracking-tight text-ink">One-Stop Solution for PCB & Assemblage</h2>
             <p className="mt-1 text-sm text-slate-500">Made easy, quality, on time</p>
 
-            <ul className="mt-6 space-y-2 text-sm leading-5 text-slate-600">
+            <ul className="mt-4 space-y-1.5 text-sm leading-5 text-slate-600">
               {oneStopCapabilities.map((item) => (
                 <li key={item} className="flex gap-3">
                   <span className="text-base font-black text-[#008b6d]">v</span>
@@ -310,7 +310,7 @@ function HomeCapabilityMatrix() {
               ))}
             </ul>
 
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2">
               {oneStopBadges.map((badge) => (
                 <span key={badge} className="bg-[#008b6d] px-3 py-2 text-xs font-black text-white">
                   {badge}
@@ -320,7 +320,7 @@ function HomeCapabilityMatrix() {
           </div>
 
           <div className="min-w-0">
-            <div className="relative h-[18rem] overflow-hidden bg-slate-950 sm:h-[22rem] lg:h-full lg:min-h-[24rem]">
+            <div className="relative h-[13rem] overflow-hidden bg-slate-950 sm:h-[16rem] lg:h-full lg:min-h-[18rem]">
               <video
                 className="h-full w-full object-cover"
                 autoPlay
@@ -332,8 +332,8 @@ function HomeCapabilityMatrix() {
               >
                 <source src={oneStopSolutionVideo} type="video/quicktime" />
               </video>
-              <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 px-5 py-4 text-white">
-                <p className="text-lg font-normal">Kendronics PCB & Assembly workflow</p>
+              <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 px-4 py-2.5 text-white">
+                <p className="text-base font-normal">Kendronics PCB & Assembly workflow</p>
               </div>
             </div>
           </div>
@@ -346,11 +346,11 @@ function HomeCapabilityMatrix() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-[62rem] w-full border-collapse text-left text-[13px]">
+          <table className="min-w-[62rem] w-full border-collapse text-left text-xs">
             <thead className="bg-[#d8edf8] text-[11px] font-black uppercase tracking-[0.1em] text-slate-900">
               <tr>
                 {pcbGroup.headers.map((header, index) => (
-                  <th key={header} className={`${index === 0 ? 'w-[14rem]' : index === 1 ? 'w-[24rem]' : ''} border-b border-r border-slate-300 px-4 py-3 last:border-r-0`}>
+                  <th key={header} className={`${index === 0 ? 'w-[14rem]' : index === 1 ? 'w-[24rem]' : ''} border-b border-r border-slate-300 px-4 py-2.5 last:border-r-0`}>
                     {header}
                   </th>
                 ))}
@@ -392,7 +392,7 @@ function HomeCapabilityMatrix() {
 
 function OneStopStat({ icon, value, label }: { icon: 'gear' | 'planet' | 'wallet'; value: string; label: string }) {
   return (
-    <div className="flex items-center gap-4 border-b border-slate-200 px-5 py-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+    <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-3.5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
       <OneStopStatIcon icon={icon} />
       <span>
         <span className="block text-sm font-black text-[#ff5a00]">{value}</span>
@@ -405,20 +405,22 @@ function OneStopStat({ icon, value, label }: { icon: 'gear' | 'planet' | 'wallet
 function OneStopStatIcon({ icon }: { icon: 'gear' | 'planet' | 'wallet' }) {
   if (icon === 'gear') {
     return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-9 w-9 flex-none text-[#008b6d]" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" />
-        <path d="M19.4 15a1.8 1.8 0 0 0 .36 2l.06.06-1.8 3.1-.08-.02a1.8 1.8 0 0 0-2.02.52l-.44.5-3.56-1.2-.08-.66a1.8 1.8 0 0 0-1.8-1.56h-.12l-2.2 2.76-3.1-1.8.02-.08a1.8 1.8 0 0 0-.52-2.02l-.5-.44 1.2-3.56.66-.08A1.8 1.8 0 0 0 3.24 10v-.12L.48 7.68l1.8-3.1.08.02a1.8 1.8 0 0 0 2.02-.52l.44-.5 3.56 1.2.08.66A1.8 1.8 0 0 0 10.26 7h.12l2.2-2.76 3.1 1.8-.02.08a1.8 1.8 0 0 0 .52 2.02l.5.44-1.2 3.56-.66.08A1.8 1.8 0 0 0 19.4 15Z" />
+      <svg aria-hidden="true" viewBox="0 0 64 64" className="h-9 w-9 flex-none text-[#526f82]" fill="currentColor">
+        <path d="M25.6 11.5 29 8h6l3.4 3.5 4.8-1.2 4.2 4.2-1.2 4.8 3.5 3.4v6l-3.5 3.4 1.2 4.8-4.2 4.2-4.8-1.2-3.4 3.5h-6l-3.4-3.5-4.8 1.2-4.2-4.2 1.2-4.8-3.5-3.4v-6l3.5-3.4-1.2-4.8 4.2-4.2 4.8 1.2Zm6.4 8.8a5.4 5.4 0 1 0 0 10.8 5.4 5.4 0 0 0 0-10.8Z" />
+        <path d="m46.2 34.8 2.4-2.5h4.2l2.4 2.5 3.3-.8 3 3-.8 3.3 2.5 2.4v4.2l-2.5 2.4.8 3.3-3 3-3.3-.8-2.4 2.5h-4.2l-2.4-2.5-3.3.8-3-3 .8-3.3-2.5-2.4v-4.2l2.5-2.4-.8-3.3 3-3 3.3.8Zm4.5 6.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" />
       </svg>
     );
   }
 
   if (icon === 'planet') {
     return (
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-9 w-9 flex-none text-[#008b6d]" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="12" cy="12" r="8" />
-        <path d="M4.8 15.5c3.8 2.1 10.6 1.8 14.8-.8" />
-        <path d="M9 5c1.2 1.7 1.8 4 1.6 6.2-.2 2.6-1.2 5-2.8 6.8" />
-        <path d="M15 5c-1.2 1.7-1.8 4-1.6 6.2.2 2.6 1.2 5 2.8 6.8" />
+      <svg aria-hidden="true" viewBox="0 0 64 64" className="h-9 w-9 flex-none text-[#4f4f4f]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.5">
+        <circle cx="26" cy="34" r="20" />
+        <path d="M10 27c5-3 9-3 13-1 3 2 7 1 10-2 3-2 7-2 10 0" />
+        <path d="M11 42c5-2 9-2 12 1 2 2 3 5 2 9" />
+        <path d="M29 16c-3 5-3 10 1 14 3 3 8 3 11 7" />
+        <path d="M44 5c-6 0-11 5-11 11 0 8 11 22 11 22s11-14 11-22c0-6-5-11-11-11Z" fill="white" />
+        <circle cx="44" cy="16" r="4" fill="white" />
       </svg>
     );
   }
@@ -437,7 +439,7 @@ function HomeCapabilityRow({ row, stripe }: { row: string[]; stripe: boolean }) 
   return (
     <tr className={stripe ? 'bg-[#edf7fd]' : 'bg-white'}>
       {row.map((cell, index) => (
-        <td key={`${cell}-${index}`} className={`${index === 0 ? 'font-normal text-[#008b6d]' : 'leading-5 text-slate-700'} border-b border-r border-slate-300 px-4 py-3 align-top last:border-r-0`}>
+        <td key={`${cell}-${index}`} className={`${index === 0 ? 'font-normal text-[#008b6d]' : 'leading-5 text-slate-700'} border-b border-r border-slate-300 px-4 py-2.5 align-top last:border-r-0`}>
           {cell}
         </td>
       ))}
@@ -454,7 +456,7 @@ function HomeExpandableCapabilityRow({ row, stripe, detail }: { row: string[]; s
             {row.map((cell, index) => (
               <span
                 key={`${cell}-${index}`}
-                className={`${index === 0 ? 'font-normal text-[#008b6d]' : 'leading-5 text-slate-700'} border-r border-slate-300 px-4 py-3 last:border-r-0`}
+                className={`${index === 0 ? 'font-normal text-[#008b6d]' : 'leading-5 text-slate-700'} border-r border-slate-300 px-4 py-2.5 last:border-r-0`}
               >
                 {index === 0 ? (
                   <span className="flex items-center justify-between gap-3">
@@ -467,7 +469,7 @@ function HomeExpandableCapabilityRow({ row, stripe, detail }: { row: string[]; s
               </span>
             ))}
           </summary>
-          <div className="border-t border-slate-300 bg-[#f8fbfd] p-4">{detail}</div>
+          <div className="border-t border-slate-300 bg-[#f8fbfd] p-3">{detail}</div>
         </details>
       </td>
     </tr>
@@ -645,16 +647,16 @@ function MobileQuickAccess() {
 
 function SmartOrdering() {
   return (
-    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
+    <section className="bg-[#eef2f6] px-0 py-4 sm:px-4 lg:px-8">
       <div className="mx-auto max-w-none">
-        <div className="relative min-h-[20rem] overflow-hidden bg-white lg:min-h-[24rem]">
+        <div className="relative min-h-[13rem] overflow-hidden bg-white lg:min-h-[16rem]">
           <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="relative p-5 sm:p-8">
+          <div className="relative p-4 sm:p-6">
             <div className="max-w-[25rem]">
               <p className="label-caps text-ink">Commande intelligente</p>
-              <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:gap-3">
-                <Button href="/quote" className="min-w-[8rem]">Commencer</Button>
-                <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap">
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+                <Button href="/quote" className="min-w-[7.5rem] sm:h-10">Commencer</Button>
+                <Button href="/how-it-works" variant="secondary" className="min-w-[10rem] whitespace-nowrap sm:h-10">
                   Comment ca marche
                 </Button>
               </div>
