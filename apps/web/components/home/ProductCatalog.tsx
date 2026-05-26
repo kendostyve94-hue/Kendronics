@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '../ui/Button';
 
 const productCards = [
   {
@@ -79,12 +78,8 @@ export function ProductCatalog() {
   const activeCard = productCards[activeIndex] ?? productCards[defaultProductIndex] ?? productCards[0];
 
   return (
-    <section className="bg-white px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-      <div className="mx-auto max-w-[1440px]">
-        <div className="mb-6 flex justify-end">
-          <Button href="/services" variant="secondary" className="hidden sm:inline-flex lg:h-12 lg:px-7">Tout explorer</Button>
-        </div>
-
+    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
+      <div className="mx-auto max-w-none">
         <div className="grid overflow-hidden border border-line bg-white lg:grid-cols-[15rem_1fr]">
           <aside className="grid border-b border-line bg-white lg:border-b-0 lg:border-r">
             <article className="bg-white p-4">

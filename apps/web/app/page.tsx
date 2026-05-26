@@ -169,7 +169,7 @@ const trustAssurances = [
 
 export default function HomePage() {
   return (
-    <main className="overflow-hidden bg-white text-ink">
+    <main className="overflow-hidden bg-[#eef2f6] text-ink">
       <Navbar />
       <Hero />
       <MobileQuickAccess />
@@ -278,14 +278,8 @@ function HomeCapabilityMatrix() {
   const finishGroup = homeCapabilityGroups[2];
 
   return (
-    <section className="bg-white px-0 pb-8 pt-2 sm:px-6 sm:pb-12 sm:pt-3 lg:px-8">
+    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
       <div className="mx-auto max-w-none">
-        <div className="mb-5 flex justify-end">
-          <Button href="/capabilities" variant="secondary" className="h-11 lg:h-12">
-            Voir le detail
-          </Button>
-        </div>
-
         <div className="overflow-hidden border border-slate-300 bg-white">
           <div className="flex flex-col gap-2 border-b border-slate-300 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -534,7 +528,7 @@ function MobileQuickAccess() {
   ];
 
   return (
-    <section className="bg-white px-4 py-4 sm:px-6 lg:hidden">
+    <section className="bg-[#eef2f6] px-4 py-5 sm:px-6 lg:hidden">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-sm font-black text-ink">Accès rapide</h2>
         <a href="/quote" className="text-xs font-black text-deepblue">Devis</a>
@@ -553,57 +547,21 @@ function MobileQuickAccess() {
 
 function SmartOrdering() {
   return (
-    <section className="relative overflow-hidden bg-ink px-0 py-5 text-white sm:px-4 lg:px-8">
-      <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70" />
-      <div className="absolute inset-0 bg-gradient-to-r from-ink/90 via-ink/60 to-ink/20" />
-      <svg className="smart-ordering-routes pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1200 520" aria-hidden="true">
-        <defs>
-          <linearGradient id="route-blue" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#8fc5ff" stopOpacity="0" />
-            <stop offset="52%" stopColor="#7bb9ff" stopOpacity="0.58" />
-            <stop offset="100%" stopColor="#8fc5ff" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {[
-          'M180 330 C380 205 650 190 985 275',
-          'M250 215 C500 95 760 132 1070 210',
-          'M335 405 C570 310 785 320 1000 278',
-          'M505 135 C650 230 820 245 1032 350',
-          'M90 255 C330 175 560 250 805 160 C930 118 1035 145 1160 210',
-          'M120 420 C360 350 620 405 815 330 C950 278 1065 315 1165 385',
-          'M65 145 C305 95 520 145 725 118 C870 98 1010 85 1168 132',
-          'M420 462 C540 380 680 355 822 372 C965 390 1072 438 1160 474',
-          'M190 92 C365 188 470 285 650 285 C835 286 930 198 1105 260',
-        ].map((path, index) => (
-          <path key={path} d={path} className="smart-ordering-route" style={{ animationDelay: `${index * 0.72}s` }} />
-        ))}
-        {[
-          [180, 330],
-          [250, 215],
-          [335, 405],
-          [505, 135],
-          [725, 118],
-          [815, 330],
-          [930, 198],
-          [1000, 278],
-          [1105, 260],
-          [1160, 474],
-        ].map(([cx, cy], index) => (
-          <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="2.5" className="smart-ordering-node" style={{ animationDelay: `${index * 0.55}s` }} />
-        ))}
-      </svg>
-      <div className="relative mx-auto max-w-none">
-        <div className="min-h-[20rem] border border-white/10 p-5 sm:p-8 lg:min-h-[24rem]">
-          <div className="max-w-[25rem]">
-            <p className="label-caps text-white">Commande intelligente</p>
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:gap-3">
-              <Button href="/quote" className="min-w-[8rem]">Commencer</Button>
-              <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap border-white/35 bg-white/10 text-white hover:border-white/55 hover:bg-white/15">
-                Comment ca marche
-              </Button>
+    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
+      <div className="mx-auto max-w-none">
+        <div className="relative min-h-[20rem] overflow-hidden bg-white lg:min-h-[24rem]">
+          <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="relative p-5 sm:p-8">
+            <div className="max-w-[25rem]">
+              <p className="label-caps text-ink">Commande intelligente</p>
+              <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:gap-3">
+                <Button href="/quote" className="min-w-[8rem]">Commencer</Button>
+                <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap">
+                  Comment ca marche
+                </Button>
+              </div>
             </div>
           </div>
-
         </div>
       </div>
     </section>
@@ -736,8 +694,8 @@ function TrustBlock() {
 
 function Resources() {
   return (
-    <section className="bg-cloud px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-      <div className="mx-auto max-w-[1180px]">
+    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
+      <div className="mx-auto max-w-none">
         <div className="mb-4">
           <p className="label-caps text-deepblue">Guides et solutions</p>
           <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Les réponses utiles avant de commander.</h2>

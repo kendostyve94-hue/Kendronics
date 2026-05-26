@@ -41,7 +41,7 @@ export function HeroQuickQuote() {
   return (
     <aside className="w-full border border-[#d8e2ea] bg-white text-ink">
       <div className="grid lg:grid-cols-[11.5rem_1fr]">
-        <nav className="grid border-b border-[#d8e2ea] bg-[#009a43] text-white lg:border-b-0 lg:border-r">
+        <nav className="grid border-b border-[#d8e2ea] bg-[#0f8f6b] text-white lg:border-b-0 lg:border-r">
           {productOptions.map((option) => {
             const isActive = option.value === productType;
 
@@ -51,7 +51,7 @@ export function HeroQuickQuote() {
                 type="button"
                 onClick={() => setProductType(option.value)}
                 className={`min-h-10 border-b border-white/20 px-4 text-left text-sm font-normal transition last:border-b-0 ${
-                  isActive ? 'bg-white text-ink' : 'bg-[#00a843] hover:bg-[#00953d]'
+                  isActive ? 'bg-white text-ink' : 'bg-[#0f8f6b] hover:bg-[#0b7558]'
                 }`}
               >
                 {option.label}
@@ -62,7 +62,7 @@ export function HeroQuickQuote() {
 
         <div className="bg-[#f4f7fa] p-4 sm:p-5">
           <div className="mb-3">
-            <h1 className="text-2xl font-black leading-tight text-[#00a651]">Devis immédiat</h1>
+            <h1 className="text-2xl font-black leading-tight text-[#0f8f6b]">Devis immédiat</h1>
             <p className="mt-1 text-sm text-slate-500">Vos circuits imprimés au meilleur prix.</p>
           </div>
 
