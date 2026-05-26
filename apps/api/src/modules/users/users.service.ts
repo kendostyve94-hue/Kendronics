@@ -231,7 +231,7 @@ function sanitizeProfileDetails(details: Record<string, unknown> | undefined): R
 
 function validAvatarDataUrl(value: string | undefined): boolean {
   if (!value) return false;
-  return /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(value) && value.length <= 750000;
+  return /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(value) && value.length <= 3000000;
 }
 
 function uniqueRoles(roles: UserRole[]): UserRole[] {

@@ -3,12 +3,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { Navbar } from '../../components/layout/Navbar';
+import { africanCountries } from '../../lib/african-countries';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { clearAuthSession, readAuthSession, readFreshAuthSession, revokeAuthSession } from '../../lib/auth-session';
 import { purgeLegacySensitiveStorage, readScopedLocalStorage, removeScopedLocalStorage, writeScopedLocalStorage } from '../../lib/user-scoped-storage';
 
 const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
+const siteGreen = '#0f8f6b';
 
 type ProfileForm = {
   name: string;
@@ -255,7 +257,7 @@ const productInterestOptions = [
   'Flex PCB',
   'Rigid-flex PCB',
   'Stencil',
-  'Assembly',
+  'Assemblage',
   'CNC machining/Sheet metal/3D printing/Injection molding',
   'Autre',
 ];
@@ -288,7 +290,7 @@ export default function ProfilePage() {
       email: sessionProfile.email || storedProfile.email || '',
       phone: storedProfile.phone || '',
       company: storedProfile.company || '',
-      country: storedProfile.country || '',
+      country: normalizeProfileCountry(storedProfile.country),
       avatarDataUrl: storedProfile.avatarDataUrl || '',
       profileDetails: normalizeProfileDetails(storedProfile.profileDetails, storedProfile.name, storedProfile.company),
       shippingAddress: normalizeAddress(storedProfile.shippingAddress),
@@ -321,7 +323,7 @@ export default function ProfilePage() {
           email: userResponse.email || current.email,
           phone: userResponse.phone || current.phone,
           company: userResponse.companyName || current.company,
-          country: userResponse.country || current.country,
+          country: normalizeProfileCountry(userResponse.country || current.country),
           avatarDataUrl: userResponse.avatarDataUrl || current.avatarDataUrl,
           profileDetails: normalizeProfileDetails(userResponse.profileDetails ?? current.profileDetails, userResponse.fullName || current.name, userResponse.companyName || current.company),
           shippingAddress: normalizeAddress(userResponse.shippingAddress ?? current.shippingAddress),
@@ -408,7 +410,7 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
           </span>
           <span className="text-xs leading-5 text-[#64748b]">
             Bonjour, {firstName}
-            <strong className="block text-sm font-black text-[#00a651]">Mon Espace</strong>
+            <strong className="block text-sm font-black text-[#0f8f6b]">Mon Espace</strong>
           </span>
         </a>
       </div>
@@ -418,7 +420,7 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
 
 function ProfileNavLink({ href, label }: { href: string; label: string }) {
   return (
-    <a href={href} className="grid min-h-[54px] min-w-[92px] snap-start place-items-center px-2 text-center leading-6 hover:text-[#00a651]">
+    <a href={href} className="grid min-h-[54px] min-w-[92px] snap-start place-items-center px-2 text-center leading-6 hover:text-[#0f8f6b]">
       {label}
     </a>
   );
@@ -1173,7 +1175,7 @@ function AddressFormSection({
       </p>
       {status === 'saved' ? <p className="mt-3 text-sm font-semibold text-[#0f8f6b]">Adresse enregistree.</p> : null}
       {status === 'error' ? <p className="mt-3 text-sm font-semibold text-red-600">Impossible d'enregistrer cette adresse.</p> : null}
-      <button form={`${kind}-form`} type="submit" disabled={status === 'saving'} className="mt-5 bg-[#1baa4f] px-6 py-2 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-300">
+      <button form={`${kind}-form`} type="submit" disabled={status === 'saving'} className="mt-5 bg-[#0f8f6b] px-6 py-2 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-300">
         {status === 'saving' ? 'Enregistrement...' : 'Soumettre'}
       </button>
     </section>
@@ -1418,11 +1420,11 @@ function SettingsSection({
             {profile.name || 'Client Kendronics'} <AccountTypeBadge profile={profile} />
           </p>
           <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
-          <p className="text-[#6b7280]">Pays/region <span className="ml-20 text-black">{profile.country || 'Non renseigne'}</span></p>
+          <p className="text-[#6b7280]">Pays/region <span className="ml-20 text-black">{profile.country ? countryDisplayName(profile.country) : 'Non renseigne'}</span></p>
           <p className="text-[#6b7280]">Telephone <span className="ml-20 text-black">{profile.phone || 'Non renseigne'}</span></p>
           {profile.profileDetails?.accountType === 'company' ? <p className="text-[#6b7280]">Societe <span className="ml-24 text-black">{profile.company || 'Non renseignee'}</span></p> : null}
         </div>
-        <button type="button" onClick={() => setEditingProfile(true)} className="self-start pt-12 text-right text-sm text-[#00a651]">
+        <button type="button" onClick={() => setEditingProfile(true)} className="self-start pt-12 text-right text-sm text-[#0f8f6b]">
           Modifier le profil
         </button>
       </div>
@@ -1434,13 +1436,13 @@ function SettingsSection({
         <div key={label} className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
           <h2 className="text-lg">{label}</h2>
           <p className="text-[#4b5563]">{value}</p>
-          <a href={href} className="text-right text-[#00a651]">{action}</a>
+          <a href={href} className="text-right text-[#0f8f6b]">{action}</a>
         </div>
       ))}
       <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
         <h2 className="text-lg">Verification</h2>
         <div className="grid gap-3 text-[#4b5563]">
-          <p>E-mail: <span className={profile.emailVerifiedAt ? 'text-[#00a651]' : 'text-[#d97706]'}>{profile.emailVerifiedAt ? 'compte verifie' : 'verification requise'}</span></p>
+          <p>E-mail: <span className={profile.emailVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}>{profile.emailVerifiedAt ? 'compte verifie' : 'verification requise'}</span></p>
           <p>Telephone: <span className="text-[#64748b]">SMS non configure</span></p>
           {verificationStatus === 'sent' || verificationStatus === 'verifying' || verificationStatus === 'error' ? (
             <div className="flex max-w-md gap-2">
@@ -1448,24 +1450,24 @@ function SettingsSection({
                 value={verificationCode}
                 onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
                 inputMode="numeric"
-                className="h-10 flex-1 border border-[#cbd5e1] px-3 text-center text-lg tracking-[0.35em] outline-none focus:border-[#00a651]"
+                className="h-10 flex-1 border border-[#cbd5e1] px-3 text-center text-lg tracking-[0.35em] outline-none focus:border-[#0f8f6b]"
                 placeholder="000000"
               />
-              <button type="button" onClick={() => void verifyAccountCode()} disabled={verificationStatus === 'verifying'} className="h-10 bg-[#00a651] px-4 text-sm font-semibold text-white disabled:bg-slate-300">
+              <button type="button" onClick={() => void verifyAccountCode()} disabled={verificationStatus === 'verifying'} className="h-10 bg-[#0f8f6b] px-4 text-sm font-semibold text-white disabled:bg-slate-300">
                 Valider
               </button>
             </div>
           ) : null}
-          {verificationMessage ? <p className={verificationStatus === 'error' ? 'text-red-600' : 'text-[#00a651]'}>{verificationMessage}</p> : null}
+          {verificationMessage ? <p className={verificationStatus === 'error' ? 'text-red-600' : 'text-[#0f8f6b]'}>{verificationMessage}</p> : null}
         </div>
-        <button type="button" onClick={() => void requestAccountVerificationCode()} disabled={verificationStatus === 'sending' || verificationStatus === 'verifying'} className="text-right text-[#00a651] disabled:text-slate-300">
+        <button type="button" onClick={() => void requestAccountVerificationCode()} disabled={verificationStatus === 'sending' || verificationStatus === 'verifying'} className="text-right text-[#0f8f6b] disabled:text-slate-300">
           {profile.emailVerifiedAt ? 'Renvoyer un code' : verificationStatus === 'sending' ? 'Envoi...' : 'Verifier'}
         </button>
       </div>
       <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
         <h2 className="text-lg">Déconnexion</h2>
         <p className="text-[#4b5563]">Fermer la session sur cet appareil.</p>
-        <button type="button" onClick={logout} className="text-right text-[#00a651]">Se déconnecter</button>
+        <button type="button" onClick={logout} className="text-right text-[#0f8f6b]">Se déconnecter</button>
       </div>
       <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
         <h2 className="text-lg">Supprimer le compte</h2>
@@ -1519,7 +1521,7 @@ function AccountProfileEditForm({
   const [email, setEmail] = useState(profile.email);
   const [company, setCompany] = useState(profile.company);
   const [phone, setPhone] = useState(profile.phone);
-  const [country, setCountry] = useState(profile.country || '');
+  const [country, setCountry] = useState(normalizeProfileCountry(profile.country));
   const [details, setDetails] = useState<ProfileDetails>(initialDetails);
   const [picture, setPicture] = useState(profile.avatarDataUrl || avatarDataUrl);
   const [saving, setSaving] = useState(false);
@@ -1538,24 +1540,23 @@ function AccountProfileEditForm({
     setMessage('');
   }
 
-  function handlePictureUpload(file: File | undefined) {
+  async function handlePictureUpload(file: File | undefined) {
     setMessage('');
     if (!file) return;
     if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
       setMessage('Format image accepte: PNG, JPG ou WEBP.');
       return;
     }
-    if (file.size > 500 * 1024) {
-      setMessage('Image trop lourde. Maximum 500Kb.');
+    if (file.size > 4 * 1024 * 1024) {
+      setMessage('Image trop lourde. Maximum 4 Mo.');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') setPicture(reader.result);
-    };
-    reader.onerror = () => setMessage("Impossible de charger l'image.");
-    reader.readAsDataURL(file);
+    try {
+      setPicture(await resizeProfileImage(file));
+    } catch {
+      setMessage("Impossible de charger la photo. Essayez une autre image PNG, JPG ou WEBP.");
+    }
   }
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
@@ -1607,7 +1608,7 @@ function AccountProfileEditForm({
           email,
           phone,
           companyName: details.accountType === 'company' ? company : '',
-          country,
+          country: normalizeProfileCountry(country),
           avatarDataUrl: picture,
           profileDetails: payloadDetails,
         }),
@@ -1621,7 +1622,7 @@ function AccountProfileEditForm({
         email: user.email || email,
         phone: user.phone || phone,
         company: user.companyName || (details.accountType === 'company' ? company : ''),
-        country: user.country || country,
+        country: normalizeProfileCountry(user.country || country),
         avatarDataUrl: user.avatarDataUrl || picture,
         profileDetails: normalizeProfileDetails(user.profileDetails ?? payloadDetails, user.fullName || fullName, user.companyName || company),
         shippingAddress: normalizeAddress(user.shippingAddress ?? profile.shippingAddress),
@@ -1643,24 +1644,24 @@ function AccountProfileEditForm({
     <section className="min-h-[690px] bg-white p-6 text-black shadow-sm ring-1 ring-slate-200">
       <form onSubmit={saveProfile} className="grid gap-7">
         <div>
-          <h1 className="border-l-4 border-[#00a651] pl-3 text-lg font-semibold">Informations de base</h1>
+          <h1 className="border-l-4 border-[#0f8f6b] pl-3 text-lg font-semibold">Informations de base</h1>
           <div className="mt-5 grid grid-cols-[170px_1fr] items-center gap-x-8 gap-y-4 border-b border-[#e5e7eb] pb-7">
             <div className="flex justify-end">
               <Avatar avatarDataUrl={picture} size="large" />
             </div>
             <div>
-              <label className="inline-flex h-9 cursor-pointer items-center bg-[#22b457] px-6 text-sm font-semibold text-white transition hover:bg-[#159c46]">
+              <label className="inline-flex h-9 cursor-pointer items-center bg-[#0f8f6b] px-6 text-sm font-semibold text-white transition hover:bg-[#0b7558]">
                 Importer une photo
                 <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => handlePictureUpload(event.target.files?.[0])} />
               </label>
-              <p className="mt-4 text-xs text-[#8b949e]">Maximum 500 Ko, format carre recommande.</p>
+              <p className="mt-4 text-xs text-[#8b949e]">Maximum 4 Mo. L'image est optimisee automatiquement.</p>
             </div>
 
             <ProfileReadonlyRow label="User ID" value={userId} />
             <div className="col-span-2 grid grid-cols-[170px_minmax(0,320px)_1fr] items-center gap-4 text-sm">
               <span className="text-right text-[#8b949e]">Email</span>
               <input value={email} onChange={(event) => setEmail(event.target.value)} className={profileEditInputClassName} type="email" required />
-              <span className={profile.emailVerifiedAt ? 'text-[#00a651]' : 'text-[#d97706]'}>
+              <span className={profile.emailVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}>
                 {profile.emailVerifiedAt ? 'E-mail verifie' : 'E-mail a verifier apres enregistrement'}
               </span>
             </div>
@@ -1670,9 +1671,9 @@ function AccountProfileEditForm({
               <div className="flex gap-8">
                 {[
                   ['individual', 'Compte individuel', '#2563eb'],
-                  ['company', 'Societe / professionnel', '#00a651'],
+                  ['company', 'Societe / professionnel', siteGreen],
                 ].map(([value, label]) => (
-                  <ProfileRadio key={value} checked={details.accountType === value} label={label} color={value === 'individual' ? '#2563eb' : '#00a651'} onChange={() => updateDetails('accountType', value)} />
+                  <ProfileRadio key={value} checked={details.accountType === value} label={label} color={value === 'individual' ? '#2563eb' : siteGreen} onChange={() => updateDetails('accountType', value)} />
                 ))}
               </div>
             </div>
@@ -1691,25 +1692,18 @@ function AccountProfileEditForm({
                 {orderPreferenceOptions.map((option) => (
                   <ProfileCheckbox key={option} checked={details.orderPreference.includes(option)} label={option} onChange={() => toggleListValue('orderPreference', option)} compact />
                 ))}
-                <span className="px-2 py-2 text-xs text-[#a0a7af]">Multiple choices</span>
+                <span className="px-2 py-2 text-xs text-[#a0a7af]">Choix multiples</span>
               </div>
             </div>
 
-            <div className="col-span-2 grid grid-cols-[170px_1fr] items-start gap-4 text-sm">
-              <span />
-              <div className="flex flex-wrap gap-x-5 gap-y-3">
-                {productInterestOptions.map((option) => (
-                  <ProfileCheckbox key={option} checked={details.productInterests.includes(option)} label={option} onChange={() => toggleListValue('productInterests', option)} />
-                ))}
-              </div>
-            </div>
+            <ProfileMultiSelectField label="Produits interesses" value={details.productInterests} options={productInterestOptions} onChange={(value) => updateDetails('productInterests', value)} />
 
             <ProfileSelectField label="Comment nous avez-vous connus ?" value={details.hearAboutUs} options={hearAboutOptions} placeholder="Selectionner une source" onChange={(value) => updateDetails('hearAboutUs', value)} />
           </div>
         </div>
 
         <div>
-          <h2 className="border-l-4 border-[#00a651] pl-3 text-lg font-semibold">Coordonnees</h2>
+          <h2 className="border-l-4 border-[#0f8f6b] pl-3 text-lg font-semibold">Coordonnees</h2>
           <div className="mt-7 grid grid-cols-[170px_minmax(0,1fr)_170px_minmax(0,1fr)] items-center gap-x-6 gap-y-4 text-sm">
             <span className="text-right text-[#8b949e]">Prenom</span>
             <input value={details.firstName} onChange={(event) => updateDetails('firstName', event.target.value)} className={profileEditInputClassName} />
@@ -1719,8 +1713,8 @@ function AccountProfileEditForm({
             <span className="text-right text-[#8b949e]"><span className="text-red-500">*</span> Pays/region</span>
             <select value={country} onChange={(event) => setCountry(event.target.value)} required className={`${profileEditInputClassName} col-span-3 max-w-[420px]`}>
               <option value="">Selectionner un pays</option>
-              {['FRANCE', 'UNITED STATES OF AMERICA', 'CANADA', 'UNITED KINGDOM', 'GERMANY', 'ITALY', 'SPAIN', 'SWITZERLAND', 'CAMEROON'].map((option) => (
-                <option key={option} value={option}>{option}</option>
+              {africanCountries.map((option) => (
+                <option key={option.iso2} value={option.iso2}>{option.name}</option>
               ))}
             </select>
 
@@ -1741,7 +1735,7 @@ function AccountProfileEditForm({
           <button type="button" onClick={onCancel} disabled={saving} className="h-10 border border-[#cbd5e1] bg-white px-8 text-sm text-[#475569] transition hover:border-[#94a3b8] disabled:opacity-60">
             Annuler
           </button>
-          <button type="submit" disabled={saving} className="h-10 min-w-[168px] bg-[#22b457] px-8 text-sm font-semibold text-white transition hover:bg-[#159c46] disabled:cursor-not-allowed disabled:bg-slate-300">
+          <button type="submit" disabled={saving} className="h-10 min-w-[168px] bg-[#0f8f6b] px-8 text-sm font-semibold text-white transition hover:bg-[#0b7558] disabled:cursor-not-allowed disabled:bg-slate-300">
             {saving ? 'Enregistrement...' : 'Enregistrer'}
           </button>
         </div>
@@ -1751,7 +1745,7 @@ function AccountProfileEditForm({
   );
 }
 
-const profileEditInputClassName = 'h-9 border border-[#c9c9c9] bg-white px-3 text-sm text-black outline-none transition focus:border-[#00a651]';
+const profileEditInputClassName = 'h-9 border border-[#c9c9c9] bg-white px-3 text-sm text-black outline-none transition focus:border-[#0f8f6b]';
 
 function ProfileReadonlyRow({ label, value }: { label: string; value: string }) {
   return (
@@ -1769,7 +1763,7 @@ function AccountTypeBadge({ profile }: { profile: ProfileForm }) {
   }
 
   if (accountType === 'company' || profile.company) {
-    return <span className="ml-2 rounded-none bg-[#00a651] px-2 py-1 text-xs font-black text-white">Societe</span>;
+    return <span className="ml-2 rounded-none bg-[#0f8f6b] px-2 py-1 text-xs font-black text-white">Societe</span>;
   }
 
   return <span className="ml-2 rounded-none bg-[#94a3b8] px-2 py-1 text-xs font-black text-white">A configurer</span>;
@@ -1822,7 +1816,39 @@ function ProfileSelectField({
   );
 }
 
-function ProfileRadio({ checked, label, color = '#00a651', onChange }: { checked: boolean; label: string; color?: string; onChange: () => void }) {
+function ProfileMultiSelectField({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string[];
+  options: string[];
+  onChange: (value: string[]) => void;
+}) {
+  return (
+    <div className="col-span-2 grid grid-cols-[170px_minmax(0,420px)] items-start gap-4 text-sm">
+      <span className="pt-2 text-right text-[#8b949e]">{label}</span>
+      <div>
+        <select
+          multiple
+          size={Math.min(6, options.length)}
+          value={value}
+          onChange={(event) => onChange(Array.from(event.currentTarget.selectedOptions).map((option) => option.value))}
+          className="min-h-[150px] w-full border border-[#c9c9c9] bg-white px-3 py-2 text-sm text-black outline-none transition focus:border-[#0f8f6b]"
+        >
+          {options.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+        <p className="mt-2 text-xs text-[#8b949e]">Maintenez Ctrl pour choisir plusieurs lignes.</p>
+      </div>
+    </div>
+  );
+}
+
+function ProfileRadio({ checked, label, color = siteGreen, onChange }: { checked: boolean; label: string; color?: string; onChange: () => void }) {
   return (
     <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
       <input type="radio" checked={checked} onChange={onChange} className="h-5 w-5" style={{ accentColor: color }} />
@@ -1833,8 +1859,8 @@ function ProfileRadio({ checked, label, color = '#00a651', onChange }: { checked
 
 function ProfileCheckbox({ checked, label, compact = false, onChange }: { checked: boolean; label: string; compact?: boolean; onChange: () => void }) {
   return (
-    <label className={`inline-flex cursor-pointer items-center gap-2 text-sm ${compact ? 'border border-[#00a651] px-3 py-2' : ''}`}>
-      <input type="checkbox" checked={checked} onChange={onChange} className="h-5 w-5 accent-[#00a651]" />
+    <label className={`inline-flex cursor-pointer items-center gap-2 text-sm ${compact ? `border px-3 py-2 ${checked ? 'border-[#0f8f6b] bg-[#eefbf6]' : 'border-[#cbd5e1] bg-white'}` : ''}`}>
+      <input type="checkbox" checked={checked} onChange={onChange} className="h-5 w-5 accent-[#0f8f6b]" />
       <span>{label}</span>
     </label>
   );
@@ -2787,7 +2813,7 @@ function InfoList({ title, items, action, numbered }: { title: string; items: st
 }
 
 function Avatar({ avatarDataUrl, size }: { avatarDataUrl: string; size: 'small' | 'medium' | 'large' }) {
-  const className = size === 'large' ? 'h-16 w-16 border-2 border-[#d89b2b]' : size === 'small' ? 'h-7 w-7 border border-slate-200' : 'h-20 w-20 border border-slate-200';
+  const className = size === 'large' ? 'h-28 w-28 border-2 border-[#0f8f6b]' : size === 'small' ? 'h-7 w-7 border border-slate-200' : 'h-24 w-24 border border-slate-200';
 
   return (
     <span className={`grid shrink-0 place-items-center overflow-hidden rounded-none bg-slate-200 ${className}`}>
@@ -3056,6 +3082,52 @@ function normalizeProfileDetails(value: unknown, fullName = '', companyName = ''
     website: stringValue(source.website),
     birthday: stringValue(source.birthday),
   };
+}
+
+function normalizeProfileCountry(value: string | undefined): string {
+  const raw = (value ?? '').trim();
+  if (!raw) return '';
+  const upper = raw.toUpperCase();
+  const byIso = africanCountries.find((country) => country.iso2 === upper);
+  if (byIso) return byIso.iso2;
+  const byName = africanCountries.find((country) => country.name.toUpperCase() === upper);
+  return byName?.iso2 ?? '';
+}
+
+function countryDisplayName(value: string): string {
+  return africanCountries.find((country) => country.iso2 === value)?.name ?? value;
+}
+
+async function resizeProfileImage(file: File): Promise<string> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Image load failed'));
+      img.src = objectUrl;
+    });
+    const maxSide = 512;
+    const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+    const width = Math.max(1, Math.round(image.width * scale));
+    const height = Math.max(1, Math.round(image.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas unavailable');
+    context.drawImage(image, 0, 0, width, height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.86));
+    if (!blob) throw new Error('Image compression failed');
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => (typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Invalid image data')));
+      reader.onerror = () => reject(new Error('File read failed'));
+      reader.readAsDataURL(blob);
+    });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 function normalizeAddress(value: unknown): AccountAddress {

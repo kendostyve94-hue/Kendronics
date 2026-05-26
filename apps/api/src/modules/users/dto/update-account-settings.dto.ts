@@ -28,7 +28,7 @@ export class UpdateAccountProfileDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(750000)
+  @MaxLength(3000000)
   avatarDataUrl?: string;
 
   @IsOptional()
