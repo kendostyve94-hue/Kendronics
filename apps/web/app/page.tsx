@@ -3,6 +3,7 @@ import { ProductCatalog } from '../components/home/ProductCatalog';
 import { Footer } from '../components/layout/Footer';
 import { Navbar } from '../components/layout/Navbar';
 import { Button } from '../components/ui/Button';
+import { africanCountries } from '../lib/african-countries';
 import { officialContactEmail } from '../lib/official-contact';
 
 const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
@@ -10,6 +11,20 @@ const heroControllerBoardImage = '/images/hero-controller-board-transparent.png'
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
 const smartOrderingMapImage = '/images/home-schematic-preview.png';
 const pcbwayChoiceBannerImage = '/images/hero-pcb-color-variants.png';
+const oneStopSolutionVideo = '/videos/one-stop-solution.mov';
+const oneStopPaymentMethodCount = 4;
+const oneStopServiceCount = 6;
+
+const oneStopCapabilities = [
+  'PCB standard et avance',
+  'Assemblage PCBA',
+  'FPC, flex et rigid-flex',
+  'Stencil SMT',
+  'CNC, impression 3D et tolerie',
+  'Assistance Gerber avant paiement',
+];
+
+const oneStopBadges = ['Functional Testing', 'IC Programming', 'BGA & QFN'];
 
 const pcbwayChoiceCards = [
   {
@@ -177,6 +192,7 @@ export default function HomePage() {
       <SmartOrdering />
       <WhyBuyPcbSection />
       <HomeCapabilityMatrix />
+      <OneStopSolutionBlock />
       <Resources />
       <Footer />
     </main>
@@ -328,6 +344,78 @@ function HomeCapabilityMatrix() {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function OneStopSolutionBlock() {
+  const stats = [
+    { value: `${oneStopServiceCount}+`, label: 'Services proposes' },
+    { value: `${africanCountries.length}`, label: 'Pays livres' },
+    { value: `${oneStopPaymentMethodCount}`, label: 'Moyens de paiement' },
+  ];
+
+  return (
+    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
+      <div className="mx-auto max-w-none border border-slate-200 bg-white">
+        <div className="grid lg:grid-cols-[minmax(18rem,24rem)_1fr]">
+          <div className="border-b border-slate-200 p-5 sm:p-6 lg:border-b-0 lg:border-r">
+            <span className="mb-4 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
+            <h2 className="text-xl font-black leading-tight tracking-tight text-ink">One-Stop Solution for PCB & Assembly</h2>
+            <p className="mt-1 text-sm text-slate-500">Made easy, quality, on time</p>
+
+            <ul className="mt-6 space-y-2 text-sm leading-5 text-slate-600">
+              {oneStopCapabilities.map((item) => (
+                <li key={item} className="flex gap-3">
+                  <span className="text-base font-black text-[#008b6d]">v</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              {oneStopBadges.map((badge) => (
+                <span key={badge} className="bg-[#008b6d] px-3 py-2 text-xs font-black text-white">
+                  {badge}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="min-w-0">
+            <div className="relative h-[18rem] overflow-hidden bg-slate-950 sm:h-[22rem] lg:h-[24rem]">
+              <video
+                className="h-full w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-label="Video Kendronics PCB et assemblage"
+              >
+                <source src={oneStopSolutionVideo} type="video/quicktime" />
+              </video>
+              <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 px-5 py-4 text-white">
+                <p className="text-lg font-normal">Kendronics PCB & Assembly workflow</p>
+              </div>
+            </div>
+
+            <div className="grid border-t border-slate-200 bg-white sm:grid-cols-3">
+              {stats.map((stat) => (
+                <div key={stat.label} className="flex items-center gap-4 border-b border-slate-200 px-5 py-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+                  <span className="grid h-10 w-10 place-items-center border-2 border-[#008b6d] text-lg font-black text-[#008b6d]">
+                    {stat.value}
+                  </span>
+                  <span>
+                    <span className="block text-sm font-black text-[#ff5a00]">{stat.value}</span>
+                    <span className="block text-sm leading-4 text-slate-700">{stat.label}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
