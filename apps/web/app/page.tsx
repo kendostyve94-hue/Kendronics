@@ -189,10 +189,9 @@ export default function HomePage() {
       <Hero />
       <MobileQuickAccess />
       <ProductCatalog />
-      <SmartOrdering />
-      <WhyBuyPcbSection />
       <HomeCapabilityMatrix />
-      <Resources />
+      <WhyBuyPcbSection />
+      <SmartOrdering />
       <Footer />
     </main>
   );
