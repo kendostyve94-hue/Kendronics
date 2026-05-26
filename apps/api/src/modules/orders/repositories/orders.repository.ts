@@ -85,6 +85,32 @@ export class OrdersRepository {
     return orders.map((order) => this.toOrder(order));
   }
 
+  async findRecentPublicActivity(limit: number): Promise<Order[]> {
+    const orders = await this.prisma.order.findMany({
+      where: {
+        status: {
+          in: [
+            'payment_authorized',
+            'supplier_review_pending',
+            'paid',
+            'supplier_order_pending',
+            'supplier_ordered',
+            'supplier_in_production',
+            'china_3pl_received',
+            'shipped_to_africa',
+            'customs_processing',
+            'out_for_delivery',
+            'delivered',
+          ],
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: Math.min(Math.max(limit, 1), 12),
+      include: { quote: true, payments: { orderBy: { createdAt: 'desc' }, take: 1 } },
+    });
+    return orders.map((order) => this.toOrder(order));
+  }
+
   async updateStatus(id: string, status: OrderStatus): Promise<Order> {
     const order = await this.prisma.order.update({
       where: { id },

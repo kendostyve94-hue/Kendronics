@@ -42,7 +42,7 @@ const productCards = [
     meta: 'BOM / CPL',
     details: ['BOM et CPL requis', 'Sourcing composants', 'Preparation production'],
     price: 'Sur demande',
-    time: 'Contrôle fichiers',
+    time: 'Controle fichiers',
     href: '/quote',
     image: '/images/product-pcba-assembly.png',
     cta: 'Preparer un PCBA',
@@ -102,7 +102,7 @@ export function ProductCatalog() {
                   {activeCard.cta}
                 </a>
                 <a href="/quote" className="inline-flex min-h-10 items-center justify-center border border-line bg-white px-3 text-center text-xs font-normal leading-5 text-ink transition hover:border-deepblue hover:text-deepblue">
-                  Demande un devis
+                  Demander un devis
                 </a>
               </div>
             </article>

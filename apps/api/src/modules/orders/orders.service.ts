@@ -50,6 +50,10 @@ export class OrdersService {
     return this.ordersRepository.findAll();
   }
 
+  listRecentPublicActivity(limit = 6): Promise<Order[]> {
+    return this.ordersRepository.findRecentPublicActivity(limit);
+  }
+
   async markPaidFromVerifiedPayment(orderId: string): Promise<Order> {
     const order = await this.ordersRepository.findById(orderId);
     if (!order) {

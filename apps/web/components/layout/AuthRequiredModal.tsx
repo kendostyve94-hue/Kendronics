@@ -21,6 +21,7 @@ const neutralForgotPasswordMessage =
 const authRequiredDismissedKey = 'kendronics.auth-required.dismissed';
 
 const publicPathPrefixes = [
+  '/',
   '/login',
   '/register',
   '/reset-password',

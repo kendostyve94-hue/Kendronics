@@ -9,10 +9,10 @@ type ProductOption = {
 };
 
 const productOptions: ProductOption[] = [
-  { label: 'Circuits imprimés', value: 'standard_pcb' },
+  { label: 'Circuits imprimes', value: 'standard_pcb' },
   { label: 'Assemblage (PCBA)', value: 'pcb_assembly' },
   { label: 'FPC/Rigide-Flex', value: 'fpc_rigid_flex' },
-  { label: 'PCB Avancé', value: 'advanced_pcb' },
+  { label: 'PCB avance', value: 'advanced_pcb' },
   { label: 'CNC | Impression 3D', value: 'cnc_3d' },
   { label: 'Pochoirs CMS', value: 'smt_stencil' },
 ];
@@ -62,8 +62,8 @@ export function HeroQuickQuote() {
 
         <div className="bg-[#f4f7fa] p-4 sm:p-5">
           <div className="mb-3">
-            <h1 className="text-2xl font-black leading-tight text-[#0f8f6b]">Devis immédiat</h1>
-            <p className="mt-1 text-sm text-slate-500">Vos circuits imprimés au meilleur prix.</p>
+            <h1 className="text-2xl font-black leading-tight text-[#0f8f6b]">Devis immediat</h1>
+            <p className="mt-1 text-sm text-slate-500">Vos circuits imprimes au meilleur prix.</p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -78,7 +78,7 @@ export function HeroQuickQuote() {
             </div>
 
             <SelectField
-              label="Quantité"
+              label="Quantite"
               value={quantity}
               onChange={(value) => setQuantity(Number(value))}
               options={[
@@ -107,7 +107,7 @@ export function HeroQuickQuote() {
             />
 
             <SelectField
-              label="Épaisseur"
+              label="Epaisseur"
               value={thickness}
               onChange={setThickness}
               options={[
@@ -125,7 +125,7 @@ export function HeroQuickQuote() {
               Finaliser
             </a>
             <a href="/capabilities" className="inline-flex min-h-10 items-center justify-center border border-[#0f8f6b] bg-white px-5 text-sm font-black text-ink transition hover:bg-[#f4fbf8] hover:text-[#0f8f6b]">
-              Capacités
+              Capacites
             </a>
           </div>
         </div>

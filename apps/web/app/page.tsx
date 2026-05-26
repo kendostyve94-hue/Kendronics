@@ -4,6 +4,7 @@ import { Footer } from '../components/layout/Footer';
 import { Navbar } from '../components/layout/Navbar';
 import { Button } from '../components/ui/Button';
 import { africanCountries } from '../lib/african-countries';
+import { getApiBaseUrl } from '../lib/api-base-url';
 import { officialContactEmail } from '../lib/official-contact';
 
 const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
@@ -11,7 +12,7 @@ const heroControllerBoardImage = '/images/hero-controller-board-transparent.png'
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
 const smartOrderingMapImage = '/images/home-schematic-preview.png';
 const pcbwayChoiceBannerImage = '/images/hero-pcb-color-variants.png';
-const oneStopSolutionVideo = '/videos/one-stop-solution.mov';
+const oneStopSolutionVideoMp4 = '/videos/one-stop-solution.mp4';
 const oneStopPaymentMethodCount = 4;
 const oneStopServiceCount = 6;
 
@@ -48,46 +49,47 @@ const pcbwayChoiceCards = [
 ];
 
 const pcbwayChoiceReasons = [
-  '24 hours production lead-time*',
-  'Team supported by professionals and technical review',
-  'On-time shipping support with carrier tracking',
-  'Quality options approved through partner review',
-  'Trusted PCB ordering experience',
-  'Non-stop production and assistance service',
-  'Low minimum quantity requirement',
-  'Factory PCB options with competitive advantages',
-  'Electronic Manufacturing Service support',
+  'Delais de fabrication visibles avant validation',
+  'Support technique et revue des fichiers',
+  'Suivi livraison avec transporteur quand disponible',
+  'Options qualite confirmees apres revue partenaire',
+  'Commande PCB encadree et tracable',
+  'Assistance client pendant le parcours',
+  'Petites quantites possibles selon capacite',
+  'Options usine coordonnees avec partenaires',
+  'Support EMS pour projets electroniques',
 ];
 
-const recentProductionActivity = [
-  { date: '05-16', region: 'SN', buyer: 'D***r', service: 'Standard PCB', leadTime: '3-4 jours', progress: 28 },
-  { date: '05-16', region: 'CI', buyer: 'A***a', service: 'PCB avance', leadTime: '5-6 jours', progress: 41 },
-  { date: '05-15', region: 'CM', buyer: 'R***c', service: 'PCBA', leadTime: '6-8 jours', progress: 35 },
-  { date: '05-15', region: 'MA', buyer: 'M***l', service: 'FPC/Rigid-Flex', leadTime: '4-5 jours', progress: 52 },
-  { date: '05-14', region: 'NG', buyer: 'K***n', service: 'Stencil SMT', leadTime: '2-3 jours', progress: 67 },
-  { date: '05-14', region: 'CD', buyer: 'B***d', service: 'CNC / 3D', leadTime: '5-7 jours', progress: 23 },
-];
+type RecentProductionActivityItem = {
+  date: string;
+  region: string;
+  reference: string;
+  service: string;
+  leadTime: string;
+  progress: number;
+};
+
 const heroSlides = [
   {
-    eyebrow: 'PCB personnalisés et assemblage',
-    title: 'Passez d’un dossier Gerber à une commande PCB suivie.',
-    body: 'Kendronics vous aide à configurer vos PCB, vérifier les fichiers essentiels et coordonner fabrication, paiement et livraison vers l’Afrique.',
+    eyebrow: 'PCB personnalises et assemblage',
+    title: 'Passez d un dossier Gerber a une commande PCB suivie.',
+    body: 'Kendronics vous aide a configurer vos PCB, verifier les fichiers essentiels et coordonner fabrication, paiement et livraison vers l Afrique.',
     media: heroPcbVariantsImage,
     type: 'image',
     imageClassName: 'object-contain object-right opacity-100 lg:translate-x-0',
   },
   {
     eyebrow: 'PCBA et composants',
-    title: 'Préparez vos cartes assemblées sans perdre le contrôle du dossier.',
-    body: 'BOM, CPL, composants critiques, options de montage : le parcours garde les informations techniques attachées au devis et au suivi client.',
+    title: 'Preparez vos cartes assemblees sans perdre le controle du dossier.',
+    body: 'BOM, CPL, composants critiques, options de montage : le parcours garde les informations techniques attachees au devis et au suivi client.',
     media: heroControllerBoardImage,
     type: 'image',
     imageClassName: 'object-contain object-right opacity-100 lg:translate-x-0',
   },
   {
     eyebrow: 'Cartes complexes et industrialisation',
-    title: 'Faites examiner les options avancées avant de lancer la fabrication.',
-    body: 'Multicouche, impédance contrôlée, matériaux spéciaux ou contraintes de livraison : les demandes sensibles passent par une revue avant confirmation.',
+    title: 'Faites examiner les options avancees avant de lancer la fabrication.',
+    body: 'Multicouche, impedance controlee, materiaux speciaux ou contraintes de livraison : les demandes sensibles passent par une revue avant confirmation.',
     media: heroStackedPcbImage,
     type: 'image',
     imageClassName: 'object-contain object-right opacity-100 lg:translate-x-0',
@@ -105,10 +107,10 @@ const workflowSteps = [
 ];
 
 const capabilityRows = [
-  ['Matériaux', 'FR-4, aluminium, cuivre core, flex, Rogers/PTFE selon revue.'],
+  ['Materiaux', 'FR-4, aluminium, cuivre core, flex, Rogers/PTFE selon revue.'],
   ['Finitions', 'HASL lead-free, ENIG, OSP, immersion silver.'],
   ['Tests', 'Flying probe, AOI, full electrical test selon configuration.'],
-  ['Logistique', 'Coordination France, transport vers l’Afrique et suivi client.'],
+  ['Logistique', 'Coordination France, transport vers l Afrique et suivi client.'],
 ];
 
 const homeCapabilityGroups = [
@@ -160,29 +162,25 @@ const homeCapabilityGroups = [
   },
 ];
 
-const resourceItems = [
-  ['Guide technique', 'Gerber, KiCad, EasyEDA, erreurs courantes et bases pour préparer un dossier propre.', '/guide-technique'],
-  ['Capacités', 'Matériaux, finitions, vias, cuivre, assemblage et options avancées.', '/capabilities'],
-  ['Comment ça marche', 'Le parcours complet entre fichiers, devis, paiement, production et livraison.', '/how-it-works'],
-];
-
 const operationalProofs = [
-  ['Dossier de fabrication', 'Gerber ZIP, BOM et CPL restent attachés au devis pour éviter les échanges dispersés.'],
-  ['Cadre fournisseur', 'Les options sensibles sont signalées avant paiement pour limiter les mauvaises surprises techniques.'],
-  ['Suivi client', 'Chaque commande conserve ses jalons visibles : paiement, production, transit et réception.'],
-  ['Logistique Afrique', 'Le parcours intègre le pays de destination dès le devis pour cadrer transport et support.'],
+  ['Dossier de fabrication', 'Gerber ZIP, BOM et CPL restent attaches au devis pour eviter les echanges disperses.'],
+  ['Cadre fournisseur', 'Les options sensibles sont signalees avant paiement pour limiter les mauvaises surprises techniques.'],
+  ['Suivi client', 'Chaque commande conserve ses jalons visibles : paiement, production, transit et reception.'],
+  ['Logistique Afrique', 'Le parcours integre le pays de destination des le devis pour cadrer transport et support.'],
 ];
 
 const trustAssurances = [
-  ['Rôle transparent', 'Kendronics n’est pas une usine PCB : la plateforme coordonne le devis, le paiement, le suivi et le support avec des partenaires externes.', '/terms'],
-  ['Fichiers protégés', 'Les fichiers de production sont associés au dossier client et utilisés pour le devis, la revue, la coordination et le support.', '/privacy'],
-  ['Paiement encadré', 'Les paiements carte passent par Stripe Checkout quand disponible. Kendronics ne demande jamais les données carte par e-mail.', '/pricing'],
-  ['Remboursement cadré', 'Les demandes sont étudiées selon l’état de paiement, la revue fichier, la production engagée et la logistique déjà lancée.', '/refund-policy'],
-  ['Support vérifiable', `Les demandes passent par tickets ou par ${officialContactEmail}, avec contexte commande et historique de suivi.`, '/contact'],
-  ['Livraison réaliste', 'Les délais dépendent de la fabrication, du pays, de la douane, du transporteur et des conditions locales.', '/how-it-works'],
+  ['Role transparent', "Kendronics n'est pas une usine PCB : la plateforme coordonne le devis, le paiement, le suivi et le support avec des partenaires externes.", '/terms'],
+  ['Fichiers proteges', 'Les fichiers de production sont associes au dossier client et utilises pour le devis, la revue, la coordination et le support.', '/privacy'],
+  ['Paiement encadre', 'Les paiements carte passent par Stripe Checkout quand disponible. Kendronics ne demande jamais les donnees carte par e-mail.', '/pricing'],
+  ['Remboursement cadre', "Les demandes sont etudiees selon l'etat de paiement, la revue fichier, la production engagee et la logistique deja lancee.", '/refund-policy'],
+  ['Support verifiable', `Les demandes passent par tickets ou par ${officialContactEmail}, avec contexte commande et historique de suivi.`, '/contact'],
+  ['Livraison realiste', 'Les delais dependent de la fabrication, du pays, de la douane, du transporteur et des conditions locales.', '/how-it-works'],
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const recentProductionActivity = await getRecentProductionActivity();
+
   return (
     <main className="overflow-hidden bg-[#eef2f6] text-ink">
       <Navbar />
@@ -190,14 +188,27 @@ export default function HomePage() {
       <MobileQuickAccess />
       <ProductCatalog />
       <HomeCapabilityMatrix />
-      <WhyBuyPcbSection />
+      <WhyBuyPcbSection recentProductionActivity={recentProductionActivity} />
       <SmartOrdering />
       <Footer />
     </main>
   );
 }
 
-function WhyBuyPcbSection() {
+async function getRecentProductionActivity(): Promise<RecentProductionActivityItem[]> {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/api/home/recent-production?limit=6`, {
+      cache: 'no-store',
+    });
+    if (!response.ok) return [];
+    const data = await response.json();
+    return Array.isArray(data.items) ? data.items : [];
+  } catch {
+    return [];
+  }
+}
+
+function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivity: RecentProductionActivityItem[] }) {
   return (
     <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
       <div className="mx-auto max-w-none border-t-2 border-[#a88c00] bg-white">
@@ -217,8 +228,8 @@ function WhyBuyPcbSection() {
               <span className="absolute inset-0 bg-gradient-to-r from-[#064626]/80 via-[#0b5134]/70 to-[#1f2937]/40" />
               <span className="relative flex h-full items-center justify-end px-5 text-right">
                 <span>
-                  <span className="block text-sm font-black">Why Choose PCBWay?</span>
-                  <span className="mt-1 block text-xs font-black">Explore More <span className="inline-block transition group-hover:translate-x-1">-&gt;</span></span>
+                  <span className="block text-sm font-black">Pourquoi Kendronics ?</span>
+                  <span className="mt-1 block text-xs font-black">Voir plus <span className="inline-block transition group-hover:translate-x-1">-&gt;</span></span>
                 </span>
               </span>
             </a>
@@ -251,32 +262,36 @@ function WhyBuyPcbSection() {
                   <h3 className="text-lg font-normal text-slate-800">Activite recente de production</h3>
                   <p className="text-xs text-slate-500">Commandes anonymisees, progression indicative et zones de livraison.</p>
                 </div>
-                <p className="text-xs text-slate-500">30 derniers jours: <span className="font-semibold text-[#ff5a00]">845+</span></p>
+                <p className="text-xs text-slate-500">Donnees issues des commandes reelles.</p>
               </div>
               <div className="overflow-hidden border border-slate-200">
                 <div className="grid grid-cols-[3.2rem_3rem_4rem_minmax(7rem,1fr)_4.5rem_8.5rem] border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
                   <span>Date</span>
                   <span>Zone</span>
-                  <span>Client</span>
+                  <span>Ref</span>
                   <span>Service</span>
                   <span>Delai</span>
-                  <span>Progression</span>
+                  <span>Prog.</span>
                 </div>
-                <div>
-                  {recentProductionActivity.map((item) => (
-                    <div key={`${item.date}-${item.buyer}-${item.service}`} className="grid grid-cols-[3.2rem_3rem_4rem_minmax(7rem,1fr)_4.5rem_8.5rem] items-center border-b border-slate-100 px-3 py-2 text-xs last:border-b-0">
-                      <span className="text-slate-500">{item.date}</span>
-                      <span className="text-slate-700">{item.region}</span>
-                      <span className="text-slate-700">{item.buyer}</span>
-                      <span className="min-w-0 truncate text-slate-700">{item.service}</span>
-                      <span className="font-semibold text-[#ff5a00]">{item.leadTime}</span>
-                      <span className="grid grid-cols-[1fr_2rem] items-center gap-2">
-                        <span className="h-2 bg-slate-100"><span className="block h-full bg-[#9bcf9f]" style={{ width: `${item.progress}%` }} /></span>
-                        <span className="text-[11px] text-slate-500">{item.progress}%</span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {recentProductionActivity.length > 0 ? (
+                  <div>
+                    {recentProductionActivity.map((item) => (
+                      <div key={`${item.date}-${item.reference}-${item.service}`} className="grid grid-cols-[3.2rem_3rem_4rem_minmax(7rem,1fr)_4.5rem_8.5rem] items-center border-b border-slate-100 px-3 py-2 text-xs last:border-b-0">
+                        <span className="text-slate-500">{item.date}</span>
+                        <span className="text-slate-700">{item.region}</span>
+                        <span className="text-slate-700">{item.reference}</span>
+                        <span className="min-w-0 truncate text-slate-700">{item.service}</span>
+                        <span className="font-semibold text-[#ff5a00]">{item.leadTime}</span>
+                        <span className="grid grid-cols-[1fr_2rem] items-center gap-2">
+                          <span className="h-2 bg-slate-100"><span className="block h-full bg-[#9bcf9f]" style={{ width: `${item.progress}%` }} /></span>
+                          <span className="text-[11px] text-slate-500">{item.progress}%</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="px-3 py-4 text-xs text-slate-500">Les commandes confirmees apparaitront ici automatiquement.</p>
+                )}
               </div>
             </div>
           </div>
@@ -329,7 +344,7 @@ function HomeCapabilityMatrix() {
                 preload="metadata"
                 aria-label="Video Kendronics PCB et assemblage"
               >
-                <source src={oneStopSolutionVideo} type="video/quicktime" />
+                <source src={oneStopSolutionVideoMp4} type="video/mp4" />
               </video>
               <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 px-4 py-2.5 text-white">
                 <p className="text-base font-normal">Kendronics PCB & Assembly workflow</p>
@@ -460,7 +475,7 @@ function HomeExpandableCapabilityRow({ row, stripe, detail }: { row: string[]; s
                 {index === 0 ? (
                   <span className="flex items-center justify-between gap-3">
                     {cell}
-                    <span className="text-sm text-deepblue transition group-open:rotate-180">⌄</span>
+                    <span className="text-sm text-deepblue transition group-open:rotate-180">v</span>
                   </span>
                 ) : (
                   cell
@@ -521,10 +536,10 @@ function TrustAssurance() {
     <section className="bg-cloud px-4 py-8 sm:px-6 sm:py-14 lg:px-8">
       <div className="mx-auto max-w-[1180px]">
         <div className="mb-6 max-w-3xl">
-          <p className="label-caps text-deepblue">Confiance et sécurité</p>
-          <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Ce que Kendronics promet clairement, et ce qu’il ne promet pas.</h2>
+          <p className="label-caps text-deepblue">Confiance et securite</p>
+          <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Ce que Kendronics promet clairement, et ce qu'il ne promet pas.</h2>
           <p className="mt-3 text-sm leading-7 text-slate-600">
-            La confiance vient d’un cadre lisible : rôle exact de la plateforme, fichiers protégés, paiement encadré, support traçable et limites réalistes sur production et livraison.
+            La confiance vient d'un cadre lisible : role exact de la plateforme, fichiers proteges, paiement encadre, support tracable et limites realistes sur production et livraison.
           </p>
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -547,8 +562,8 @@ function OperationalProofs() {
       <div className="mx-auto max-w-[1180px]">
         <div className="mb-5 flex flex-col gap-3 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="label-caps text-deepblue">Preuves opérationnelles</p>
-            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Ce que le client garde sous contrôle.</h2>
+            <p className="label-caps text-deepblue">Preuves operationnelles</p>
+            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Ce que le client garde sous controle.</h2>
           </div>
           <Button href="/how-it-works" variant="secondary" className="sm:h-12">
             Voir le parcours
@@ -603,7 +618,7 @@ function HeroPromoPanels() {
       <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=10&thickness=1.6mm" className="relative min-h-[10.25rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-3 text-center transition hover:border-[#0f8f6b]">
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
         <p className="text-2xl font-normal leading-none text-[#0f8f6b]">$ 5.00</p>
-        <p className="mt-2 text-xs leading-4 text-slate-600">10 pièces 1-2 couche(s)</p>
+        <p className="mt-2 text-xs leading-4 text-slate-600">10 pieces 1-2 couche(s)</p>
         <p className="text-xs leading-4 text-slate-600">Temps de production:24 heures</p>
         <img src="/images/product-pcb-standard-transparent.png" alt="" className="mx-auto mt-2 h-16 w-full object-contain" />
       </a>
@@ -611,7 +626,7 @@ function HeroPromoPanels() {
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
         <p className="text-2xl font-normal leading-none text-[#0f8f6b]">$ 29</p>
         <p className="mt-2 text-xs leading-4 text-slate-600">Livraison gratuite</p>
-        <p className="text-xs leading-4 text-slate-600">Pour 1-20 pièce(s)</p>
+        <p className="text-xs leading-4 text-slate-600">Pour 1-20 piece(s)</p>
         <img src="/images/product-pcba-assembly.png" alt="" className="mx-auto mt-2 h-16 w-full object-contain" />
       </a>
     </aside>
@@ -629,7 +644,7 @@ function MobileQuickAccess() {
   return (
     <section className="bg-[#eef2f6] px-4 py-5 sm:px-6 lg:hidden">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-black text-ink">Accès rapide</h2>
+        <h2 className="text-sm font-black text-ink">Acces rapide</h2>
         <a href="/quote" className="text-xs font-black text-deepblue">Devis</a>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -760,7 +775,7 @@ function TrustBlock() {
     <section className="bg-white px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
       <div className="mx-auto grid max-w-[21.5rem] gap-5 sm:max-w-[1180px] sm:gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
         <div className="min-w-0">
-          <p className="label-caps text-deepblue">Capacités et cadre de service</p>
+          <p className="label-caps text-deepblue">Capacites et cadre de service</p>
           <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Des options techniques visibles avant validation.</h2>
           <div className="mt-5 grid gap-2.5 sm:mt-6 sm:gap-3">
             {capabilityRows.map(([title, body]) => (
@@ -777,7 +792,7 @@ function TrustBlock() {
             <p className="label-caps text-deepblue">Pourquoi Kendronics</p>
             <h3 className="mt-3 text-xl font-black leading-tight text-ink sm:text-2xl">Un seul dossier pour le devis, le paiement, le support et la livraison.</h3>
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              Kendronics sert de couche opérationnelle entre vos fichiers, les partenaires de fabrication, la logistique et le support client.
+              Kendronics sert de couche operationnelle entre vos fichiers, les partenaires de fabrication, la logistique et le support client.
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:gap-3">
               {['Prix lisible', 'Support Gerber', 'Suivi commande', 'Livraison Afrique'].map((item) => (
@@ -785,28 +800,6 @@ function TrustBlock() {
               ))}
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Resources() {
-  return (
-    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
-      <div className="mx-auto max-w-none">
-        <div className="mb-4">
-          <p className="label-caps text-deepblue">Guides et solutions</p>
-          <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Les réponses utiles avant de commander.</h2>
-        </div>
-        <div className="grid gap-3 md:grid-cols-3">
-          {resourceItems.map(([title, body, href]) => (
-            <a key={title} href={href} className="block border border-line bg-white p-4 transition hover:border-deepblue">
-              <h3 className="text-base font-black text-ink">{title}</h3>
-              <p className="mt-2 text-sm leading-5 text-slate-600">{body}</p>
-              <span className="mt-3 inline-flex text-sm font-black text-deepblue">Lire</span>
-            </a>
-          ))}
         </div>
       </div>
     </section>
