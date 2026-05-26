@@ -192,7 +192,6 @@ export default function HomePage() {
       <SmartOrdering />
       <WhyBuyPcbSection />
       <HomeCapabilityMatrix />
-      <OneStopSolutionBlock />
       <Resources />
       <Footer />
     </main>
@@ -295,76 +294,11 @@ function HomeCapabilityMatrix() {
 
   return (
     <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
-      <div className="mx-auto max-w-none">
-        <div className="overflow-hidden border border-slate-300 bg-white">
-          <div className="flex flex-col gap-2 border-b border-slate-300 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#008b6d]">{pcbGroup.count}</p>
-              <h3 className="text-lg font-black text-ink">{pcbGroup.label}</h3>
-            </div>
-            <p className="max-w-xl text-xs leading-5 text-slate-500 sm:text-right">{pcbGroup.description}</p>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-[62rem] w-full border-collapse text-left text-[13px]">
-              <thead className="bg-[#d8edf8] text-[11px] font-black uppercase tracking-[0.1em] text-slate-900">
-                <tr>
-                  {pcbGroup.headers.map((header, index) => (
-                    <th key={header} className={`${index === 0 ? 'w-[14rem]' : index === 1 ? 'w-[24rem]' : ''} border-b border-r border-slate-300 px-4 py-3 last:border-r-0`}>
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {pcbGroup.rows.map((row, index) => {
-                  if (row[0] === 'Materiaux') {
-                    return (
-                      <HomeExpandableCapabilityRow
-                        key={row[0]}
-                        row={row}
-                        stripe={index % 2 === 1}
-                        detail={<NestedCapabilityTable group={materialGroup} />}
-                      />
-                    );
-                  }
-
-                  if (row[0] === 'Finitions') {
-                    return (
-                      <HomeExpandableCapabilityRow
-                        key={row[0]}
-                        row={row}
-                        stripe={index % 2 === 1}
-                        detail={<NestedCapabilityTable group={finishGroup} />}
-                      />
-                    );
-                  }
-
-                  return <HomeCapabilityRow key={row[0]} row={row} stripe={index % 2 === 1} />;
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function OneStopSolutionBlock() {
-  const stats = [
-    { value: `${oneStopServiceCount}+`, label: 'Services proposes' },
-    { value: `${africanCountries.length}`, label: 'Pays livres' },
-    { value: `${oneStopPaymentMethodCount}`, label: 'Moyens de paiement' },
-  ];
-
-  return (
-    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
-      <div className="mx-auto max-w-none border border-slate-200 bg-white">
-        <div className="grid lg:grid-cols-[minmax(18rem,24rem)_1fr]">
+      <div className="mx-auto max-w-none overflow-hidden border border-slate-300 bg-white">
+        <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(18rem,24rem)_1fr]">
           <div className="border-b border-slate-200 p-5 sm:p-6 lg:border-b-0 lg:border-r">
             <span className="mb-4 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
-            <h2 className="text-xl font-black leading-tight tracking-tight text-ink">One-Stop Solution for PCB & Assembly</h2>
+            <h2 className="text-xl font-black leading-tight tracking-tight text-ink">One-Stop Solution for PCB & Assemblage</h2>
             <p className="mt-1 text-sm text-slate-500">Made easy, quality, on time</p>
 
             <ul className="mt-6 space-y-2 text-sm leading-5 text-slate-600">
@@ -386,7 +320,7 @@ function OneStopSolutionBlock() {
           </div>
 
           <div className="min-w-0">
-            <div className="relative h-[18rem] overflow-hidden bg-slate-950 sm:h-[22rem] lg:h-[24rem]">
+            <div className="relative h-[18rem] overflow-hidden bg-slate-950 sm:h-[22rem] lg:h-full lg:min-h-[24rem]">
               <video
                 className="h-full w-full object-cover"
                 autoPlay
@@ -402,24 +336,100 @@ function OneStopSolutionBlock() {
                 <p className="text-lg font-normal">Kendronics PCB & Assembly workflow</p>
               </div>
             </div>
-
-            <div className="grid border-t border-slate-200 bg-white sm:grid-cols-3">
-              {stats.map((stat) => (
-                <div key={stat.label} className="flex items-center gap-4 border-b border-slate-200 px-5 py-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
-                  <span className="grid h-10 w-10 place-items-center border-2 border-[#008b6d] text-lg font-black text-[#008b6d]">
-                    {stat.value}
-                  </span>
-                  <span>
-                    <span className="block text-sm font-black text-[#ff5a00]">{stat.value}</span>
-                    <span className="block text-sm leading-4 text-slate-700">{stat.label}</span>
-                  </span>
-                </div>
-              ))}
-            </div>
           </div>
+        </div>
+
+        <div className="grid border-b border-slate-300 bg-white sm:grid-cols-3">
+          <OneStopStat icon="gear" value={`${oneStopServiceCount}+`} label="Services proposes" />
+          <OneStopStat icon="planet" value={`${africanCountries.length}`} label="Pays livres" />
+          <OneStopStat icon="wallet" value={`${oneStopPaymentMethodCount}`} label="Moyens de paiement" />
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-[62rem] w-full border-collapse text-left text-[13px]">
+            <thead className="bg-[#d8edf8] text-[11px] font-black uppercase tracking-[0.1em] text-slate-900">
+              <tr>
+                {pcbGroup.headers.map((header, index) => (
+                  <th key={header} className={`${index === 0 ? 'w-[14rem]' : index === 1 ? 'w-[24rem]' : ''} border-b border-r border-slate-300 px-4 py-3 last:border-r-0`}>
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {pcbGroup.rows.map((row, index) => {
+                if (row[0] === 'Materiaux') {
+                  return (
+                    <HomeExpandableCapabilityRow
+                      key={row[0]}
+                      row={row}
+                      stripe={index % 2 === 1}
+                      detail={<NestedCapabilityTable group={materialGroup} />}
+                    />
+                  );
+                }
+
+                if (row[0] === 'Finitions') {
+                  return (
+                    <HomeExpandableCapabilityRow
+                      key={row[0]}
+                      row={row}
+                      stripe={index % 2 === 1}
+                      detail={<NestedCapabilityTable group={finishGroup} />}
+                    />
+                  );
+                }
+
+                return <HomeCapabilityRow key={row[0]} row={row} stripe={index % 2 === 1} />;
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
+  );
+}
+
+function OneStopStat({ icon, value, label }: { icon: 'gear' | 'planet' | 'wallet'; value: string; label: string }) {
+  return (
+    <div className="flex items-center gap-4 border-b border-slate-200 px-5 py-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+      <OneStopStatIcon icon={icon} />
+      <span>
+        <span className="block text-sm font-black text-[#ff5a00]">{value}</span>
+        <span className="block text-sm leading-4 text-slate-700">{label}</span>
+      </span>
+    </div>
+  );
+}
+
+function OneStopStatIcon({ icon }: { icon: 'gear' | 'planet' | 'wallet' }) {
+  if (icon === 'gear') {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-9 w-9 flex-none text-[#008b6d]" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" />
+        <path d="M19.4 15a1.8 1.8 0 0 0 .36 2l.06.06-1.8 3.1-.08-.02a1.8 1.8 0 0 0-2.02.52l-.44.5-3.56-1.2-.08-.66a1.8 1.8 0 0 0-1.8-1.56h-.12l-2.2 2.76-3.1-1.8.02-.08a1.8 1.8 0 0 0-.52-2.02l-.5-.44 1.2-3.56.66-.08A1.8 1.8 0 0 0 3.24 10v-.12L.48 7.68l1.8-3.1.08.02a1.8 1.8 0 0 0 2.02-.52l.44-.5 3.56 1.2.08.66A1.8 1.8 0 0 0 10.26 7h.12l2.2-2.76 3.1 1.8-.02.08a1.8 1.8 0 0 0 .52 2.02l.5.44-1.2 3.56-.66.08A1.8 1.8 0 0 0 19.4 15Z" />
+      </svg>
+    );
+  }
+
+  if (icon === 'planet') {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-9 w-9 flex-none text-[#008b6d]" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M4.8 15.5c3.8 2.1 10.6 1.8 14.8-.8" />
+        <path d="M9 5c1.2 1.7 1.8 4 1.6 6.2-.2 2.6-1.2 5-2.8 6.8" />
+        <path d="M15 5c-1.2 1.7-1.8 4-1.6 6.2.2 2.6 1.2 5 2.8 6.8" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-9 w-9 flex-none text-[#008b6d]" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M4 7.5h14.5A2.5 2.5 0 0 1 21 10v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5a2 2 0 0 1 2-2Z" />
+      <path d="M4.5 7.5 16 4.4a2 2 0 0 1 2.5 1.9v1.2" />
+      <path d="M17 13h4v4h-4a2 2 0 0 1 0-4Z" />
+      <path d="M18.5 15h.01" />
+    </svg>
   );
 }
 
