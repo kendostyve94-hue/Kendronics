@@ -81,30 +81,12 @@ export function ProductCatalog() {
   return (
     <section className="bg-white px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <div className="mx-auto max-w-[1440px]">
-        <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="label-caps text-deepblue">Solutions electroniques</p>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-ink sm:text-3xl lg:text-4xl">Un catalogue clair pour passer au devis.</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-              Retrouvez les formats les plus demandes, avec les informations essentielles visibles au premier coup d oeil.
-            </p>
-          </div>
+        <div className="mb-6 flex justify-end">
           <Button href="/services" variant="secondary" className="hidden sm:inline-flex lg:h-12 lg:px-7">Tout explorer</Button>
         </div>
 
         <div className="grid overflow-hidden border border-line bg-white lg:grid-cols-[15rem_1fr]">
           <aside className="grid border-b border-line bg-white lg:border-b-0 lg:border-r">
-            <div className="flex min-h-[10rem] flex-col items-center justify-center border-b border-line bg-white p-5 text-center">
-              <h3 className="text-lg font-black text-ink">Bon à savoir</h3>
-              <p className="mt-2 text-sm leading-5 text-slate-500">Un parcours lisible, du fichier au suivi.</p>
-              <a
-                href="/how-it-works"
-                className="mt-4 inline-flex min-h-11 w-full items-center justify-center bg-deepblue px-3 text-center text-sm font-black leading-5 text-white transition hover:bg-[#0b7558]"
-              >
-                Comment ça marche
-              </a>
-            </div>
-
             <article className="bg-white p-4">
               <p className="label-caps text-deepblue">{activeCard.tag}</p>
               <h3 className="mt-2 text-lg font-black leading-6 text-ink">{activeCard.title}</h3>
@@ -132,13 +114,6 @@ export function ProductCatalog() {
           </aside>
 
           <div className="min-w-0">
-            <div className="border-b border-line bg-white px-4 py-4 sm:px-6">
-              <img
-                src="/images/solutions-workflow.png"
-                alt="Demande en ligne, telechargement du fichier PCB, verification de la commande, paiement, suivi en temps reel de la fabrication, livraison et reception confirmee."
-                className="h-auto w-full object-contain"
-              />
-            </div>
 
             <div className="grid grid-cols-2 gap-px bg-line p-px md:grid-cols-3 xl:grid-cols-6">
               {productCards.map((card, index) => {

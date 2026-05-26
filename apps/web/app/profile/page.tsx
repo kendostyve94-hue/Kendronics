@@ -1696,7 +1696,13 @@ function AccountProfileEditForm({
               </div>
             </div>
 
-            <ProfileMultiSelectField label="Produits interesses" value={details.productInterests} options={productInterestOptions} onChange={(value) => updateDetails('productInterests', value)} />
+            <ProfileSelectField
+              label="Produits interesses"
+              value={details.productInterests[0] ?? ''}
+              options={productInterestOptions}
+              placeholder="Selectionner un produit"
+              onChange={(value) => updateDetails('productInterests', value ? [value] : [])}
+            />
 
             <ProfileSelectField label="Comment nous avez-vous connus ?" value={details.hearAboutUs} options={hearAboutOptions} placeholder="Selectionner une source" onChange={(value) => updateDetails('hearAboutUs', value)} />
           </div>
@@ -1812,38 +1818,6 @@ function ProfileSelectField({
           <option key={option} value={option}>{option}</option>
         ))}
       </select>
-    </div>
-  );
-}
-
-function ProfileMultiSelectField({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string[];
-  options: string[];
-  onChange: (value: string[]) => void;
-}) {
-  return (
-    <div className="col-span-2 grid grid-cols-[170px_minmax(0,420px)] items-start gap-4 text-sm">
-      <span className="pt-2 text-right text-[#8b949e]">{label}</span>
-      <div>
-        <select
-          multiple
-          size={Math.min(6, options.length)}
-          value={value}
-          onChange={(event) => onChange(Array.from(event.currentTarget.selectedOptions).map((option) => option.value))}
-          className="min-h-[150px] w-full border border-[#c9c9c9] bg-white px-3 py-2 text-sm text-black outline-none transition focus:border-[#0f8f6b]"
-        >
-          {options.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-        <p className="mt-2 text-xs text-[#8b949e]">Maintenez Ctrl pour choisir plusieurs lignes.</p>
-      </div>
     </div>
   );
 }

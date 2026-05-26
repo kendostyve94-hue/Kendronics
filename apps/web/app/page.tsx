@@ -8,9 +8,7 @@ import { officialContactEmail } from '../lib/official-contact';
 const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
 const heroControllerBoardImage = '/images/hero-controller-board-transparent.png';
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
-const smartOrderingMapImage = '/images/smart-ordering-world-map.png';
-const quoteWorkflowImage = '/images/quote-workflow.png';
-const smartOrderingWorkflowImage = '/images/smart-ordering-workflow-fade.png';
+const smartOrderingMapImage = '/images/home-schematic-preview.png';
 const pcbwayChoiceBannerImage = '/images/hero-pcb-color-variants.png';
 
 const pcbwayChoiceCards = [
@@ -179,7 +177,6 @@ export default function HomePage() {
       <SmartOrdering />
       <WhyBuyPcbSection />
       <HomeCapabilityMatrix />
-      <TrustAssurance />
       <Resources />
       <Footer />
     </main>
@@ -283,14 +280,7 @@ function HomeCapabilityMatrix() {
   return (
     <section className="bg-white px-0 pb-8 pt-2 sm:px-6 sm:pb-12 sm:pt-3 lg:px-8">
       <div className="mx-auto max-w-none">
-        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="label-caps text-deepblue">Capacites de fabrication</p>
-            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Options de fabrication disponibles via nos partenaires PCB.</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Ces capacites decrivent ce que Kendronics peut aider a demander et coordonner. La disponibilite finale depend de la revue fichier, du materiau, du delai et de la confirmation partenaire.
-            </p>
-          </div>
+        <div className="mb-5 flex justify-end">
           <Button href="/capabilities" variant="secondary" className="h-11 lg:h-12">
             Voir le detail
           </Button>
@@ -563,9 +553,9 @@ function MobileQuickAccess() {
 
 function SmartOrdering() {
   return (
-    <section className="relative overflow-hidden bg-ink px-4 py-8 text-white sm:px-6 sm:py-14 lg:px-8">
-      <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
-      <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/78 to-ink/50" />
+    <section className="relative overflow-hidden bg-ink px-0 py-5 text-white sm:px-4 lg:px-8">
+      <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70" />
+      <div className="absolute inset-0 bg-gradient-to-r from-ink/90 via-ink/60 to-ink/20" />
       <svg className="smart-ordering-routes pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1200 520" aria-hidden="true">
         <defs>
           <linearGradient id="route-blue" x1="0" y1="0" x2="1" y2="0">
@@ -602,14 +592,10 @@ function SmartOrdering() {
           <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="2.5" className="smart-ordering-node" style={{ animationDelay: `${index * 0.55}s` }} />
         ))}
       </svg>
-      <div className="relative mx-auto max-w-[1240px]">
-        <div className="grid gap-7 lg:grid-cols-[0.82fr_1.18fr] lg:items-end">
-          <div>
+      <div className="relative mx-auto max-w-none">
+        <div className="min-h-[20rem] border border-white/10 p-5 sm:p-8 lg:min-h-[24rem]">
+          <div className="max-w-[25rem]">
             <p className="label-caps text-white">Commande intelligente</p>
-            <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">Un parcours lisible, du fichier au suivi.</h2>
-            <p className="mt-4 text-sm leading-7 text-slate-100">
-              Le devis conserve le contexte technique : fichiers, configuration, vérification, paiement, jalons de fabrication et livraison.
-            </p>
             <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:flex sm:gap-3">
               <Button href="/quote" className="min-w-[8rem]">Commencer</Button>
               <Button href="/how-it-works" variant="secondary" className="min-w-[11rem] whitespace-nowrap border-white/35 bg-white/10 text-white hover:border-white/55 hover:bg-white/15">
@@ -618,13 +604,6 @@ function SmartOrdering() {
             </div>
           </div>
 
-          <div className="overflow-hidden py-1 lg:pb-1">
-            <img
-              src={smartOrderingWorkflowImage}
-              alt="Demande en ligne, telechargement du fichier PCB, verification de la commande, paiement, suivi fabrication, livraison et reception confirmee."
-              className="h-auto w-full object-contain opacity-85"
-            />
-          </div>
         </div>
       </div>
     </section>
