@@ -18,6 +18,7 @@ const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
 const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
 const neutralForgotPasswordMessage =
   'Si ce compte peut recevoir un e-mail de reinitialisation, les instructions seront envoyees sous peu.';
+const authRequiredDismissedKey = 'kendronics.auth-required.dismissed';
 
 const publicPathPrefixes = [
   '/login',
@@ -88,12 +89,13 @@ export function AuthRequiredModal() {
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'sending' | 'checking'>('idle');
   const [verificationMessage, setVerificationMessage] = useState('');
+  const [isDismissed, setIsDismissed] = useState(false);
 
   const isPublicPath = useMemo(
     () => publicPathPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)),
     [pathname],
   );
-  const shouldShow = !isPublicPath && (authStatus === 'signed_out' || pendingVerification !== null);
+  const shouldShow = !isPublicPath && !isDismissed && (authStatus === 'signed_out' || pendingVerification !== null);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +123,10 @@ export function AuthRequiredModal() {
       window.removeEventListener('storage', refreshSession);
     };
   }, [isPublicPath]);
+
+  useEffect(() => {
+    setIsDismissed(window.sessionStorage.getItem(authRequiredDismissedKey) === 'true');
+  }, []);
 
   useEffect(() => {
     if (!shouldShow) return;
@@ -388,6 +394,11 @@ export function AuthRequiredModal() {
     setForgotErrors({});
   }
 
+  function dismissModal() {
+    window.sessionStorage.setItem(authRequiredDismissedKey, 'true');
+    setIsDismissed(true);
+  }
+
   if (!shouldShow) {
     return null;
   }
@@ -395,7 +406,7 @@ export function AuthRequiredModal() {
   return (
     <div className="fixed inset-0 z-[60] grid min-h-screen place-items-center bg-[#06101f]/70 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="auth-required-title">
       {authStep === 'choice' ? (
-        <ChoicePanel onRegister={chooseRegister} onLogin={chooseLogin} />
+        <ChoicePanel onRegister={chooseRegister} onLogin={chooseLogin} onDismiss={dismissModal} />
       ) : (
         <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto border border-slate-200 bg-white text-ink">
           <div className="border-b border-slate-200 px-5 py-4 sm:px-6">
@@ -479,7 +490,7 @@ export function AuthRequiredModal() {
   );
 }
 
-function ChoicePanel({ onRegister, onLogin }: { onRegister: () => void; onLogin: () => void }) {
+function ChoicePanel({ onRegister, onLogin, onDismiss }: { onRegister: () => void; onLogin: () => void; onDismiss: () => void }) {
   return (
     <div className="grid max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto border border-slate-200 bg-white text-ink sm:grid-cols-[0.9fr_1.1fr]">
       <div className="relative hidden min-h-[460px] overflow-hidden bg-[#10233a] sm:block">
@@ -533,6 +544,13 @@ function ChoicePanel({ onRegister, onLogin }: { onRegister: () => void; onLogin:
           En creant un compte, vous acceptez nos <a href="/terms" className="font-semibold text-[#0f8f6b] underline">conditions d'utilisation</a> et notre{' '}
           <a href="/privacy" className="font-semibold text-[#0f8f6b] underline">politique de confidentialite</a>.
         </p>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="mt-4 self-start text-xs font-medium text-slate-400 underline-offset-4 transition hover:text-slate-600 hover:underline"
+        >
+          Continuer sans compte
+        </button>
       </div>
     </div>
   );

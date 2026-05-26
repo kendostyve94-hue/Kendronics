@@ -86,16 +86,15 @@ export function CookieConsentBanner() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[80] px-2 pb-2 sm:px-4 sm:pb-4" data-i18n-skip="true">
-      <div className="mx-auto max-h-[46vh] w-full max-w-7xl overflow-y-auto border border-[#b8c9d9] bg-white px-4 py-3 text-[#0b1724] sm:px-5 sm:py-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] lg:items-center">
+    <div className="fixed inset-x-0 bottom-0 z-[80] px-2 pb-2 sm:px-4 sm:pb-3" data-i18n-skip="true">
+      <div className="mx-auto max-h-[34vh] w-full max-w-7xl overflow-y-auto border border-[#b8c9d9] bg-white px-3 py-2 text-[#0b1724] sm:px-4">
+        <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] lg:items-center">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.16em] text-[#0f8f6b]">Cookies</p>
-            <h2 className="mt-1 text-base font-semibold sm:text-lg">Gestion des cookies Kendronics</h2>
-            <p className="mt-1 max-w-4xl text-xs leading-5 text-slate-600 sm:text-sm">
+            <p className="mt-0.5 max-w-4xl text-xs leading-4 text-slate-600 sm:text-[13px]">
               Nous utilisons les cookies necessaires au fonctionnement du site. Les cookies de mesure d’audience et de preferences sont actives uniquement avec votre accord.
             </p>
-            <a href="/terms/politique-cookies" className="mt-1 inline-flex text-xs text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline sm:text-sm">
+            <a href="/terms/politique-cookies" className="mt-0.5 inline-flex text-xs text-blue-600 underline-offset-4 hover:text-blue-700 hover:underline">
               Politique de cookies
             </a>
           </div>
@@ -103,21 +102,21 @@ export function CookieConsentBanner() {
           <div className="grid min-w-0 grid-cols-3 gap-2">
             <button
               type="button"
-              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#0f8f6b] bg-[#0f8f6b] px-2 text-xs font-semibold text-white transition hover:bg-[#0b7558] sm:px-4 sm:text-sm"
+              className="h-9 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#0f8f6b] bg-[#0f8f6b] px-2 text-xs font-semibold text-white transition hover:bg-[#0b7558] sm:px-4"
               onClick={() => saveConsent({ ...defaultConsent, analytics: true, preferences: true })}
             >
               Accepter
             </button>
             <button
               type="button"
-              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#b8c9d9] bg-white px-2 text-xs font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] sm:px-4 sm:text-sm"
+              className="h-9 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#b8c9d9] bg-white px-2 text-xs font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] sm:px-4"
               onClick={() => saveConsent(defaultConsent)}
             >
               Refuser
             </button>
             <button
               type="button"
-              className="h-10 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#b8c9d9] bg-[#eef6fb] px-2 text-xs font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] sm:px-4 sm:text-sm"
+              className="h-9 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap border border-[#b8c9d9] bg-[#eef6fb] px-2 text-xs font-semibold text-slate-700 transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] sm:px-4"
               onClick={() => setIsCustomizing((current) => !current)}
             >
               Personnaliser
@@ -126,7 +125,7 @@ export function CookieConsentBanner() {
         </div>
 
         {isCustomizing ? (
-          <div className="mt-4 grid gap-3 border-t border-[#b8c9d9] pt-4 md:grid-cols-3">
+          <div className="mt-3 grid gap-2 border-t border-[#b8c9d9] pt-3 md:grid-cols-3">
             <CookieChoice label="Necessaires" checked disabled description="Connexion, panier, securite et fonctionnement du site." />
             <CookieChoice
               label="Mesure d’audience"
@@ -252,7 +251,7 @@ function CookieChoice({
   onChange?: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex min-h-24 gap-3 border border-[#b8c9d9] bg-white p-3">
+    <label className="flex min-h-20 gap-3 border border-[#b8c9d9] bg-white p-2.5">
       <input
         type="checkbox"
         className="mt-1 h-4 w-4"
