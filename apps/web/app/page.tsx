@@ -308,58 +308,60 @@ function HomeCapabilityMatrix() {
 
   return (
     <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
-      <div className="mx-auto max-w-none overflow-hidden border border-slate-300 bg-white">
-        <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(18rem,24rem)_1fr]">
-          <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
-            <span className="mb-3 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
-            <h2 className="text-xl font-black leading-tight tracking-tight text-ink">Solution complete pour PCB et assemblage</h2>
-            <p className="mt-1 text-sm text-slate-500">Simple, qualite suivie, delais visibles</p>
+      <div className="mx-auto grid max-w-none gap-5 xl:grid-cols-[minmax(34rem,1.05fr)_minmax(31rem,0.95fr)]">
+        <div className="overflow-hidden border border-slate-300 bg-white">
+          <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(17rem,24rem)_1fr]">
+            <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
+              <span className="mb-3 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
+              <h2 className="text-xl font-black leading-tight tracking-tight text-ink">Solution complete pour PCB et assemblage</h2>
+              <p className="mt-1 text-sm text-slate-500">Simple, qualite suivie, delais visibles</p>
 
-            <ul className="mt-4 space-y-1.5 text-sm leading-5 text-slate-600">
-              {oneStopCapabilities.map((item) => (
-                <li key={item} className="flex gap-3">
-                  <span className="text-base font-black text-[#008b6d]">v</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+              <ul className="mt-4 space-y-1.5 text-sm leading-5 text-slate-600">
+                {oneStopCapabilities.map((item) => (
+                  <li key={item} className="flex gap-3">
+                    <span className="text-base font-black text-[#008b6d]">v</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {oneStopBadges.map((badge) => (
-                <span key={badge} className="bg-[#008b6d] px-3 py-2 text-xs font-black text-white">
-                  {badge}
-                </span>
-              ))}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {oneStopBadges.map((badge) => (
+                  <span key={badge} className="bg-[#008b6d] px-3 py-2 text-xs font-black text-white">
+                    {badge}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="min-w-0">
-            <div className="relative h-[13rem] overflow-hidden bg-slate-950 sm:h-[16rem] lg:h-full lg:min-h-[18rem]">
-              <video
-                className="h-full w-full object-cover"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                aria-label="Video Kendronics PCB et assemblage"
-              >
-                <source src={oneStopSolutionVideoMp4} type="video/mp4" />
-              </video>
-              <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 px-4 py-2.5 text-white">
-                <p className="text-base font-normal">Parcours PCB et assemblage Kendronics</p>
+            <div className="min-w-0">
+              <div className="relative h-[13rem] overflow-hidden bg-slate-950 sm:h-[16rem] lg:h-full lg:min-h-[18rem]">
+                <video
+                  className="h-full w-full object-cover"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  aria-label="Video Kendronics PCB et assemblage"
+                >
+                  <source src={oneStopSolutionVideoMp4} type="video/mp4" />
+                </video>
+                <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 px-4 py-2.5 text-white">
+                  <p className="text-base font-normal">Parcours PCB et assemblage Kendronics</p>
+                </div>
               </div>
             </div>
           </div>
+
+          <div className="grid bg-white sm:grid-cols-3">
+            <OneStopStat icon="gear" value={`${oneStopServiceCount}+`} label="Services proposes" />
+            <OneStopStat icon="planet" value={`${africanCountries.length}`} label="Pays livres" />
+            <OneStopStat icon="wallet" value={`${oneStopPaymentMethodCount}`} label="Moyens de paiement" />
+          </div>
         </div>
 
-        <div className="grid border-b border-slate-300 bg-white sm:grid-cols-3">
-          <OneStopStat icon="gear" value={`${oneStopServiceCount}+`} label="Services proposes" />
-          <OneStopStat icon="planet" value={`${africanCountries.length}`} label="Pays livres" />
-          <OneStopStat icon="wallet" value={`${oneStopPaymentMethodCount}`} label="Moyens de paiement" />
-        </div>
-
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto border border-slate-300 bg-white">
           <table className="min-w-[62rem] w-full border-collapse text-left text-xs">
             <thead className="bg-[#d8edf8] text-[11px] font-black uppercase tracking-[0.1em] text-slate-900">
               <tr>

@@ -268,7 +268,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
                 <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
               </a>
             ) : (
-              <a href="/login" className="inline-flex h-9 items-center gap-1.5 px-1 text-xs font-semibold text-[#111827] transition hover:text-[#0f8f6b]" aria-label={t('nav.login')}>
+              <a href="/login" onClick={(event) => { event.preventDefault(); openAuthRequired('login'); }} className="inline-flex h-9 items-center gap-1.5 px-1 text-xs font-semibold text-[#111827] transition hover:text-[#0f8f6b]" aria-label={t('nav.login')}>
                 <UserIcon />
                 <span>Connexion</span>
               </a>
@@ -461,6 +461,9 @@ function Dropdown({ label, items, t }: { label: string; items: NavItem[]; t: (ke
   );
 }
 
+function openAuthRequired(panel: 'register' | 'login' = 'register', step: 'choice' | 'form' = 'choice') {
+  window.dispatchEvent(new CustomEvent('kendronics:open-auth-required', { detail: { panel, step } }));
+}
 function LoginMenu({ isSignedIn, avatarDataUrl, firstName, t }: { isSignedIn: boolean; avatarDataUrl: string; firstName: string; t: (key: NavLabelKey) => string }) {
   if (isSignedIn) {
     return (
@@ -479,16 +482,16 @@ function LoginMenu({ isSignedIn, avatarDataUrl, firstName, t }: { isSignedIn: bo
   return (
     <div className="group relative">
       <div className="flex min-w-[170px] items-center gap-2 text-[#111827]">
-        <a href="/login" className="grid h-9 w-9 place-items-center text-[#111827] transition hover:text-[#0f8f6b]" aria-label={t('nav.login')}>
+        <a href="/login" onClick={(event) => { event.preventDefault(); openAuthRequired('login'); }} className="grid h-9 w-9 place-items-center text-[#111827] transition hover:text-[#0f8f6b]" aria-label={t('nav.login')}>
           <UserIcon />
         </a>
         <div className="min-w-0 text-[13px] leading-5">
           <p className="whitespace-nowrap font-semibold">
-            <a href="/login" className="transition hover:text-[#0f8f6b]">Se connecter</a>
+            <a href="/login" onClick={(event) => { event.preventDefault(); openAuthRequired('login'); }} className="transition hover:text-[#0f8f6b]">Se connecter</a>
             <span className="px-1 text-[#6b7280]">|</span>
-            <a href="/register" className="transition hover:text-[#0f8f6b]">S’inscrire</a>
+            <a href="/register" onClick={(event) => { event.preventDefault(); openAuthRequired('register'); }} className="transition hover:text-[#0f8f6b]">S'inscrire</a>
           </p>
-          <a href="/login" className="block whitespace-nowrap font-black text-[#00a651] transition hover:text-[#0f8f6b]">
+          <a href="/login" onClick={(event) => { event.preventDefault(); openAuthRequired('register'); }} className="block whitespace-nowrap font-black text-[#00a651] transition hover:text-[#0f8f6b]">
             Mon Espace
           </a>
         </div>

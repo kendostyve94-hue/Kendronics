@@ -133,6 +133,20 @@ export function AuthRequiredModal() {
   }, []);
 
   useEffect(() => {
+    function openAuthRequired(event: Event) {
+      const detail = (event as CustomEvent<{ panel?: 'register' | 'login'; step?: 'choice' | 'form' }>).detail;
+      window.sessionStorage.removeItem(authRequiredDismissedKey);
+      setIsDismissed(false);
+      setAuthStep(detail?.step ?? 'choice');
+      setActivePanel(detail?.panel ?? 'register');
+      setLoginMode('login');
+    }
+
+    window.addEventListener('kendronics:open-auth-required', openAuthRequired);
+    return () => window.removeEventListener('kendronics:open-auth-required', openAuthRequired);
+  }, []);
+
+  useEffect(() => {
     if (!shouldShow) return;
 
     const previousOverflow = document.body.style.overflow;
@@ -420,13 +434,14 @@ export function AuthRequiredModal() {
       ) : (
         <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto border border-slate-200 bg-white text-ink">
           <div className="border-b border-slate-200 px-5 py-4 sm:px-6">
-            <button type="button" onClick={backToChoice} className="mb-3 text-xs font-semibold text-[#0f8f6b] underline">
-              Retour au choix
+          <div className="flex items-center gap-4">
+            <button type="button" onClick={backToChoice} className="shrink-0 text-xs font-medium text-slate-400 transition hover:text-slate-600">
+              Retour
             </button>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0f8f6b]">Compte requis</p>
-          <h1 id="auth-required-title" className="mt-2 text-2xl font-bold tracking-normal text-ink sm:text-[28px]">
-            Rejoindre ou se connecter
-          </h1>
+            <h1 id="auth-required-title" className="text-2xl font-bold tracking-normal text-ink sm:text-[28px]">
+              Rejoindre ou se connecter
+            </h1>
+          </div>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
             Creez votre compte ou connectez-vous ici pour acceder aux fonctionnalites Kendronics.
           </p>
@@ -511,8 +526,7 @@ function ChoicePanel({ onRegister, onLogin, onDismiss }: { onRegister: () => voi
       </div>
 
       <div className="flex min-h-[460px] flex-col justify-center px-5 py-7 sm:px-9">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#0f8f6b]">Compte requis</p>
-        <h1 className="mt-3 text-2xl font-bold tracking-normal text-ink sm:text-[28px]">Bienvenue sur Kendronics</h1>
+        <h1 className="text-2xl font-bold tracking-normal text-ink sm:text-[28px]">Bienvenue sur Kendronics</h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">
           Pour utiliser les fonctionnalites du site, creez d'abord votre compte ou connectez-vous si vous en avez deja un.
         </p>
@@ -612,21 +626,29 @@ function RegisterPanel({
 
       <div>
         <span className="mb-1 block text-[11px] font-semibold text-slate-600">Type de compte</span>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           {[
-            ['individual', 'Personnel'],
-            ['student', 'Etudiant'],
-            ['startup', 'Startup'],
-            ['company', 'Entreprise'],
-          ].map(([value, label]) => (
+            ['individual', 'Compte individuel', '#2563eb'],
+            ['company', 'Societe / professionnel', '#0f8f6b'],
+          ].map(([value, label, color]) => (
             <button
               key={value}
               type="button"
               onClick={() => onUpdate('accountType', value as RegisterFormState['accountType'])}
-              className={`h-8 border px-3 text-xs font-semibold transition ${
-                values.accountType === value ? 'border-[#0f8f6b] bg-[#ecfdf5] text-[#0b7558]' : 'border-slate-300 bg-white text-slate-600 hover:border-[#0f8f6b]'
-              }`}
+              className="flex h-9 items-center gap-2 border bg-white px-3 text-left text-xs font-semibold transition hover:border-slate-400"
+              style={{
+                borderColor: values.accountType === value ? color : '#cbd5e1',
+                color: values.accountType === value ? color : '#475569',
+                backgroundColor: values.accountType === value ? `${color}12` : '#ffffff',
+              }}
             >
+              <span
+                className="grid h-4 w-4 place-items-center rounded-full border"
+                style={{ borderColor: values.accountType === value ? color : '#cbd5e1' }}
+                aria-hidden="true"
+              >
+                {values.accountType === value ? <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} /> : null}
+              </span>
               {label}
             </button>
           ))}
