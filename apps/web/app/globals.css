@@ -739,7 +739,7 @@ section {
   color: #ffffff !important;
 }
 
-/* PCBWay-style square UI across the whole storefront. Keep this last so
+/* Square marketplace UI across the whole storefront. Keep this last so
    legacy Tailwind rounded utilities and component overrides cannot re-round. */
 *,
 *::before,

@@ -376,7 +376,7 @@ export function PricingSummary({
               <p className={`mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] ${
                 pricingPreview.status === 'live' ? 'text-[#0f8f6b]' : pricingPreview.status === 'error' ? 'text-[#c45100]' : 'text-slate-500'
               }`}>
-                {pricingPreview.status === 'live' ? 'PCBWay live' : pricingPreview.status === 'loading' ? 'Live...' : pricingPreview.status === 'error' ? 'A verifier' : 'Local'}
+                {pricingPreview.status === 'live' ? 'Fournisseur live' : pricingPreview.status === 'loading' ? 'Live...' : pricingPreview.status === 'error' ? 'A verifier' : 'Local'}
               </p>
               <p className="mt-0.5 text-lg font-bold text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
             </button>

@@ -20,8 +20,7 @@ const neutralForgotPasswordMessage =
   'Si ce compte peut recevoir un e-mail de reinitialisation, les instructions seront envoyees sous peu.';
 const authRequiredDismissedKey = 'kendronics.auth-required.dismissed';
 
-const publicPathPrefixes = [
-  '/',
+const publicExactPaths = [
   '/login',
   '/register',
   '/reset-password',
@@ -29,6 +28,10 @@ const publicPathPrefixes = [
   '/privacy',
   '/cookie-policy',
   '/admin',
+];
+
+const publicPathPrefixes = [
+  '/terms',
   '/api',
 ];
 
@@ -93,7 +96,7 @@ export function AuthRequiredModal() {
   const [isDismissed, setIsDismissed] = useState(false);
 
   const isPublicPath = useMemo(
-    () => publicPathPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)),
+    () => publicExactPaths.includes(pathname) || publicPathPrefixes.some((prefix) => pathname.startsWith(`${prefix}/`)),
     [pathname],
   );
   const shouldShow = !isPublicPath && !isDismissed && (authStatus === 'signed_out' || pendingVerification !== null);

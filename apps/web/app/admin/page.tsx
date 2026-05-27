@@ -133,7 +133,7 @@ const adminNavigation: Array<{ title: string; items: Array<{ id: AdminTab; label
     items: [
       { id: 'suppliers', label: 'Vue fournisseurs' },
       { id: 'jlcpcb', label: 'JLCPCB' },
-      { id: 'pcbway', label: 'PCBWay' },
+      { id: 'pcbway', label: 'Fournisseur partenaire' },
       { id: 'futureSuppliers', label: 'Fournisseurs futurs' },
     ],
   },
@@ -2087,11 +2087,11 @@ function SupplierPanel({
       <SupplierConnectionPanel result={supplierConnectionTest} onSubmit={onSubmitSupplierConnectionTest} />
       <OperationalPanel
         eyebrow="Fournisseurs"
-        title="JLCPCB / PCBWay / Fournisseurs futurs"
+        title="JLCPCB / fournisseur partenaire / fournisseurs futurs"
         description="Suivi des partenaires industriels : API, délais moyens, coût, qualité, incidents et références externes."
         columns={['Fournisseur', 'Commandes', 'API', 'Dernier statut']}
         rows={[
-          ['PCBWay', orders.filter((order) => (order.externalManufacturingPartner ?? '').toLowerCase().includes('pcbway')).length.toString(), supplierConnectionTest?.supplier === 'pcbway' && supplierConnectionTest.ok ? 'Connectée' : 'À vérifier', supplierConnectionTest?.message ?? 'Pas de test récent'],
+          ['Fournisseur partenaire', orders.filter((order) => (order.externalManufacturingPartner ?? '').toLowerCase().includes('pcbway')).length.toString(), supplierConnectionTest?.supplier === 'pcbway' && supplierConnectionTest.ok ? 'Connectée' : 'À vérifier', supplierConnectionTest?.message ?? 'Pas de test récent'],
           ['JLCPCB', orders.filter((order) => (order.externalManufacturingPartner ?? '').toLowerCase().includes('jlcpcb')).length.toString(), 'Prévu', 'Fournisseur configurable'],
           ['Futurs', '0', 'Prévu', 'Marketplace fournisseur'],
         ]}
@@ -2819,7 +2819,7 @@ function AdminOrderActions({
       >
         <div className="grid gap-4 xl:grid-cols-2">
           <AdminForm title="Reference fournisseur" onSubmit={onSubmitSupplier} variant="dark">
-            <input name="externalManufacturingPartner" placeholder="Nom du fournisseur, ex. PCBWay" className={darkFieldClassName} />
+            <input name="externalManufacturingPartner" placeholder="Nom du fournisseur partenaire" className={darkFieldClassName} />
             <input name="externalSupplierOrderId" placeholder="Numero de commande chez le fournisseur" className={darkFieldClassName} />
             <p className="text-xs font-bold text-[#9fc2d7]">Information interne utilisee pour retrouver la fabrication cote partenaire.</p>
           </AdminForm>
@@ -2945,7 +2945,7 @@ function SupplierConnectionPanel({
         </div>
         <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-[1fr_auto]">
           <select name="supplier" defaultValue="pcbway" className={fieldClassName}>
-            <option value="pcbway">PCBWay</option>
+            <option value="pcbway">Fournisseur partenaire</option>
             <option value="jlcpcb">JLCPCB</option>
           </select>
           <button type="submit" className="h-11 rounded-sm bg-deepblue px-5 text-sm font-black text-white transition hover:bg-deepblue-dark">Test</button>

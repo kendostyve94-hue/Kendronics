@@ -327,7 +327,7 @@ export default function QuotePage() {
   const [apiPricing, setApiPricing] = useState<PricingBreakdown | null>(null);
   const [pricingPreview, setPricingPreview] = useState<PricingPreviewState>({
     status: 'local',
-    message: 'Connectez-vous pour afficher le prix live PCBWay.',
+    message: 'Connectez-vous pour afficher le prix fournisseur en direct.',
   });
 
   const selectedCountry = useMemo(
@@ -349,14 +349,14 @@ export default function QuotePage() {
           setApiPricing(null);
           setPricingPreview({
             status: 'local',
-            message: 'Connectez-vous pour afficher le prix live PCBWay.',
+            message: 'Connectez-vous pour afficher le prix fournisseur en direct.',
           });
           return;
         }
 
         setPricingPreview({
           status: 'loading',
-          message: 'Calcul du prix live PCBWay en cours...',
+          message: 'Calcul du prix fournisseur en direct...',
         });
 
         const response = await fetch(`${apiBaseUrl}/api/pricing/preview`, {
@@ -390,7 +390,7 @@ export default function QuotePage() {
           setApiPricing(null);
           setPricingPreview({
             status: 'error',
-            message: 'Apercu PCBWay indisponible. Le prix local reste visible, mais la sauvegarde retentera le devis live.',
+            message: 'Apercu fournisseur indisponible. Le prix local reste visible, mais la sauvegarde retentera le devis en direct.',
           });
         }
       }
