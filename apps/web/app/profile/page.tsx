@@ -202,9 +202,9 @@ type ProfileView =
   | null;
 
 const quickProducts: QuickProduct[] = [
-  { title: 'Prototype PCB', subtitle: 'Commander maintenant', href: '/quote', image: '/images/quote-product-standard-pcb.png', color: '#22c55e' },
-  { title: 'PCB avancé / PCBA', subtitle: 'Préparer un devis', href: '/quote', image: '/images/quote-product-advanced-pcba.png', color: '#0ea5e9' },
-  { title: 'Assemblage PCB', subtitle: 'Lancer un projet', href: '/quote', image: '/images/quote-product-assembly.png', color: '#3b82f6' },
+  { title: 'Prototype PCB', subtitle: '', href: '/quote', image: '/images/quote-product-standard-pcb.png', color: '#22c55e' },
+  { title: 'PCB avance / PCBA', subtitle: '', href: '/quote', image: '/images/quote-product-advanced-pcba.png', color: '#0ea5e9' },
+  { title: 'Assemblage PCB', subtitle: '', href: '/quote', image: '/images/quote-product-assembly.png', color: '#3b82f6' },
 ];
 
 type SidebarItem = {
@@ -2214,58 +2214,50 @@ function maskEmail(email: string) {
 
 function ProductQuickGrid() {
   return (
-    <section className="bg-white p-3 shadow-sm ring-1 ring-[#dbe4ee]">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0f8f6b]">Démarrer</p>
-          <h2 className="text-base font-semibold text-[#102033]">Services fréquents</h2>
+    <div className="grid grid-cols-[minmax(0,1fr)_302px] gap-3">
+      <section className="bg-white p-3 shadow-sm ring-1 ring-[#dbe4ee]">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-[#0f8f6b]">Demarrer</p>
+            <h2 className="text-base text-[#102033]">Services frequents</h2>
+          </div>
+          <a href="/profile?view=services" className="text-xs text-[#0f8f6b]">Tout voir</a>
         </div>
-        <a href="/profile?view=services" className="text-xs font-black text-[#0f8f6b]">Tout voir</a>
-      </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_302px] gap-3">
         <div className="grid grid-cols-3 gap-3">
           {quickProducts.map((product) => (
             <a key={product.title} href={product.href} className="group relative block min-h-[174px] overflow-hidden bg-[#f8fafc] ring-1 ring-[#d4e2ee] transition hover:-translate-y-0.5 hover:ring-[#0f8f6b]">
               {product.image ? (
-                <img src={product.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-300 group-hover:scale-[1.025] group-hover:opacity-100" />
+                <img src={product.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.015]" />
               ) : (
                 <span className="absolute inset-0 grid place-items-center" style={{ backgroundColor: `${product.color}22` }}>
                   <span className="h-14 w-16" style={{ border: `4px solid ${product.color}` }} />
                 </span>
               )}
-              <span className="absolute inset-0 bg-white/20" />
-              <span className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white via-white/90 to-white/0" />
-              <span className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white via-white/95 to-white/0" />
               <span className="relative z-10 block p-4">
-                <span className="block min-h-9 text-sm font-semibold leading-5 text-[#102033]">{product.title}</span>
-              </span>
-              <span className="absolute inset-x-0 bottom-0 z-10 block px-4 pb-4 text-xs font-semibold leading-4 text-[#33506e]">
-                {product.subtitle} &gt;
+                <span className="inline-block bg-white/88 px-2 py-1 text-sm leading-5 text-[#102033]">{product.title}</span>
               </span>
             </a>
           ))}
         </div>
-        <LivePromoFlash />
-      </div>
-    </section>
+      </section>
+      <LivePromoFlash />
+    </div>
   );
 }
-
 function LivePromoFlash() {
   return (
-    <aside className="grid min-h-[154px] overflow-hidden ring-1 ring-[#dbe4ee]" aria-label="Promotions Kendronics">
+    <aside className="grid min-h-[154px] overflow-hidden bg-white shadow-sm ring-1 ring-[#dbe4ee]" aria-label="Promotions Kendronics">
       <a href="/quote" className="relative min-h-[76px] overflow-hidden bg-[#07143a] px-3 py-3 text-white">
-        <img src="/images/quote-product-assembly.png" alt="" className="absolute -right-4 bottom-0 h-[88px] w-[138px] object-cover opacity-90" />
-        <span className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.12),rgba(255,255,255,0)_38%)]" />
-        <span className="relative z-10 block text-[16px] font-black leading-5">Assemblage PCB pour 1-20 pieces</span>
-        <span className="relative z-10 mt-1 block text-[11px] font-black uppercase tracking-wide">Seulement <strong className="text-[25px] leading-none text-[#ff9b00]">$29</strong> au total</span>
-        <span className="relative z-10 mt-1 block text-[12px] font-semibold text-slate-100">Jusqu a $30 de remise transport</span>
+        <img src="/images/quote-product-assembly.png" alt="" className="absolute -right-4 bottom-0 h-[88px] w-[138px] object-cover" />
+        <span className="relative z-10 block text-[16px] leading-5">Assemblage PCB pour 1-20 pieces</span>
+        <span className="relative z-10 mt-1 block text-[11px] uppercase tracking-wide">Seulement <strong className="text-[25px] leading-none text-[#ff9b00]">$29</strong> au total</span>
+        <span className="relative z-10 mt-1 block text-[12px] text-slate-100">Jusqu a $30 de remise transport</span>
       </a>
       <a href="/quote" className="relative min-h-[78px] overflow-hidden bg-[#f8fbf5] px-3 py-3 text-[#102033]">
-        <img src="/images/quote-product-standard-pcb.png" alt="" className="absolute -right-4 bottom-0 h-[84px] w-[128px] object-cover opacity-95" />
-        <span className="relative z-10 block text-[18px] font-black leading-5">Prototype PCB <strong className="text-[24px] text-[#ff6a00]">$5</strong></span>
-        <span className="relative z-10 mt-2 inline-flex bg-[#dff7e5] px-2 py-1 text-[11px] font-black text-[#0f8f6b]">1-2 couches</span>
-        <span className="relative z-10 ml-1 mt-2 inline-flex bg-[#dff7e5] px-2 py-1 text-[11px] font-black text-[#0f8f6b]">Taille &lt;=100x100mm</span>
+        <img src="/images/quote-product-standard-pcb.png" alt="" className="absolute -right-4 bottom-0 h-[84px] w-[128px] object-cover" />
+        <span className="relative z-10 block text-[18px] leading-5">Prototype PCB <strong className="text-[24px] text-[#ff6a00]">$5</strong></span>
+        <span className="relative z-10 mt-2 inline-flex bg-[#dff7e5] px-2 py-1 text-[11px] text-[#0f8f6b]">1-2 couches</span>
+        <span className="relative z-10 ml-1 mt-2 inline-flex bg-[#dff7e5] px-2 py-1 text-[11px] text-[#0f8f6b]">Taille &lt;=100x100mm</span>
         <span className="relative z-10 mt-1 block text-[12px] text-[#53657a]">Nouveau client : coupon de $5.</span>
       </a>
     </aside>
