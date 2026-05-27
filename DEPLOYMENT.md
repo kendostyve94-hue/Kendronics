@@ -45,7 +45,7 @@ Variables utiles pour l'API:
 - `S3_SECRET_ACCESS_KEY`
 - `S3_ENDPOINT` optionnel pour Cloudflare R2 ou autre stockage compatible S3
 - `PREFERRED_PCB_SUPPLIER=pcbway`
-- `PCBWAY_API_KEY` cle API fournie par PCBWay
+- `PCBWAY_API_KEY` cle API fournie par le fournisseur partenaire
 - `PCBWAY_BALANCE_ENDPOINT=https://api-partner.pcbway.com/api/Account/QueryBalance`
 - `PCBWAY_QUOTE_ENDPOINT=https://api-partner.pcbway.com/api/Pcb/PcbQuotation`
 - `PCBWAY_ORDER_ENDPOINT=https://api-partner.pcbway.com/api/Pcb/PlaceOrder`
@@ -82,7 +82,7 @@ Commandes utiles:
 - Le webhook Stripe pointe vers `https://url-publique-de-ton-api/api/payments/webhooks/stripe`.
 - SMTP est configure avec un mot de passe d'application ou un fournisseur email transactionnel.
 - Le bucket prive S3/R2 est cree et les variables `S3_*` sont renseignees.
-- PCBWay est configure dans Render avec `PREFERRED_PCB_SUPPLIER=pcbway`, `PCBWAY_API_KEY`, `PCBWAY_BALANCE_ENDPOINT`, `PCBWAY_QUOTE_ENDPOINT`, `PCBWAY_ORDER_ENDPOINT` et `REQUIRE_LIVE_SUPPLIER_PRICING=true`.
+- Le fournisseur partenaire est configure dans Render avec `PREFERRED_PCB_SUPPLIER=pcbway`, `PCBWAY_API_KEY`, `PCBWAY_BALANCE_ENDPOINT`, `PCBWAY_QUOTE_ENDPOINT`, `PCBWAY_ORDER_ENDPOINT` et `REQUIRE_LIVE_SUPPLIER_PRICING=true`.
 - Le parcours complet est teste: inscription, connexion, upload Gerber, devis, commande, paiement, suivi, ticket support.
 
 ## Developpement local avec PostgreSQL

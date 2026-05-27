@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const PCBWAY_QUOTE_ENDPOINT =
+const SUPPLIER_QUOTE_ENDPOINT =
   process.env.PCBWAY_QUOTE_ENDPOINT ?? 'https://api-partner.pcbway.com/api/Pcb/PcbQuotation';
 
 export async function POST(request: Request) {
@@ -9,14 +9,14 @@ export async function POST(request: Request) {
   if (!apiKey) {
     return NextResponse.json(
       {
-        error: 'Supplier live pricing is not available yet. Kendronics is completing supplier API configuration.',
+        error: 'Le prix fournisseur en direct n est pas encore disponible. Kendronics finalise la configuration API fournisseur.',
       },
       { status: 501 },
     );
   }
 
   const payload = await request.json();
-  const supplierResponse = await fetch(PCBWAY_QUOTE_ENDPOINT, {
+  const supplierResponse = await fetch(SUPPLIER_QUOTE_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   if (!supplierResponse.ok || data.Status === 'error') {
     return NextResponse.json(
       {
-        error: data.ErrorText || 'Supplier API quote failed.',
+        error: data.ErrorText || 'Le devis API fournisseur a echoue.',
         supplierStatus: data.Status,
       },
       { status: supplierResponse.ok ? 502 : supplierResponse.status },
@@ -64,9 +64,9 @@ export async function POST(request: Request) {
     finalTotal: round(finalTotal),
     displayTotalBeforeAdjustment: round(finalTotal),
     deliveryWeightKg: 0,
-    shippingCarrier: data.Shipping?.ShipName ?? 'Supplier shipping',
-    estimatedShippingTime: data.Shipping?.DeliveryTime ?? 'Supplier estimate',
-    estimatedLeadTime: `${data.priceList?.[0]?.BuildDays ?? 'Supplier'} build days`,
+    shippingCarrier: data.Shipping?.ShipName ?? 'Livraison fournisseur',
+    estimatedShippingTime: data.Shipping?.DeliveryTime ?? 'Estimation fournisseur',
+    estimatedLeadTime: `${data.priceList?.[0]?.BuildDays ?? 'Delai fournisseur'} jours de production`,
   });
 }
 

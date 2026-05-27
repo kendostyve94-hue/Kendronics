@@ -18,7 +18,7 @@ const capabilityRows = [
   ['Options de vias', 'Vias standards, tented, filled, via-in-pad sur revue', 'Les structures avancées exigent une revue fichier et fabricabilité.'],
   ['Tests électriques', 'Flying probe ou test fixture selon disponibilité', 'Aide à détecter ouvertures et courts-circuits avant expédition, surtout sur cartes denses.'],
   ['Disponibilité PCBA', 'Demandes SMT et mixtes sur revue BOM/CPL', 'L’assemblage dépend d’une revue partenaire, pas d’une garantie automatique.'],
-  ['Disponibilité stencil', 'Stencils avec ou sans cadre sur demande', 'Utile pour assemblage local, prototypes et application pâte à braser en petit lot.'],
+  ['Disponibilite pochoir', 'Pochoirs avec ou sans cadre sur demande', 'Utile pour assemblage local, prototypes et application de pate a braser en petit lot.'],
 ];
 
 const materialRows = [

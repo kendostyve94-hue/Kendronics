@@ -62,7 +62,7 @@ export class PaymentWebhookHandler {
       await this.trackingService.addAdminStatusEvent(
         payment.orderId,
         'payment_authorized',
-        'Payment authorized by Stripe. Supplier file review can start before capture.',
+        'Paiement autorise par Stripe. La verification des fichiers peut demarrer avant la capture.',
       );
     }
 

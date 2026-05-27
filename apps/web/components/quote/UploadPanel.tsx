@@ -21,7 +21,7 @@ export function UploadPanel({
     <div className="grid gap-3 lg:grid-cols-3">
       <FileDrop
         label="Gerber ZIP"
-        help="Téléversez le ZIP de production exporté depuis votre outil PCB. Les fichiers sont stockés de façon privée et préparés pour validation."
+        help="Televersez le ZIP de production exporte depuis votre outil PCB. Les fichiers sont stockes de facon privee et prepares pour validation."
         accept=".zip,application/zip"
         fileName={gerberFileName}
         onFile={onGerber}
@@ -29,14 +29,14 @@ export function UploadPanel({
       />
       <FileDrop
         label="Fichier BOM"
-        help="Liste des composants utilisée pour les demandes PCBA. Requise seulement si l’assemblage est activé."
+        help="Liste des composants utilisee pour les demandes PCBA. Requise seulement si l'assemblage est active."
         accept=".csv,.xlsx,.xls"
         fileName={bomFileName}
         onFile={onBom}
       />
       <FileDrop
         label="Fichier CPL"
-        help="Fichier de placement des composants utilisé par les partenaires d’assemblage externes."
+        help="Fichier de placement des composants utilise par les partenaires d'assemblage externes."
         accept=".csv,.xlsx,.xls"
         fileName={cplFileName}
         onFile={onCpl}
@@ -77,7 +77,7 @@ function FileDrop({
         <span>
           <span className="mx-auto mb-3 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-r from-signal to-electric text-lg font-black text-white">+</span>
           <span className="block text-sm font-black text-ink">{fileName ?? 'Ajouter un fichier'}</span>
-          <span className="mt-1 block text-xs text-slate-500">Upload privé, analyse prête production</span>
+          <span className="mt-1 block text-xs text-slate-500">Televersement prive, analyse prete pour la production</span>
         </span>
       </span>
     </label>

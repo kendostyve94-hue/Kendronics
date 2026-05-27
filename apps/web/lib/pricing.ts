@@ -13,7 +13,7 @@ type CalibrationAnchor = {
   priceUsd: number;
 };
 
-const PCBWAY_PUBLIC_ANCHORS: CalibrationAnchor[] = [
+const PUBLIC_PRICE_ANCHORS: CalibrationAnchor[] = [
   { layers: 1, maxAreaCm2: 100, quantity: 10, priceUsd: 5 },
   { layers: 2, maxAreaCm2: 100, quantity: 10, priceUsd: 5 },
   { layers: 4, maxAreaCm2: 100, quantity: 10, priceUsd: 48 },
@@ -205,8 +205,8 @@ function calculateLocalCalibratedQuote(config: QuoteConfig): PricingBreakdown {
     displayTotalBeforeAdjustment: round(displayTotalBeforeAdjustment),
     deliveryWeightKg: round(volumeWeightKg),
     shippingCarrier: getShippingCarrierLabel(config),
-    estimatedShippingTime: config.liveShippingTransitTime ?? (config.shippingMode === 'express' ? '2-4 business days' : config.shippingMode === 'economy' ? '7-12 business days' : '4-7 business days'),
-    estimatedLeadTime: `${leadTimeDays} business days`,
+    estimatedShippingTime: config.liveShippingTransitTime ?? (config.shippingMode === 'express' ? '2-4 jours ouvres' : config.shippingMode === 'economy' ? '7-12 jours ouvres' : '4-7 jours ouvres'),
+    estimatedLeadTime: `${leadTimeDays} jours ouvres`,
     supplierLeadTimeDays: productionBuildDays,
     productionBuildDays,
     buildOptions: getBuildOptions(config, supplierEstimatedPrice),
@@ -297,9 +297,9 @@ function normalizeDimensions(config: QuoteConfig) {
 }
 
 function getAnchor(layers: number): CalibrationAnchor {
-  if (layers <= 1) return PCBWAY_PUBLIC_ANCHORS[0];
-  if (layers <= 2) return PCBWAY_PUBLIC_ANCHORS[1];
-  return PCBWAY_PUBLIC_ANCHORS[2];
+  if (layers <= 1) return PUBLIC_PRICE_ANCHORS[0];
+  if (layers <= 2) return PUBLIC_PRICE_ANCHORS[1];
+  return PUBLIC_PRICE_ANCHORS[2];
 }
 
 function getLayerMultiplier(layers: number, anchorLayers: number): number {

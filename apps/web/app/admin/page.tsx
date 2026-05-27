@@ -91,12 +91,12 @@ const apiBaseUrl = getApiBaseUrl();
 const adminElevationStorageKey = 'kendronics.admin.elevation';
 
 const adminNavigation: Array<{ title: string; items: Array<{ id: AdminTab; label: string }> }> = [
-  { title: 'Pilotage', items: [{ id: 'dashboard', label: 'Dashboard' }] },
+  { title: 'Pilotage', items: [{ id: 'dashboard', label: 'Tableau de bord' }] },
   {
     title: 'Commandes',
     items: [
       { id: 'orders', label: 'Toutes les commandes' },
-      { id: 'orderValidation', label: 'À valider' },
+      { id: 'orderValidation', label: 'A valider' },
       { id: 'production', label: 'En fabrication' },
       { id: 'delivery', label: 'En livraison' },
       { id: 'disputes', label: 'Litiges' },
@@ -115,14 +115,14 @@ const adminNavigation: Array<{ title: string; items: Array<{ id: AdminTab; label
     items: [
       { id: 'clients', label: 'Tous les clients' },
       { id: 'companies', label: 'Entreprises' },
-      { id: 'clientActivity', label: 'Activité' },
+      { id: 'clientActivity', label: 'Activite' },
       { id: 'clientRisk', label: 'Risques' },
     ],
   },
   {
     title: 'Devis & Pricing',
     items: [
-      { id: 'quotes', label: 'Devis générés' },
+      { id: 'quotes', label: 'Devis generes' },
       { id: 'pricing', label: 'Marges' },
       { id: 'buffers', label: 'Buffers' },
       { id: 'priceHistory', label: 'Historique prix' },
@@ -140,8 +140,8 @@ const adminNavigation: Array<{ title: string; items: Array<{ id: AdminTab; label
   {
     title: 'Logistique',
     items: [
-      { id: 'shipments', label: 'Expéditions' },
-      { id: 'tracking', label: 'Tracking' },
+      { id: 'shipments', label: 'Expeditions' },
+      { id: 'tracking', label: 'Suivi' },
       { id: 'customs', label: 'Douane' },
       { id: 'logisticsIncidents', label: 'Incidents' },
     ],
@@ -172,22 +172,22 @@ const adminNavigation: Array<{ title: string; items: Array<{ id: AdminTab; label
     ],
   },
   {
-    title: 'Conformité',
+    title: 'Conformite',
     items: [
       { id: 'compliance', label: 'RGPD' },
       { id: 'gdpr', label: 'Consentements' },
       { id: 'consents', label: 'Cookies' },
-      { id: 'legalLogs', label: 'Logs légaux' },
+      { id: 'legalLogs', label: 'Logs legaux' },
     ],
   },
   {
-    title: 'Paramètres',
+    title: 'Parametres',
     items: [
       { id: 'settings', label: 'Utilisateurs' },
-      { id: 'users', label: 'Rôles' },
+      { id: 'users', label: 'Roles' },
       { id: 'permissions', label: 'Permissions' },
       { id: 'apiSettings', label: 'API' },
-      { id: 'emailSettings', label: 'Emails' },
+      { id: 'emailSettings', label: 'E-mails' },
       { id: 'notificationSettings', label: 'Notifications' },
     ],
   },
@@ -507,7 +507,7 @@ export default function AdminPage() {
       { method: adminApiContract.supplierOrder.method, body: payload },
     );
     setSupplierOrderPackage(result);
-    setMessage(result.mode === 'create' ? 'Supplier order creation request completed.' : 'Supplier order package prepared.');
+    setMessage(result.mode === 'create' ? 'Demande de creation de commande fournisseur terminee.' : 'Dossier de commande fournisseur prepare.');
   }
 
   async function submitShipment(event: FormEvent<HTMLFormElement>) {
@@ -691,8 +691,8 @@ export default function AdminPage() {
               eyebrow="Fichiers Gerber"
               title={adminTabTitle(tab)}
               description="Analyse automatique, validation manuelle, historique des fichiers, erreurs potentielles et confiance parser."
-              rows={orders.map((order) => [order.orderNumber, order.quoteId, order.status, order.createdAt ? formatDate(order.createdAt) : 'Pending'])}
-              columns={['Commande', 'Quote', 'Statut', 'Upload']}
+              rows={orders.map((order) => [order.orderNumber, order.quoteId, order.status, order.createdAt ? formatDate(order.createdAt) : 'En attente'])}
+              columns={['Commande', 'Devis', 'Statut', 'Fichier']}
             />
           )}
 
@@ -702,7 +702,7 @@ export default function AdminPage() {
               title={adminTabTitle(tab)}
               description="Vision 360 client : pays, volume, tickets, paiements, commandes et score de risque interne."
               rows={orders.map((order) => [order.orderNumber, order.destinationCountryIso2, getPaymentStatus(order), formatCurrency(order.totalPrice ?? 0)])}
-              columns={['Dernière commande', 'Pays', 'Paiement', 'Volume']}
+              columns={['Derniere commande', 'Pays', 'Paiement', 'Volume']}
             />
           )}
 
@@ -714,9 +714,9 @@ export default function AdminPage() {
             <OperationalPanel
               eyebrow="Logistique"
               title={adminTabTitle(tab)}
-              description="Expéditions, tracking, douane, incidents, transporteurs et ETA critiques."
-              rows={orders.map((order) => [order.orderNumber, order.carrierName || 'En attente', order.trackingNumber || 'Aucun', order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : 'ETA pending'])}
-              columns={['Commande', 'Transporteur', 'Tracking', 'ETA']}
+              description="Expeditions, suivi, douane, incidents, transporteurs et dates critiques."
+              rows={orders.map((order) => [order.orderNumber, order.carrierName || 'En attente', order.trackingNumber || 'Aucun', order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : 'Date en attente'])}
+              columns={['Commande', 'Transporteur', 'Suivi', 'ETA']}
             />
           )}
 
@@ -865,7 +865,7 @@ function AdminCodeDialog({
 
 function AdminSidebar({ activeTab, onSelect }: { activeTab: AdminTab; onSelect: (tab: AdminTab) => void }) {
   const primaryItems: Array<{ id: AdminTab; label: string }> = [
-    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'dashboard', label: 'Tableau de bord' },
     { id: 'orders', label: 'Commandes' },
     { id: 'gerberAnalysis', label: 'Fichiers Gerber' },
     { id: 'clients', label: 'Clients' },
@@ -983,7 +983,7 @@ function LegacyAdminTopbar({ onSelect }: { onSelect: (tab: AdminTab) => void }) 
       </nav>
       <div className="flex items-center gap-3">
         <span className="grid h-8 w-8 place-items-center rounded-lg bg-white/10 text-sm">!</span>
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-white/10 text-sm">⚙</span>
+        <span className="grid h-8 w-8 place-items-center rounded-lg bg-white/10 text-sm">*</span>
         <span className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-400 text-sm font-black text-[#06445f]">K</span>
       </div>
     </header>
@@ -998,7 +998,7 @@ function AdminPageHeader({ meta, isDashboard = false }: { meta: ReturnType<typeo
         <div className="flex items-center gap-2 text-sm">
           <span className="text-white/55">Accueil</span>
           <span className="text-white/30">/</span>
-          <span className="font-medium text-[#70bd4d]">Dashboard</span>
+          <span className="font-medium text-[#70bd4d]">Tableau de bord</span>
         </div>
       </div>
     );
@@ -1051,7 +1051,7 @@ function getAdminPageMeta(tab: AdminTab): { title: string; description: string; 
     case 'suppliers':
       return { title: 'Fournisseurs', description: 'Gestion des partenaires industriels, performances, couts et fiabilite.', action: 'Ajouter fournisseur' };
     case 'shipments':
-      return { title: 'Logistique', description: 'Tracking international, douane, incidents et livraison client final.', action: 'Creer expedition' };
+      return { title: 'Logistique', description: 'Suivi international, douane, incidents et livraison client final.', action: 'Creer expedition' };
     case 'support':
       return { title: 'Support', description: 'Tickets clients, SAV, pieces jointes et suivi des reclamations.', action: 'Creer ticket' };
     case 'payments':
@@ -1063,7 +1063,7 @@ function getAdminPageMeta(tab: AdminTab): { title: string; description: string; 
     case 'settings':
       return { title: 'Parametres', description: 'Gestion des acces, API, emails, notifications et configuration systeme.', action: 'Ajouter admin' };
     default:
-      return { title: 'Dashboard', description: 'Vue globale des commandes PCB, production, paiement et logistique.', action: 'Nouvelle commande' };
+      return { title: 'Tableau de bord', description: 'Vue globale des commandes PCB, production, paiement et logistique.', action: 'Nouvelle commande' };
   }
 }
 
@@ -1215,7 +1215,7 @@ function ModernDashboardPanel({
 
 function SalesOverviewCard({ orders, intelligence }: { orders: AdminOrderRow[]; intelligence: AdminPricingIntelligence | null }) {
   const [period, setPeriod] = useState<SalesOverviewPeriod>('year');
-  const quoteSeries = buildQuoteSeries(orders, intelligence?.snapshots ?? [], period);
+  const quoteSeries = buildDevisSeries(orders, intelligence?.snapshots ?? [], period);
   const maxValue = Math.max(...quoteSeries.flatMap((item) => [item.quotes, item.paid]), 1);
   const scaleLabels = buildScaleLabels(maxValue);
 
@@ -1341,11 +1341,11 @@ function DashboardKpiIcon({ icon }: { icon: 'customer' | 'group' | 'dollar' | 'b
 
 type SalesOverviewPeriod = 'year' | 'month';
 
-function buildQuoteSeries(orders: AdminOrderRow[], snapshots: AdminPricingSnapshot[], period: SalesOverviewPeriod) {
-  return period === 'month' ? buildCurrentMonthQuoteSeries(orders, snapshots) : buildMonthlyQuoteSeries(orders, snapshots);
+function buildDevisSeries(orders: AdminOrderRow[], snapshots: AdminPricingSnapshot[], period: SalesOverviewPeriod) {
+  return period === 'month' ? buildCurrentMonthDevisSeries(orders, snapshots) : buildMonthlyDevisSeries(orders, snapshots);
 }
 
-function buildCurrentMonthQuoteSeries(orders: AdminOrderRow[], snapshots: AdminPricingSnapshot[]) {
+function buildCurrentMonthDevisSeries(orders: AdminOrderRow[], snapshots: AdminPricingSnapshot[]) {
   const now = new Date();
   const series = [
     { month: 'S1', quotes: 0, paid: 0 },
@@ -1383,7 +1383,7 @@ function monthWeekIndex(date: Date): number {
   return Math.min(3, Math.floor((date.getDate() - 1) / 7));
 }
 
-function buildMonthlyQuoteSeries(orders: AdminOrderRow[], snapshots: AdminPricingSnapshot[]) {
+function buildMonthlyDevisSeries(orders: AdminOrderRow[], snapshots: AdminPricingSnapshot[]) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const currentYear = new Date().getFullYear();
   const series = months.map((month) => ({ month, quotes: 0, paid: 0 }));
@@ -1421,7 +1421,7 @@ function buildScaleLabels(maxValue: number) {
   return [top, Math.round(top * 0.8), Math.round(top * 0.6), Math.round(top * 0.4), Math.round(top * 0.2), 0].map(String);
 }
 
-function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> }) {
+function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: string; subtitle: string; amount: string; date: string; status: 'En attente' | 'Termine' | 'Echec'; tone: string; progress: number }> }) {
   return (
     <section className="overflow-hidden rounded-md" style={{ backgroundColor: '#08263a', border: '1px solid #11516b' }}>
       <div className="px-6 py-5" style={{ borderBottom: '1px solid #143b58' }}>
@@ -1439,7 +1439,7 @@ function LatestTransactionsCard({ transactions }: { transactions: Array<{ name: 
                 <p className="mt-1 max-w-[12rem] text-sm leading-5 text-white/60">{transaction.subtitle}</p>
               </div>
               <span className={`mx-auto rounded-full px-2 py-1 text-[10px] font-semibold ${
-                transaction.status === 'Completed' ? 'bg-[#dcf9e8] text-[#18b95b]' : transaction.status === 'Failed' ? 'bg-[#ffe5e9] text-[#f0445c]' : 'bg-[#fff0cf] text-[#f5a400]'
+                transaction.status === 'Termine' ? 'bg-[#dcf9e8] text-[#18b95b]' : transaction.status === 'Echec' ? 'bg-[#ffe5e9] text-[#f0445c]' : 'bg-[#fff0cf] text-[#f5a400]'
               }`}>
                 {transaction.status}
               </span>
@@ -1594,7 +1594,7 @@ function AfricanFlag({ code }: { code: string }) {
 
 function countryFlag(iso2: string): string {
   const code = iso2.trim().toUpperCase();
-  if (!/^[A-Z]{2}$/.test(code)) return '🌍';
+  if (!/^[A-Z]{2}$/.test(code)) return 'ðŸŒ';
   return code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 }
 
@@ -1703,30 +1703,30 @@ function DashboardPanel({
   return (
     <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_20.5rem]">
       <Card className="rounded-xl border-[#d7e3ec] p-5 shadow-md shadow-slate-300/40">
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Dashboard</p>
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Tableau de bord</p>
         <h2 className="mt-2 text-2xl font-black text-ink">Vue globale en 10 secondes</h2>
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           <DashboardTile label="Commandes du jour" value={orders.filter((order) => isToday(order.createdAt)).length.toString()} />
           <DashboardTile label="Commandes en attente" value={orders.filter((order) => order.status === 'awaiting_payment').length.toString()} />
           <DashboardTile label="Tickets ouverts" value={tickets.filter((ticket) => ticket.status !== 'closed').length.toString()} />
-          <DashboardTile label="Buffers surveillés" value={String(intelligence?.metrics.flaggedBucketCount ?? 0)} />
+          <DashboardTile label="Buffers surveilles" value={String(intelligence?.metrics.flaggedBucketCount ?? 0)} />
         </div>
       </Card>
 
       <Card className="rounded-xl border-[#d7e3ec] p-5 shadow-md shadow-slate-300/40">
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Activité récente</p>
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Activite recente</p>
         <div className="mt-5 space-y-4">
           {recentLogs.map((log) => (
             <TimelineItem key={log.id} title={log.action} meta={`${log.targetType}${log.targetId ? ` / ${log.targetId.slice(0, 8)}` : ''}`} date={log.createdAt} />
           ))}
-          {recentLogs.length === 0 ? <p className="text-sm font-bold text-slate-500">Aucune activité récente.</p> : null}
+          {recentLogs.length === 0 ? <p className="text-sm font-bold text-slate-500">Aucune activite recente.</p> : null}
         </div>
       </Card>
 
       <Card className="overflow-hidden rounded-xl border-[#d7e3ec] shadow-md shadow-slate-300/40 xl:col-span-2">
         <div className="border-b border-slate-100 p-5">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Production / Logistique / Finance</p>
-          <h2 className="mt-2 text-xl font-black text-ink">Flux opérationnel récent</h2>
+          <h2 className="mt-2 text-xl font-black text-ink">Flux operationnel recent</h2>
         </div>
         <OrdersTable orders={recentOrders} selectedOrderId="" onSelect={() => undefined} />
       </Card>
@@ -2002,7 +2002,7 @@ function AdminOrderListRow({ order, selected, onSelect }: { order: AdminOrderRow
         <button type="button" onClick={() => onSelect(order.id)} className="font-black text-[#35b5ff] hover:text-[#2edf7f]">
           {order.orderNumber}
         </button>
-        <p className="mt-1 max-w-[12rem] truncate text-xs font-bold text-[#9fc2d7]">Quote {order.quoteId}</p>
+        <p className="mt-1 max-w-[12rem] truncate text-xs font-bold text-[#9fc2d7]">Devis {order.quoteId}</p>
       </td>
       <td className="px-5 py-4">
         <p className="font-black text-white">{product}</p>
@@ -2065,7 +2065,7 @@ function OperationalPanel({
                 {row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`} className="px-5 py-4 font-bold text-slate-700">{cell}</td>)}
               </tr>
             ))}
-            {rows.length === 0 ? <tr><td className="px-5 py-8 text-center text-sm font-bold text-slate-500" colSpan={columns.length}>Aucune donnée disponible.</td></tr> : null}
+            {rows.length === 0 ? <tr><td className="px-5 py-8 text-center text-sm font-bold text-slate-500" colSpan={columns.length}>Aucune donnee disponible.</td></tr> : null}
           </tbody>
         </table>
       </div>
@@ -2088,12 +2088,12 @@ function SupplierPanel({
       <OperationalPanel
         eyebrow="Fournisseurs"
         title="JLCPCB / fournisseur partenaire / fournisseurs futurs"
-        description="Suivi des partenaires industriels : API, délais moyens, coût, qualité, incidents et références externes."
+        description="Suivi des partenaires industriels : API, delais moyens, cout, qualite, incidents et references externes."
         columns={['Fournisseur', 'Commandes', 'API', 'Dernier statut']}
         rows={[
-          ['Fournisseur partenaire', orders.filter((order) => (order.externalManufacturingPartner ?? '').toLowerCase().includes('pcbway')).length.toString(), supplierConnectionTest?.supplier === 'pcbway' && supplierConnectionTest.ok ? 'Connectée' : 'À vérifier', supplierConnectionTest?.message ?? 'Pas de test récent'],
-          ['JLCPCB', orders.filter((order) => (order.externalManufacturingPartner ?? '').toLowerCase().includes('jlcpcb')).length.toString(), 'Prévu', 'Fournisseur configurable'],
-          ['Futurs', '0', 'Prévu', 'Marketplace fournisseur'],
+          ['Fournisseur partenaire', orders.filter((order) => (order.externalManufacturingPartner ?? '').toLowerCase().includes('pcbway')).length.toString(), supplierConnectionTest?.supplier === 'pcbway' && supplierConnectionTest.ok ? 'Connectee' : 'A verifier', supplierConnectionTest?.message ?? 'Pas de test recent'],
+          ['JLCPCB', orders.filter((order) => (order.externalManufacturingPartner ?? '').toLowerCase().includes('jlcpcb')).length.toString(), 'Prevu', 'Fournisseur configurable'],
+          ['Futurs', '0', 'Prevu', 'Marketplace fournisseur'],
         ]}
       />
     </div>
@@ -2161,11 +2161,11 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
   const scopedTicketsFor = (block: AnalyticsCalendarBlockId) => (calendarBlock === block ? calendarScopedTickets : tickets);
   const scopedSnapshotsFor = (block: AnalyticsCalendarBlockId) => (calendarBlock === block ? calendarScopedSnapshots : allSnapshots);
 
-  const quoteSeries = buildQuoteSeries(scopedOrdersFor('devisGeneres'), scopedSnapshotsFor('devisGeneres'), 'year');
-  const conversionQuoteSeries = buildQuoteSeries(scopedOrdersFor('tauxConversion'), scopedSnapshotsFor('tauxConversion'), 'year');
+  const quoteSeries = buildDevisSeries(scopedOrdersFor('devisGeneres'), scopedSnapshotsFor('devisGeneres'), 'year');
+  const conversionDevisSeries = buildDevisSeries(scopedOrdersFor('tauxConversion'), scopedSnapshotsFor('tauxConversion'), 'year');
   const paidOrders = scopedOrdersFor('commandesPayees').filter((order) => getPaymentStatus(order) === 'paid');
-  const conversionRate = conversionQuoteSeries.reduce((sum, item) => sum + item.quotes, 0)
-    ? (conversionQuoteSeries.reduce((sum, item) => sum + item.paid, 0) / conversionQuoteSeries.reduce((sum, item) => sum + item.quotes, 0)) * 100
+  const conversionRate = conversionDevisSeries.reduce((sum, item) => sum + item.quotes, 0)
+    ? (conversionDevisSeries.reduce((sum, item) => sum + item.paid, 0) / conversionDevisSeries.reduce((sum, item) => sum + item.quotes, 0)) * 100
     : 0;
   const activeCustomerOrders = scopedOrdersFor('clientsActifs');
   const activeCustomers = uniqueValues(activeCustomerOrders.filter((order) => isRecentDate(order.createdAt, 30) || calendarBlock === 'clientsActifs').map((order) => order.userId)).length;
@@ -2202,7 +2202,7 @@ function AnalyticsPanel({ orders, tickets, intelligence }: { orders: AdminOrderR
       />
       <div className="grid gap-4 lg:grid-cols-4">
         <AnalyticsMetricCard tone="#16c784" icon="quote" title="Devis generes" value={formatCompactNumber(quoteSeries.reduce((sum, item) => sum + item.quotes, 0))} trend={revenueSummary.revenueTrendLabel} sparkline={quoteSeries.map((item) => item.quotes)} />
-        <AnalyticsMetricCard tone="#2787ff" icon="percent" title="Taux de conversion" value={`${conversionRate.toFixed(1)}%`} trend="devis > paiement" sparkline={conversionQuoteSeries.map((item) => item.paid)} />
+        <AnalyticsMetricCard tone="#2787ff" icon="percent" title="Taux de conversion" value={`${conversionRate.toFixed(1)}%`} trend="devis > paiement" sparkline={conversionDevisSeries.map((item) => item.paid)} />
         <AnalyticsMetricCard tone="#12a88f" icon="cart" title="Commandes payees" value={formatCompactNumber(paidOrders.length)} trend={`+ ${shareOf(paidOrders.length, scopedOrdersFor('commandesPayees').length)}%`} sparkline={buildMonthlyOrderCounts(scopedOrdersFor('commandesPayees'))} />
         <AnalyticsMetricCard tone="#27bddc" icon="users" title="Clients actifs" value={formatCompactNumber(activeCustomers)} trend="+ 30 jours" sparkline={orderSparkline} />
       </div>
@@ -2714,7 +2714,7 @@ function TimelineItem({ title, meta, date }: { title: string; meta: string; date
       <span className="mt-1 h-3 w-3 rounded-full bg-[#0f8f6b]" />
       <div>
         <p className="text-sm font-black text-ink">{title}</p>
-        <p className="mt-1 text-xs font-bold text-slate-500">{meta} · {formatDate(date)}</p>
+        <p className="mt-1 text-xs font-bold text-slate-500">{meta} - {formatDate(date)}</p>
       </div>
     </div>
   );
@@ -2734,12 +2734,12 @@ function OrdersTable({
       <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
         <thead className="bg-slate-50 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
           <tr>
-            <th className="px-5 py-4">Order</th>
-            <th className="px-5 py-4">Status</th>
-            <th className="px-5 py-4">Payment</th>
-            <th className="px-5 py-4">Country</th>
-            <th className="px-5 py-4">Carrier</th>
-            <th className="px-5 py-4">Delivery</th>
+            <th className="px-5 py-4">Commande</th>
+            <th className="px-5 py-4">Statut</th>
+            <th className="px-5 py-4">Paiement</th>
+            <th className="px-5 py-4">Pays</th>
+            <th className="px-5 py-4">Transporteur</th>
+            <th className="px-5 py-4">Livraison</th>
             <th className="px-5 py-4">Detail</th>
           </tr>
         </thead>
@@ -2755,16 +2755,16 @@ function OrdersTable({
               <td className="px-5 py-4"><AdminStatusBadge status={order.status} /></td>
               <td className="px-5 py-4"><PaymentBadge status={getPaymentStatus(order)} /></td>
               <td className="px-5 py-4 font-bold text-slate-700">{order.destinationCountryIso2}</td>
-              <td className="px-5 py-4 text-slate-600">{order.carrierName || 'Pending'}</td>
-              <td className="px-5 py-4 text-slate-600">{order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : 'Pending'}</td>
+              <td className="px-5 py-4 text-slate-600">{order.carrierName || 'En attente'}</td>
+              <td className="px-5 py-4 text-slate-600">{order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : 'En attente'}</td>
               <td className="px-5 py-4">
-                <a href={`/orders/${order.id}`} className="font-black text-deepblue hover:text-signal-dark">Open</a>
+                <a href={`/orders/${order.id}`} className="font-black text-deepblue hover:text-signal-dark">Ouvrir</a>
               </td>
             </tr>
           ))}
           {orders.length === 0 && (
             <tr>
-              <td className="px-5 py-8 text-center text-sm font-bold text-slate-500" colSpan={7}>No orders match these filters.</td>
+              <td className="px-5 py-8 text-center text-sm font-bold text-slate-500" colSpan={7}>Aucune commande ne correspond a ces filtres.</td>
             </tr>
           )}
         </tbody>
@@ -2798,7 +2798,7 @@ function AdminOrderActions({
         <p className="text-xs font-black uppercase tracking-[0.16em] text-[#2edf7f]">Commande selectionnee</p>
         <h2 className="mt-2 text-xl font-black text-white">{order.orderNumber}</h2>
         <p className="mt-1 text-sm text-[#9fc2d7]">{order.id}</p>
-        <p className="mt-1 text-xs font-bold text-[#9fc2d7]">Quote {order.quoteId}</p>
+        <p className="mt-1 text-xs font-bold text-[#9fc2d7]">Devis {order.quoteId}</p>
       </div>
 
       <OrderActionSection
@@ -2880,15 +2880,15 @@ function SupplierOrderPackagePanel({ packageData }: { packageData: AdminSupplier
       <p className="text-xs font-black uppercase tracking-[0.16em] text-[#2edf7f]">Dossier prepare</p>
       <h2 className="mt-2 text-lg font-black text-white">Dossier {packageData.supplier.toUpperCase()}</h2>
       <div className="mt-4 space-y-3 text-sm text-[#9fc2d7]">
-        <InfoLine label="Order" value={`${packageData.orderNumber} / ${packageData.quoteId.slice(0, 8)}`} />
-        <InfoLine label="Gerber" value={packageData.gerber?.storageKey ?? 'Missing upload record'} />
-        <InfoLine label="Board" value={`${packageData.pcb.layers} layers, ${packageData.pcb.lengthMm} x ${packageData.pcb.widthMm} mm, ${packageData.pcb.quantity} pcs`} />
-        <InfoLine label="Parser" value={analysis ? `${analysis.complexity}, confidence ${(analysis.parserConfidence * 100).toFixed(0)}%` : 'No analysis'} />
-        <InfoLine label="Supplier estimate" value={packageData.pricing.supplierEstimatedPrice == null ? 'Missing' : formatCurrency(packageData.pricing.supplierEstimatedPrice)} />
-        <InfoLine label="Client PCB" value={packageData.pricing.pcbClientPrice == null ? 'Missing' : formatCurrency(packageData.pricing.pcbClientPrice)} />
-        <InfoLine label="Shipping" value={packageData.pricing.shippingPrice == null ? 'Missing' : formatCurrency(packageData.pricing.shippingPrice)} />
-        <InfoLine label="Buffer" value={packageData.pricing.bufferUsed == null ? 'Missing' : `x${packageData.pricing.bufferUsed.toFixed(2)}`} />
-        <InfoLine label="Live API" value={packageData.liveCreateAvailable ? 'Configured' : 'Not configured'} />
+        <InfoLine label="Commande" value={`${packageData.orderNumber} / ${packageData.quoteId.slice(0, 8)}`} />
+        <InfoLine label="Gerber" value={packageData.gerber?.storageKey ?? 'Fichier manquant'} />
+        <InfoLine label="Carte" value={`${packageData.pcb.layers} couches, ${packageData.pcb.lengthMm} x ${packageData.pcb.widthMm} mm, ${packageData.pcb.quantity} pcs`} />
+        <InfoLine label="Analyse" value={analysis ? `${analysis.complexity}, confiance ${(analysis.parserConfidence * 100).toFixed(0)}%` : 'Aucune analyse'} />
+        <InfoLine label="Estimation fournisseur" value={packageData.pricing.supplierEstimatedPrice == null ? 'Manquant' : formatCurrency(packageData.pricing.supplierEstimatedPrice)} />
+        <InfoLine label="Client PCB" value={packageData.pricing.pcbClientPrice == null ? 'Manquant' : formatCurrency(packageData.pricing.pcbClientPrice)} />
+        <InfoLine label="Livraison" value={packageData.pricing.shippingPrice == null ? 'Manquant' : formatCurrency(packageData.pricing.shippingPrice)} />
+        <InfoLine label="Buffer" value={packageData.pricing.bufferUsed == null ? 'Manquant' : `x${packageData.pricing.bufferUsed.toFixed(2)}`} />
+        <InfoLine label="API directe" value={packageData.liveCreateAvailable ? 'Configuree' : 'Non configuree'} />
         {packageData.supplierOrderId ? <InfoLine label="Supplier ID" value={packageData.supplierOrderId} /> : null}
       </div>
       <div className="mt-4 border border-[#1c5874] bg-[#082b40] p-3 text-xs font-bold text-[#9fc2d7]">
@@ -2940,8 +2940,8 @@ function SupplierConnectionPanel({
     <Card className="p-5">
       <div className="grid gap-4 lg:grid-cols-[1fr_18rem] lg:items-end">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Supplier API</p>
-          <h2 className="mt-2 text-2xl font-black text-ink">Live connection test</h2>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">API fournisseur</p>
+          <h2 className="mt-2 text-2xl font-black text-ink">Test de connexion en direct</h2>
         </div>
         <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-[1fr_auto]">
           <select name="supplier" defaultValue="pcbway" className={fieldClassName}>
@@ -3003,7 +3003,7 @@ function PricingIntelligencePanel({ intelligence }: { intelligence: AdminPricing
           <table className="min-w-full divide-y divide-slate-100 text-left text-sm">
             <thead className="bg-slate-50 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
               <tr>
-                <th className="px-5 py-4">Quote</th>
+                <th className="px-5 py-4">Devis</th>
                 <th className="px-5 py-4">Supplier</th>
                 <th className="px-5 py-4">Supplier price</th>
                 <th className="px-5 py-4">Buffer</th>
@@ -3046,7 +3046,7 @@ function PricingSnapshotRow({ snapshot }: { snapshot: AdminPricingSnapshot }) {
     <tr>
       <td className="px-5 py-4">
         <p className="font-black text-deepblue">{snapshot.quoteId.slice(0, 8)}</p>
-        <p className="mt-1 text-xs text-slate-500">{snapshot.quote?.layers ?? '-'} layers / {snapshot.quote?.quantity ?? '-'} pcs</p>
+        <p className="mt-1 text-xs text-slate-500">{snapshot.quote?.layers ?? '-'} couches / {snapshot.quote?.quantity ?? '-'} pcs</p>
       </td>
       <td className="px-5 py-4 font-bold text-slate-700">{snapshot.supplier}</td>
       <td className="px-5 py-4 text-slate-600">{formatCurrency(snapshot.supplierEstimatedPrice)}</td>
@@ -3126,7 +3126,7 @@ function AccessManagementPanel({
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
       <Card className="overflow-hidden">
         <div className="border-b border-slate-100 p-5">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Gestion des accès</p>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Gestion des acces</p>
           <h2 className="mt-2 text-2xl font-black text-ink">Acces admin en base</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             Render garde seulement l'acces de depart. Les nouveaux admins sont maintenant lies ici avec leur compte de connexion et leur e-mail professionnel.
@@ -3210,7 +3210,7 @@ function AccessManagementPanel({
         <Card className="overflow-hidden">
           <div className="border-b border-slate-100 p-5">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Historique</p>
-            <h2 className="mt-2 text-xl font-black text-ink">Changements d'accès</h2>
+            <h2 className="mt-2 text-xl font-black text-ink">Changements d'acces</h2>
           </div>
           <SimpleTable
             headers={['Action', 'Actor', 'Target', 'IP', 'Date']}
@@ -3230,7 +3230,7 @@ function SupportTicketsPanel({ tickets }: { tickets: AdminSupportTicket[] }) {
         <h2 className="mt-2 text-2xl font-black text-ink">Tickets</h2>
       </div>
       <SimpleTable
-        headers={['Ticket', 'Subject', 'Order', 'Status', 'Created']}
+        headers={['Ticket', 'Sujet', 'Commande', 'Statut', 'Cree']}
         rows={tickets.map((ticket) => [ticket.ticketNumber, ticket.subject, ticket.orderId ?? 'None', ticket.status, formatDate(ticket.createdAt)])}
       />
     </Card>
@@ -3256,7 +3256,7 @@ function AuditLogPanel({ logs }: { logs: AdminAuditLog[] }) {
         <h2 className="mt-2 text-2xl font-black text-ink">Admin actions</h2>
       </div>
       <SimpleTable
-        headers={['Action', 'Actor', 'Target', 'Target ID', 'IP', 'Created']}
+        headers={['Action', 'Acteur', 'Cible', 'ID cible', 'IP', 'Cree']}
         rows={logs.map((log) => [log.action, log.actorUserId, log.targetType, log.targetId ?? 'None', log.ipAddress ?? 'None', formatDate(log.createdAt)])}
       />
     </Card>
@@ -3297,7 +3297,7 @@ function AdminForm({
       <h2 className={`text-lg font-black ${isDark ? 'text-white' : 'text-ink'}`}>{title}</h2>
       <form onSubmit={onSubmit} className="mt-4 space-y-3">
         {children}
-        <button type="submit" className={`h-11 w-full rounded-sm text-sm font-black text-white transition ${isDark ? 'bg-[#168f66] hover:bg-[#0f7b56]' : 'bg-deepblue hover:bg-deepblue-dark'}`}>Save</button>
+        <button type="submit" className={`h-11 w-full rounded-sm text-sm font-black text-white transition ${isDark ? 'bg-[#168f66] hover:bg-[#0f7b56]' : 'bg-deepblue hover:bg-deepblue-dark'}`}>Enregistrer</button>
       </form>
     </div>
   );
@@ -3600,7 +3600,7 @@ function adminTabTitle(tab: AdminTab): string {
     const item = group.items.find((entry) => entry.id === tab);
     if (item) return item.label;
   }
-  return 'Dashboard';
+  return 'Tableau de bord';
 }
 
 function filterOrdersForAdminTab(orders: AdminOrderRow[], tab: AdminTab): AdminOrderRow[] {
@@ -3864,11 +3864,11 @@ function buildOperationalProgressMetrics(orders: AdminOrderRow[]) {
 
 function buildPcbServiceStats(orders: AdminOrderRow[]): Array<{ label: string; percent: number; orders: number; color: string }> {
   const serviceDefinitions = [
-    { id: 'standard_pcb', label: 'Standard PCB', color: '#6fbc53' },
+    { id: 'standard_pcb', label: 'PCB standard', color: '#6fbc53' },
     { id: 'advanced_pcb', label: 'PCB avance', color: '#0e6389' },
     { id: 'pcb_assembly', label: 'PCBA', color: '#2eb987' },
-    { id: 'fpc_rigid_flex', label: 'FPC / Rigid-Flex', color: '#12a8ff' },
-    { id: 'smt_stencil', label: 'SMD-Stencil', color: '#ff812d' },
+    { id: 'fpc_rigid_flex', label: 'FPC / rigide-flex', color: '#12a8ff' },
+    { id: 'smt_stencil', label: 'Pochoir CMS', color: '#ff812d' },
     { id: 'cnc_3d', label: 'CNC / Impression 3D', color: '#6c3cff' },
   ];
   const counts = new Map(serviceDefinitions.map((service) => [service.id, 0]));
@@ -3917,7 +3917,7 @@ function productTypeForOrder(order: AdminOrderRow): string | undefined {
   return order.quoteSnapshot?.productType?.trim();
 }
 
-function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'Pending' | 'Completed' | 'Failed'; tone: string; progress: number }> {
+function buildDashboardTransactions(orders: AdminOrderRow[]): Array<{ name: string; subtitle: string; amount: string; date: string; status: 'En attente' | 'Termine' | 'Echec'; tone: string; progress: number }> {
   return [...orders]
     .filter((order) => !['delivered', 'cancelled', 'refunded'].includes(order.status))
     .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
@@ -3942,7 +3942,7 @@ function serviceLabelForOrder(order: AdminOrderRow): string {
   if (value.includes('flex')) return 'FPC/Rigid-Flex';
   if (value.includes('cnc') || value.includes('3d')) return 'CNC / 3D';
   if (value.includes('advanced')) return 'PCB avance';
-  return 'Standard PCB';
+  return 'PCB standard';
 }
 
 function countryLabelForOrder(order: AdminOrderRow): string {
@@ -3961,10 +3961,10 @@ function dashboardStageLabelForOrder(order: AdminOrderRow): string {
   return adminStatusLabels[order.status] ?? order.status;
 }
 
-function transactionStatusForOrder(order: AdminOrderRow, paymentStatus: PaymentStatus): 'Pending' | 'Completed' | 'Failed' {
-  if (paymentStatus === 'failed' || paymentStatus === 'refunded' || ['cancelled', 'refunded'].includes(order.status)) return 'Failed';
-  if (order.status === 'delivered') return 'Completed';
-  return 'Pending';
+function transactionStatusForOrder(order: AdminOrderRow, paymentStatus: PaymentStatus): 'En attente' | 'Termine' | 'Echec' {
+  if (paymentStatus === 'failed' || paymentStatus === 'refunded' || ['cancelled', 'refunded'].includes(order.status)) return 'Echec';
+  if (order.status === 'delivered') return 'Termine';
+  return 'En attente';
 }
 
 function transactionToneForOrder(order: AdminOrderRow, paymentStatus: PaymentStatus): string {

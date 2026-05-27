@@ -11,7 +11,7 @@ const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
 const heroControllerBoardImage = '/images/hero-controller-board-transparent.png';
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
 const smartOrderingMapImage = '/images/home-schematic-preview.png';
-const pcbwayChoiceBannerImage = '/images/hero-pcb-color-variants.png';
+const kendronicsChoiceBannerImage = '/images/hero-pcb-color-variants.png';
 const oneStopSolutionVideoMp4 = '/videos/one-stop-solution.mp4';
 const oneStopPaymentMethodCount = 4;
 const oneStopServiceCount = 6;
@@ -25,30 +25,30 @@ const oneStopCapabilities = [
   'Assistance Gerber avant paiement',
 ];
 
-const oneStopBadges = ['Functional Testing', 'IC Programming', 'BGA & QFN'];
+const oneStopBadges = ['Tests fonctionnels', 'Programmation CI', 'BGA et QFN'];
 
-const pcbwayChoiceCards = [
+const kendronicsChoiceCards = [
   {
-    eyebrow: 'HIGH-END, COMPLEX',
-    title: 'Advanced PCB',
+    eyebrow: 'HAUT DE GAMME, COMPLEXE',
+    title: 'PCB avance',
     image: '/images/product-pcb-advanced.png',
     href: '/quote?productType=advanced_pcb',
   },
   {
-    eyebrow: 'Polyimide, Stiffener, E-Test',
-    title: 'Flexible, Rigid-Flex',
+    eyebrow: 'Polyimide, renfort, test electrique',
+    title: 'Flexible, rigide-flex',
     image: '/images/quote-product-fpc-rigid-flex.png',
     href: '/quote?productType=fpc_rigid_flex',
   },
   {
-    eyebrow: 'Turnkey or consigned',
-    title: 'PCB Assembly',
+    eyebrow: 'Cle en main ou fourni par le client',
+    title: 'Assemblage PCB',
     image: '/images/home-hero-pcb-assembly.jpeg',
     href: '/quote?productType=pcb_assembly',
   },
 ];
 
-const pcbwayChoiceReasons = [
+const kendronicsChoiceReasons = [
   'Delais de fabrication visibles avant validation',
   'Support technique et revue des fichiers',
   'Suivi livraison avec transporteur quand disponible',
@@ -115,20 +115,20 @@ const capabilityRows = [
 
 const homeCapabilityGroups = [
   {
-    label: 'PCB fabrication',
-    count: '11 specs',
+    label: 'Fabrication PCB',
+    count: '11 specifications',
     description: 'Options principales coordonnees via partenaires.',
-    headers: ['Item', 'Specifications', 'Note'],
+    headers: ['Element', 'Specifications', 'Note'],
     rows: [
-      ['Materiaux', 'FR4, flex, aluminium, copper core, Rogers, PTFE Teflon', 'Standards, thermiques, flexibles ou RF selon revue.'],
+      ['Materiaux', 'FR4, flex, aluminium, cuivre core, Rogers, PTFE Teflon', 'Standards, thermiques, flexibles ou RF selon revue.'],
       ['Couches', '1-2, 4, 6, 8 et plus sur demande', 'Selon complexite, empilage, materiau et capacite partenaire.'],
       ['Epaisseurs', '0,4 mm a 2,0 mm courants, sur mesure possible', 'Pour prototypes, boitiers contraints et cartes rigides.'],
-      ['Finitions', 'HASL sans plomb, ENIG, immersion silver, OSP, hard gold', 'Selon usage, delai, assemblage et disponibilite.'],
+      ['Finitions', 'HASL sans plomb, ENIG, immersion argent, OSP, or dur', 'Selon usage, delai, assemblage et disponibilite.'],
       ['Cuivre', '1 oz, 2 oz et cuivre plus epais sur revue', 'Pour courant, thermique et contraintes DFM.'],
       ['Masque', 'Vert, noir, blanc, bleu, rouge, jaune, mat selon disponibilite', 'La couleur depend de la ligne partenaire.'],
       ['Serigraphie', 'Blanc, noir et autres options selon masque', 'References, polarites, logos et lisibilite assemblage.'],
-      ['Vias', 'Standards, tented, filled, via-in-pad sur revue', 'Les vias avances exigent une validation fichier.'],
-      ['Tests electriques', 'Flying probe ou test fixture selon disponibilite', 'Controle ouvertures et courts-circuits avant expedition.'],
+      ['Vias', 'Standards, couverts, remplis, via-in-pad sur revue', 'Les vias avances exigent une validation fichier.'],
+      ['Tests electriques', 'Flying probe ou banc de test selon disponibilite', 'Controle ouvertures et courts-circuits avant expedition.'],
       ['PCBA', 'Demandes SMT et mixtes sur revue BOM/CPL', 'Assemblage confirme apres analyse partenaire.'],
       ['Stencil', 'Avec ou sans cadre sur demande', 'Pour prototypes, SMT et petites series.'],
     ],
@@ -153,11 +153,11 @@ const homeCapabilityGroups = [
     description: 'Soudabilite, stockage, cout et connecteurs.',
     headers: ['Finition', 'Usage typique', 'Note pratique'],
     rows: [
-      ['HASL lead-free', 'Prototypes economiques et FR4 courants', 'Abordable, moins plat que ENIG.'],
-      ['ENIG', 'Fine pitch, assemblage et prototypes premium', 'Surface plate et tres polyvalente.'],
+      ['HASL sans plomb', 'Prototypes economiques et FR4 courants', 'Abordable, moins plat que ENIG.'],
+      ['ENIG', 'Pas fin, assemblage et prototypes premium', 'Surface plate et tres polyvalente.'],
       ['OSP', 'Production courte duree et assemblage simple', 'Stockage et manipulation a planifier.'],
-      ['Immersion silver', 'Signal ou assemblage avec bonne soudabilite', 'Precautions de stockage necessaires.'],
-      ['Hard gold', 'Gold fingers et surfaces d usure', 'Pour connecteurs et insertions repetees.'],
+      ['Immersion argent', 'Signal ou assemblage avec bonne soudabilite', 'Precautions de stockage necessaires.'],
+      ['Or dur', 'Doigts de contact et surfaces d usure', 'Pour connecteurs et insertions repetees.'],
     ],
   },
 ];
@@ -214,9 +214,9 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
       <div className="mx-auto max-w-none border-t-2 border-[#a88c00] bg-white">
         <div className="grid border border-slate-200 lg:grid-cols-[minmax(18rem,25rem)_1fr]">
           <div className="border-b border-slate-200 p-5 sm:p-6 lg:border-b-0 lg:border-r">
-            <h2 className="text-xl font-normal tracking-tight text-slate-800">Why Buy Printed Circuit Boards From us?</h2>
+            <h2 className="text-xl font-normal tracking-tight text-slate-800">Pourquoi commander vos circuits imprimes chez Kendronics ?</h2>
             <ul className="mt-5 space-y-2 text-sm leading-5 text-slate-600">
-              {pcbwayChoiceReasons.map((reason) => (
+              {kendronicsChoiceReasons.map((reason) => (
                 <li key={reason} className="flex gap-3">
                   <span className="mt-0.5 text-base font-black text-[#87c98a]">v</span>
                   <span>{reason}</span>
@@ -224,7 +224,7 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
               ))}
             </ul>
             <a href="/capabilities" className="group relative mt-4 block h-20 overflow-hidden border border-slate-300 bg-ink text-white">
-              <img src={pcbwayChoiceBannerImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-65" />
+              <img src={kendronicsChoiceBannerImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-65" />
               <span className="absolute inset-0 bg-gradient-to-r from-[#064626]/80 via-[#0b5134]/70 to-[#1f2937]/40" />
               <span className="relative flex h-full items-center justify-end px-5 text-right">
                 <span>
@@ -241,7 +241,7 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
                 &lt;
               </button>
               <div className="grid gap-0 overflow-hidden sm:grid-cols-3">
-                {pcbwayChoiceCards.map((card) => (
+                {kendronicsChoiceCards.map((card) => (
                   <a key={card.title} href={card.href} className="group relative h-[18rem] min-w-[17rem] overflow-hidden border-r border-slate-200 last:border-r-0 sm:min-w-0">
                     <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
                     <span className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/20 to-slate-950/0" />
@@ -312,8 +312,8 @@ function HomeCapabilityMatrix() {
         <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(18rem,24rem)_1fr]">
           <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
             <span className="mb-3 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
-            <h2 className="text-xl font-black leading-tight tracking-tight text-ink">One-Stop Solution for PCB & Assemblage</h2>
-            <p className="mt-1 text-sm text-slate-500">Made easy, quality, on time</p>
+            <h2 className="text-xl font-black leading-tight tracking-tight text-ink">Solution complete pour PCB et assemblage</h2>
+            <p className="mt-1 text-sm text-slate-500">Simple, qualite suivie, delais visibles</p>
 
             <ul className="mt-4 space-y-1.5 text-sm leading-5 text-slate-600">
               {oneStopCapabilities.map((item) => (
@@ -347,7 +347,7 @@ function HomeCapabilityMatrix() {
                 <source src={oneStopSolutionVideoMp4} type="video/mp4" />
               </video>
               <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 px-4 py-2.5 text-white">
-                <p className="text-base font-normal">Kendronics PCB & Assembly workflow</p>
+                <p className="text-base font-normal">Parcours PCB et assemblage Kendronics</p>
               </div>
             </div>
           </div>

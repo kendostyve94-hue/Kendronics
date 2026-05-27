@@ -91,40 +91,40 @@ export const orderDetailApiContract = {
   order: {
     method: 'GET',
     path: '/api/orders/:orderId',
-    response: 'Customer-safe order summary plus quote snapshot fields when available.',
-    customerSafety: 'Do not expose externalManufacturingPartner or externalSupplierOrderId.',
+    response: 'Resume de commande protege client avec les donnees de devis disponibles.',
+    customerSafety: 'Ne pas exposer externalManufacturingPartner ni externalSupplierOrderId.',
   },
   deleteOrder: {
     method: 'DELETE',
     path: '/api/orders/:orderId',
-    response: '204 No Content when the authenticated customer owns the order.',
+    response: '204 sans contenu lorsque le client authentifie possede la commande.',
   },
   tracking: {
     method: 'GET',
     path: '/api/tracking/:orderId',
-    response: 'Customer tracking events using public milestone statuses.',
+    response: 'Evenements de suivi client bases sur les jalons publics.',
   },
   support: {
     method: 'GET',
     path: '/contact?orderId=:orderId',
-    response: 'Support form prefilled with the customer order reference.',
+    response: 'Formulaire support pre-rempli avec la reference de commande client.',
   },
 } as const;
 
 export const statusLabels: Record<CustomerTrackingStatus, string> = {
-  awaiting_payment: 'Awaiting payment',
-  payment_authorized: 'Payment authorized',
-  supplier_review_pending: 'Supplier file review',
-  supplier_files_rejected: 'Files rejected',
-  paid: 'Paid',
-  supplier_order_pending: 'Partner order pending',
-  supplier_ordered: 'Partner order placed',
-  supplier_in_production: 'In production',
-  china_3pl_received: 'Received by China 3PL',
-  shipped_to_africa: 'Shipped to Africa',
-  customs_processing: 'Customs processing',
-  out_for_delivery: 'Out for delivery',
-  delivered: 'Delivered',
+  awaiting_payment: 'Paiement en attente',
+  payment_authorized: 'Paiement autorise',
+  supplier_review_pending: 'Verification des fichiers',
+  supplier_files_rejected: 'Fichiers refuses',
+  paid: 'Paiement capture',
+  supplier_order_pending: 'Commande partenaire en attente',
+  supplier_ordered: 'Commande partenaire envoyee',
+  supplier_in_production: 'En production',
+  china_3pl_received: 'Recu par la logistique',
+  shipped_to_africa: 'Expedie vers la destination',
+  customs_processing: 'Traitement douanier',
+  out_for_delivery: 'En cours de livraison',
+  delivered: 'Livre',
 };
 
 export function isCustomerTrackingStatus(status: string): status is CustomerTrackingStatus {

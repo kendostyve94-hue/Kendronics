@@ -949,7 +949,7 @@ function NotificationsSection({
       <div className="mt-5 flex h-[58px] items-center justify-between bg-white px-5 ring-1 ring-[#e5e7eb]">
         <div className="flex items-center gap-5 text-sm">
           <button className="border-r border-[#b8b8b8] pr-5 text-[#ff5a00]" type="button">Tout</button>
-          <button className="border-r border-[#b8b8b8] pr-5" type="button">Not. Help center</button>
+          <button className="border-r border-[#b8b8b8] pr-5" type="button">Not. centre aide</button>
           <button type="button">Not. Product</button>
         </div>
         <button type="button" disabled={markingRead || notifications.every((notification) => notification.readAt)} onClick={() => void markAllNotificationsRead(notifications, onNotificationsChange, setMarkingRead)} className="rounded-none border border-[#b8b8b8] px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50">
@@ -2257,16 +2257,16 @@ function LivePromoFlash() {
       <a href="/quote" className="relative min-h-[76px] overflow-hidden bg-[#07143a] px-3 py-3 text-white">
         <img src="/images/quote-product-assembly.png" alt="" className="absolute -right-4 bottom-0 h-[88px] w-[138px] object-cover opacity-90" />
         <span className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.12),rgba(255,255,255,0)_38%)]" />
-        <span className="relative z-10 block text-[16px] font-black leading-5">PCB Assembly for 1-20 pcs</span>
-        <span className="relative z-10 mt-1 block text-[11px] font-black uppercase tracking-wide">Only <strong className="text-[25px] leading-none text-[#ff9b00]">$29</strong> in total</span>
-        <span className="relative z-10 mt-1 block text-[12px] font-semibold text-slate-100">Up to $30 Freight Deduction</span>
+        <span className="relative z-10 block text-[16px] font-black leading-5">Assemblage PCB pour 1-20 pieces</span>
+        <span className="relative z-10 mt-1 block text-[11px] font-black uppercase tracking-wide">Seulement <strong className="text-[25px] leading-none text-[#ff9b00]">$29</strong> au total</span>
+        <span className="relative z-10 mt-1 block text-[12px] font-semibold text-slate-100">Jusqu a $30 de remise transport</span>
       </a>
       <a href="/quote" className="relative min-h-[78px] overflow-hidden bg-[#f8fbf5] px-3 py-3 text-[#102033]">
         <img src="/images/quote-product-standard-pcb.png" alt="" className="absolute -right-4 bottom-0 h-[84px] w-[128px] object-cover opacity-95" />
-        <span className="relative z-10 block text-[18px] font-black leading-5">PCB Prototype Only <strong className="text-[24px] text-[#ff6a00]">$5</strong></span>
-        <span className="relative z-10 mt-2 inline-flex bg-[#dff7e5] px-2 py-1 text-[11px] font-black text-[#0f8f6b]">1-2 layers</span>
-        <span className="relative z-10 ml-1 mt-2 inline-flex bg-[#dff7e5] px-2 py-1 text-[11px] font-black text-[#0f8f6b]">Size &lt;=100x100mm</span>
-        <span className="relative z-10 mt-1 block text-[12px] text-[#53657a]">New customer gets a $5 Coupon!</span>
+        <span className="relative z-10 block text-[18px] font-black leading-5">Prototype PCB <strong className="text-[24px] text-[#ff6a00]">$5</strong></span>
+        <span className="relative z-10 mt-2 inline-flex bg-[#dff7e5] px-2 py-1 text-[11px] font-black text-[#0f8f6b]">1-2 couches</span>
+        <span className="relative z-10 ml-1 mt-2 inline-flex bg-[#dff7e5] px-2 py-1 text-[11px] font-black text-[#0f8f6b]">Taille &lt;=100x100mm</span>
+        <span className="relative z-10 mt-1 block text-[12px] text-[#53657a]">Nouveau client : coupon de $5.</span>
       </a>
     </aside>
   );

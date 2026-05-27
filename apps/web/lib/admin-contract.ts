@@ -433,11 +433,11 @@ export const adminOrderStatuses: AdminOrderStatus[] = [
 ];
 
 export const adminStatusLabels: Record<AdminOrderStatus, string> = {
-  awaiting_payment: 'Awaiting payment',
+  awaiting_payment: 'Paiement en attente',
   payment_authorized: 'Paiement autorise',
   supplier_review_pending: 'Verification fournisseur',
   supplier_files_rejected: 'Fichiers refuses',
-  paid: 'Paid',
+  paid: 'Paiement capture',
   supplier_order_pending: 'Commande fournisseur a passer',
   supplier_ordered: 'Commande fournisseur passee',
   supplier_in_production: 'Fabrication',
@@ -445,7 +445,7 @@ export const adminStatusLabels: Record<AdminOrderStatus, string> = {
   shipped_to_africa: 'Expedition Afrique',
   customs_processing: 'Douane',
   out_for_delivery: 'Livraison locale',
-  delivered: 'Delivered',
-  cancelled: 'Cancelled',
-  refunded: 'Refunded',
+  delivered: 'Livre',
+  cancelled: 'Annule',
+  refunded: 'Rembourse',
 };

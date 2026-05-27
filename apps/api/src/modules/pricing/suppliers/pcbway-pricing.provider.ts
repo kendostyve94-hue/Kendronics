@@ -18,7 +18,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
   async getPcbQuote(dto: CreateQuoteDto): Promise<SupplierQuote> {
     const apiKey = this.apiKeyValue();
     if (!apiKey) {
-      throw new ServiceUnavailableException('PCBWay quote API is not configured.');
+      throw new ServiceUnavailableException('API devis fournisseur non configuree.');
     }
 
     const endpoint = this.configValue('PCBWAY_QUOTE_ENDPOINT') ?? 'https://api-partner.pcbway.com/api/Pcb/PcbQuotation';
@@ -34,7 +34,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
     const manufacturingPrice = Number(priceItem?.Price ?? data.Price ?? 0);
     const shippingPrice = Number(data.Shipping?.ShipCost ?? 0);
     if (!Number.isFinite(manufacturingPrice) || manufacturingPrice <= 0) {
-      throw new ServiceUnavailableException('PCBWay live quote did not include a valid manufacturing price.');
+      throw new ServiceUnavailableException('Le devis fournisseur en direct ne contient pas de prix de fabrication valide.');
     }
 
     return {
@@ -85,7 +85,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
       return {
         ok: false,
         statusCode: 0,
-        message: 'PCBWay API key is not configured.',
+        message: 'Cle API fournisseur non configuree.',
       };
     }
 
@@ -114,7 +114,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
       balance: numberOrUndefined(data.balance),
       coupon: numberOrUndefined(data.coupon),
       point: numberOrUndefined(data.point),
-      message: 'PCBWay account API accepted the key.',
+      message: 'L API compte fournisseur a accepte la cle.',
     };
   }
 
@@ -251,7 +251,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
       if (!Number.isFinite(price) || price <= 0 || !Number.isFinite(buildDays) || buildDays <= 0) return;
 
       const speed: SupplierBuildOption['speed'] = item.Express ? 'express_24h' : 'standard';
-      const label = item.BuildText?.trim() || (item.Express ? 'PCBWay Express' : item.Standard ? 'PCBWay Standard' : `PCBWay Build ${index + 1}`);
+      const label = item.BuildText?.trim() || (item.Express ? 'Express fournisseur' : item.Standard ? 'Standard fournisseur' : `Fabrication fournisseur ${index + 1}`);
       options.push({
         id: `pcbway-${speed}-${buildDays}-${index}`,
         label,
@@ -299,7 +299,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
 
   private quoteErrorMessage(statusCode: number, data: PcbWayQuoteResponse | null): string {
     if (statusCode === 401) {
-      return 'PCBWay returned http=401 on PcbQuotation. The key may be active, but the quote endpoint rejected this request. Check auth header name/value, account binding, endpoint environment, and Render env formatting.';
+      return 'Le fournisseur a retourne http=401 sur le devis. La cle peut etre active, mais la requete a ete refusee. Verifiez l authentification, le compte associe, l environnement et les variables Render.';
     }
 
     const errorText = typeof data?.ErrorText === 'string' && data.ErrorText.trim() ? data.ErrorText.trim() : undefined;
@@ -312,12 +312,12 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
       `http=${statusCode}`,
     ].filter(Boolean);
 
-    return details.length > 0 ? `PCBWay live quote failed: ${details.join(', ')}` : 'PCBWay live quote failed.';
+    return details.length > 0 ? `Le devis fournisseur en direct a echoue : ${details.join(', ')}` : 'Le devis fournisseur en direct a echoue.';
   }
 
   private balanceErrorMessage(statusCode: number, data: PcbWayBalanceResponse | null): string {
     if (statusCode === 401) {
-      return 'PCBWay account API rejected the key: http=401. This points to an inactive key, wrong environment, or account/key mismatch.';
+      return 'L API compte fournisseur a refuse la cle : http=401. Cela indique une cle inactive, un mauvais environnement ou une incoherence compte/cle.';
     }
 
     const errorText = typeof data?.ErrorText === 'string' && data.ErrorText.trim() ? data.ErrorText.trim() : undefined;
@@ -330,7 +330,7 @@ export class PcbWayPricingProvider implements SupplierPricingProvider {
       `http=${statusCode}`,
     ].filter(Boolean);
 
-    return details.length > 0 ? `PCBWay account API failed: ${details.join(', ')}` : 'PCBWay account API failed.';
+    return details.length > 0 ? `L API compte fournisseur a echoue : ${details.join(', ')}` : 'L API compte fournisseur a echoue.';
   }
 
   private boardType(boardType: string): string {

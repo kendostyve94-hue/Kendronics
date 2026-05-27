@@ -60,7 +60,7 @@ const services = [
     title: 'Commande stencil SMT',
     category: 'Assemblage',
     image: serviceImages[3],
-    what: 'Support de commande stencil pour l’assemblage CMS, la pâte à braser et les petites productions.',
+    what: 'Assistance de commande pochoir pour l assemblage CMS, la pate a braser et les petites productions.',
     audience: 'Laboratoires, ateliers et petits fabricants qui assemblent localement ou préparent une série contrôlée.',
     benefit: 'Le stencil peut être planifié avec la même commande que le PCB.',
     cta: 'Deviser un stencil',

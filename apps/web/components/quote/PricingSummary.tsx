@@ -11,7 +11,7 @@ type ShippingRate = {
   amount?: number;
   currency: string;
   transitTime?: string;
-  live: boolean;
+  direct: boolean;
   note?: string;
 };
 
@@ -25,7 +25,7 @@ type ShippingRateSelection = {
 };
 
 type PricingPreviewState = {
-  status: 'local' | 'loading' | 'live' | 'error';
+  status: 'local' | 'loading' | 'direct' | 'error';
   message: string;
 };
 
@@ -38,7 +38,7 @@ type ShippingMethod = {
   currency: string;
   transitTime: string;
   mode?: QuoteConfig['shippingMode'];
-  live?: boolean;
+  direct?: boolean;
 };
 
 export function PricingSummary({
@@ -98,7 +98,7 @@ export function PricingSummary({
     : [
         {
           id: 'standard',
-          label: 'Standard build',
+          label: 'Fabrication standard',
           buildDays: Math.max(1, pricing.productionBuildDays ?? extractLastNumber(pricing.estimatedLeadTime) ?? 2),
           price: standardBuildPrice,
           currency: 'EUR' as const,
@@ -107,7 +107,7 @@ export function PricingSummary({
         },
         {
           id: 'express',
-          label: 'Express build',
+          label: 'Fabrication express',
           buildDays: 1,
           price: urgentBuildPrice,
           currency: 'EUR' as const,
@@ -131,7 +131,7 @@ export function PricingSummary({
         service: 'DHL',
         amount: pricing.franceToAfricaDelivery,
         currency: 'USD',
-        transitTime: '2-4 business days',
+        transitTime: '2-4 jours ouvres',
         mode: 'express',
       },
       {
@@ -141,22 +141,22 @@ export function PricingSummary({
         service: 'DHL(DTP)',
         amount: pricing.franceToAfricaDelivery,
         currency: 'USD',
-        transitTime: '2-4 business days',
+        transitTime: '2-4 jours ouvres',
         mode: 'standard',
       },
       {
         id: 'economy',
         logo: 'Global',
         carrier: 'Global',
-        service: 'Global Standard Shipping',
+        service: 'Livraison standard internationale',
         amount: Math.max(0, pricing.franceToAfricaDelivery * 0.72),
         currency: 'USD',
-        transitTime: '7-12 business days',
+        transitTime: '7-12 jours ouvres',
         mode: 'economy',
       },
     ];
 
-    const liveMethods = rates
+    const directMethods = rates
       .filter((rate) => typeof rate.amount === 'number')
       .map((rate) => ({
         id: rate.id,
@@ -165,15 +165,15 @@ export function PricingSummary({
         service: rate.service,
         amount: rate.amount ?? 0,
         currency: rate.currency,
-        transitTime: rate.transitTime ?? 'Transit pending',
-        live: true,
+        transitTime: rate.transitTime ?? 'Delai en attente',
+        direct: true,
       }));
 
-    return [...defaults, ...liveMethods];
+    return [...defaults, ...directMethods];
   }, [pricing.franceToAfricaDelivery, rates]);
 
   const activeShippingMethod =
-    shippingMethods.find((method) => (method.live ? selectedLiveShippingRateId === method.id : !selectedLiveShippingRateId && method.mode === shippingMode)) ?? shippingMethods[0];
+    shippingMethods.find((method) => (method.direct ? selectedLiveShippingRateId === method.id : !selectedLiveShippingRateId && method.mode === shippingMode)) ?? shippingMethods[0];
   const activeBuildOption = buildOptions.find((option) => option.id === selectedBuildTimeOptionId) ?? buildOptions.find((option) => option.speed === productionSpeed) ?? buildOptions[0];
   const shipmentAt = addBusinessDays(new Date(), Math.max(1, activeBuildOption.buildDays || pricing.productionBuildDays || pricing.supplierLeadTimeDays || 1));
   const deliveryAt = addBusinessDays(shipmentAt, Math.max(1, extractLastNumber(activeShippingMethod.transitTime) || 4));
@@ -207,7 +207,7 @@ export function PricingSummary({
           cache: 'no-store',
         });
 
-        if (!response.ok) throw new Error('Shipping rates unavailable');
+        if (!response.ok) throw new Error('Tarifs de livraison indisponibles');
         const payload = await response.json();
         setRates(payload.rates ?? []);
         setRatesState('ready');
@@ -222,7 +222,7 @@ export function PricingSummary({
   }, [shippingDialogOpen, destinationCountry, pricing.deliveryWeightKg]);
 
   function chooseShippingMethod(method: ShippingMethod) {
-    if (method.live) {
+    if (method.direct) {
       onLiveShippingRateSelect({
         id: method.id,
         carrier: method.carrier,
@@ -241,23 +241,23 @@ export function PricingSummary({
     <aside className="space-y-3">
       <div className="hidden border border-slate-300 bg-white lg:block">
         <div className="border-b border-slate-300 bg-slate-100 px-3 py-2">
-          <h2 className="text-sm font-semibold text-slate-900">Pricing And Build Time</h2>
+          <h2 className="text-sm font-semibold text-slate-900">Prix et delai de fabrication</h2>
         </div>
 
         <div className="p-3">
           <div className="mb-3">
             <div className="mb-1 flex items-center justify-between text-xs">
-              <span className="text-slate-700">PCB Price</span>
+              <span className="text-slate-700">Prix PCB</span>
               <button type="button" onClick={() => setPriceDetailsOpen(true)} className="inline-flex items-center gap-1 border border-slate-300 bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-700">
                 <span className="text-sm leading-none text-slate-500">i</span>
-                Price details
+                Details du prix
               </button>
             </div>
 
             <div className="bg-slate-100 p-1">
               <div className="grid grid-cols-[1fr_3rem_4.5rem] px-2 pb-1 text-center text-xs font-medium text-slate-500">
-                <span>Build Time</span>
-                <span>Qty</span>
+                <span>Delai fabrication</span>
+                <span>Qte</span>
                 <span>Total</span>
               </div>
               {buildOptions.map((option) => (
@@ -278,13 +278,13 @@ export function PricingSummary({
             </div>
 
             <p className="mt-3 text-[11px] font-medium text-[#ff7a00]">
-              {pricing.pricingSource === 'supplier_api' ? 'Build times are returned by the supplier quote.' : 'Build times update from the board options and Gerber analysis.'}
+              {pricing.pricingSource === 'supplier_api' ? 'Les delais viennent du devis fournisseur.' : "Les delais s'ajustent selon les options PCB et l'analyse Gerber."}
             </p>
           </div>
 
           <div className="mb-3">
             <div className="mb-1 flex items-center justify-between text-sm">
-              <span className="font-semibold text-slate-700">Shipping Cost:</span>
+              <span className="font-semibold text-slate-700">Frais de livraison :</span>
               <span className="text-slate-700">${pricing.franceToAfricaDelivery.toFixed(2)}</span>
             </div>
             <div className="grid grid-cols-[1fr_5rem] gap-2">
@@ -319,18 +319,18 @@ export function PricingSummary({
           </div>
 
           <div className="mb-3 grid grid-cols-2 border border-[#d7efcf] bg-[#e4f6de] text-[11px] font-medium text-slate-600">
-            <DateBox title="Shipment Date" value={shipmentDate} />
-            <DateBox title="Delivery Date" value={deliveryDate} />
+            <DateBox title="Date expedition" value={shipmentDate} />
+            <DateBox title="Date livraison" value={deliveryDate} />
           </div>
 
           <div className="space-y-1 border-b border-slate-200 pb-3 text-sm">
-            <FeeLine label="PCB Cost:" value={pcbClientPrice} />
-            <FeeLine label="Shipping:" value={pricing.franceToAfricaDelivery} />
+            <FeeLine label="Cout PCB :" value={pcbClientPrice} />
+            <FeeLine label="Livraison :" value={pricing.franceToAfricaDelivery} />
             <div className="flex items-center justify-between pt-1 font-semibold">
-              <span className="text-slate-700">Total:</span>
+              <span className="text-slate-700">Total :</span>
               <span className="text-lg font-bold text-black">${pricing.finalTotal.toFixed(2)}</span>
             </div>
-            <p className="pt-2 text-right text-[10px] text-slate-500">Notice: Customs duties and VAT are not included!</p>
+            <p className="pt-2 text-right text-[10px] text-slate-500">Note : droits de douane et TVA non inclus.</p>
           </div>
 
           {errors.length > 0 ? (
@@ -352,7 +352,7 @@ export function PricingSummary({
               canSave ? 'bg-[#29ad62] hover:bg-[#198c4b]' : 'cursor-not-allowed bg-[#29ad62]/35 text-white/80'
             }`}
           >
-            <span>{saveState === 'saving' ? 'Saving...' : saveState === 'saved' ? 'Saved' : 'Save to Cart'}</span>
+            <span>{saveState === 'saving' ? 'Sauvegarde...' : saveState === 'saved' ? 'Enregistre' : 'Ajouter au panier'}</span>
           </button>
         </div>
       </div>
@@ -367,16 +367,16 @@ export function PricingSummary({
         }`}
         role={priceDetailsOpen ? 'dialog' : undefined}
         aria-modal={priceDetailsOpen ? 'true' : undefined}
-        aria-label={priceDetailsOpen ? 'Details prix' : undefined}
+        aria-label={priceDetailsOpen ? 'Details du prix' : undefined}
       >
         <div className="mx-auto max-w-md">
           <div className="flex items-center gap-3">
             <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Afficher le detail du prix" aria-expanded={priceDetailsOpen}>
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total estime</p>
               <p className={`mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] ${
-                pricingPreview.status === 'live' ? 'text-[#0f8f6b]' : pricingPreview.status === 'error' ? 'text-[#c45100]' : 'text-slate-500'
+                pricingPreview.status === 'direct' ? 'text-[#0f8f6b]' : pricingPreview.status === 'error' ? 'text-[#c45100]' : 'text-slate-500'
               }`}>
-                {pricingPreview.status === 'live' ? 'Fournisseur live' : pricingPreview.status === 'loading' ? 'Live...' : pricingPreview.status === 'error' ? 'A verifier' : 'Local'}
+                {pricingPreview.status === 'direct' ? 'Fournisseur direct' : pricingPreview.status === 'loading' ? 'Direct...' : pricingPreview.status === 'error' ? 'A verifier' : 'Local'}
               </p>
               <p className="mt-0.5 text-lg font-bold text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
             </button>
@@ -397,8 +397,8 @@ export function PricingSummary({
               <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-slate-300" />
               <div className="mb-2 flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-sm font-semibold text-slate-950">Pricing And Build Time</h2>
-                  <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{isSupplierPrice ? 'Prix live Kendronics.' : 'Prix estime avec livraison integree.'}</p>
+                  <h2 className="text-sm font-semibold text-slate-950">Prix et delai de fabrication</h2>
+                  <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{isSupplierPrice ? 'Prix direct Kendronics.' : 'Prix estime avec livraison integree.'}</p>
                 </div>
                 <button type="button" className="grid h-8 w-8 place-items-center rounded-full bg-white text-base font-medium text-slate-700" onClick={() => setPriceDetailsOpen(false)} aria-label="Fermer">
                   x
@@ -407,10 +407,10 @@ export function PricingSummary({
 
               <div className="rounded-sm border border-slate-200 bg-white p-2.5">
                 <div className="space-y-2 border-b border-slate-200 pb-2 text-xs">
-                  <FeeLine label="PCB Cost:" value={pcbClientPrice} />
-                  <FeeLine label="Shipping:" value={pricing.franceToAfricaDelivery} />
+                  <FeeLine label="Cout PCB :" value={pcbClientPrice} />
+                  <FeeLine label="Livraison :" value={pricing.franceToAfricaDelivery} />
                   <div className="flex items-center justify-between font-semibold">
-                    <span>Total:</span>
+                    <span>Total :</span>
                     <span>${pricing.finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
@@ -437,20 +437,20 @@ export function PricingSummary({
       </div>
 
       {priceDetailsOpen ? (
-        <div className="fixed inset-0 z-[75] hidden items-center justify-center bg-black/35 px-4 lg:flex" role="dialog" aria-modal="true" aria-label="Price details">
+      <div className="fixed inset-0 z-[75] hidden items-center justify-center bg-black/35 px-4 lg:flex" role="dialog" aria-modal="true" aria-label="Details du prix">
           <div className="w-full max-w-sm border border-slate-200 bg-white p-4">
             <div className="mb-3 flex items-center justify-between gap-4">
-              <h3 className="text-sm font-semibold text-slate-950">Price details</h3>
-              <button type="button" onClick={() => setPriceDetailsOpen(false)} className="grid h-8 w-8 place-items-center text-xl font-light text-slate-500" aria-label="Close price details">
+              <h3 className="text-sm font-semibold text-slate-950">Details du prix</h3>
+              <button type="button" onClick={() => setPriceDetailsOpen(false)} className="grid h-8 w-8 place-items-center text-xl font-light text-slate-500" aria-label="Fermer les details du prix">
                 x
               </button>
             </div>
             <div className="space-y-2 text-sm">
-              <FeeLine label="PCB Cost:" value={pcbClientPrice} />
-              <FeeLine label="Shipping:" value={pricing.franceToAfricaDelivery} />
+              <FeeLine label="Cout PCB :" value={pcbClientPrice} />
+              <FeeLine label="Livraison :" value={pricing.franceToAfricaDelivery} />
               <FeeLine label="Service:" value={pricing.kendronicsServiceFee} />
               <div className="flex items-center justify-between border-t border-slate-200 pt-2 font-semibold">
-                <span>Total:</span>
+                <span>Total :</span>
                 <span>${pricing.finalTotal.toFixed(2)}</span>
               </div>
             </div>
@@ -478,7 +478,7 @@ export function PricingSummary({
             setCountryOpen(false);
           }}
           onSelect={chooseShippingMethod}
-          onClose={() => setShippingDialogOpen(false)}
+          onFermer={() => setShippingDialogOpen(false)}
         />
       ) : null}
     </aside>
@@ -516,7 +516,7 @@ function BuildTimeOption({
         </span>
         <span>
           <span className="block leading-4">{label}</span>
-          <span className="block text-[11px] leading-4 text-slate-500">{days} business day{days > 1 ? 's' : ''}</span>
+          <span className="block text-[11px] leading-4 text-slate-500">{days} jour{days > 1 ? 's' : ''} ouvre{days > 1 ? 's' : ''}</span>
         </span>
       </span>
       <span className="text-center">{qty}</span>
@@ -539,7 +539,7 @@ function ShippingMethodDialog({
   onQueryChange,
   onCountrySelect,
   onSelect,
-  onClose,
+  onFermer,
 }: {
   countries: AfricanCountry[];
   filteredCountries: AfricanCountry[];
@@ -554,14 +554,14 @@ function ShippingMethodDialog({
   onQueryChange: (query: string) => void;
   onCountrySelect: (country: AfricanCountry) => void;
   onSelect: (method: ShippingMethod) => void;
-  onClose: () => void;
+  onFermer: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[80] bg-black/55 px-3 py-8" role="dialog" aria-modal="true" aria-label="Shipping methods">
+    <div className="fixed inset-0 z-[80] bg-black/55 px-3 py-8" role="dialog" aria-modal="true" aria-label="Mode de livraisons">
       <div className="mx-auto max-h-[82vh] max-w-[700px] overflow-y-auto rounded-lg bg-white p-5 shadow-2xl">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div className="grid flex-1 grid-cols-[3.5rem_1fr] items-center gap-3">
-            <span className="text-sm font-semibold text-slate-900">Ship to</span>
+            <span className="text-sm font-semibold text-slate-900">Livrer vers</span>
             <CountryDropdown
               countries={countries}
               filteredCountries={filteredCountries}
@@ -575,15 +575,15 @@ function ShippingMethodDialog({
               onSelect={onCountrySelect}
             />
           </div>
-          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center text-3xl font-light text-slate-500" aria-label="Close">
+          <button type="button" onClick={onFermer} className="grid h-9 w-9 place-items-center text-3xl font-light text-slate-500" aria-label="Fermer">
             x
           </button>
         </div>
 
         <div className="grid grid-cols-[1fr_9rem_10rem] bg-slate-100 px-7 py-3 text-sm font-semibold text-slate-700">
-          <span>Shipping method</span>
-          <span>Costs</span>
-          <span>Delivery Time</span>
+          <span>Mode de livraison</span>
+          <span>Couts</span>
+          <span>Delai de livraison</span>
         </div>
 
         <div className="divide-y divide-transparent">
@@ -598,7 +598,7 @@ function ShippingMethodDialog({
               <span className="flex min-w-0 items-center gap-2">
                 <CarrierLogo label={method.logo} />
                 <span className="truncate">{method.service}</span>
-                {method.live ? <span className="rounded-full bg-[#a7cf8c] px-1 text-[10px] font-semibold text-white">live</span> : null}
+                {method.direct ? <span className="rounded-full bg-[#a7cf8c] px-1 text-[10px] font-semibold text-white">direct</span> : null}
               </span>
               <span className="font-medium">${method.amount.toFixed(2)}</span>
               <span className="font-medium">{method.transitTime}</span>
@@ -606,12 +606,12 @@ function ShippingMethodDialog({
           ))}
         </div>
 
-        {ratesState === 'loading' ? <p className="mt-2 text-center text-xs font-medium text-slate-500">Loading live carrier rates...</p> : null}
-        {ratesState === 'error' ? <p className="mt-2 text-center text-xs font-medium text-red-600">Live carrier rates unavailable. Default methods remain selectable.</p> : null}
+        {ratesState === 'loading' ? <p className="mt-2 text-center text-xs font-medium text-slate-500">Chargement des tarifs transporteur...</p> : null}
+        {ratesState === 'error' ? <p className="mt-2 text-center text-xs font-medium text-red-600">Tarifs transporteur en direct indisponibles. Les modes par defaut restent selectionnables.</p> : null}
 
         <div className="mt-5 flex justify-center">
-          <button type="button" onClick={onClose} className="h-9 min-w-28 rounded bg-[#29ad62] px-8 text-sm font-semibold text-white hover:bg-[#198c4b]">
-            Apply
+          <button type="button" onClick={onFermer} className="h-9 min-w-28 rounded bg-[#29ad62] px-8 text-sm font-semibold text-white hover:bg-[#198c4b]">
+            Appliquer
           </button>
         </div>
       </div>
@@ -664,7 +664,7 @@ function CountryDropdown({
               autoFocus
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
-              placeholder="Search"
+              placeholder="Rechercher"
               className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
             />
             <span className="text-base text-slate-400">Q</span>
