@@ -328,7 +328,7 @@ export function PricingSummary({
             <FeeLine label="Livraison :" value={pricing.franceToAfricaDelivery} />
             <div className="flex items-center justify-between pt-1 font-semibold">
               <span className="text-slate-700">Total :</span>
-              <span className="text-lg font-bold text-black">${pricing.finalTotal.toFixed(2)}</span>
+              <span className="text-lg font-semibold text-black">${pricing.finalTotal.toFixed(2)}</span>
             </div>
             <p className="pt-2 text-right text-[10px] text-slate-500">Note : droits de douane et TVA non inclus.</p>
           </div>
@@ -378,7 +378,7 @@ export function PricingSummary({
               }`}>
                 {pricingPreview.status === 'direct' ? 'Fournisseur direct' : pricingPreview.status === 'loading' ? 'Direct...' : pricingPreview.status === 'error' ? 'A verifier' : 'Local'}
               </p>
-              <p className="mt-0.5 text-lg font-bold text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
+              <p className="mt-0.5 text-lg font-semibold text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
             </button>
             <button
               type="button"

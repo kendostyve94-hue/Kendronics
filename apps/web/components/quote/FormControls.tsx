@@ -10,7 +10,7 @@ export function FieldLabel({
   visual?: 'via' | 'stack' | 'barcode';
 }) {
   return (
-    <span className="mb-2 flex items-center justify-between gap-2 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
+    <span className="mb-2 flex items-center justify-between gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
       {label}
       <HelpTooltip title={label} visual={visual}>
         {help}
@@ -40,7 +40,7 @@ export function SelectField({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-12 w-full rounded-[10px] border border-line bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
+        className="h-12 w-full rounded-[10px] border border-line bg-white px-3 text-sm font-medium text-ink outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
       >
         {options.map((option) => {
           const value = typeof option === 'object' ? option.value : option;
@@ -77,7 +77,7 @@ export function NumberField({
         min={min}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-12 w-full rounded-[10px] border border-line bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
+        className="h-12 w-full rounded-[10px] border border-line bg-white px-3 text-sm font-medium text-ink outline-none transition focus:border-signal focus:ring-2 focus:ring-signal/20"
       />
     </label>
   );

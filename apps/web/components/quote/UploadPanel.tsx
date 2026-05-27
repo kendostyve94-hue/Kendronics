@@ -75,8 +75,8 @@ function FileDrop({
       />
       <span className="grid min-h-28 place-items-center rounded-[10px] border border-line bg-white px-4 text-center">
         <span>
-          <span className="mx-auto mb-3 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-r from-signal to-electric text-lg font-black text-white">+</span>
-          <span className="block text-sm font-black text-ink">{fileName ?? 'Ajouter un fichier'}</span>
+          <span className="mx-auto mb-3 grid h-9 w-9 place-items-center rounded-full bg-gradient-to-r from-signal to-electric text-lg font-semibold text-white">+</span>
+          <span className="block text-sm font-semibold text-ink">{fileName ?? 'Ajouter un fichier'}</span>
           <span className="mt-1 block text-xs text-slate-500">Televersement prive, analyse prete pour la production</span>
         </span>
       </span>

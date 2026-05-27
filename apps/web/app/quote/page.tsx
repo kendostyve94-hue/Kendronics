@@ -327,7 +327,7 @@ export default function QuotePage() {
   const [apiPricing, setApiPricing] = useState<PricingBreakdown | null>(null);
   const [pricingPreview, setPricingPreview] = useState<PricingPreviewState>({
     status: 'local',
-    message: 'Connectez-vous pour afficher le prix fournisseur en direct.',
+    message: 'Calcul du prix fournisseur en direct...',
   });
 
   const selectedCountry = useMemo(
@@ -345,26 +345,23 @@ export default function QuotePage() {
     const timeout = window.setTimeout(async () => {
       try {
         const session = await readFreshAuthSession();
-        if (!session || cancelled) {
-          setApiPricing(null);
-          setPricingPreview({
-            status: 'local',
-            message: 'Connectez-vous pour afficher le prix fournisseur en direct.',
-          });
-          return;
-        }
+        if (cancelled) return;
 
         setPricingPreview({
           status: 'loading',
           message: 'Calcul du prix fournisseur en direct...',
         });
 
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        };
+        if (session?.accessToken) {
+          headers.Authorization = `Bearer ${session.accessToken}`;
+        }
+
         const response = await fetch(`${apiBaseUrl}/api/pricing/preview`, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`,
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify(buildPricingPayload(config, gerberUpload.uploadId)),
           signal: controller.signal,
         });
@@ -390,7 +387,7 @@ export default function QuotePage() {
           setApiPricing(null);
           setPricingPreview({
             status: 'error',
-            message: 'Apercu fournisseur indisponible. Le prix local reste visible, mais la sauvegarde retentera le devis en direct.',
+            message: 'Apercu fournisseur indisponible. Le prix local reste visible, puis le devis sera recalcule avant commande.',
           });
         }
       }
@@ -613,7 +610,8 @@ export default function QuotePage() {
     try {
       const session = await readFreshAuthSession();
       if (!session) {
-        throw new Error('Connectez-vous avant de sauvegarder un devis.');
+        window.dispatchEvent(new CustomEvent('kendronics:open-auth-required', { detail: { panel: 'login', step: 'choice' } }));
+        throw new Error('Connectez-vous ou creez un compte pour ajouter ce devis au panier.');
       }
 
       if (errors.length > 0) {
@@ -701,10 +699,10 @@ export default function QuotePage() {
         <div className="mx-auto max-w-[1280px] px-3 pb-2 sm:px-6 sm:pb-3 lg:px-8">
           <div className="mb-1 grid gap-0 sm:mb-3 sm:gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(26rem,48rem)_minmax(0,1fr)] lg:items-center">
             <div>
-              <div className="text-xs font-bold text-slate-500">
+              <div className="text-xs font-medium text-slate-500">
                 Livraison vers : <span className="text-[#0f8f6b]">{selectedCountry.name}</span> / {selectedCountry.logisticsZone}
               </div>
-              <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:mt-2 sm:text-3xl">Devis PCB en ligne</h1>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:mt-2 sm:text-3xl">Devis PCB en ligne</h1>
             </div>
             <div className="-my-1 flex justify-center overflow-hidden sm:my-0">
               <img
@@ -713,7 +711,7 @@ export default function QuotePage() {
                 className="h-auto w-full max-w-[48rem] object-contain mix-blend-multiply"
               />
             </div>
-            <a href="/how-it-works" className="text-xs font-bold text-[#0f8f6b] hover:text-[#096b51] sm:text-sm lg:justify-self-end">
+            <a href="/how-it-works" className="text-xs font-medium text-[#0f8f6b] hover:text-[#096b51] sm:text-sm lg:justify-self-end">
               Instructions de commande &gt;
             </a>
           </div>
@@ -733,7 +731,7 @@ export default function QuotePage() {
                       : 'border-slate-200 bg-white hover:border-[#0f8f6b]/55'
                   }`}
                 >
-                  {product.badge ? <span className="absolute right-0 top-0 bg-[#00a63e] px-1 text-[10px] font-black text-white">{product.badge}</span> : null}
+                  {product.badge ? <span className="absolute right-0 top-0 bg-[#00a63e] px-1 text-[10px] font-semibold text-white">{product.badge}</span> : null}
                   <ProductVisual kind={product.visual} />
                   <span className="min-w-0 flex-1">
                     <span className={`line-clamp-2 block overflow-hidden break-words text-[11px] font-semibold leading-3.5 sm:text-sm sm:leading-4 ${isSelected ? 'text-white' : 'text-slate-950'}`}>{product.title}</span>
@@ -749,10 +747,11 @@ export default function QuotePage() {
       <section className="mx-auto grid max-w-[1280px] gap-3 px-3 py-3 pb-40 sm:gap-5 sm:px-6 sm:py-5 sm:pb-5 lg:grid-cols-[minmax(0,1fr)_330px] lg:px-8">
         <div className="space-y-2 sm:space-y-4">
           <Panel
-            title="Devis Express PCB"
+            title="Devis PCB express"
             description="Une seule zone prend en charge Gerber, BOM et CPL."
             isOpen
             onToggle={() => undefined}
+            showToggle={false}
           >
             <UnifiedUpload
               gerberFileName={config.gerberFileName}
@@ -766,10 +765,11 @@ export default function QuotePage() {
           </Panel>
 
           <Panel
-            title="PCB Specification Selection"
+            title="Selection des specifications PCB"
             description="Type de carte, dimensions, couches, materiau et options de production."
             isOpen
             onToggle={() => undefined}
+            showToggle={false}
           >
             <CardOptions
               value={config.baseMaterial}
@@ -819,6 +819,7 @@ export default function QuotePage() {
             description="Epaisseur, couleur, finition, cuivre et recouvrement des vias."
             isOpen
             onToggle={() => undefined}
+            showToggle={false}
           >
             <PanelGrid>
               <QuoteRow label="Designs differents" help="Nombre de designs uniques separes par V-cut, mouse bites ou fraisage.">
@@ -942,17 +943,17 @@ export default function QuotePage() {
           </Panel>
 
           {saved ? (
-            <div className="rounded-sm border border-[#b9ebda] bg-[#eefbf6] p-3 text-sm font-bold text-[#116b52] sm:p-4">
+            <div className="rounded-sm border border-[#b9ebda] bg-[#eefbf6] p-3 text-sm font-medium text-[#116b52] sm:p-4">
               Devis sauvegarde cote serveur. Validation fournisseur requise avant paiement final.
             </div>
           ) : null}
           {quoteSave.status === 'error' ? (
-            <div className="rounded-sm border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-700 sm:p-4">
+            <div className="rounded-sm border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700 sm:p-4">
               {quoteSave.message}
             </div>
           ) : null}
           {quoteSave.status === 'saved' && quoteSave.message ? (
-            <div className="rounded-sm border border-slate-200 bg-white p-3 text-sm font-bold text-slate-700 sm:p-4">
+            <div className="rounded-sm border border-slate-200 bg-white p-3 text-sm font-medium text-slate-700 sm:p-4">
               <p>{quoteSave.message}</p>
               {quoteSave.orderId ? (
                 <a className="mt-3 inline-flex text-[#0877ff] hover:text-[#0068e8]" href={`/orders/${quoteSave.orderId}`}>
@@ -1113,12 +1114,14 @@ function Panel({
   description,
   isOpen,
   onToggle,
+  showToggle = true,
   children,
 }: {
   title: string;
   description: string;
   isOpen: boolean;
   onToggle: () => void;
+  showToggle?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -1130,10 +1133,10 @@ function Panel({
         onClick={onToggle}
       >
         <span>
-          <span className="block text-sm font-bold text-slate-950 sm:text-base">{title}</span>
+          <span className="block text-sm font-medium text-slate-950 sm:text-base">{title}</span>
           <span className="mt-0.5 hidden text-xs leading-5 text-slate-500 sm:block">{description}</span>
         </span>
-        <span className={`text-xl font-black text-slate-800 transition ${isOpen ? 'rotate-180' : ''}`}>v</span>
+        {showToggle ? <span className={`text-xl font-semibold text-slate-800 transition ${isOpen ? 'rotate-180' : ''}`}>v</span> : null}
       </button>
       {isOpen ? <div className="quote-panel-body bg-[#ffffff]">{children}</div> : null}
     </section>
@@ -1203,7 +1206,7 @@ function MobileSheetRow({
             <span className="block text-sm font-semibold text-slate-900">{label}</span>
             <span className="mt-1 block truncate text-xs font-medium text-[#0f8f6b]">{summary}</span>
           </span>
-          <span className="text-lg font-black text-slate-400">+</span>
+          <span className="text-lg font-medium text-slate-400">+</span>
         </button>
       </div>
       <div className="hidden sm:block">
@@ -1217,16 +1220,16 @@ function MobileSheetRow({
             {typeof estimatedTotal === 'number' ? (
               <div className="quote-sheet-total sticky top-0 z-10 -mx-4 -mt-4 mb-3 flex items-center justify-between border-b border-slate-200 bg-[#ffffff] px-4 py-3">
                 <span className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Total estime</span>
-                <span className="text-lg font-black text-[#ff7a00]">${estimatedTotal.toFixed(2)}</span>
+                <span className="text-lg font-semibold text-[#ff7a00]">${estimatedTotal.toFixed(2)}</span>
               </div>
             ) : null}
             <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-slate-300" />
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-base font-black text-slate-950">{label}</h3>
+                <h3 className="text-base font-semibold text-slate-950">{label}</h3>
                 <p className="mt-1 text-xs leading-5 text-slate-500">{help}</p>
               </div>
-              <button type="button" className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-lg font-black text-slate-700" onClick={() => onOpenSheet(null)} aria-label="Fermer">
+              <button type="button" className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-lg font-medium text-slate-700" onClick={() => onOpenSheet(null)} aria-label="Fermer">
                 x
               </button>
             </div>
@@ -1334,7 +1337,7 @@ function CardOptions({
             value === option ? 'border-[#0f8f6b] bg-[#eefbf6]' : 'border-slate-200 hover:border-[#0f8f6b]/55'
           }`}
         >
-          <span className="block text-sm font-black text-slate-950">{option}</span>
+          <span className="block text-sm font-medium text-slate-950">{option}</span>
           <span className="mt-2 hidden text-xs leading-5 text-slate-500 sm:block">{description}</span>
         </button>
       ))}
@@ -1361,7 +1364,7 @@ function Pills({
             key={String(optionValue)}
             type="button"
             onClick={() => onChange(optionValue)}
-            className={`min-h-8 rounded-sm border px-2.5 text-xs font-bold transition sm:min-h-10 sm:px-4 sm:text-sm ${
+            className={`min-h-8 rounded-sm border px-2.5 text-xs font-medium transition sm:min-h-10 sm:px-4 sm:text-sm ${
               value === optionValue ? 'border-[#0f8f6b] bg-[#0f8f6b] text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
             }`}
           >
@@ -1392,7 +1395,7 @@ function ColorPills({ value, onChange }: { value: string; onChange: (value: stri
           key={label}
           type="button"
           onClick={() => onChange(label)}
-          className={`flex min-h-8 items-center gap-1.5 rounded-sm border px-2.5 text-xs font-bold transition sm:min-h-11 sm:gap-2 sm:px-4 sm:text-sm ${
+          className={`flex min-h-8 items-center gap-1.5 rounded-sm border px-2.5 text-xs font-medium transition sm:min-h-11 sm:gap-2 sm:px-4 sm:text-sm ${
             value === label ? 'border-[#0f8f6b] bg-[#eefbf6] text-[#0f6f54]' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
           }`}
         >
@@ -1417,13 +1420,13 @@ function NumberBox({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] font-bold text-slate-500 sm:text-xs">{label}</span>
+      <span className="mb-1 block text-[11px] font-medium text-slate-500 sm:text-xs">{label}</span>
       <input
         type="number"
         min={min}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-9 w-full rounded-sm border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11 sm:px-3"
+        className="h-9 w-full rounded-sm border border-slate-200 bg-white px-2.5 text-sm font-medium text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11 sm:px-3"
       />
     </label>
   );
@@ -1442,7 +1445,7 @@ function SelectBox({
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="h-9 w-full rounded-sm border border-slate-200 bg-white px-2.5 text-sm font-bold text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11 sm:px-3"
+      className="h-9 w-full rounded-sm border border-slate-200 bg-white px-2.5 text-sm font-medium text-slate-950 outline-none transition focus:border-[#0f8f6b] focus:ring-2 focus:ring-[#0f8f6b]/15 sm:h-11 sm:px-3"
     >
       {options.map((item) => {
         const optionValue = Array.isArray(item) ? item[0] : item;
@@ -1459,7 +1462,7 @@ function SelectBox({
 
 function Switch({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
-    <label className={`flex min-h-9 cursor-pointer items-center justify-between gap-2 rounded-sm border px-2.5 text-[11px] font-bold transition sm:min-h-11 sm:gap-3 sm:px-3 sm:text-sm ${
+    <label className={`flex min-h-9 cursor-pointer items-center justify-between gap-2 rounded-sm border px-2.5 text-[11px] font-medium transition sm:min-h-11 sm:gap-3 sm:px-3 sm:text-sm ${
       checked ? 'border-[#0f8f6b] bg-[#eefbf6] text-[#0f6f54]' : 'border-slate-200 bg-white text-slate-700 hover:border-[#0f8f6b]/55'
     }`}>
       <span>{label}</span>

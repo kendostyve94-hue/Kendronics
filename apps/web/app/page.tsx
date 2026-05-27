@@ -306,14 +306,14 @@ function HomeCapabilityMatrix() {
 
   return (
     <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
-      <div className="mx-auto grid max-w-none gap-5 xl:grid-cols-[minmax(40rem,1.18fr)_minmax(28rem,0.82fr)]">
-        <div className="overflow-hidden border border-slate-300 bg-white">
-          <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(13rem,16rem)_minmax(0,1fr)]">
+      <div className="mx-auto grid max-w-none items-start gap-5 xl:grid-cols-[minmax(40rem,1.18fr)_minmax(28rem,0.82fr)]">
+        <div className="overflow-hidden border border-slate-300 bg-white lg:h-[24rem]">
+          <div className="grid border-b border-slate-300 lg:h-[19rem] lg:grid-cols-[minmax(12rem,15.5rem)_minmax(0,1fr)]">
             <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
               <h2 className="text-lg font-semibold leading-tight tracking-tight text-ink">Solution complete pour PCB et assemblage</h2>
               <p className="mt-1 text-sm text-slate-500">Simple, qualite suivie, delais visibles</p>
 
-              <ul className="mt-4 space-y-1.5 text-[13px] leading-5 text-slate-600">
+              <ul className="mt-3 space-y-1.5 text-[13px] leading-5 text-slate-600">
                 {oneStopCapabilities.map((item) => (
                   <li key={item} className="flex gap-3">
                     <span className="text-sm font-semibold text-[#008b6d]">v</span>
@@ -324,7 +324,7 @@ function HomeCapabilityMatrix() {
             </div>
 
             <div className="min-w-0">
-              <div className="relative h-[15rem] overflow-hidden bg-slate-950 sm:h-[18rem] lg:h-full lg:min-h-[20rem]">
+              <div className="relative h-[14rem] overflow-hidden bg-slate-950 sm:h-[17rem] lg:h-full">
                 <video
                   className="h-full w-full object-cover"
                   autoPlay
@@ -343,14 +343,14 @@ function HomeCapabilityMatrix() {
             </div>
           </div>
 
-          <div className="grid bg-white sm:grid-cols-3">
+          <div className="grid bg-white sm:grid-cols-3 lg:h-[5rem]">
             <OneStopStat icon="gear" value={`${oneStopServiceCount}+`} label="Services proposes" />
             <OneStopStat icon="planet" value={`${africanCountries.length}`} label="Pays livres" />
             <OneStopStat icon="wallet" value={`${oneStopPaymentMethodCount}`} label="Moyens de paiement" />
           </div>
         </div>
 
-        <div className="overflow-hidden border border-slate-300 bg-white">
+        <div className="overflow-y-auto overflow-x-hidden border border-slate-300 bg-white lg:h-[24rem]">
           <table className="w-full table-fixed border-collapse text-left text-xs">
             <thead className="bg-[#d8edf8] text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-900">
               <tr>

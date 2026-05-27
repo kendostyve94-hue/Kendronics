@@ -18,14 +18,14 @@ export function HelpTooltip({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="grid h-5 w-5 place-items-center rounded-full border border-signal/35 bg-signal/10 text-[11px] font-black text-deepblue transition hover:bg-signal/20"
+        className="grid h-5 w-5 place-items-center rounded-full border border-signal/35 bg-signal/10 text-[11px] font-semibold text-deepblue transition hover:bg-signal/20"
         aria-label={`Help: ${title}`}
       >
         ?
       </button>
       {open && (
         <span className="absolute right-0 top-7 z-30 w-72 rounded-lg border border-line bg-white p-4 text-left">
-          <span className="block text-sm font-black text-ink">{title}</span>
+          <span className="block text-sm font-semibold text-ink">{title}</span>
           <span className="mt-2 block text-xs leading-5 text-slate-600">{children}</span>
           {visual && <TooltipVisual visual={visual} />}
         </span>

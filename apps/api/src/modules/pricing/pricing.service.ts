@@ -43,8 +43,8 @@ export class PricingService {
     return quote;
   }
 
-  async previewQuote(userId: string, dto: PreviewQuoteDto): Promise<PricingBreakdown> {
-    const effectiveDto = await this.applyOptionalGerberAnalysis(userId, dto);
+  async previewQuote(dto: PreviewQuoteDto, userId?: string): Promise<PricingBreakdown> {
+    const effectiveDto = await this.applyOptionalGerberAnalysis(dto, userId);
     const gerberFileId = effectiveDto.gerberFileId ?? crypto.randomUUID();
     const supplierDto = {
       ...effectiveDto,
@@ -89,8 +89,8 @@ export class PricingService {
     };
   }
 
-  private async applyOptionalGerberAnalysis(userId: string, dto: PreviewQuoteDto): Promise<PreviewQuoteDto> {
-    if (!dto.gerberFileId) return dto;
+  private async applyOptionalGerberAnalysis(dto: PreviewQuoteDto, userId?: string): Promise<PreviewQuoteDto> {
+    if (!dto.gerberFileId || !userId) return dto;
 
     const analysis = await this.uploadsService.getAnalysis(userId, dto.gerberFileId);
     if (!analysis) return dto;

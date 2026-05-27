@@ -7,17 +7,17 @@ import { PreviewQuoteDto } from './dto/preview-quote.dto';
 import { PricingService } from './pricing.service';
 
 @Controller('pricing')
-@UseGuards(JwtAuthGuard)
 export class PricingController {
   constructor(private readonly pricingService: PricingService) {}
 
   @Post('quote')
+  @UseGuards(JwtAuthGuard)
   createQuote(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateQuoteDto) {
     return this.pricingService.createQuote(user.id, dto);
   }
 
   @Post('preview')
-  previewQuote(@CurrentUser() user: AuthenticatedUser, @Body() dto: PreviewQuoteDto) {
-    return this.pricingService.previewQuote(user.id, dto);
+  previewQuote(@Body() dto: PreviewQuoteDto) {
+    return this.pricingService.previewQuote(dto);
   }
 }
