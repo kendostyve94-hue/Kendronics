@@ -768,8 +768,8 @@ export default function QuotePage() {
           <Panel
             title="PCB Specification Selection"
             description="Board type, dimensions, layers, material and production options."
-            isOpen={openPanel === 'base'}
-            onToggle={() => setOpenPanel('base')}
+            isOpen
+            onToggle={() => undefined}
           >
             <CardOptions
               value={config.baseMaterial}
@@ -817,8 +817,8 @@ export default function QuotePage() {
           <Panel
             title="Spécifications PCB"
             description="Épaisseur, couleur, finition, cuivre et recouvrement des vias."
-            isOpen={openPanel === 'specs'}
-            onToggle={() => setOpenPanel('specs')}
+            isOpen
+            onToggle={() => undefined}
           >
             <PanelGrid>
               <QuoteRow label="Designs différents" help="Nombre de designs uniques séparés par V-cut, mouse bites ou fraisage.">

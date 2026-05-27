@@ -194,7 +194,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
     return () => document.removeEventListener('pointerdown', closeMobilePanels);
   }, [isMenuOpen, isSearchOpen]);
 
-  const cartHref = useMemo(() => '/profile?view=orders', []);
+  const cartHref = useMemo(() => (orders.length > 0 ? '/profile?view=orders' : '/quote'), [orders.length]);
 
   const visibleProfileNavItems = useMemo(() => {
     return profileNavItems.filter((item) => item.href !== '/admin' || isAdmin);
@@ -372,7 +372,7 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
             item.href === '/'
               ? pathname === '/'
               : item.labelKey === 'nav.cart'
-                ? pathname.startsWith('/orders')
+                ? pathname.startsWith('/orders') || pathname.startsWith('/profile') || (orderCount === 0 && pathname.startsWith('/quote'))
                 : pathname.startsWith(item.href);
 
           return (

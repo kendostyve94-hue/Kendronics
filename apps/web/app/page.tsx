@@ -615,19 +615,21 @@ function Hero() {
 function HeroPromoPanels() {
   return (
     <aside className="grid gap-2 sm:grid-cols-2 lg:self-end" aria-label="Offres PCB">
-      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=10&thickness=1.6mm" className="relative min-h-[10.25rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-3 text-center transition hover:border-[#0f8f6b]">
+      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=5&thickness=1.6mm" className="relative min-h-[10.25rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-3 text-center transition hover:border-[#0f8f6b]">
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
-        <p className="text-2xl font-normal leading-none text-[#0f8f6b]">$ 5.00</p>
-        <p className="mt-2 text-xs leading-4 text-slate-600">10 pieces 1-2 couche(s)</p>
-        <p className="text-xs leading-4 text-slate-600">Temps de production:24 heures</p>
+        <p className="text-2xl font-normal leading-none text-[#0f8f6b]">$ 6.75</p>
+        <p className="mt-2 text-xs leading-4 text-slate-600">5 pieces, 1-2 couches</p>
+        <p className="text-xs leading-4 text-slate-600">Production: 24 heures</p>
+        <p className="text-xs leading-4 text-slate-600">PCB prototypes</p>
         <img src="/images/product-pcb-standard-transparent.png" alt="" className="mx-auto mt-2 h-16 w-full object-contain" />
       </a>
-      <a href="/quote?productType=pcb_assembly&layers=2&length=100&width=100&quantity=20&thickness=1.6mm" className="relative min-h-[10.25rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-3 text-center transition hover:border-[#0f8f6b]">
+      <a href="/quote?productType=advanced_pcb&layers=4&length=100&width=100&quantity=30&thickness=1.6mm" className="relative min-h-[10.25rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-3 text-center transition hover:border-[#0f8f6b]">
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
-        <p className="text-2xl font-normal leading-none text-[#0f8f6b]">$ 29</p>
-        <p className="mt-2 text-xs leading-4 text-slate-600">Livraison gratuite</p>
-        <p className="text-xs leading-4 text-slate-600">Pour 1-20 piece(s)</p>
-        <img src="/images/product-pcba-assembly.png" alt="" className="mx-auto mt-2 h-16 w-full object-contain" />
+        <p className="text-2xl font-normal leading-none text-[#0f8f6b]">$ 221.72</p>
+        <p className="mt-2 text-xs leading-4 text-slate-600">4 couches, 5-30 pieces</p>
+        <p className="text-xs leading-4 text-slate-600">Production: 8-9 jours</p>
+        <p className="text-xs leading-4 text-slate-600">PCB avance</p>
+        <img src="/images/product-pcb-advanced.png" alt="" className="mx-auto mt-2 h-16 w-full object-contain" />
       </a>
     </aside>
   );

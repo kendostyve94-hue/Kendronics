@@ -170,6 +170,12 @@ export function AuthRequiredModal() {
       if (!response.ok) throw new Error('Login failed.');
 
       const tokens = (await response.json()) as LoginResponse;
+      const isVerified = await isAccountEmailVerified(tokens);
+      if (isVerified) {
+        completeAuth(tokens, { remember: rememberMe });
+        return;
+      }
+
       await startAccountVerification({
         tokens,
         remember: rememberMe,
@@ -472,19 +478,6 @@ export function AuthRequiredModal() {
         </div>
         )}
 
-        {!pendingVerification ? (
-          <div className="border-t border-slate-200 px-5 py-4 sm:px-8">
-            <div className="flex items-center gap-3 text-xs font-medium text-slate-400">
-              <span className="h-px flex-1 bg-slate-200" />
-              <span>ou continuer avec</span>
-              <span className="h-px flex-1 bg-slate-200" />
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <SocialProviderLink provider="google" label="Continuer avec Google" href={googleOAuthUrl} />
-              <SocialProviderLink provider="apple" label="Continuer avec Apple" href={appleOAuthUrl} />
-            </div>
-          </div>
-        ) : null}
       </div>
       )}
     </div>
@@ -765,6 +758,18 @@ function LoginPanel({
         {status === 'submitting' ? 'Envoi du code...' : 'Se connecter'}
       </button>
 
+      <div className="pt-2">
+        <div className="flex items-center gap-3 text-xs font-medium text-slate-400">
+          <span className="h-px flex-1 bg-slate-200" />
+          <span>ou continuer avec</span>
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+        <div className="mt-3 grid gap-2">
+          <SocialProviderLink provider="google" label="Continuer avec Google" href={googleOAuthUrl} />
+          <SocialProviderLink provider="apple" label="Continuer avec Apple" href={appleOAuthUrl} />
+        </div>
+      </div>
+
       <p className="hidden text-xs leading-5 text-slate-500 lg:block">
         Nouveau sur Kendronics? Utilisez le formulaire de creation a gauche.
       </p>
@@ -950,6 +955,22 @@ async function requestVerificationCode(tokens: AuthTokens) {
   }
 }
 
+async function isAccountEmailVerified(tokens: AuthTokens): Promise<boolean> {
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/users/me`, {
+      headers: {
+        Authorization: `${tokens.tokenType} ${tokens.accessToken}`,
+      },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) return false;
+    const user = (await response.json()) as { emailVerifiedAt?: string | null };
+    return Boolean(user.emailVerifiedAt);
+  } catch {
+    return false;
+  }
+}
 
 function validateLoginMeta(values: LoginMetaState): LoginMetaErrors {
   const errors: LoginMetaErrors = {};
