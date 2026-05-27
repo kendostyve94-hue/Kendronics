@@ -281,15 +281,14 @@ export function LanguageRuntime({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>('fr');
 
   useEffect(() => {
-    window.localStorage.setItem(languageStorageKey, 'fr');
-    setLanguageState('fr');
+    setLanguageState(readStoredLanguage());
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = 'fr';
-    window.localStorage.setItem(languageStorageKey, 'fr');
-    applySiteTranslations('fr');
-    window.dispatchEvent(new CustomEvent('kendronics:language-changed', { detail: { language: 'fr' } }));
+    document.documentElement.lang = language;
+    window.localStorage.setItem(languageStorageKey, language);
+    applySiteTranslations(language);
+    window.dispatchEvent(new CustomEvent('kendronics:language-changed', { detail: { language } }));
   }, [language]);
 
   useEffect(() => {
@@ -298,30 +297,31 @@ export function LanguageRuntime({ children }: { children: React.ReactNode }) {
       if (isApplying) return;
       isApplying = true;
       window.requestAnimationFrame(() => {
-        applySiteTranslations('fr');
+        applySiteTranslations(language);
         isApplying = false;
       });
     });
 
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     return () => observer.disconnect();
-  }, []);
+  }, [language]);
 
   const value = useMemo<LanguageContextValue>(
     () => ({
-      language: 'fr',
-      setLanguage: () => setLanguageState('fr'),
-      toggleLanguage: () => setLanguageState('fr'),
-      t: (key) => messages.fr[key],
+      language,
+      setLanguage: setLanguageState,
+      toggleLanguage: () => setLanguageState((current) => (current === 'fr' ? 'en' : 'fr')),
+      t: (key) => messages[language][key],
     }),
-    [],
+    [language],
   );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
 function readStoredLanguage(): Language {
-  return 'fr';
+  if (typeof window === 'undefined') return 'fr';
+  return window.localStorage.getItem(languageStorageKey) === 'en' ? 'en' : 'fr';
 }
 
 function applySiteTranslations(language: Language) {

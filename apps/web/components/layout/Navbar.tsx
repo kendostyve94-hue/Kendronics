@@ -364,7 +364,7 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
               <span className={`relative grid h-5 w-5 place-items-center ${isActive ? 'text-[#0f8f6b]' : ''}`}>
                 {item.icon}
                 {item.count != null ? (
-                <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-[#ec3b91] px-1 text-[10px] font-semibold leading-none text-white">
+                <span className="absolute -right-2 -top-2 grid h-5 w-5 place-items-center rounded-full bg-[#ec3b91] text-[10px] font-medium leading-none text-white">
                     {item.count}
                   </span>
                 ) : null}
@@ -512,7 +512,7 @@ function LanguageToggle({
       data-i18n-skip="true"
     >
       <GlobeIcon />
-      <span className="text-[11px] font-black uppercase tracking-[0.08em]">{language}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-[0.04em]">{language}</span>
       <span className="sr-only">{label}</span>
     </button>
   );
@@ -523,7 +523,7 @@ function CartLink({ href, count }: { href: string; count: number }) {
   return (
     <a href={href} className="relative inline-flex h-9 w-9 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-10 sm:w-10" aria-label={t('nav.cart')}>
       <CartIcon />
-      <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#ec3b91] px-1 text-[11px] font-semibold leading-none text-white">
+      <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[#ec3b91] text-[10px] font-medium leading-none text-white">
         {count}
       </span>
     </a>
@@ -532,7 +532,7 @@ function CartLink({ href, count }: { href: string; count: number }) {
 
 function CartIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="9" cy="20" r="1.4" />
       <circle cx="18" cy="20" r="1.4" />
       <path d="M3 4h2l2.3 11.2a2 2 0 0 0 2 1.6h8.5a2 2 0 0 0 1.9-1.4L21 8H6.2" />
@@ -587,7 +587,7 @@ function SearchIcon({ small = false }: { small?: boolean }) {
 
 function GlobeIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18" />
       <path d="M12 3a13.5 13.5 0 0 1 0 18" />
