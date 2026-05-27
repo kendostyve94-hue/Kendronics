@@ -52,10 +52,11 @@ const searchItems = [
 
 const profileNavItems = [
   { label: 'Devis immediat', href: '/quote' },
-  { label: 'Assemblage PCB', href: '/quote' },
-  { label: 'Impression 3D', href: '/services' },
-  { label: 'Conception PCB', href: '/services' },
-  { label: 'Mes commandes', href: '/profile?view=orders' },
+  { label: 'PCB prototype', href: '/services#pcb-standard' },
+  { label: 'Petites series', href: '/services#pcb-petit-lot' },
+  { label: 'PCB avance', href: '/services#pcb-avance' },
+  { label: 'Assistance Gerber', href: '/services#assistance-technique' },
+  { label: 'Comment ca marche', href: '/how-it-works' },
   { label: 'Admin', href: '/admin' },
 ] satisfies Array<{ label: string; href: string }>;
 

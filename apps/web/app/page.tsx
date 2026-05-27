@@ -350,12 +350,12 @@ function HomeCapabilityMatrix() {
           </div>
         </div>
 
-        <div className="overflow-x-auto border border-slate-300 bg-white">
-          <table className="min-w-[44rem] w-full border-collapse text-left text-xs">
+        <div className="overflow-hidden border border-slate-300 bg-white">
+          <table className="w-full table-fixed border-collapse text-left text-xs">
             <thead className="bg-[#d8edf8] text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-900">
               <tr>
                 {pcbGroup.headers.map((header, index) => (
-                  <th key={header} className={`${index === 0 ? 'w-[14rem]' : index === 1 ? 'w-[24rem]' : ''} border-b border-r border-slate-300 px-4 py-2.5 last:border-r-0`}>
+                  <th key={header} className={`${index === 0 ? 'w-[30%]' : index === 1 ? 'w-[42%]' : 'w-[28%]'} border-b border-r border-slate-300 px-3 py-2 last:border-r-0`}>
                     {header}
                   </th>
                 ))}
@@ -444,7 +444,7 @@ function HomeCapabilityRow({ row, stripe }: { row: string[]; stripe: boolean }) 
   return (
     <tr className={stripe ? 'bg-[#edf7fd]' : 'bg-white'}>
       {row.map((cell, index) => (
-        <td key={`${cell}-${index}`} className={`${index === 0 ? 'font-normal text-[#008b6d]' : 'leading-5 text-slate-700'} border-b border-r border-slate-300 px-4 py-2.5 align-top last:border-r-0`}>
+        <td key={`${cell}-${index}`} className={`${index === 0 ? 'font-normal text-[#008b6d]' : 'leading-5 text-slate-700'} break-words border-b border-r border-slate-300 px-3 py-2 align-top last:border-r-0`}>
           {cell}
         </td>
       ))}
@@ -457,11 +457,11 @@ function HomeExpandableCapabilityRow({ row, stripe, detail }: { row: string[]; s
     <tr className={stripe ? 'bg-[#edf7fd]' : 'bg-white'}>
       <td colSpan={3} className="border-b border-slate-300 p-0 align-top">
         <details className="group">
-          <summary className="grid cursor-pointer list-none grid-cols-[10rem_17rem_minmax(0,1fr)] border-slate-300 outline-none marker:content-none focus:outline-none [&::-webkit-details-marker]:hidden">
+          <summary className="grid cursor-pointer list-none grid-cols-[30%_42%_28%] border-slate-300 outline-none marker:content-none focus:outline-none [&::-webkit-details-marker]:hidden">
             {row.map((cell, index) => (
               <span
                 key={`${cell}-${index}`}
-                className={`${index === 0 ? 'font-normal text-[#008b6d]' : 'leading-5 text-slate-700'} border-r border-slate-300 px-4 py-2.5 last:border-r-0`}
+                className={`${index === 0 ? 'font-normal text-[#008b6d]' : 'leading-5 text-slate-700'} min-w-0 break-words border-r border-slate-300 px-3 py-2 last:border-r-0`}
               >
                 {index === 0 ? (
                   <span className="flex items-center justify-between gap-3">
@@ -474,7 +474,7 @@ function HomeExpandableCapabilityRow({ row, stripe, detail }: { row: string[]; s
               </span>
             ))}
           </summary>
-          <div className="border-t border-slate-300 bg-[#f8fbfd] p-3">{detail}</div>
+          <div className="border-t border-slate-300 bg-[#f8fbfd] p-2">{detail}</div>
         </details>
       </td>
     </tr>
@@ -492,7 +492,7 @@ function NestedCapabilityTable({ group }: { group: (typeof homeCapabilityGroups)
         <p className="text-xs leading-5 text-slate-500">{group.description}</p>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse text-left text-xs">
+        <table className="min-w-[34rem] border-collapse text-left text-xs">
           <thead className="bg-[#d8edf8] text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-900">
             <tr>
               {group.headers.map((header) => (
