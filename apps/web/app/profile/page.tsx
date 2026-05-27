@@ -118,6 +118,8 @@ type ProfileOrder = {
   paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
   totalPrice?: number;
   currency?: 'EUR';
+  externalManufacturingPartner?: string;
+  externalSupplierOrderId?: string;
   carrierName?: string;
   trackingNumber?: string;
   createdAt: string;
@@ -359,7 +361,7 @@ export default function ProfilePage() {
 
           <section className="min-w-0">
             {activeProfileView ? (
-              <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onProfileChange={setProfile} onAvatarChange={setAvatarDataUrl} onNotificationsChange={setNotifications} />
+              <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onProfileChange={setProfile} onAvatarChange={setAvatarDataUrl} onOrdersChange={setOrders} onNotificationsChange={setNotifications} />
             ) : (
               <>
                 <div className="grid min-w-0 gap-4">
@@ -548,6 +550,7 @@ function ProfileViewContent({
   dataStatus,
   onProfileChange,
   onAvatarChange,
+  onOrdersChange,
   onNotificationsChange,
 }: {
   view: Exclude<ProfileView, null>;
@@ -559,15 +562,16 @@ function ProfileViewContent({
   dataStatus: 'loading' | 'ready' | 'signed-out' | 'error';
   onProfileChange: (profile: ProfileForm | ((current: ProfileForm) => ProfileForm)) => void;
   onAvatarChange: (avatarDataUrl: string) => void;
+  onOrdersChange: (orders: ProfileOrder[] | ((current: ProfileOrder[]) => ProfileOrder[])) => void;
   onNotificationsChange: (notifications: ProfileNotification[]) => void;
 }) {
   if (view === 'quotes') return <QuotesHubSection orders={orders} dataStatus={dataStatus} />;
-  if (view === 'all-orders') return <OrderReviewSection activeKey="all" title="Toutes commandes" mode="table" orders={orders} dataStatus={dataStatus} />;
-  if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Panier / Examen de votre commande" mode="review" orders={orders} dataStatus={dataStatus} />;
-  if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Panier / Examen de votre commande" mode="review" orders={orders} dataStatus={dataStatus} />;
-  if (view === 'production') return <OrderReviewSection activeKey="production" title="Progres de la Fabrication" mode="table" orders={orders} dataStatus={dataStatus} />;
-  if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="table" orders={orders} dataStatus={dataStatus} />;
-  if (view === 'completed') return <OrderReviewSection activeKey="completed" title="Commande completee" mode="table" orders={orders} dataStatus={dataStatus} />;
+  if (view === 'all-orders') return <OrderReviewSection activeKey="all" title="Toutes commandes" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
+  if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Panier / Examen de votre commande" mode="review" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
+  if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Panier / Examen de votre commande" mode="review" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
+  if (view === 'production') return <OrderReviewSection activeKey="production" title="Progres de la Fabrication" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
+  if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
+  if (view === 'completed') return <OrderReviewSection activeKey="completed" title="Commande completee" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'comments') return <CommentsManagementSection orders={orders} dataStatus={dataStatus} />;
   if (view === 'services') return <ServicesHubSection />;
   if (view === 'support') return <SupportHubSection orders={orders} dataStatus={dataStatus} />;
@@ -597,12 +601,14 @@ function OrderReviewSection({
   mode,
   orders = [],
   dataStatus = 'ready',
+  onOrdersChange,
 }: {
   activeKey: OrderStatusKey;
   title: string;
   mode: 'review' | 'table';
   orders?: ProfileOrder[];
   dataStatus?: 'loading' | 'ready' | 'signed-out' | 'error';
+  onOrdersChange: (orders: ProfileOrder[] | ((current: ProfileOrder[]) => ProfileOrder[])) => void;
 }) {
   const visibleOrders = orders.filter((order) => orderMatchesStatus(order, activeKey));
 
@@ -616,7 +622,7 @@ function OrderReviewSection({
           <h2 className="text-xl font-normal text-black">{title}</h2>
         </div>
 
-        {mode === 'review' ? <ReviewSearchPanel orders={visibleOrders} dataStatus={dataStatus} /> : <OrderTableSearchPanel orders={visibleOrders} dataStatus={dataStatus} />}
+        {mode === 'review' ? <ReviewSearchPanel orders={visibleOrders} dataStatus={dataStatus} /> : <OrderTableSearchPanel orders={visibleOrders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />}
       </div>
     </section>
   );
@@ -669,15 +675,25 @@ function ReviewSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dat
   );
 }
 
-function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+function OrderTableSearchPanel({
+  orders,
+  dataStatus,
+  onOrdersChange,
+}: {
+  orders: ProfileOrder[];
+  dataStatus: 'loading' | 'ready' | 'signed-out' | 'error';
+  onOrdersChange: (orders: ProfileOrder[] | ((current: ProfileOrder[]) => ProfileOrder[])) => void;
+}) {
   const [query, setQuery] = useState('');
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
-  const visibleOrders = orders.filter((order) => orderMatchesQuery(order, query));
+  const [statusFilter, setStatusFilter] = useState<OrderStatusKey>('all');
+  const [deletingOrderId, setDeletingOrderId] = useState('');
+  const filteredOrders = statusFilter === 'all' ? orders : orders.filter((order) => orderMatchesStatus(order, statusFilter));
+  const visibleOrders = filteredOrders.filter((order) => orderMatchesQuery(order, query));
   const selectedOrders = orders.filter((order) => selectedOrderIds.includes(order.id) && isSelectableCartOrder(order));
   const allVisibleSelected = visibleOrders.filter(isSelectableCartOrder).every((order) => selectedOrderIds.includes(order.id));
   const merchandiseTotal = selectedOrders.reduce((total, order) => total + orderTotal(order), 0);
-  const shippingEstimate = selectedOrders.length > 0 ? Math.max(8.75, selectedOrders.length * 6.25) : 0;
-  const payableTotal = merchandiseTotal + shippingEstimate;
+  const payableTotal = merchandiseTotal;
 
   useEffect(() => {
     setSelectedOrderIds(orders.filter(isSelectableCartOrder).map((order) => order.id));
@@ -698,18 +714,49 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
     });
   }
 
+  async function deleteOrder(orderId: string) {
+    if (deletingOrderId) return;
+    const confirmed = window.confirm('Supprimer cette commande de votre panier ?');
+    if (!confirmed) return;
+
+    setDeletingOrderId(orderId);
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) throw new Error('Session expiree.');
+
+      const response = await fetch(`${getApiBaseUrl()}/api/orders/${orderId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+      });
+
+      if (!response.ok) throw new Error('Suppression impossible.');
+
+      onOrdersChange((current) => current.filter((order) => order.id !== orderId));
+      setSelectedOrderIds((current) => current.filter((id) => id !== orderId));
+      window.dispatchEvent(new Event('kendronics:orders-updated'));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'Suppression impossible.');
+    } finally {
+      setDeletingOrderId('');
+    }
+  }
+
   return (
     <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
       <div className="min-w-0">
         <div className="border border-[#e5e7eb] bg-white">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5e7eb] px-5 py-4">
-            <div className="flex flex-wrap items-center gap-7 text-sm font-semibold text-black">
-              <button type="button" className="text-[#0877ff]">All ({orders.length})</button>
-              <button type="button">JLCPCB ({orders.length})</button>
-              <button type="button">JLC3DP (0)</button>
-              <button type="button">JLCCNC (0)</button>
-              <button type="button">JLCMC (0)</button>
-              <button type="button">Flex Heater (0)</button>
+            <div className="flex flex-wrap items-center gap-5 text-sm text-black">
+              {orderTableFilters.map((filter) => (
+                <button
+                  key={filter.key}
+                  type="button"
+                  onClick={() => setStatusFilter(filter.key)}
+                  className={statusFilter === filter.key ? 'text-[#0877ff]' : 'text-black hover:text-[#0877ff]'}
+                >
+                  {filter.label} ({filter.key === 'all' ? orders.length : orders.filter((order) => orderMatchesStatus(order, filter.key)).length})
+                </button>
+              ))}
             </div>
             <label className="flex h-9 w-[180px] items-center gap-2 border border-[#d1d5db] bg-white px-3 text-sm text-[#8a8f98]">
               <input value={query} onChange={(event) => setQuery(event.target.value)} className="min-w-0 flex-1 outline-none" placeholder="Rechercher" />
@@ -717,13 +764,13 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
             </label>
           </div>
 
-          <div className="grid grid-cols-[32px_minmax(0,1fr)_140px_150px_120px_32px] items-center bg-[#f4f5f7] px-5 py-3 text-sm font-semibold text-black">
+          <div className="grid grid-cols-[32px_minmax(0,1fr)_110px_135px_120px_50px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
             <input type="checkbox" checked={visibleOrders.length > 0 && allVisibleSelected} onChange={toggleVisibleSelection} className="h-4 w-4 accent-[#0877ff]" aria-label="Selectionner toutes les commandes visibles" />
             <span>Article</span>
             <span>Qte</span>
             <span>Delais prod</span>
             <span>Prix</span>
-            <span className="text-center text-[#9ca3af]">x</span>
+            <span className="text-center text-[#9ca3af]">Action</span>
           </div>
 
           {dataStatus === 'loading' ? (
@@ -744,10 +791,10 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
           ) : (
             <div className="divide-y divide-[#e5e7eb]">
               {visibleOrders.map((order) => (
-                <div key={order.id} className="grid grid-cols-[32px_minmax(0,1fr)_140px_150px_120px_32px] items-start px-5 py-5 text-sm text-[#1f2f43]">
+                <div key={order.id} className="grid grid-cols-[32px_minmax(0,1fr)_110px_135px_120px_50px] items-start px-5 py-5 text-sm text-[#1f2f43]">
                   <input type="checkbox" checked={selectedOrderIds.includes(order.id)} disabled={!isSelectableCartOrder(order)} onChange={() => toggleOrderSelection(order.id)} className="mt-10 h-4 w-4 accent-[#0877ff]" aria-label={`Selectionner ${order.orderNumber}`} />
                   <div className="flex min-w-0 gap-5">
-                    <div className="grid h-[116px] w-[116px] shrink-0 place-items-center bg-[#f1f4f7] text-lg font-semibold text-[#c8cfd6]">JLCPCB</div>
+                    <div className="grid h-[116px] w-[116px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-sm text-[#64748b]">{orderProviderLabel(order)}</div>
                     <div className="min-w-0 py-1">
                       <p className="font-semibold text-black">{orderGerberLabel(order)}</p>
                       <p className="mt-1 text-sm text-[#44546a]">{orderProductLabel(order)}: {order.orderNumber}</p>
@@ -759,39 +806,27 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
                     </div>
                   </div>
                   <div className="pt-5">
-                    <select className="h-9 w-[100px] border border-[#d1d5db] bg-white px-3 text-sm outline-none">
+                    <select className="h-9 w-[82px] border border-[#d1d5db] bg-white px-3 text-sm outline-none" disabled>
                       <option>{orderQuantity(order)}</option>
                     </select>
                   </div>
                   <span className="pt-6 text-sm text-black">{orderLeadTime(order)}</span>
                   <div className="pt-6">
-                    <p className="font-semibold text-[#ff7a00]">{formatMoney(orderTotal(order))}</p>
-                    <p className="mt-1 text-xs text-[#8a8f98] line-through">{formatMoney(orderTotal(order) * 1.18)}</p>
+                    <p className="text-[#ff7a00]">{formatMoney(orderTotal(order))}</p>
                   </div>
-                  <a href={`/orders/${order.id}`} className="pt-6 text-center text-[#9ca3af] hover:text-red-600" aria-label={`Voir ${order.orderNumber}`}>x</a>
+                  <button
+                    type="button"
+                    onClick={() => deleteOrder(order.id)}
+                    disabled={deletingOrderId === order.id || !isSelectableCartOrder(order)}
+                    className="pt-6 text-center text-[#9ca3af] hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                    aria-label={`Supprimer ${order.orderNumber}`}
+                  >
+                    {deletingOrderId === order.id ? '...' : 'x'}
+                  </button>
                 </div>
               ))}
             </div>
           )}
-        </div>
-
-        <div className="mt-3 border border-[#e5e7eb] bg-white p-3">
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-black">
-            <span>Recommended Deals For You</span>
-            <button type="button" className="text-xs font-normal text-[#0877ff]">Refresh</button>
-          </div>
-          <div className="grid gap-3 lg:grid-cols-3">
-            {quickProducts.slice(0, 3).map((product) => (
-              <a key={product.title} href={product.href} className="flex min-h-[72px] items-center gap-3 bg-[#f6f7f9] p-2">
-                <img src={product.image} alt="" className="h-14 w-14 object-cover" />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-semibold text-black">{product.title}</span>
-                  <span className="mt-1 block text-xs text-[#ff7a00]">Des {formatMoney(0.009)}</span>
-                </span>
-                <span className="shrink-0 rounded-full border border-[#0877ff] px-3 py-1 text-xs text-[#0877ff]">Passer commande</span>
-              </a>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -805,27 +840,23 @@ function OrderTableSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[];
             <span>Total marchandises</span>
             <span>{formatMoney(merchandiseTotal)}</span>
           </div>
-          <div className="flex justify-between gap-4">
-            <span>Estimation des frais de port</span>
-            <span>{formatMoney(shippingEstimate)}</span>
-          </div>
           <div className="flex justify-between gap-4 border-t border-[#e5e7eb] pt-4 text-base font-semibold">
             <span>Total</span>
             <span className="text-[#ff7a00]">{formatMoney(payableTotal)}</span>
           </div>
           <div className="border-t border-[#e5e7eb] pt-4">
             <div className="flex justify-between gap-4">
-              <span>Date d'expedition estimee</span>
-              <span>{estimatedShippingDate()}</span>
+              <span>Paiement</span>
+              <span>{selectedOrders.length === 1 ? 'Pret' : 'Un article a la fois'}</span>
             </div>
-            <p className="mt-3 text-sm leading-5 text-[#8a8f98]">La commande ne sera pas expediee tant que tous les articles ne seront pas prets.</p>
+            <p className="mt-3 text-sm leading-5 text-[#8a8f98]">Le paiement et le detail logistique se font sur la page de chaque commande.</p>
           </div>
           <div className="flex justify-between gap-4">
-            <span>Poids</span>
-            <span>{Math.max(0.29, selectedOrders.length * 0.29).toFixed(2)}kg</span>
+            <span>Commandes selectionnees</span>
+            <span>{selectedOrders.length}</span>
           </div>
         </div>
-        {selectedOrders[0] ? (
+        {selectedOrders.length === 1 ? (
           <a href={`/orders/${selectedOrders[0].id}`} className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#0877ff] px-5 text-base font-semibold text-white hover:bg-[#0068e8]">
             Paiement securise
           </a>
@@ -866,19 +897,20 @@ function orderQuantity(order: ProfileOrder) {
 function orderLeadTime(order: ProfileOrder) {
   if (order.status === 'delivered') return 'Termine';
   if (order.status === 'cancelled' || order.status === 'refunded') return '-';
-  return '2 days';
+  if (order.status === 'awaiting_payment' || order.paymentStatus === 'pending') return 'Apres paiement';
+  if (order.status === 'supplier_in_production') return 'En production';
+  if (order.status === 'shipped_to_africa' || order.status === 'customs_processing' || order.status === 'out_for_delivery') return 'En transit';
+  return 'Selon revue';
+}
+
+function orderProviderLabel(order: ProfileOrder) {
+  return order.externalManufacturingPartner || order.carrierName || 'Kendronics';
 }
 
 function orderGerberLabel(order: ProfileOrder) {
   const gerberId = order.quoteSnapshot?.gerberFileId?.trim();
   if (gerberId) return `pcb-gbr-files_${gerberId.slice(0, 10)}`;
   return `pcb-gbr-files_${order.orderNumber}`;
-}
-
-function estimatedShippingDate() {
-  const date = new Date();
-  date.setDate(date.getDate() + 2);
-  return date.toISOString().slice(0, 10);
 }
 
 function SearchField({ label }: { label: string }) {
@@ -1853,6 +1885,14 @@ const deleteReasonOptions: { value: DeleteReason; label: string }[] = [
   { value: 'new_account', label: 'Je cree un nouveau compte' },
   { value: 'privacy_security', label: 'Preoccupations liees a la confidentialite / securite' },
   { value: 'other', label: 'Autre' },
+];
+
+const orderTableFilters: Array<{ key: OrderStatusKey; label: string }> = [
+  { key: 'all', label: 'Tout' },
+  { key: 'payment-pending', label: 'Paiement' },
+  { key: 'production', label: 'Production' },
+  { key: 'delivery', label: 'Livraison' },
+  { key: 'completed', label: 'Terminees' },
 ];
 
 function DeleteAccountModal({
