@@ -126,9 +126,15 @@ type ProfileOrder = {
   quoteSnapshot?: {
     productType: string;
     gerberFileId: string;
+    layers?: number;
+    lengthMm?: number;
+    widthMm?: number;
     quantity: number;
     finalTotal: number;
     currency: 'EUR';
+    shippingMode?: string;
+    breakdown?: Record<string, number>;
+    configSnapshot?: Record<string, unknown> | null;
   };
 };
 
@@ -586,6 +592,7 @@ function ProfileViewContent({
 }
 
 type OrderStatusKey = 'all' | 'verification' | 'payment-pending' | 'production' | 'delivery' | 'completed' | 'comments';
+type OrderProductFilter = 'standard_pcb' | 'advanced_pcb' | 'fpc_rigid_flex' | 'pcb_assembly' | 'smt_stencil';
 
 const orderStatuses: Array<{ key: Extract<OrderStatusKey, 'verification' | 'payment-pending' | 'production' | 'delivery' | 'comments'>; label: string }> = [
   { key: 'verification', label: 'Vérification en cours' },
@@ -686,18 +693,18 @@ function OrderTableSearchPanel({
 }) {
   const [query, setQuery] = useState('');
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
-  const [statusFilter, setStatusFilter] = useState<OrderStatusKey>('all');
+  const [productFilter, setProductFilter] = useState<OrderProductFilter>('standard_pcb');
   const [deletingOrderId, setDeletingOrderId] = useState('');
-  const filteredOrders = statusFilter === 'all' ? orders : orders.filter((order) => orderMatchesStatus(order, statusFilter));
+  const [detailOrder, setDetailOrder] = useState<ProfileOrder | null>(null);
+  const filteredOrders = orders.filter((order) => orderProductFilterKey(order) === productFilter);
   const visibleOrders = filteredOrders.filter((order) => orderMatchesQuery(order, query));
   const selectedOrders = orders.filter((order) => selectedOrderIds.includes(order.id) && isSelectableCartOrder(order));
   const allVisibleSelected = visibleOrders.filter(isSelectableCartOrder).every((order) => selectedOrderIds.includes(order.id));
-  const merchandiseTotal = selectedOrders.reduce((total, order) => total + orderTotal(order), 0);
-  const payableTotal = merchandiseTotal;
-
-  useEffect(() => {
-    setSelectedOrderIds(orders.filter(isSelectableCartOrder).map((order) => order.id));
-  }, [orders]);
+  const merchandiseTotal = selectedOrders.reduce((total, order) => total + orderProductionTotal(order), 0);
+  const shippingTotal = selectedOrders.reduce((total, order) => total + orderShippingTotal(order), 0);
+  const taxesTotal = selectedOrders.reduce((total, order) => total + orderTaxesTotal(order), 0);
+  const payableTotal = merchandiseTotal + shippingTotal + taxesTotal;
+  const totalWeightKg = selectedOrders.reduce((total, order) => total + orderWeightKg(order), 0);
 
   function toggleOrderSelection(orderId: string) {
     setSelectedOrderIds((current) => (current.includes(orderId) ? current.filter((id) => id !== orderId) : [...current, orderId]));
@@ -745,16 +752,32 @@ function OrderTableSearchPanel({
     <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
       <div className="min-w-0">
         <div className="border border-[#e5e7eb] bg-white">
+          <div className="grid gap-2 border-b border-[#e5e7eb] bg-[#f3f6fa] p-2 sm:grid-cols-2 lg:grid-cols-5">
+            {orderProductFilters.map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                onClick={() => setProductFilter(filter.key)}
+                className={`relative flex min-h-[64px] items-center gap-3 border px-3 text-left text-sm transition ${
+                  productFilter === filter.key ? 'border-[#0f8f6b] bg-[#0f8f6b] text-white' : 'border-[#bfcbd8] bg-white text-black hover:border-[#0f8f6b]'
+                }`}
+              >
+                {filter.badge ? <span className="absolute right-0 top-0 bg-[#00b050] px-1 text-[9px] text-white">{filter.badge}</span> : null}
+                <img src={filter.image} alt="" className="h-11 w-16 object-contain" />
+                <span>{filter.label}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5e7eb] px-5 py-4">
             <div className="flex flex-wrap items-center gap-5 text-sm text-black">
-              {orderTableFilters.map((filter) => (
+              {orderStatuses.filter((status) => status.key !== 'verification' && status.key !== 'comments').map((filter) => (
                 <button
                   key={filter.key}
                   type="button"
-                  onClick={() => setStatusFilter(filter.key)}
-                  className={statusFilter === filter.key ? 'text-[#0877ff]' : 'text-black hover:text-[#0877ff]'}
+                  className="text-black"
                 >
-                  {filter.label} ({filter.key === 'all' ? orders.length : orders.filter((order) => orderMatchesStatus(order, filter.key)).length})
+                  {shortOrderStatusLabel(filter.key)} ({orders.filter((order) => orderProductFilterKey(order) === productFilter && orderMatchesStatus(order, filter.key)).length})
                 </button>
               ))}
             </div>
@@ -790,18 +813,26 @@ function OrderTableSearchPanel({
             </div>
           ) : (
             <div className="divide-y divide-[#e5e7eb]">
+              <div className="grid grid-cols-[32px_minmax(0,1fr)_110px_135px_120px_50px] items-center px-5 py-3 text-sm text-black">
+                <span />
+                <span>{productFilterGroupLabel(productFilter)}</span>
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
               {visibleOrders.map((order) => (
                 <div key={order.id} className="grid grid-cols-[32px_minmax(0,1fr)_110px_135px_120px_50px] items-start px-5 py-5 text-sm text-[#1f2f43]">
                   <input type="checkbox" checked={selectedOrderIds.includes(order.id)} disabled={!isSelectableCartOrder(order)} onChange={() => toggleOrderSelection(order.id)} className="mt-10 h-4 w-4 accent-[#0877ff]" aria-label={`Selectionner ${order.orderNumber}`} />
                   <div className="flex min-w-0 gap-5">
                     <div className="grid h-[116px] w-[116px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-sm text-[#64748b]">{orderProviderLabel(order)}</div>
                     <div className="min-w-0 py-1">
-                      <p className="font-semibold text-black">{orderGerberLabel(order)}</p>
-                      <p className="mt-1 text-sm text-[#44546a]">{orderProductLabel(order)}: {order.orderNumber}</p>
-                      <p className="mt-1 text-sm text-[#44546a]">{orderStatusLabel(order.status)}</p>
+                      <p className="text-black">{orderGerberLabel(order)}</p>
+                      <p className="mt-1 text-sm text-[#44546a]">{orderSummaryLine(order)}</p>
+                      <p className="mt-1 text-sm text-[#44546a]">Client #: <span className="text-[#0877ff]">{order.orderNumber}</span></p>
                       <div className="mt-3 flex flex-wrap gap-4 text-sm">
-                        <a href={`/orders/${order.id}`} className="text-[#44546a] hover:text-[#0877ff]">Details du produit</a>
-                        <a href={`/orders/${order.id}`} className="text-[#44546a] hover:text-[#0877ff]">Modifier la commande</a>
+                        <button type="button" onClick={() => setDetailOrder(order)} className="text-[#44546a] hover:text-[#0877ff]">Detail du produit</button>
+                        <a href={`/quote?orderId=${encodeURIComponent(order.id)}`} className="text-[#44546a] hover:text-[#0877ff]">Modifier la commande</a>
                       </div>
                     </div>
                   </div>
@@ -810,9 +841,9 @@ function OrderTableSearchPanel({
                       <option>{orderQuantity(order)}</option>
                     </select>
                   </div>
-                  <span className="pt-6 text-sm text-black">{orderLeadTime(order)}</span>
+                  <span className="pt-6 text-sm text-black">{orderProductionDelay(order)}</span>
                   <div className="pt-6">
-                    <p className="text-[#ff7a00]">{formatMoney(orderTotal(order))}</p>
+                    <p className="text-[#ff7a00]">{formatMoney(orderProductionTotal(order))}</p>
                   </div>
                   <button
                     type="button"
@@ -840,6 +871,14 @@ function OrderTableSearchPanel({
             <span>Total marchandises</span>
             <span>{formatMoney(merchandiseTotal)}</span>
           </div>
+          <div className="flex justify-between gap-4">
+            <span>Estimation des frais de port</span>
+            <span>{selectedOrders.length ? formatMoney(shippingTotal) : '--'}</span>
+          </div>
+          <div className="flex justify-between gap-4">
+            <span>Droits de douane et taxes</span>
+            <span>{selectedOrders.length ? formatMoney(taxesTotal) : '--'}</span>
+          </div>
           <div className="flex justify-between gap-4 border-t border-[#e5e7eb] pt-4 text-base font-semibold">
             <span>Total</span>
             <span className="text-[#ff7a00]">{formatMoney(payableTotal)}</span>
@@ -852,8 +891,8 @@ function OrderTableSearchPanel({
             <p className="mt-3 text-sm leading-5 text-[#8a8f98]">Le paiement et le detail logistique se font sur la page de chaque commande.</p>
           </div>
           <div className="flex justify-between gap-4">
-            <span>Commandes selectionnees</span>
-            <span>{selectedOrders.length}</span>
+            <span>Poids</span>
+            <span>{selectedOrders.length ? `${formatWeight(totalWeightKg)}kg` : '--'}</span>
           </div>
         </div>
         {selectedOrders.length === 1 ? (
@@ -869,12 +908,175 @@ function OrderTableSearchPanel({
           +Ajouter un nouvel article
         </a>
       </aside>
+      {detailOrder ? <ProductDetailModal order={detailOrder} onClose={() => setDetailOrder(null)} /> : null}
     </div>
   );
 }
 
 function orderTotal(order: ProfileOrder) {
   return order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0;
+}
+
+function orderProductionTotal(order: ProfileOrder) {
+  return Math.max(0, orderTotal(order) - orderShippingTotal(order) - orderTaxesTotal(order));
+}
+
+function orderShippingTotal(order: ProfileOrder) {
+  return lineAmount(order.quoteSnapshot?.breakdown, ['FranceToAfricaDelivery', 'franceToAfricaDelivery']);
+}
+
+function orderTaxesTotal(order: ProfileOrder) {
+  return lineAmount(order.quoteSnapshot?.breakdown, ['taxesIfApplicable', 'customsRiskBuffer']);
+}
+
+function lineAmount(breakdown: Record<string, number> | undefined, keys: string[]) {
+  if (!breakdown) return 0;
+  return keys.reduce((total, key) => total + Number(breakdown[key] ?? 0), 0);
+}
+
+function orderProductFilterKey(order: ProfileOrder): OrderProductFilter {
+  const type = order.quoteSnapshot?.productType;
+  if (type === 'advanced_pcb' || type === 'pcb_assembly' || type === 'fpc_rigid_flex' || type === 'smt_stencil') return type;
+  return 'standard_pcb';
+}
+
+function productFilterGroupLabel(filter: OrderProductFilter) {
+  return {
+    standard_pcb: 'Kendronics (PCB standard)',
+    advanced_pcb: 'Kendronics (PCB avance / PCBA)',
+    fpc_rigid_flex: 'Kendronics (FPC / rigide-flex)',
+    pcb_assembly: 'Kendronics (Assemblage)',
+    smt_stencil: 'Kendronics (Pochoir CMS)',
+  }[filter];
+}
+
+function shortOrderStatusLabel(key: OrderStatusKey) {
+  if (key === 'payment-pending') return 'Paiement';
+  if (key === 'production') return 'Production';
+  if (key === 'delivery') return 'Livraison';
+  if (key === 'completed') return 'Terminees';
+  return 'Tout';
+}
+
+function orderSummaryLine(order: ProfileOrder) {
+  const config = order.quoteSnapshot?.configSnapshot ?? {};
+  const color = stringConfig(config.solderMaskColor) || 'Couleur a confirmer';
+  const thickness = stringConfig(config.thickness) || 'Epaisseur a confirmer';
+  const finish = stringConfig(config.surfaceFinish) || 'Finition a confirmer';
+  return `${orderProductLabel(order)}: ${color}, ${thickness}, ${finish}`;
+}
+
+function orderProductionDelay(order: ProfileOrder) {
+  const config = order.quoteSnapshot?.configSnapshot ?? {};
+  const days = numberConfig(config.productionBuildDays) ?? numberConfig(config.buildTimeDays);
+  if (days && days > 0) return `${days} days`;
+  return orderLeadTime(order);
+}
+
+function orderWeightKg(order: ProfileOrder) {
+  const config = order.quoteSnapshot?.configSnapshot ?? {};
+  const explicitWeight = numberConfig(config.weightKg) ?? numberConfig(config.estimatedWeightKg) ?? numberConfig(config.shippingWeightKg);
+  if (explicitWeight && explicitWeight > 0) return explicitWeight;
+
+  const lengthMm = order.quoteSnapshot?.lengthMm ?? numberConfig(config.lengthMm) ?? numberConfig(config.length) ?? 100;
+  const widthMm = order.quoteSnapshot?.widthMm ?? numberConfig(config.widthMm) ?? numberConfig(config.width) ?? 100;
+  const quantity = order.quoteSnapshot?.quantity ?? numberConfig(config.quantity) ?? 1;
+  const layers = order.quoteSnapshot?.layers ?? numberConfig(config.layers) ?? 2;
+  const thickness = parseFloat(String(config.thickness ?? '1.6').replace(',', '.')) || 1.6;
+  const pcbVolumeCm3 = (lengthMm / 10) * (widthMm / 10) * (thickness / 10);
+  const materialKg = pcbVolumeCm3 * 1.85 / 1000 * quantity;
+  const layerFactor = Math.max(1, layers / 2);
+  return Math.max(0.08, materialKg * layerFactor + 0.06);
+}
+
+function formatWeight(value: number) {
+  return value.toFixed(value >= 1 ? 2 : 3).replace('.', ',');
+}
+
+function stringConfig(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value.trim() : '';
+}
+
+function numberConfig(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function ProductDetailModal({ order, onClose }: { order: ProfileOrder; onClose: () => void }) {
+  const rows = productDetailRows(order);
+
+  return (
+    <div className="fixed inset-0 z-[90] bg-black/55 px-4 py-10">
+      <div className="mx-auto max-h-[86vh] max-w-[1100px] overflow-auto bg-white p-7 text-black shadow-xl">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <h2 className="text-lg">Detail du produit</h2>
+          <button type="button" onClick={onClose} className="grid h-8 w-8 place-items-center text-2xl text-[#6b7280] hover:text-black" aria-label="Fermer">
+            x
+          </button>
+        </div>
+        <div className="grid border border-[#dfe5ec] text-sm md:grid-cols-2">
+          {rows.map((row) => (
+            <div key={row.label} className="grid grid-cols-[200px_minmax(0,1fr)] border-b border-[#dfe5ec] md:border-r md:even:border-r-0">
+              <span className="bg-[#f0f3f7] px-3 py-3 text-[#1f2f43]">{row.label}</span>
+              <span className="px-3 py-3">{row.value || 'A confirmer'}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function productDetailRows(order: ProfileOrder) {
+  const quote = order.quoteSnapshot;
+  const config = quote?.configSnapshot ?? {};
+  const dimensions = `${quote?.lengthMm ?? numberConfig(config.lengthMm) ?? numberConfig(config.length) ?? 'A confirmer'} mm * ${quote?.widthMm ?? numberConfig(config.widthMm) ?? numberConfig(config.width) ?? 'A confirmer'} mm`;
+
+  return [
+    { label: 'Fichier Gerber:', value: orderGerberLabel(order) },
+    { label: 'Delais prod:', value: orderProductionDelay(order) },
+    { label: 'Materiau de base:', value: stringConfig(config.baseMaterial) || 'FR-4' },
+    { label: 'Couches:', value: String(quote?.layers ?? numberConfig(config.layers) ?? 'A confirmer') },
+    { label: 'Dimension:', value: dimensions },
+    { label: 'Quantite de PCB:', value: String(quote?.quantity ?? numberConfig(config.quantity) ?? 'A confirmer') },
+    { label: 'Type de produit:', value: orderProductLabel(order) },
+    { label: 'Conception differente:', value: String(numberConfig(config.designCount) ?? numberConfig(config.differentDesigns) ?? 1) },
+    { label: 'Format de livraison:', value: stringConfig(config.deliveryFormat) || 'Single PCB' },
+    { label: 'Epaisseur de PCB:', value: stringConfig(config.thickness) },
+    { label: "Specifier l'empilement:", value: stringConfig(config.stackup) || 'Non' },
+    { label: 'Couleur de PCB:', value: stringConfig(config.solderMaskColor) },
+    { label: 'Serigraphie:', value: stringConfig(config.silkscreenColor) },
+    { label: 'Type de materiel:', value: stringConfig(config.materialType) || stringConfig(config.fr4Tg) },
+    { label: 'Recouvrement des vias:', value: stringConfig(config.viaCovering) },
+    { label: 'Finition de surface:', value: stringConfig(config.surfaceFinish) },
+    { label: 'Ebavurage/Arrondissement des bords:', value: booleanText(config.edgePlating) },
+    { label: 'Poids du cuivre externe:', value: stringConfig(config.outerCopperWeight) || stringConfig(config.copperWeight) },
+    { label: 'Doigts dores:', value: booleanText(config.goldFingers) },
+    { label: 'Test electrique:', value: stringConfig(config.electricalTest) || 'Test selon revue' },
+    { label: 'Trous metallises:', value: booleanText(config.platedHoles) },
+    { label: 'Placage des bords:', value: booleanText(config.edgePlating) },
+    { label: 'Marquage sur PCB:', value: stringConfig(config.markOnPcb) || stringConfig(config.removeMark) },
+    { label: 'Trou aveugle:', value: booleanText(config.blindVia) },
+    { label: 'Min via hole size/diameter:', value: stringConfig(config.minViaHole) || stringConfig(config.minHoleSize) },
+    { label: 'Via Plating Method:', value: stringConfig(config.viaPlatingMethod) },
+    { label: '4-Wire Kelvin Test:', value: booleanText(config.fourWireKelvinTest) },
+    { label: 'Paper between PCBs:', value: booleanText(config.paperBetweenPcbs) },
+    { label: 'Appearance Quality:', value: stringConfig(config.appearanceQuality) },
+    { label: 'Confirm Production file:', value: booleanText(config.confirmProductionFile) },
+    { label: 'Silkscreen Technology:', value: stringConfig(config.silkscreenTechnology) },
+    { label: 'Package Box:', value: stringConfig(config.packageBox) },
+    { label: 'Inspection Report:', value: booleanText(config.inspectionReport) },
+    { label: 'Board Outline Tolerance:', value: stringConfig(config.boardOutlineTolerance) },
+    { label: 'UL Marking:', value: booleanText(config.ulMarking) },
+    { label: 'Countersink Hole:', value: booleanText(config.countersinkHole) },
+    { label: 'Humidity Indicator Card:', value: booleanText(config.humidityIndicatorCard) },
+    { label: 'Poids brut:', value: `${formatWeight(orderWeightKg(order))} kg` },
+  ];
+}
+
+function booleanText(value: unknown) {
+  if (typeof value === 'boolean') return value ? 'Oui' : 'Non';
+  if (typeof value === 'string' && value.trim()) return value;
+  return 'Non';
 }
 
 function isSelectableCartOrder(order: ProfileOrder) {
@@ -1887,12 +2089,12 @@ const deleteReasonOptions: { value: DeleteReason; label: string }[] = [
   { value: 'other', label: 'Autre' },
 ];
 
-const orderTableFilters: Array<{ key: OrderStatusKey; label: string }> = [
-  { key: 'all', label: 'Tout' },
-  { key: 'payment-pending', label: 'Paiement' },
-  { key: 'production', label: 'Production' },
-  { key: 'delivery', label: 'Livraison' },
-  { key: 'completed', label: 'Terminees' },
+const orderProductFilters: Array<{ key: OrderProductFilter; label: string; image: string; badge?: string }> = [
+  { key: 'standard_pcb', label: 'PCB standard', image: '/images/quote-product-standard-pcb.png' },
+  { key: 'advanced_pcb', label: 'PCB avance / PCBA', image: '/images/quote-product-advanced-pcba.png' },
+  { key: 'fpc_rigid_flex', label: 'FPC / rigide-flex', image: '/images/quote-product-fpc-rigid-flex.png', badge: 'NOUVEAU' },
+  { key: 'pcb_assembly', label: 'Assemblage', image: '/images/quote-product-assembly.png' },
+  { key: 'smt_stencil', label: 'Pochoir CMS', image: '/images/quote-product-smd-stencil.png' },
 ];
 
 function DeleteAccountModal({
