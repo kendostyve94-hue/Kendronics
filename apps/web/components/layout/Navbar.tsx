@@ -230,38 +230,12 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
           </div>
 
           <nav className="hidden shrink-0 items-center justify-end gap-3 text-[15px] font-normal text-slate-800 xl:gap-4 lg:flex">
-            <button
-              type="button"
-              className="text-slate-900 transition hover:text-[#0f8f6b]"
-              aria-label={t('nav.search')}
-              aria-expanded={isSearchOpen}
-              onClick={() => {
-                setIsSearchOpen((open) => !open);
-                setIsMenuOpen(false);
-                setOpenMobileSection(null);
-              }}
-            >
-              <SearchIcon />
-            </button>
             <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} />
             <CartLink href={cartHref} count={orders.length} />
             <LoginMenu isSignedIn={isSignedIn} avatarDataUrl={avatarDataUrl} firstName={firstName} t={t} />
           </nav>
 
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
-            <button
-              type="button"
-              className="inline-flex h-9 w-9 items-center justify-center text-slate-900 transition hover:text-[#0f8f6b]"
-              aria-label={t('nav.search')}
-              aria-expanded={isSearchOpen}
-              onClick={() => {
-                setIsSearchOpen((open) => !open);
-                setIsMenuOpen(false);
-                setOpenMobileSection(null);
-              }}
-            >
-              <SearchIcon />
-            </button>
             <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} compact />
             {isSignedIn ? (
               <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-sm border border-[#d1d5db] bg-[#0b1724] text-xs font-black text-white" aria-label={t('nav.openAccount')}>
@@ -389,7 +363,7 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
               <span className={`relative grid h-5 w-5 place-items-center ${isActive ? 'text-[#0f8f6b]' : ''}`}>
                 {item.icon}
                 {item.count != null ? (
-                  <span className="absolute -right-2 -top-2 grid min-h-4 min-w-4 place-items-center rounded-full bg-pink-500 px-1 text-[10px] font-black leading-none text-white">
+                <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-[#ec3b91] px-1 text-[10px] font-semibold leading-none text-white">
                     {item.count}
                   </span>
                 ) : null}
@@ -548,7 +522,7 @@ function CartLink({ href, count }: { href: string; count: number }) {
   return (
     <a href={href} className="relative inline-flex h-9 w-9 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-10 sm:w-10" aria-label={t('nav.cart')}>
       <CartIcon />
-      <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-pink-500 px-1 text-[11px] font-semibold leading-none text-white">
+      <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#ec3b91] px-1 text-[11px] font-semibold leading-none text-white">
         {count}
       </span>
     </a>

@@ -25,8 +25,6 @@ const oneStopCapabilities = [
   'Assistance Gerber avant paiement',
 ];
 
-const oneStopBadges = ['Tests fonctionnels', 'Programmation CI', 'BGA et QFN'];
-
 const kendronicsChoiceCards = [
   {
     eyebrow: 'HAUT DE GAMME, COMPLEXE',
@@ -218,7 +216,7 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
             <ul className="mt-5 space-y-2 text-sm leading-5 text-slate-600">
               {kendronicsChoiceReasons.map((reason) => (
                 <li key={reason} className="flex gap-3">
-                  <span className="mt-0.5 text-base font-black text-[#87c98a]">v</span>
+                  <span className="mt-0.5 text-base font-semibold text-[#87c98a]">v</span>
                   <span>{reason}</span>
                 </li>
               ))}
@@ -228,8 +226,8 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
               <span className="absolute inset-0 bg-gradient-to-r from-[#064626]/80 via-[#0b5134]/70 to-[#1f2937]/40" />
               <span className="relative flex h-full items-center justify-end px-5 text-right">
                 <span>
-                  <span className="block text-sm font-black">Pourquoi Kendronics ?</span>
-                  <span className="mt-1 block text-xs font-black">Voir plus <span className="inline-block transition group-hover:translate-x-1">-&gt;</span></span>
+                  <span className="block text-sm font-semibold">Pourquoi Kendronics ?</span>
+                  <span className="mt-1 block text-xs font-semibold">Voir plus <span className="inline-block transition group-hover:translate-x-1">-&gt;</span></span>
                 </span>
               </span>
             </a>
@@ -246,8 +244,8 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
                     <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
                     <span className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/20 to-slate-950/0" />
                     <span className="relative block p-5 text-white">
-                      <span className="block text-sm font-black">{card.eyebrow}</span>
-                      <span className="mt-2 block text-2xl font-black tracking-tight">{card.title}</span>
+                      <span className="block text-sm font-semibold">{card.eyebrow}</span>
+                      <span className="mt-2 block text-2xl font-semibold tracking-tight">{card.title}</span>
                     </span>
                   </a>
                 ))}
@@ -308,34 +306,25 @@ function HomeCapabilityMatrix() {
 
   return (
     <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
-      <div className="mx-auto grid max-w-none gap-5 xl:grid-cols-[minmax(34rem,1.05fr)_minmax(31rem,0.95fr)]">
+      <div className="mx-auto grid max-w-none gap-5 xl:grid-cols-[minmax(40rem,1.18fr)_minmax(28rem,0.82fr)]">
         <div className="overflow-hidden border border-slate-300 bg-white">
-          <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(17rem,24rem)_1fr]">
+          <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(13rem,16rem)_minmax(0,1fr)]">
             <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
-              <span className="mb-3 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
-              <h2 className="text-xl font-black leading-tight tracking-tight text-ink">Solution complete pour PCB et assemblage</h2>
+              <h2 className="text-lg font-semibold leading-tight tracking-tight text-ink">Solution complete pour PCB et assemblage</h2>
               <p className="mt-1 text-sm text-slate-500">Simple, qualite suivie, delais visibles</p>
 
-              <ul className="mt-4 space-y-1.5 text-sm leading-5 text-slate-600">
+              <ul className="mt-4 space-y-1.5 text-[13px] leading-5 text-slate-600">
                 {oneStopCapabilities.map((item) => (
                   <li key={item} className="flex gap-3">
-                    <span className="text-base font-black text-[#008b6d]">v</span>
+                    <span className="text-sm font-semibold text-[#008b6d]">v</span>
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {oneStopBadges.map((badge) => (
-                  <span key={badge} className="bg-[#008b6d] px-3 py-2 text-xs font-black text-white">
-                    {badge}
-                  </span>
-                ))}
-              </div>
             </div>
 
             <div className="min-w-0">
-              <div className="relative h-[13rem] overflow-hidden bg-slate-950 sm:h-[16rem] lg:h-full lg:min-h-[18rem]">
+              <div className="relative h-[15rem] overflow-hidden bg-slate-950 sm:h-[18rem] lg:h-full lg:min-h-[20rem]">
                 <video
                   className="h-full w-full object-cover"
                   autoPlay
@@ -348,7 +337,7 @@ function HomeCapabilityMatrix() {
                   <source src={oneStopSolutionVideoMp4} type="video/mp4" />
                 </video>
                 <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 px-4 py-2.5 text-white">
-                  <p className="text-base font-normal">Parcours PCB et assemblage Kendronics</p>
+                  <p className="text-sm font-normal">Parcours PCB et assemblage Kendronics</p>
                 </div>
               </div>
             </div>
@@ -362,8 +351,8 @@ function HomeCapabilityMatrix() {
         </div>
 
         <div className="overflow-x-auto border border-slate-300 bg-white">
-          <table className="min-w-[62rem] w-full border-collapse text-left text-xs">
-            <thead className="bg-[#d8edf8] text-[11px] font-black uppercase tracking-[0.1em] text-slate-900">
+          <table className="min-w-[44rem] w-full border-collapse text-left text-xs">
+            <thead className="bg-[#d8edf8] text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-900">
               <tr>
                 {pcbGroup.headers.map((header, index) => (
                   <th key={header} className={`${index === 0 ? 'w-[14rem]' : index === 1 ? 'w-[24rem]' : ''} border-b border-r border-slate-300 px-4 py-2.5 last:border-r-0`}>
@@ -411,7 +400,7 @@ function OneStopStat({ icon, value, label }: { icon: 'gear' | 'planet' | 'wallet
     <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-3.5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
       <OneStopStatIcon icon={icon} />
       <span>
-        <span className="block text-sm font-black text-[#ff5a00]">{value}</span>
+        <span className="block text-sm font-semibold text-[#ff5a00]">{value}</span>
         <span className="block text-sm leading-4 text-slate-700">{label}</span>
       </span>
     </div>
@@ -421,7 +410,7 @@ function OneStopStat({ icon, value, label }: { icon: 'gear' | 'planet' | 'wallet
 function OneStopStatIcon({ icon }: { icon: 'gear' | 'planet' | 'wallet' }) {
   if (icon === 'gear') {
     return (
-      <svg aria-hidden="true" viewBox="0 0 64 64" className="h-9 w-9 flex-none text-[#526f82]" fill="currentColor">
+      <svg aria-hidden="true" viewBox="0 0 64 64" className="h-9 w-9 flex-none text-[#008b6d]" fill="currentColor">
         <path d="M25.6 11.5 29 8h6l3.4 3.5 4.8-1.2 4.2 4.2-1.2 4.8 3.5 3.4v6l-3.5 3.4 1.2 4.8-4.2 4.2-4.8-1.2-3.4 3.5h-6l-3.4-3.5-4.8 1.2-4.2-4.2 1.2-4.8-3.5-3.4v-6l3.5-3.4-1.2-4.8 4.2-4.2 4.8 1.2Zm6.4 8.8a5.4 5.4 0 1 0 0 10.8 5.4 5.4 0 0 0 0-10.8Z" />
         <path d="m46.2 34.8 2.4-2.5h4.2l2.4 2.5 3.3-.8 3 3-.8 3.3 2.5 2.4v4.2l-2.5 2.4.8 3.3-3 3-3.3-.8-2.4 2.5h-4.2l-2.4-2.5-3.3.8-3-3 .8-3.3-2.5-2.4v-4.2l2.5-2.4-.8-3.3 3-3 3.3.8Zm4.5 6.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" />
       </svg>
@@ -430,7 +419,7 @@ function OneStopStatIcon({ icon }: { icon: 'gear' | 'planet' | 'wallet' }) {
 
   if (icon === 'planet') {
     return (
-      <svg aria-hidden="true" viewBox="0 0 64 64" className="h-9 w-9 flex-none text-[#4f4f4f]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.5">
+      <svg aria-hidden="true" viewBox="0 0 64 64" className="h-9 w-9 flex-none text-[#008b6d]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.5">
         <circle cx="26" cy="34" r="20" />
         <path d="M10 27c5-3 9-3 13-1 3 2 7 1 10-2 3-2 7-2 10 0" />
         <path d="M11 42c5-2 9-2 12 1 2 2 3 5 2 9" />
@@ -468,7 +457,7 @@ function HomeExpandableCapabilityRow({ row, stripe, detail }: { row: string[]; s
     <tr className={stripe ? 'bg-[#edf7fd]' : 'bg-white'}>
       <td colSpan={3} className="border-b border-slate-300 p-0 align-top">
         <details className="group">
-          <summary className="grid cursor-pointer list-none grid-cols-[14rem_24rem_minmax(0,1fr)] border-slate-300 outline-none marker:content-none focus:outline-none [&::-webkit-details-marker]:hidden">
+          <summary className="grid cursor-pointer list-none grid-cols-[10rem_17rem_minmax(0,1fr)] border-slate-300 outline-none marker:content-none focus:outline-none [&::-webkit-details-marker]:hidden">
             {row.map((cell, index) => (
               <span
                 key={`${cell}-${index}`}
@@ -497,14 +486,14 @@ function NestedCapabilityTable({ group }: { group: (typeof homeCapabilityGroups)
     <div className="overflow-hidden border border-slate-300 bg-white">
       <div className="flex flex-col gap-1 border-b border-slate-300 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#008b6d]">{group.count}</p>
-          <h4 className="text-base font-black text-ink">{group.label}</h4>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#008b6d]">{group.count}</p>
+          <h4 className="text-base font-semibold text-ink">{group.label}</h4>
         </div>
         <p className="text-xs leading-5 text-slate-500">{group.description}</p>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse text-left text-xs">
-          <thead className="bg-[#d8edf8] text-[10px] font-black uppercase tracking-[0.1em] text-slate-900">
+          <thead className="bg-[#d8edf8] text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-900">
             <tr>
               {group.headers.map((header) => (
                 <th key={header} className="border-b border-r border-slate-300 px-3 py-2 last:border-r-0">
@@ -519,7 +508,7 @@ function NestedCapabilityTable({ group }: { group: (typeof homeCapabilityGroups)
                 {row.map((cell, cellIndex) => (
                   <td
                     key={`${cell}-${cellIndex}`}
-                    className={`${cellIndex === 0 ? 'font-black text-ink' : 'leading-5 text-slate-700'} border-b border-r border-slate-300 px-3 py-2 align-top last:border-r-0`}
+                    className={`${cellIndex === 0 ? 'font-semibold text-ink' : 'leading-5 text-slate-700'} border-b border-r border-slate-300 px-3 py-2 align-top last:border-r-0`}
                   >
                     {cell}
                   </td>
@@ -539,7 +528,7 @@ function TrustAssurance() {
       <div className="mx-auto max-w-[1180px]">
         <div className="mb-6 max-w-3xl">
           <p className="label-caps text-deepblue">Confiance et securite</p>
-          <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Ce que Kendronics promet clairement, et ce qu'il ne promet pas.</h2>
+          <h2 className="mt-3 text-2xl font-semibold text-ink sm:text-3xl">Ce que Kendronics promet clairement, et ce qu'il ne promet pas.</h2>
           <p className="mt-3 text-sm leading-7 text-slate-600">
             La confiance vient d'un cadre lisible : role exact de la plateforme, fichiers proteges, paiement encadre, support tracable et limites realistes sur production et livraison.
           </p>
@@ -547,9 +536,9 @@ function TrustAssurance() {
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {trustAssurances.map(([title, body, href]) => (
             <a key={title} href={href} className="block border border-line bg-white p-4 transition hover:border-deepblue">
-              <h3 className="text-sm font-black text-ink">{title}</h3>
+              <h3 className="text-sm font-semibold text-ink">{title}</h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
-              <span className="mt-4 inline-flex text-xs font-black uppercase tracking-[0.12em] text-deepblue">Lire le cadre</span>
+              <span className="mt-4 inline-flex text-xs font-semibold uppercase tracking-[0.12em] text-deepblue">Lire le cadre</span>
             </a>
           ))}
         </div>
@@ -565,7 +554,7 @@ function OperationalProofs() {
         <div className="mb-5 flex flex-col gap-3 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="label-caps text-deepblue">Preuves operationnelles</p>
-            <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Ce que le client garde sous controle.</h2>
+            <h2 className="mt-3 text-2xl font-semibold text-ink sm:text-3xl">Ce que le client garde sous controle.</h2>
           </div>
           <Button href="/how-it-works" variant="secondary" className="sm:h-12">
             Voir le parcours
@@ -574,7 +563,7 @@ function OperationalProofs() {
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           {operationalProofs.map(([title, body]) => (
             <article key={title} className="border border-line bg-slate-50 p-4">
-              <h3 className="text-sm font-black text-ink">{title}</h3>
+              <h3 className="text-sm font-semibold text-ink">{title}</h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">{body}</p>
             </article>
           ))}
@@ -648,13 +637,13 @@ function MobileQuickAccess() {
   return (
     <section className="bg-[#eef2f6] px-4 py-5 sm:px-6 lg:hidden">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-black text-ink">Acces rapide</h2>
-        <a href="/quote" className="text-xs font-black text-deepblue">Devis</a>
+        <h2 className="text-sm font-semibold text-ink">Acces rapide</h2>
+        <a href="/quote" className="text-xs font-semibold text-deepblue">Devis</a>
       </div>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {links.map(([title, subtitle, href]) => (
           <a key={title} href={href} className="min-w-[8.5rem] border border-line bg-slate-50 p-3">
-            <p className="text-sm font-black text-ink">{title}</p>
+            <p className="text-sm font-semibold text-ink">{title}</p>
             <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
           </a>
         ))}
@@ -758,14 +747,14 @@ function WhyKendronics() {
         <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <div>
             <p className="label-caps text-deepblue">Pourquoi Kendronics</p>
-            <h2 className="mt-3 text-2xl font-black leading-tight text-ink sm:text-3xl">Un seul dossier pour le devis, le paiement, le support et la livraison.</h2>
+            <h2 className="mt-3 text-2xl font-semibold leading-tight text-ink sm:text-3xl">Un seul dossier pour le devis, le paiement, le support et la livraison.</h2>
             <p className="mt-4 text-sm leading-7 text-slate-600">
               Kendronics sert de couche operationnelle entre vos fichiers, les partenaires de fabrication, la logistique et le support client.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {['Prix lisible', 'Support Gerber', 'Suivi commande', 'Livraison Afrique'].map((item) => (
-              <div key={item} className="flex min-h-16 items-center border border-line bg-slate-50 p-3 text-sm font-black leading-5 text-ink">{item}</div>
+              <div key={item} className="flex min-h-16 items-center border border-line bg-slate-50 p-3 text-sm font-semibold leading-5 text-ink">{item}</div>
             ))}
           </div>
         </div>
@@ -780,11 +769,11 @@ function TrustBlock() {
       <div className="mx-auto grid max-w-[21.5rem] gap-5 sm:max-w-[1180px] sm:gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
         <div className="min-w-0">
           <p className="label-caps text-deepblue">Capacites et cadre de service</p>
-          <h2 className="mt-3 text-2xl font-black text-ink sm:text-3xl">Des options techniques visibles avant validation.</h2>
+          <h2 className="mt-3 text-2xl font-semibold text-ink sm:text-3xl">Des options techniques visibles avant validation.</h2>
           <div className="mt-5 grid gap-2.5 sm:mt-6 sm:gap-3">
             {capabilityRows.map(([title, body]) => (
               <div key={title} className="border border-line bg-slate-50 p-3 sm:p-4">
-                <h3 className="text-sm font-black text-ink">{title}</h3>
+                <h3 className="text-sm font-semibold text-ink">{title}</h3>
                 <p className="mt-1 text-[13px] leading-5 text-slate-600 sm:text-sm sm:leading-6">{body}</p>
               </div>
             ))}
@@ -794,13 +783,13 @@ function TrustBlock() {
         <div className="min-w-0">
           <div className="border border-line bg-white p-4 sm:p-6">
             <p className="label-caps text-deepblue">Pourquoi Kendronics</p>
-            <h3 className="mt-3 text-xl font-black leading-tight text-ink sm:text-2xl">Un seul dossier pour le devis, le paiement, le support et la livraison.</h3>
+            <h3 className="mt-3 text-xl font-semibold leading-tight text-ink sm:text-2xl">Un seul dossier pour le devis, le paiement, le support et la livraison.</h3>
             <p className="mt-4 text-sm leading-7 text-slate-600">
               Kendronics sert de couche operationnelle entre vos fichiers, les partenaires de fabrication, la logistique et le support client.
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:gap-3">
               {['Prix lisible', 'Support Gerber', 'Suivi commande', 'Livraison Afrique'].map((item) => (
-                <div key={item} className="flex min-h-12 items-center border border-line bg-slate-50 p-2.5 text-[13px] font-black leading-5 text-ink sm:min-h-14 sm:p-3 sm:text-sm">{item}</div>
+                <div key={item} className="flex min-h-12 items-center border border-line bg-slate-50 p-2.5 text-[13px] font-semibold leading-5 text-ink sm:min-h-14 sm:p-3 sm:text-sm">{item}</div>
               ))}
             </div>
           </div>

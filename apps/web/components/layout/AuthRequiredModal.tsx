@@ -63,7 +63,7 @@ const initialRegisterValues: RegisterFormState = {
   password: '',
   confirmPassword: '',
   country: '',
-  accountType: 'individual',
+  accountType: '',
   acceptedTerms: false,
 };
 
@@ -434,13 +434,13 @@ export function AuthRequiredModal() {
       ) : (
         <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto border border-slate-200 bg-white text-ink">
           <div className="border-b border-slate-200 px-5 py-4 sm:px-6">
-          <div className="flex items-center gap-4">
-            <button type="button" onClick={backToChoice} className="shrink-0 text-xs font-medium text-slate-400 transition hover:text-slate-600">
-              Retour
-            </button>
+          <div className="flex items-center justify-between gap-4">
             <h1 id="auth-required-title" className="text-2xl font-bold tracking-normal text-ink sm:text-[28px]">
               Rejoindre ou se connecter
             </h1>
+            <button type="button" onClick={backToChoice} className="shrink-0 text-xs font-medium text-slate-400 transition hover:text-slate-600">
+              Retour
+            </button>
           </div>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
             Creez votre compte ou connectez-vous ici pour acceder aux fonctionnalites Kendronics.
@@ -653,6 +653,7 @@ function RegisterPanel({
             </button>
           ))}
         </div>
+        {errors.accountType && <span className="mt-1 block text-xs font-medium text-red-600">{errors.accountType}</span>}
       </div>
 
       <label className="flex gap-3 text-xs leading-5 text-slate-600">

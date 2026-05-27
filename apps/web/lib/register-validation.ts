@@ -6,7 +6,7 @@ export interface RegisterFormState {
   password: string;
   confirmPassword: string;
   country: string;
-  accountType: AccountType;
+  accountType: AccountType | '';
   acceptedTerms: boolean;
 }
 
@@ -21,6 +21,7 @@ export function validateRegisterForm(values: RegisterFormState): RegisterErrors 
   if (values.password.length < 10) errors.password = 'Le mot de passe doit contenir au moins 10 caracteres.';
   if (values.confirmPassword !== values.password) errors.confirmPassword = 'Les mots de passe ne correspondent pas.';
   if (!values.country) errors.country = 'Selectionnez votre pays.';
+  if (!values.accountType) errors.accountType = 'Selectionnez un type de compte.';
   if (!values.acceptedTerms) errors.acceptedTerms = 'Acceptez les conditions et la politique de confidentialite pour continuer.';
 
   return errors;
