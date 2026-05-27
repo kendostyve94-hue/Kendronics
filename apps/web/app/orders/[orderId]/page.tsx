@@ -57,6 +57,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const [mobileMoneyCountryIso2, setMobileMoneyCountryIso2] = useState('');
   const [deleteStatus, setDeleteStatus] = useState<DeleteStatus>('idle');
   const [deleteError, setDeleteError] = useState('');
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [shippingConfirmed, setShippingConfirmed] = useState(false);
+  const [submissionMode, setSubmissionMode] = useState<'direct' | 'review_first'>('direct');
 
   useEffect(() => {
     let cancelled = false;
@@ -102,9 +105,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   }, [orderId]);
 
   const destination = detail ? countryNames[detail.order.destinationCountryIso2] ?? detail.order.destinationCountryIso2 : '';
-  const supportHref = detail ? `/contact?orderId=${encodeURIComponent(detail.order.id)}` : '/contact';
   const canCheckout = status === 'ready' && detail?.order.paymentStatus === 'pending';
-  const selectedMobileMoneyCountry = mobileMoneyCountryIso2 || detail?.order.destinationCountryIso2 || 'SN';
+  const checkoutAddress = detail ? readCheckoutAddress(destination) : null;
+  const shippingLabel = detail ? shippingMethodLabel(detail.order.quoteSnapshot?.shippingMode) : 'Livraison a confirmer';
+  const shippingDelay = detail?.order.quoteSnapshot?.configSnapshot?.liveShippingTransitTime
+    ? String(detail.order.quoteSnapshot.configSnapshot.liveShippingTransitTime)
+    : detail?.order.quoteSnapshot?.configSnapshot?.estimatedShippingTime
+      ? String(detail.order.quoteSnapshot.configSnapshot.estimatedShippingTime)
+      : detail?.order.estimatedDeliveryAt
+        ? formatDate(detail.order.estimatedDeliveryAt)
+        : 'Delai a confirmer';
 
   async function startStripeCheckout() {
     if (!detail) return;
@@ -164,7 +174,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
         body: JSON.stringify({
           orderId: detail.order.id,
           phoneNumber: mobileMoneyPhone,
-          countryIso2: selectedMobileMoneyCountry,
+          countryIso2: mobileMoneyCountryIso2 || detail.order.destinationCountryIso2 || 'SN',
         }),
       });
 
@@ -220,77 +230,70 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   }
 
   return (
-    <main className="min-h-screen bg-cloud">
-      <Navbar />
-      <section className="border-b border-line bg-white pt-28">
-        <div className="mx-auto max-w-[1320px] px-4 pb-5 sm:px-6 lg:px-8">
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">Panier d'achat</p>
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">Détail de commande</h1>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Consultez les fichiers, spécifications, coûts et actions disponibles pour cette commande.
-              </p>
-            </div>
-            {detail ? <StatusBadge status={detail.order.status} /> : null}
+    <main className="min-h-screen bg-[#eef1f5] text-[#111827]">
+      <header className="border-b border-[#e5e7eb] bg-white">
+        <div className="mx-auto flex h-[72px] max-w-[1360px] items-center gap-8 px-5">
+          <a href="/" aria-label="Kendronics accueil" className="shrink-0">
+            <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-11 w-auto" />
+          </a>
+          <div>
+            <h1 className="text-base uppercase text-black">Caisse s&eacute;curis&eacute;e SSL</h1>
+            <p className="mt-2 text-sm text-[#8b929b]">Vos informations sont prot&eacute;g&eacute;es</p>
           </div>
         </div>
-      </section>
+      </header>
 
-      <section className="mx-auto max-w-[1320px] px-4 py-5 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-[1360px] px-5 py-8">
+        <a href="/profile?view=orders" className="mb-4 inline-flex items-center gap-2 text-sm text-black hover:text-[#0877ff]">
+          <span aria-hidden="true">&larr;</span>
+          Retour au panier
+        </a>
         {status === 'error' && (
-          <div className="mb-5 rounded-sm border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
-            Impossible de charger cette commande. Connectez-vous avec le bon compte ou créez un nouveau devis.
+          <div className="mb-5 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            Impossible de charger cette commande. Connectez-vous avec le bon compte ou cr&eacute;ez un nouveau devis.
             <a href="/quote" className="ml-2 underline">Ouvrir le devis</a>
           </div>
         )}
         {status === 'loading' || !detail ? (
-          <div className="rounded-sm border border-line bg-white p-6 text-sm font-bold text-slate-600">
-            {status === 'loading' ? 'Chargement de la commande...' : 'Aucune donnée de commande à afficher.'}
+          <div className="border border-line bg-white p-6 text-sm text-slate-600">
+            {status === 'loading' ? 'Chargement de la commande...' : 'Aucune donnee de commande a afficher.'}
           </div>
         ) : (
-
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="overflow-hidden rounded-sm border border-line bg-white">
-            <div className="flex flex-col gap-2 border-b border-line p-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Commande</p>
-                <p className="mt-1 text-lg font-black text-ink">{detail.order.orderNumber}</p>
-              </div>
-              <p className="text-sm font-bold text-slate-600">{detail.pcbSpecs.productType}</p>
-            </div>
-
-            <OrderAccordion
-              order={detail.order}
-              specs={detail.pcbSpecs}
-              gerberFile={detail.gerberFile}
-              pricingBreakdown={detail.pricingBreakdown}
-              trackingTimeline={detail.trackingTimeline}
-              destination={destination}
-              deleteStatus={deleteStatus}
-              deleteError={deleteError}
-              onDelete={deleteOrder}
+        <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="space-y-5">
+            <CheckoutAddressCard
+              address={checkoutAddress}
+              confirmed={addressConfirmed}
+              onConfirm={() => setAddressConfirmed(true)}
+              onChange={() => setAddressConfirmed(false)}
+            />
+            <CheckoutShippingCard
+              confirmed={shippingConfirmed}
+              shippingLabel={shippingLabel}
+              shippingDelay={shippingDelay}
+              onConfirm={() => setShippingConfirmed(true)}
+              onChange={() => setShippingConfirmed(false)}
+            />
+            <CheckoutSubmitCard
+              mode={submissionMode}
+              onModeChange={setSubmissionMode}
             />
           </div>
 
-          <div className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+          <div className="xl:sticky xl:top-6 xl:self-start">
             <SummaryCard
               order={detail.order}
               canCheckout={canCheckout}
               checkoutStatus={checkoutStatus}
               checkoutError={checkoutError}
-              paymentMethod={paymentMethod}
-              onPaymentMethodChange={setPaymentMethod}
-              mobileMoneyStatus={mobileMoneyStatus}
-              mobileMoneyError={mobileMoneyError}
-              mobileMoneyPhone={mobileMoneyPhone}
-              mobileMoneyCountryIso2={selectedMobileMoneyCountry}
-              onMobileMoneyPhoneChange={setMobileMoneyPhone}
-              onMobileMoneyCountryChange={setMobileMoneyCountryIso2}
-              onCheckout={startStripeCheckout}
-              onMobileMoneyPayment={startMobileMoneyPayment}
+              submissionMode={submissionMode}
+              addressConfirmed={addressConfirmed}
+              shippingConfirmed={shippingConfirmed}
+              onCheckout={submissionMode === 'direct' ? startStripeCheckout : () => router.push(`/contact?orderId=${encodeURIComponent(detail.order.id)}&topic=review-before-payment`)}
             />
-            <SupportCard supportHref={supportHref} orderNumber={detail.order.orderNumber} />
+          </div>
+          <div className="fixed bottom-16 right-8 hidden h-[62px] w-[62px] place-items-center rounded-full bg-white text-xs text-[#0f8f6b] shadow-sm ring-1 ring-[#dbe4ee] xl:grid">
+            K
           </div>
         </div>
         )}
@@ -304,138 +307,226 @@ function SummaryCard({
   canCheckout,
   checkoutStatus,
   checkoutError,
-  paymentMethod,
-  onPaymentMethodChange,
-  mobileMoneyStatus,
-  mobileMoneyError,
-  mobileMoneyPhone,
-  mobileMoneyCountryIso2,
-  onMobileMoneyPhoneChange,
-  onMobileMoneyCountryChange,
+  submissionMode,
+  addressConfirmed,
+  shippingConfirmed,
   onCheckout,
-  onMobileMoneyPayment,
 }: {
   order: CustomerOrderSummary;
   canCheckout: boolean;
   checkoutStatus: CheckoutStatus;
   checkoutError: string;
-  paymentMethod: PaymentMethod;
-  onPaymentMethodChange: (method: PaymentMethod) => void;
-  mobileMoneyStatus: MobileMoneyStatus;
-  mobileMoneyError: string;
-  mobileMoneyPhone: string;
-  mobileMoneyCountryIso2: string;
-  onMobileMoneyPhoneChange: (value: string) => void;
-  onMobileMoneyCountryChange: (value: string) => void;
+  submissionMode: 'direct' | 'review_first';
+  addressConfirmed: boolean;
+  shippingConfirmed: boolean;
   onCheckout: () => void;
-  onMobileMoneyPayment: () => void;
 }) {
-  const shippingEstimate = order.estimatedDeliveryAt ? formatDate(order.estimatedDeliveryAt) : '--';
-  const canSubmitMobileMoney = canCheckout && mobileMoneyPhone.trim().length >= 8 && mobileMoneyStatus !== 'loading';
+  const quote = order.quoteSnapshot;
+  const shipping = quote ? lineAmount(quote.breakdown, ['FranceToAfricaDelivery', 'franceToAfricaDelivery']) : 0;
+  const taxes = quote ? lineAmount(quote.breakdown, ['taxesIfApplicable', 'customsRiskBuffer']) : 0;
+  const merchandise = Math.max(0, order.totalPrice - shipping - taxes);
+  const canSubmit = canCheckout && addressConfirmed && shippingConfirmed && checkoutStatus !== 'loading';
 
   return (
-    <Card className="p-5">
-      <h2 className="text-xl font-black tracking-tight text-ink">Resume</h2>
-      <div className="mt-5 space-y-4 text-sm">
-        <SummaryLine label="Total marchandises" value={formatMoney(order.totalPrice, order.currency)} />
-        <SummaryLine label="Livraison" value="Incluse ou confirmee au paiement" />
-        <div className="flex items-center justify-between border-t border-line pt-4 text-base font-black">
-          <span>Total</span>
+    <aside className="bg-white p-8 shadow-sm ring-1 ring-[#e3e7ec]">
+      <div className="flex items-start justify-between gap-4">
+        <h2 className="text-2xl uppercase text-black">R&eacute;sum&eacute;</h2>
+        <a href="/profile?view=orders" className="text-sm text-[#0877ff]">1 articles &gt;</a>
+      </div>
+
+      <div className="mt-7 space-y-6 text-[15px]">
+        <SummaryLine label="Total marchandises" value={formatMoney(merchandise, order.currency)} />
+        <SummaryLine label="Estimation de la livraison" value={shipping > 0 ? formatMoney(shipping, order.currency) : 'A confirmer'} />
+        <SummaryLine label="Droits de douane et taxes" value={taxes > 0 ? formatMoney(taxes, order.currency) : 'A confirmer'} />
+        <div className="flex items-center justify-between border-t border-[#dfe5ec] pt-6 text-lg">
+          <span className="text-[#ff7a00]">Total g&eacute;n&eacute;ral</span>
           <span className="text-[#ff7a00]">{formatMoney(order.totalPrice, order.currency)}</span>
         </div>
-        <div className="border-t border-line pt-4">
-          <SummaryLine label="Date d'expedition estimee" value={shippingEstimate} />
-          <p className="mt-3 text-xs leading-5 text-slate-500">
-            La commande avance apres validation des fichiers, paiement et disponibilite fournisseur.
-          </p>
-        </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 overflow-hidden rounded-full border border-line bg-slate-50 p-1">
-        <button
-          type="button"
-          onClick={() => onPaymentMethodChange('stripe')}
-          className={`h-10 rounded-full text-sm font-black transition ${
-            paymentMethod === 'stripe' ? 'bg-white text-[#0877ff]' : 'text-slate-500 hover:text-ink'
-          }`}
-        >
-          Carte
-        </button>
-        <button
-          type="button"
-          onClick={() => onPaymentMethodChange('mobile_money')}
-          className={`h-10 rounded-full text-sm font-black transition ${
-            paymentMethod === 'mobile_money' ? 'bg-white text-[#0f8f6b]' : 'text-slate-500 hover:text-ink'
-          }`}
-        >
-          Mobile Money
-        </button>
-      </div>
-
-      {paymentMethod === 'stripe' ? (
-        <button
-          type="button"
-          disabled={!canCheckout || checkoutStatus === 'loading'}
-          onClick={onCheckout}
-          className={`mt-4 inline-flex h-12 w-full items-center justify-center rounded-full px-5 text-base font-black text-white transition ${
-            canCheckout && checkoutStatus !== 'loading'
-              ? 'bg-[#0877ff] hover:bg-[#0068e8]'
-              : 'cursor-not-allowed bg-slate-300'
-          }`}
-        >
-          {stripeButtonLabel(order.paymentStatus, checkoutStatus)}
-        </button>
-      ) : (
-        <div className="mt-4 space-y-3">
-          <label className="block text-sm font-black text-ink">
-            Pays
-            <select
-              value={mobileMoneyCountryIso2}
-              onChange={(event) => onMobileMoneyCountryChange(event.target.value)}
-              disabled={!canCheckout || mobileMoneyStatus === 'loading'}
-              className="mt-2 h-11 w-full rounded-sm border border-line bg-white px-3 text-sm font-bold text-ink outline-none focus:border-[#0f8f6b]"
-            >
-              {africanCountries.map((country) => (
-                <option key={country.iso2} value={country.iso2}>{country.name}</option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm font-black text-ink">
-            Numero Mobile Money
-            <input
-              type="tel"
-              value={mobileMoneyPhone}
-              onChange={(event) => onMobileMoneyPhoneChange(event.target.value)}
-              disabled={!canCheckout || mobileMoneyStatus === 'loading'}
-              placeholder="+221771234567"
-              className="mt-2 h-11 w-full rounded-sm border border-line bg-white px-3 text-sm font-bold text-ink outline-none focus:border-[#0f8f6b]"
-            />
-          </label>
-          <button
-            type="button"
-            disabled={!canSubmitMobileMoney}
-            onClick={onMobileMoneyPayment}
-            className={`inline-flex h-12 w-full items-center justify-center rounded-full px-5 text-base font-black text-white transition ${
-              canSubmitMobileMoney
-                ? 'bg-[#0f8f6b] hover:bg-[#0b7558]'
-                : 'cursor-not-allowed bg-slate-300'
-            }`}
-          >
-            {mobileMoneyButtonLabel(order.paymentStatus, mobileMoneyStatus)}
-          </button>
-          {mobileMoneyStatus === 'pending' ? (
-            <p className="rounded-sm border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-700">
-              Paiement Mobile Money cree. Confirmez la demande sur votre telephone si votre operateur l'envoie.
-            </p>
-          ) : null}
-        </div>
-      )}
+      <button
+        type="button"
+        disabled={!canSubmit}
+        onClick={onCheckout}
+        className={`mt-8 inline-flex h-[42px] w-full items-center justify-center rounded-full px-5 text-base text-white transition ${
+          canSubmit ? 'bg-[#0877ff] hover:bg-[#0068e8]' : 'cursor-not-allowed bg-slate-300'
+        }`}
+      >
+        {submissionMode === 'direct' ? stripeButtonLabel(order.paymentStatus, checkoutStatus) : 'Soumettre la commande'}
+      </button>
 
       {checkoutStatus === 'error' ? <p className="mt-3 text-sm font-bold text-red-700">{checkoutError}</p> : null}
-      {mobileMoneyStatus === 'error' ? <p className="mt-3 text-sm font-bold text-red-700">{mobileMoneyError}</p> : null}
-    </Card>
+      {!addressConfirmed || !shippingConfirmed ? (
+        <p className="mt-3 text-xs leading-5 text-[#8b929b]">Confirmez l'adresse et la livraison pour continuer.</p>
+      ) : null}
+    </aside>
   );
 
+}
+
+type CheckoutAddress = {
+  name: string;
+  phone: string;
+  line: string;
+};
+
+function CheckoutAddressCard({
+  address,
+  confirmed,
+  onConfirm,
+  onChange,
+}: {
+  address: CheckoutAddress | null;
+  confirmed: boolean;
+  onConfirm: () => void;
+  onChange: () => void;
+}) {
+  return (
+    <section className="bg-white p-5 shadow-sm ring-1 ring-[#e3e7ec]">
+      <div className="flex items-start justify-between gap-4">
+        <h2 className="text-2xl text-black">1. Adresse de livraison</h2>
+        {confirmed ? (
+          <button type="button" onClick={onChange} className="text-sm text-[#8b929b] hover:text-[#0877ff]">Changer</button>
+        ) : null}
+      </div>
+
+      {confirmed ? (
+        <div className="mt-6 space-y-4 text-sm text-black">
+          <p>Informations de livraison</p>
+          <p>{address?.name || 'Adresse a completer'} {address?.phone || ''}</p>
+          <p>{address?.line || 'Ajoutez une adresse de livraison dans votre profil.'}</p>
+          <span className="inline-block text-xl leading-none text-[#64748b]">v</span>
+        </div>
+      ) : (
+        <div className="mt-5">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-black">Informations de livraison</p>
+            <a href="/profile?view=shipping-address" className="text-sm text-[#0877ff]">+Ajouter une nouvelle adresse de livraison</a>
+          </div>
+          <div className="mt-5 max-h-[132px] space-y-5 overflow-y-auto pr-3">
+            {[0, 1, 2].map((item) => (
+              <label key={item} className="flex items-center gap-3 text-sm text-[#8b929b]">
+                <input
+                  type="radio"
+                  name="shipping-address"
+                  checked={item === 0}
+                  onChange={onConfirm}
+                  className="h-4 w-4 accent-[#0877ff]"
+                />
+                <span className={item === 0 ? 'text-black' : ''}>{address?.line || 'Adresse de livraison a completer'}</span>
+                {item === 0 ? <span className="ml-auto bg-[#f0f2f5] px-3 py-2 text-xs text-[#4b5563]">D&eacute;faut</span> : null}
+              </label>
+            ))}
+          </div>
+
+          <div className="mt-5 flex items-center justify-between gap-4">
+            <p className="text-sm text-black">Informations de facturation</p>
+            <a href="/profile?view=billing" className="text-sm text-[#0877ff]">+Ajouter une nouvelle adresse de facturation</a>
+          </div>
+          <div className="mt-5 space-y-5">
+            <label className="flex items-center gap-3 text-sm text-black">
+              <input type="radio" name="billing-address" defaultChecked className="h-4 w-4 accent-[#0877ff]" />
+              Identique a l'adresse de livraison
+            </label>
+            <label className="flex items-center gap-3 text-sm text-black">
+              <input type="radio" name="billing-address" className="h-4 w-4 accent-[#0877ff]" />
+              Choisir une adresse de facturation
+            </label>
+          </div>
+
+          <button type="button" onClick={onConfirm} className="mt-6 inline-flex h-10 items-center justify-center rounded-full bg-[#0877ff] px-8 text-sm text-white">
+            Continuer
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function CheckoutShippingCard({
+  confirmed,
+  shippingLabel,
+  shippingDelay,
+  onConfirm,
+  onChange,
+}: {
+  confirmed: boolean;
+  shippingLabel: string;
+  shippingDelay: string;
+  onConfirm: () => void;
+  onChange: () => void;
+}) {
+  return (
+    <section className="bg-white p-5 shadow-sm ring-1 ring-[#e3e7ec]">
+      <div className="flex items-start justify-between gap-4">
+        <h2 className="text-2xl text-black">2. M&eacute;thode d'exp&eacute;dition</h2>
+        {confirmed ? <button type="button" onClick={onChange} className="text-sm text-[#8b929b] hover:text-[#0877ff]">Changer</button> : null}
+      </div>
+      {confirmed ? (
+        <div className="mt-6 flex gap-12 text-sm text-black">
+          <span>{shippingLabel}</span>
+          <span>{shippingDelay}</span>
+        </div>
+      ) : (
+        <div className="mt-5">
+          <label className="flex items-center gap-4 text-sm text-black">
+            <input type="radio" name="shipping-method" defaultChecked className="h-4 w-4 accent-[#0877ff]" />
+            <span>{shippingLabel}</span>
+            <span>{shippingDelay}</span>
+          </label>
+          <button type="button" onClick={onConfirm} className="mt-6 inline-flex h-10 items-center justify-center rounded-full bg-[#0877ff] px-8 text-sm text-white">
+            Continuer
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function CheckoutSubmitCard({
+  mode,
+  onModeChange,
+}: {
+  mode: 'direct' | 'review_first';
+  onModeChange: (mode: 'direct' | 'review_first') => void;
+}) {
+  return (
+    <section className="bg-white p-5 shadow-sm ring-1 ring-[#e3e7ec]">
+      <h2 className="text-2xl text-black">3. Soumettre la commande</h2>
+      <div className="mt-7 space-y-5 text-sm">
+        <label className="flex items-start gap-3 text-black">
+          <input
+            type="radio"
+            name="submission-mode"
+            checked={mode === 'direct'}
+            onChange={() => onModeChange('direct')}
+            className="mt-1 h-4 w-4 accent-[#0877ff]"
+          />
+          <span>
+            <span className="block">Payer directement (recommande)</span>
+            <span className="mt-3 block leading-6 text-[#8b929b]">
+              Nous vous sugg&eacute;rons de payer avant la r&eacute;vision des fichiers pour assurer une production efficace. Si votre fichier ne peut pas &ecirc;tre approuv&eacute; pour la production apr&egrave;s r&eacute;vision, vous recevrez un remboursement.
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-3 text-black">
+          <input
+            type="radio"
+            name="submission-mode"
+            checked={mode === 'review_first'}
+            onChange={() => onModeChange('review_first')}
+            className="mt-1 h-4 w-4 accent-[#0877ff]"
+          />
+          <span>
+            <span className="block">R&eacute;vision avant paiement</span>
+            <span className="mt-3 block leading-6 text-[#8b929b]">
+              Vous pouvez demander une r&eacute;vision de fichier avant paiement. La production ne d&eacute;marre pas avant validation du fichier et r&eacute;ception du paiement.
+            </span>
+          </span>
+        </label>
+      </div>
+    </section>
+  );
 }
 
 function SummaryLine({ label, value }: { label: string; value: string }) {
@@ -743,6 +834,62 @@ function productLabel(value: string): string {
     smt_stencil: 'Stencil SMT',
     cnc_3d: 'CNC / 3D',
   }[value] ?? value;
+}
+
+function readCheckoutAddress(destination: string): CheckoutAddress | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const stored = JSON.parse(readScopedLocalStorage('kendronics.customer.profile') ?? '{}') as {
+      name?: string;
+      phone?: string;
+      shippingAddress?: Partial<{
+        firstName: string;
+        lastName: string;
+        street: string;
+        apartment: string;
+        city: string;
+        region: string;
+        country: string;
+        postalCode: string;
+        phone: string;
+      }>;
+    };
+    const address = stored.shippingAddress ?? {};
+    const name = [address.firstName, address.lastName].filter(Boolean).join(' ') || stored.name || 'Client Kendronics';
+    const phone = address.phone || stored.phone || '';
+    const line = [
+      address.street,
+      address.apartment,
+      address.city,
+      address.region,
+      address.postalCode,
+      address.country || destination,
+    ].filter(Boolean).join(', ');
+
+    return {
+      name,
+      phone,
+      line: line || `Adresse de livraison ${destination || 'a completer'}`,
+    };
+  } catch {
+    return {
+      name: 'Client Kendronics',
+      phone: '',
+      line: `Adresse de livraison ${destination || 'a completer'}`,
+    };
+  }
+}
+
+function shippingMethodLabel(mode?: string): string {
+  if (mode === 'express') return 'DHL Express';
+  if (mode === 'economy') return 'Livraison economique';
+  if (mode === 'standard') return 'Livraison standard';
+  return 'Livraison a confirmer';
+}
+
+function lineAmount(breakdown: Record<string, number>, keys: string[]): number {
+  return keys.reduce((total, key) => total + Number(breakdown[key] ?? 0), 0);
 }
 
 function stringValue(value: unknown): string | undefined {
