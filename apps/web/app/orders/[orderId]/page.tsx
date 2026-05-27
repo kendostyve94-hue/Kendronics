@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/layout/Navbar';
 import { Card } from '../../../components/ui/Card';
@@ -31,6 +31,7 @@ type DeleteStatus = 'idle' | 'deleting' | 'error';
 type PaymentMethod = 'stripe' | 'mobile_money';
 const apiBaseUrl = getApiBaseUrl();
 const customerOrdersStorageKey = 'kendronics.customer.orders';
+const profileStorageKey = 'kendronics.customer.profile';
 
 const countryNames: Record<string, string> = {
   SN: 'Senegal',
@@ -60,6 +61,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const [addressConfirmed, setAddressConfirmed] = useState(false);
   const [shippingConfirmed, setShippingConfirmed] = useState(false);
   const [submissionMode, setSubmissionMode] = useState<'direct' | 'review_first'>('direct');
+  const [paymentTermsAccepted, setPaymentTermsAccepted] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,7 +108,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
 
   const destination = detail ? countryNames[detail.order.destinationCountryIso2] ?? detail.order.destinationCountryIso2 : '';
   const canCheckout = status === 'ready' && detail?.order.paymentStatus === 'pending';
-  const checkoutAddress = detail ? readCheckoutAddress(destination) : null;
+  const checkoutAddress = useMemo(() => (detail ? readCheckoutAddress(destination) : normalizeAddress()), [detail?.order.id, destination]);
   const shippingLabel = detail ? shippingMethodLabel(detail.order.quoteSnapshot?.shippingMode) : 'Livraison a confirmer';
   const shippingDelay = detail?.order.quoteSnapshot?.configSnapshot?.liveShippingTransitTime
     ? String(detail.order.quoteSnapshot.configSnapshot.liveShippingTransitTime)
@@ -277,6 +279,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
             <CheckoutSubmitCard
               mode={submissionMode}
               onModeChange={setSubmissionMode}
+              accepted={paymentTermsAccepted}
+              onAcceptedChange={setPaymentTermsAccepted}
             />
           </div>
 
@@ -289,6 +293,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
               submissionMode={submissionMode}
               addressConfirmed={addressConfirmed}
               shippingConfirmed={shippingConfirmed}
+              termsAccepted={paymentTermsAccepted}
               onCheckout={submissionMode === 'direct' ? startStripeCheckout : () => router.push(`/contact?orderId=${encodeURIComponent(detail.order.id)}&topic=review-before-payment`)}
             />
           </div>
@@ -310,6 +315,7 @@ function SummaryCard({
   submissionMode,
   addressConfirmed,
   shippingConfirmed,
+  termsAccepted,
   onCheckout,
 }: {
   order: CustomerOrderSummary;
@@ -319,13 +325,14 @@ function SummaryCard({
   submissionMode: 'direct' | 'review_first';
   addressConfirmed: boolean;
   shippingConfirmed: boolean;
+  termsAccepted: boolean;
   onCheckout: () => void;
 }) {
   const quote = order.quoteSnapshot;
   const shipping = quote ? lineAmount(quote.breakdown, ['FranceToAfricaDelivery', 'franceToAfricaDelivery']) : 0;
   const taxes = quote ? lineAmount(quote.breakdown, ['taxesIfApplicable', 'customsRiskBuffer']) : 0;
   const merchandise = Math.max(0, order.totalPrice - shipping - taxes);
-  const canSubmit = canCheckout && addressConfirmed && shippingConfirmed && checkoutStatus !== 'loading';
+  const canSubmit = canCheckout && addressConfirmed && shippingConfirmed && termsAccepted && checkoutStatus !== 'loading';
 
   return (
     <aside className="bg-white p-8 shadow-sm ring-1 ring-[#e3e7ec]">
@@ -356,18 +363,27 @@ function SummaryCard({
       </button>
 
       {checkoutStatus === 'error' ? <p className="mt-3 text-sm font-bold text-red-700">{checkoutError}</p> : null}
-      {!addressConfirmed || !shippingConfirmed ? (
-        <p className="mt-3 text-xs leading-5 text-[#8b929b]">Confirmez l'adresse et la livraison pour continuer.</p>
+      {!addressConfirmed || !shippingConfirmed || !termsAccepted ? (
+        <p className="mt-3 text-xs leading-5 text-[#8b929b]">Enregistrez l'adresse, confirmez la livraison et acceptez les conditions de paiement pour continuer.</p>
       ) : null}
     </aside>
   );
 
 }
 
-type CheckoutAddress = {
-  name: string;
+type AccountAddress = {
+  accountType: string;
+  firstName: string;
+  lastName: string;
+  company: string;
+  street: string;
+  apartment: string;
+  country: string;
+  region: string;
+  city: string;
+  postalCode: string;
+  taxId: string;
   phone: string;
-  line: string;
 };
 
 function CheckoutAddressCard({
@@ -376,69 +392,110 @@ function CheckoutAddressCard({
   onConfirm,
   onChange,
 }: {
-  address: CheckoutAddress | null;
+  address: AccountAddress;
   confirmed: boolean;
   onConfirm: () => void;
   onChange: () => void;
 }) {
+  const [formAddress, setFormAddress] = useState<AccountAddress>(() => normalizeAddress(address));
+  const [editing, setEditing] = useState(!isCompleteShippingAddress(address));
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const canContinue = isCompleteShippingAddress(formAddress);
+  const fieldsDisabled = !editing && canContinue;
+
+  useEffect(() => {
+    setFormAddress(normalizeAddress(address));
+    setEditing(!isCompleteShippingAddress(address));
+  }, [address]);
+
+  function updateAddress<K extends keyof AccountAddress>(key: K, value: AccountAddress[K]) {
+    setFormAddress((current) => ({ ...current, [key]: value }));
+    setSaveStatus('idle');
+    if (confirmed) onChange();
+  }
+
+  async function submitAddress(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!isCompleteShippingAddress(formAddress)) {
+      setSaveStatus('error');
+      return;
+    }
+
+    setSaveStatus('saving');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        throw new Error('Session manquante');
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/users/me/shipping-address`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `${session.tokenType} ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address: formAddress }),
+      });
+
+      if (!response.ok) throw new Error(`Address update failed: ${response.status}`);
+      const user = (await response.json()) as { shippingAddress?: AccountAddress };
+      const savedAddress = normalizeAddress(user.shippingAddress ?? formAddress);
+      setFormAddress(savedAddress);
+      writeCheckoutAddress(savedAddress);
+      setEditing(false);
+      setSaveStatus('saved');
+      onConfirm();
+    } catch {
+      setSaveStatus('error');
+    }
+  }
+
   return (
     <section className="bg-white p-5 shadow-sm ring-1 ring-[#e3e7ec]">
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-2xl text-black">1. Adresse de livraison</h2>
-        {confirmed ? (
-          <button type="button" onClick={onChange} className="text-sm text-[#8b929b] hover:text-[#0877ff]">Changer</button>
-        ) : null}
       </div>
 
-      {confirmed ? (
-        <div className="mt-6 space-y-4 text-sm text-black">
-          <p>Informations de livraison</p>
-          <p>{address?.name || 'Adresse a completer'} {address?.phone || ''}</p>
-          <p>{address?.line || 'Ajoutez une adresse de livraison dans votre profil.'}</p>
-          <span className="inline-block text-xl leading-none text-[#64748b]">v</span>
-        </div>
-      ) : (
-        <div className="mt-5">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-sm text-black">Informations de livraison</p>
-            <a href="/profile?view=shipping-address" className="text-sm text-[#0877ff]">+Ajouter une nouvelle adresse de livraison</a>
-          </div>
-          <div className="mt-5 max-h-[132px] space-y-5 overflow-y-auto pr-3">
-            {[0, 1, 2].map((item) => (
-              <label key={item} className="flex items-center gap-3 text-sm text-[#8b929b]">
-                <input
-                  type="radio"
-                  name="shipping-address"
-                  checked={item === 0}
-                  onChange={onConfirm}
-                  className="h-4 w-4 accent-[#0877ff]"
-                />
-                <span className={item === 0 ? 'text-black' : ''}>{address?.line || 'Adresse de livraison a completer'}</span>
-                {item === 0 ? <span className="ml-auto bg-[#f0f2f5] px-3 py-2 text-xs text-[#4b5563]">D&eacute;faut</span> : null}
-              </label>
-            ))}
-          </div>
-
-          <div className="mt-5 flex items-center justify-between gap-4">
-            <p className="text-sm text-black">Informations de facturation</p>
-            <a href="/profile?view=billing" className="text-sm text-[#0877ff]">+Ajouter une nouvelle adresse de facturation</a>
-          </div>
-          <div className="mt-5 space-y-5">
-            <label className="flex items-center gap-3 text-sm text-black">
-              <input type="radio" name="billing-address" defaultChecked className="h-4 w-4 accent-[#0877ff]" />
-              Identique a l'adresse de livraison
-            </label>
-            <label className="flex items-center gap-3 text-sm text-black">
-              <input type="radio" name="billing-address" className="h-4 w-4 accent-[#0877ff]" />
-              Choisir une adresse de facturation
-            </label>
-          </div>
-
-          <button type="button" onClick={onConfirm} className="mt-6 inline-flex h-10 items-center justify-center rounded-full bg-[#0877ff] px-8 text-sm text-white">
+      <form onSubmit={submitAddress} className="mt-6">
+        <CheckoutAddressFields address={formAddress} disabled={fieldsDisabled} onUpdate={updateAddress} />
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          {editing ? (
+            <button
+              type="submit"
+              disabled={saveStatus === 'saving'}
+              className="inline-flex h-10 items-center justify-center rounded-full bg-[#0f8f6b] px-7 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+            >
+              {saveStatus === 'saving' ? 'Enregistrement...' : 'Enregistrer l\'adresse'}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            disabled={!canContinue}
+            onClick={onConfirm}
+            className="inline-flex h-10 items-center justify-center rounded-full bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+          >
             Continuer
           </button>
+          {canContinue && !editing ? (
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(true);
+                onChange();
+              }}
+              className="inline-flex h-10 items-center justify-center rounded-full border border-[#cfd8e3] px-7 text-sm text-[#334155] hover:border-[#0877ff] hover:text-[#0877ff]"
+            >
+              Modifier
+            </button>
+          ) : null}
+          <a href="/profile?view=shipping-address" className="text-sm text-[#0877ff]">Gerer mes adresses dans le profil</a>
         </div>
-      )}
+        {!canContinue ? (
+          <p className="mt-3 text-xs leading-5 text-red-600">Enregistrez une adresse de livraison complete avant de continuer.</p>
+        ) : null}
+        {saveStatus === 'saved' ? <p className="mt-3 text-xs leading-5 text-[#0f8f6b]">Adresse de livraison enregistree.</p> : null}
+        {saveStatus === 'error' ? <p className="mt-3 text-xs leading-5 text-red-600">Impossible d'enregistrer cette adresse. Verifiez les champs obligatoires.</p> : null}
+      </form>
     </section>
   );
 }
@@ -483,45 +540,106 @@ function CheckoutShippingCard({
   );
 }
 
+function CheckoutAddressFields({
+  address,
+  disabled,
+  onUpdate,
+}: {
+  address: AccountAddress;
+  disabled: boolean;
+  onUpdate: <K extends keyof AccountAddress>(key: K, value: AccountAddress[K]) => void;
+}) {
+  const fieldClassName = `h-[46px] border border-[#cfd8e3] bg-white px-5 text-sm outline-none placeholder:text-[#7b8794] focus:border-[#0f8f6b] disabled:bg-[#f8fafc] disabled:text-[#64748b]`;
+
+  return (
+    <div className="grid gap-x-7 gap-y-4 md:grid-cols-2">
+      <CheckoutChoiceBox label="Societe" active={address.accountType === 'company'} disabled={disabled} onClick={() => onUpdate('accountType', 'company')} />
+      <CheckoutChoiceBox label="Particulier" active={address.accountType !== 'company'} disabled={disabled} onClick={() => onUpdate('accountType', 'individual')} />
+      <input required disabled={disabled} value={address.firstName} onChange={(event) => onUpdate('firstName', event.target.value)} placeholder="Prenom *" className={fieldClassName} />
+      <input required disabled={disabled} value={address.lastName} onChange={(event) => onUpdate('lastName', event.target.value)} placeholder="Nom de famille *" className={fieldClassName} />
+      <input required disabled={disabled} value={address.street} onChange={(event) => onUpdate('street', event.target.value)} placeholder="Adresse de la rue *" className={fieldClassName} />
+      <input disabled={disabled} value={address.apartment} onChange={(event) => onUpdate('apartment', event.target.value)} placeholder="Appartement, chambre, batiment, etage, etc. (facultatif)" className={fieldClassName} />
+      <select required disabled={disabled} value={address.country} onChange={(event) => onUpdate('country', event.target.value)} className={fieldClassName}>
+        <option value="">Pays/Region *</option>
+        {africanCountries.map((country) => (
+          <option key={country.iso2} value={country.name}>{country.name}</option>
+        ))}
+      </select>
+      <input disabled={disabled} value={address.region} onChange={(event) => onUpdate('region', event.target.value)} placeholder="Etat/Province/Region" className={fieldClassName} />
+      <input required disabled={disabled} value={address.city} onChange={(event) => onUpdate('city', event.target.value)} placeholder="Ville *" className={fieldClassName} />
+      <input disabled={disabled} value={address.postalCode} onChange={(event) => onUpdate('postalCode', event.target.value)} placeholder="Zip/Code postal" className={fieldClassName} />
+      <input disabled={disabled} value={address.taxId} onChange={(event) => onUpdate('taxId', event.target.value)} placeholder="Numero TVA/identification fiscale" className={fieldClassName} />
+      <input required disabled={disabled} value={address.phone} onChange={(event) => onUpdate('phone', event.target.value)} placeholder="Telephone mobile *" className={fieldClassName} />
+    </div>
+  );
+}
+
+function CheckoutChoiceBox({ label, active, disabled, onClick }: { label: string; active?: boolean; disabled: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={`flex h-10 items-center gap-4 border px-4 text-sm disabled:cursor-default ${active ? 'border-[#0f8f6b] bg-[#eefbf4]' : 'border-[#cfd8e3] bg-white'}`}
+    >
+      <span className={`h-5 w-5 border ${active ? 'border-[#0f8f6b] bg-[#0f8f6b]' : 'border-[#cfd3d8] bg-white'}`} />
+      {label}
+    </button>
+  );
+}
+
 function CheckoutSubmitCard({
   mode,
   onModeChange,
+  accepted,
+  onAcceptedChange,
 }: {
   mode: 'direct' | 'review_first';
   onModeChange: (mode: 'direct' | 'review_first') => void;
+  accepted: boolean;
+  onAcceptedChange: (accepted: boolean) => void;
 }) {
   return (
     <section className="bg-white p-5 shadow-sm ring-1 ring-[#e3e7ec]">
       <h2 className="text-2xl text-black">3. Soumettre la commande</h2>
-      <div className="mt-7 space-y-5 text-sm">
-        <label className="flex items-start gap-3 text-black">
+      <div className="mt-6 space-y-5 text-sm leading-6 text-[#334155]">
+        <p>
+          En continuant, votre commande passe au paiement securise. Le montant est traite par carte via Stripe selon le mode configure sur la plateforme. Apres paiement, les fichiers et les parametres techniques sont verifies avant le lancement de la production.
+        </p>
+        <p>
+          Si une anomalie bloque la production, Kendronics vous contacte avec les corrections attendues. Tant que la commande ne peut pas etre lancee correctement, le dossier reste en verification et les actions de remboursement ou de correction sont gerees depuis votre espace client.
+        </p>
+        <div className="grid gap-3 border border-[#dfe5ec] bg-[#f8fafc] p-4">
+          <label className="flex items-start gap-3 text-black">
+            <input
+              type="radio"
+              name="submission-mode"
+              checked={mode === 'direct'}
+              onChange={() => onModeChange('direct')}
+              className="mt-1 h-4 w-4 accent-[#0877ff]"
+            />
+            <span>Payer maintenant et lancer la verification de production.</span>
+          </label>
+          <label className="flex items-start gap-3 text-black">
+            <input
+              type="radio"
+              name="submission-mode"
+              checked={mode === 'review_first'}
+              onChange={() => onModeChange('review_first')}
+              className="mt-1 h-4 w-4 accent-[#0877ff]"
+            />
+            <span>Demander une verification avant paiement.</span>
+          </label>
+        </div>
+        <label className="flex items-start gap-3 border border-[#dfe5ec] p-4 text-black">
           <input
-            type="radio"
-            name="submission-mode"
-            checked={mode === 'direct'}
-            onChange={() => onModeChange('direct')}
-            className="mt-1 h-4 w-4 accent-[#0877ff]"
+            type="checkbox"
+            checked={accepted}
+            onChange={(event) => onAcceptedChange(event.target.checked)}
+            className="mt-1 h-4 w-4 accent-[#0f8f6b]"
           />
           <span>
-            <span className="block">Payer directement (recommande)</span>
-            <span className="mt-3 block leading-6 text-[#8b929b]">
-              Nous vous sugg&eacute;rons de payer avant la r&eacute;vision des fichiers pour assurer une production efficace. Si votre fichier ne peut pas &ecirc;tre approuv&eacute; pour la production apr&egrave;s r&eacute;vision, vous recevrez un remboursement.
-            </span>
-          </span>
-        </label>
-        <label className="flex items-start gap-3 text-black">
-          <input
-            type="radio"
-            name="submission-mode"
-            checked={mode === 'review_first'}
-            onChange={() => onModeChange('review_first')}
-            className="mt-1 h-4 w-4 accent-[#0877ff]"
-          />
-          <span>
-            <span className="block">R&eacute;vision avant paiement</span>
-            <span className="mt-3 block leading-6 text-[#8b929b]">
-              Vous pouvez demander une r&eacute;vision de fichier avant paiement. La production ne d&eacute;marre pas avant validation du fichier et r&eacute;ception du paiement.
-            </span>
+            J'accepte que Kendronics utilise les informations de cette commande pour verifier le dossier, calculer les frais applicables, lancer le paiement choisi et suivre la production selon les conditions d'utilisation et la politique de remboursement.
           </span>
         </label>
       </div>
@@ -836,49 +954,73 @@ function productLabel(value: string): string {
   }[value] ?? value;
 }
 
-function readCheckoutAddress(destination: string): CheckoutAddress | null {
-  if (typeof window === 'undefined') return null;
+function readCheckoutAddress(destination: string): AccountAddress {
+  if (typeof window === 'undefined') return normalizeAddress({ country: destination });
 
   try {
-    const stored = JSON.parse(readScopedLocalStorage('kendronics.customer.profile') ?? '{}') as {
+    const stored = JSON.parse(readScopedLocalStorage(profileStorageKey) ?? '{}') as {
       name?: string;
       phone?: string;
-      shippingAddress?: Partial<{
-        firstName: string;
-        lastName: string;
-        street: string;
-        apartment: string;
-        city: string;
-        region: string;
-        country: string;
-        postalCode: string;
-        phone: string;
-      }>;
+      shippingAddress?: Partial<AccountAddress>;
     };
-    const address = stored.shippingAddress ?? {};
-    const name = [address.firstName, address.lastName].filter(Boolean).join(' ') || stored.name || 'Client Kendronics';
-    const phone = address.phone || stored.phone || '';
-    const line = [
-      address.street,
-      address.apartment,
-      address.city,
-      address.region,
-      address.postalCode,
-      address.country || destination,
-    ].filter(Boolean).join(', ');
-
-    return {
-      name,
-      phone,
-      line: line || `Adresse de livraison ${destination || 'a completer'}`,
-    };
+    const fallbackName = splitName(stored.name ?? '');
+    return normalizeAddress({
+      ...stored.shippingAddress,
+      firstName: stored.shippingAddress?.firstName || fallbackName.firstName,
+      lastName: stored.shippingAddress?.lastName || fallbackName.lastName,
+      phone: stored.shippingAddress?.phone || stored.phone || '',
+      country: stored.shippingAddress?.country || destination,
+    });
   } catch {
-    return {
-      name: 'Client Kendronics',
-      phone: '',
-      line: `Adresse de livraison ${destination || 'a completer'}`,
-    };
+    return normalizeAddress({ country: destination });
   }
+}
+
+function writeCheckoutAddress(address: AccountAddress) {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const stored = JSON.parse(readScopedLocalStorage(profileStorageKey) ?? '{}') as Record<string, unknown>;
+    writeScopedLocalStorage(profileStorageKey, JSON.stringify({ ...stored, shippingAddress: address }));
+  } catch {
+    writeScopedLocalStorage(profileStorageKey, JSON.stringify({ shippingAddress: address }));
+  }
+}
+
+function normalizeAddress(address?: Partial<AccountAddress>): AccountAddress {
+  return {
+    accountType: address?.accountType === 'company' ? 'company' : 'individual',
+    firstName: address?.firstName ?? '',
+    lastName: address?.lastName ?? '',
+    company: address?.company ?? '',
+    street: address?.street ?? '',
+    apartment: address?.apartment ?? '',
+    country: address?.country ?? '',
+    region: address?.region ?? '',
+    city: address?.city ?? '',
+    postalCode: address?.postalCode ?? '',
+    taxId: address?.taxId ?? '',
+    phone: address?.phone ?? '',
+  };
+}
+
+function isCompleteShippingAddress(address?: AccountAddress): boolean {
+  if (!address) return false;
+  return Boolean(
+    address.firstName.trim() &&
+    address.lastName.trim() &&
+    address.street.trim() &&
+    address.country.trim() &&
+    address.city.trim() &&
+    address.phone.trim(),
+  );
+}
+
+function splitName(name: string): { firstName: string; lastName: string } {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { firstName: '', lastName: '' };
+  if (parts.length === 1) return { firstName: parts[0], lastName: '' };
+  return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
 }
 
 function shippingMethodLabel(mode?: string): string {
