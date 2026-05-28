@@ -3,6 +3,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderQuoteDto } from './dto/update-order-quote.dto';
 import { UpdateOrderQuantityDto } from './dto/update-order-quantity.dto';
 import { OrdersService } from './orders.service';
 
@@ -29,6 +30,11 @@ export class OrdersController {
   @Patch(':id/quantity')
   updateQuantity(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() dto: UpdateOrderQuantityDto) {
     return this.ordersService.updateOwnedOrderQuantity(user.id, id, dto.quantity);
+  }
+
+  @Patch(':id/quote')
+  updateQuote(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() dto: UpdateOrderQuoteDto) {
+    return this.ordersService.updateOwnedOrderQuote(user.id, id, dto);
   }
 
   @Delete(':id')

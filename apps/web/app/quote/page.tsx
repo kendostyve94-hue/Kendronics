@@ -209,6 +209,22 @@ type QuoteSaveState = {
   message?: string;
 };
 
+type EditableOrder = {
+  id: string;
+  orderNumber: string;
+  destinationCountryIso2: string;
+  quoteSnapshot?: {
+    productType: QuoteConfig['productType'];
+    gerberFileId: string;
+    layers: number;
+    lengthMm: number;
+    widthMm: number;
+    quantity: number;
+    shippingMode: QuoteConfig['shippingMode'];
+    configSnapshot?: Record<string, unknown> | null;
+  };
+};
+
 type UploadResponse = {
   uploadId: string;
   uploadUrl?: string;
@@ -329,6 +345,7 @@ export default function QuotePage() {
     status: 'local',
     message: 'Calcul du prix fournisseur en direct...',
   });
+  const [editOrder, setEditOrder] = useState<EditableOrder | null>(null);
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === config.destinationCountry) ?? africanCountries[0],
@@ -337,6 +354,52 @@ export default function QuotePage() {
   const localPricing = useMemo(() => calculatePCBQuote(config), [config]);
   const pricing = apiPricing ?? localPricing;
   const errors = useMemo(() => validateQuoteConfig(config), [config]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadEditableOrder() {
+      const orderId = new URLSearchParams(window.location.search).get('orderId');
+      if (!orderId) return;
+
+      try {
+        const session = await readFreshAuthSession();
+        if (!session) throw new Error('Session expiree.');
+
+        const response = await fetch(`${apiBaseUrl}/api/orders/${orderId}`, {
+          headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+        });
+        if (!response.ok) throw new Error('Commande introuvable.');
+
+        const order = (await response.json()) as EditableOrder;
+        if (cancelled || !order.quoteSnapshot) return;
+
+        const nextConfig = configFromOrder(order);
+        setEditOrder(order);
+        setConfig(nextConfig);
+        setSelectedProductTitle(productCards.find((product) => product.value === nextConfig.productType)?.title ?? productCards[0].title);
+        setGerberUpload({
+          status: 'uploaded',
+          uploadId: order.quoteSnapshot.gerberFileId,
+          message: `Commande ${order.orderNumber} chargee pour modification.`,
+        });
+        setQuoteSave({ status: 'idle', message: `Modification de la commande ${order.orderNumber}` });
+      } catch (error) {
+        if (!cancelled) {
+          setQuoteSave({
+            status: 'error',
+            message: error instanceof Error ? error.message : 'Impossible de charger la commande a modifier.',
+          });
+        }
+      }
+    }
+
+    void loadEditableOrder();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -622,31 +685,40 @@ export default function QuotePage() {
         throw new Error('Televersez un fichier Gerber ZIP avant de sauvegarder le devis.');
       }
 
+      if (editOrder) {
+        const orderResponse = await fetch(`${apiBaseUrl}/api/orders/${editOrder.id}/quote`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(buildQuotePayload(config, gerberUpload.uploadId)),
+        });
+
+        if (!orderResponse.ok) {
+          const error = await orderResponse.json().catch(() => null);
+          throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? "La commande n'a pas pu etre modifiee.");
+        }
+
+        const order = (await orderResponse.json()) as EditableOrder;
+        rememberCustomerOrder(order.id);
+        setEditOrder(order);
+        setEnregistre(true);
+        setQuoteSave({
+          status: 'saved',
+          orderId: order.id,
+          message: `Commande ${order.orderNumber} modifiee. Le nouveau devis est rattache a la meme commande.`,
+        });
+        return;
+      }
+
       const response = await fetch(`${apiBaseUrl}/api/pricing/quote`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${session.accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          productType: config.productType,
-          gerberFileId: gerberUpload.uploadId,
-          layers: config.layers,
-          lengthMm: toMillimeters(config.length, config.unit),
-          widthMm: toMillimeters(config.width, config.unit),
-          quantity: config.quantity,
-          destinationCountryIso2: config.destinationCountry,
-          shippingMode: config.shippingMode,
-          configSnapshot: {
-            ...config,
-            lengthMm: toMillimeters(config.length, config.unit),
-            widthMm: toMillimeters(config.width, config.unit),
-            gerberFileId: gerberUpload.uploadId,
-            gerberFileName: config.gerberFileName,
-            bomFileName: config.bomFileName,
-            cplFileName: config.cplFileName,
-          },
-        }),
+        body: JSON.stringify(buildQuotePayload(config, gerberUpload.uploadId)),
       });
 
       if (!response.ok) {
@@ -1016,6 +1088,40 @@ function buildPricingPayload(config: QuoteConfig, gerberFileId?: string) {
       cplFileName: config.cplFileName,
     },
   };
+}
+
+function buildQuotePayload(config: QuoteConfig, gerberFileId: string) {
+  return {
+    ...buildPricingPayload(config, gerberFileId),
+    gerberFileId,
+  };
+}
+
+function configFromOrder(order: EditableOrder): QuoteConfig {
+  const quote = order.quoteSnapshot;
+  if (!quote) return initialConfig;
+  const snapshot = quote.configSnapshot ?? {};
+  const productType = productCards.some((product) => product.value === quote.productType) ? quote.productType : initialConfig.productType;
+
+  return {
+    ...initialConfig,
+    ...productDefaults[productType],
+    ...snapshot,
+    productType,
+    layers: quote.layers,
+    length: quote.lengthMm,
+    width: quote.widthMm,
+    unit: 'mm',
+    quantity: quote.quantity,
+    destinationCountry: order.destinationCountryIso2 || stringSnapshot(snapshot.destinationCountry) || initialConfig.destinationCountry,
+    shippingMode: quote.shippingMode,
+    gerberFileId: quote.gerberFileId,
+    gerberFileName: stringSnapshot(snapshot.gerberFileName) || stringSnapshot(snapshot.gerberFileId) || 'Fichier Gerber rattache',
+  } as QuoteConfig;
+}
+
+function stringSnapshot(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value.trim() : '';
 }
 
 function normalizeApiPricingPreview(data: ApiPricingPreview, fallback: PricingBreakdown): PricingBreakdown {

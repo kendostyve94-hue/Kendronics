@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PricingService } from '../pricing/pricing.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderQuoteDto } from './dto/update-order-quote.dto';
 import {
   AddSupplierOrderReferenceDto,
   UpdateOrderStatusDto,
@@ -69,6 +70,16 @@ export class OrdersService {
       configSnapshot,
     });
 
+    return this.ordersRepository.updateQuote(order.id, nextQuote.id);
+  }
+
+  async updateOwnedOrderQuote(userId: string, orderId: string, dto: UpdateOrderQuoteDto): Promise<Order> {
+    const order = await this.findOwnedOrder(userId, orderId);
+    if (!['draft', 'quoted', 'awaiting_payment'].includes(order.status)) {
+      throw new BadRequestException('Only unpaid orders can be updated.');
+    }
+
+    const nextQuote = await this.pricingService.createQuote(userId, dto);
     return this.ordersRepository.updateQuote(order.id, nextQuote.id);
   }
 

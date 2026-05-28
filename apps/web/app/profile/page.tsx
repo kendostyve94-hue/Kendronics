@@ -593,7 +593,7 @@ function ProfileViewContent({
 
 type OrderStatusKey = 'all' | 'verification' | 'payment-pending' | 'production' | 'delivery' | 'completed' | 'comments';
 type OrderProductFilter = 'standard_pcb' | 'advanced_pcb' | 'fpc_rigid_flex' | 'pcb_assembly' | 'smt_stencil';
-type OrderTableFilter = Extract<OrderStatusKey, 'payment-pending' | 'production' | 'delivery' | 'completed'>;
+type OrderServiceFilter = OrderProductFilter | 'all';
 
 const orderStatuses: Array<{ key: Extract<OrderStatusKey, 'verification' | 'payment-pending' | 'production' | 'delivery' | 'comments'>; label: string }> = [
   { key: 'verification', label: 'Vérification en cours' },
@@ -603,11 +603,13 @@ const orderStatuses: Array<{ key: Extract<OrderStatusKey, 'verification' | 'paym
   { key: 'comments', label: 'Commentaires' },
 ];
 
-const orderTableFilters: Array<{ key: OrderTableFilter; label: string }> = [
-  { key: 'payment-pending', label: 'Paiement' },
-  { key: 'production', label: 'Production' },
-  { key: 'delivery', label: 'Livraison' },
-  { key: 'completed', label: 'Terminees' },
+const orderServiceFilters: Array<{ key: OrderServiceFilter; label: string }> = [
+  { key: 'all', label: 'Tout' },
+  { key: 'standard_pcb', label: 'PCB standard' },
+  { key: 'advanced_pcb', label: 'PCB avance' },
+  { key: 'fpc_rigid_flex', label: 'FPC flex' },
+  { key: 'pcb_assembly', label: 'Assemblage' },
+  { key: 'smt_stencil', label: 'Pochoir CMS' },
 ];
 
 function OrderReviewSection({
@@ -701,11 +703,11 @@ function OrderTableSearchPanel({
 }) {
   const [query, setQuery] = useState('');
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
-  const [tableFilter, setTableFilter] = useState<OrderTableFilter>('payment-pending');
+  const [serviceFilter, setServiceFilter] = useState<OrderServiceFilter>('all');
   const [deletingOrderId, setDeletingOrderId] = useState('');
   const [quantityUpdatingOrderId, setQuantityUpdatingOrderId] = useState('');
   const [detailOrder, setDetailOrder] = useState<ProfileOrder | null>(null);
-  const filteredOrders = orders.filter((order) => orderMatchesStatus(order, tableFilter));
+  const filteredOrders = orders.filter((order) => serviceFilter === 'all' || orderProductFilterKey(order) === serviceFilter);
   const visibleOrders = filteredOrders.filter((order) => orderMatchesQuery(order, query));
   const selectedOrders = orders.filter((order) => selectedOrderIds.includes(order.id) && isSelectableCartOrder(order));
   const allVisibleSelected = visibleOrders.filter(isSelectableCartOrder).every((order) => selectedOrderIds.includes(order.id));
@@ -793,14 +795,14 @@ function OrderTableSearchPanel({
         <div className="border border-[#e5e7eb] bg-white">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5e7eb] px-5 py-4">
             <div className="flex flex-wrap items-center gap-5 text-sm text-black">
-              {orderTableFilters.map((filter) => (
+              {orderServiceFilters.map((filter) => (
                 <button
                   key={filter.key}
                   type="button"
-                  onClick={() => setTableFilter(filter.key)}
-                  className={tableFilter === filter.key ? 'text-[#0f8f6b]' : 'text-black hover:text-[#0f8f6b]'}
+                  onClick={() => setServiceFilter(filter.key)}
+                  className={serviceFilter === filter.key ? 'text-[#0f8f6b]' : 'text-black hover:text-[#0f8f6b]'}
                 >
-                  {filter.label} ({orders.filter((order) => orderMatchesStatus(order, filter.key)).length})
+                  {filter.label} ({orders.filter((order) => filter.key === 'all' || orderProductFilterKey(order) === filter.key).length})
                 </button>
               ))}
             </div>
@@ -992,8 +994,7 @@ function orderSummaryLine(order: ProfileOrder) {
 
 function orderProductOrderLine(order: ProfileOrder) {
   const product = orderProductLabel(order);
-  const publicReference = order.orderNumber.replace(/^KEN-/, 'Y4-');
-  return `${product}:${publicReference}`;
+  return `${product}:${order.orderNumber}`;
 }
 
 function orderProductionDelay(order: ProfileOrder) {
@@ -1024,6 +1025,15 @@ function orderWeightKg(order: ProfileOrder) {
   const materialKg = pcbVolumeCm3 * 1.85 / 1000 * quantity;
   const layerFactor = Math.max(1, layers / 2);
   return Math.max(0.08, materialKg * layerFactor + 0.06);
+}
+
+function defaultMaterialType(order: ProfileOrder) {
+  const config = order.quoteSnapshot?.configSnapshot ?? {};
+  const material = stringConfig(config.baseMaterial).toUpperCase();
+  if (material.includes('FR-4') || material.includes('FR4')) return 'FR-4 TG135';
+  if (material.includes('ALUMIN')) return 'Aluminium';
+  if (material.includes('ROGERS')) return 'Rogers';
+  return 'Selon materiau du devis';
 }
 
 function formatWeight(value: number) {
@@ -1082,7 +1092,7 @@ function productDetailRows(order: ProfileOrder) {
     { label: "Specifier l'empilement:", value: stringConfig(config.stackup) || 'Non' },
     { label: 'Couleur de PCB:', value: stringConfig(config.solderMaskColor) },
     { label: 'Serigraphie:', value: stringConfig(config.silkscreenColor) },
-    { label: 'Type de materiel:', value: stringConfig(config.materialType) || stringConfig(config.fr4Tg) },
+    { label: 'Type de materiel:', value: stringConfig(config.materialType) || stringConfig(config.fr4Tg) || defaultMaterialType(order) },
     { label: 'Recouvrement des vias:', value: stringConfig(config.viaCovering) },
     { label: 'Finition de surface:', value: stringConfig(config.surfaceFinish) },
     { label: 'Ebavurage/Arrondissement des bords:', value: booleanText(config.edgePlating) },
