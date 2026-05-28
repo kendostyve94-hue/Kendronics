@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Navbar } from '../../components/layout/Navbar';
+import { InternationalPhoneInput } from '../../components/account/InternationalPhoneInput';
 import { Button } from '../../components/ui/Button';
 import { africanCountries } from '../../lib/african-countries';
 import { getApiBaseUrl } from '../../lib/api-base-url';
@@ -158,7 +159,7 @@ export default function RegisterPage() {
                   {values.contactMethod === 'email' ? (
                     <TextInput label="E-mail" type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
                   ) : (
-                    <TextInput label="Telephone" type="tel" value={values.phone} error={errors.phone} onChange={(value) => update('phone', value)} />
+                    <InternationalPhoneInput label="Telephone" value={values.phone} error={errors.phone} onChange={(value) => update('phone', value)} />
                   )}
                   <PasswordInput label="Mot de passe" value={values.password} error={errors.password} onChange={(value) => update('password', value)} />
                   <PasswordInput label="Confirmer le mot de passe" value={values.confirmPassword} error={errors.confirmPassword} onChange={(value) => update('confirmPassword', value)} />
@@ -323,13 +324,7 @@ function MobileRegisterScreen({
             onChange={(value) => onUpdate('email', value)}
           />
         ) : (
-          <MobileInput
-            placeholder="Telephone"
-            type="tel"
-            value={values.phone}
-            error={errors.phone}
-            onChange={(value) => onUpdate('phone', value)}
-          />
+          <InternationalPhoneInput value={values.phone} error={errors.phone} onChange={(value) => onUpdate('phone', value)} />
         )}
         <MobileInput
           placeholder="Mot de passe"

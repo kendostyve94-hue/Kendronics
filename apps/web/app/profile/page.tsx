@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { Footer } from '../../components/layout/Footer';
+import { InternationalPhoneInput } from '../../components/account/InternationalPhoneInput';
 import { Navbar } from '../../components/layout/Navbar';
 import { africanCountries } from '../../lib/african-countries';
 import { getApiBaseUrl } from '../../lib/api-base-url';
@@ -2245,7 +2246,10 @@ function AccountProfileEditForm({
               ))}
             </div>
 
-            <ProfileTextField label="Telephone" value={phone} onChange={setPhone} />
+            <div className="col-span-2 grid grid-cols-[170px_minmax(0,320px)] items-center gap-4 text-sm">
+              <span className="text-right text-[#8b949e]">Telephone</span>
+              <InternationalPhoneInput value={phone} onChange={(value) => setPhone(value)} />
+            </div>
             <ProfileTextField label="Site web" value={details.website} onChange={(value) => updateDetails('website', value)} />
             <ProfileTextField label="Date de naissance" value={details.birthday} type="date" onChange={(value) => updateDetails('birthday', value)} />
           </div>

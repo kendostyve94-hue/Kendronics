@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { createHash, randomUUID } from 'crypto';
+import { parsePhoneNumberFromString } from 'libphonenumber-js/min';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { PasswordService } from '../auth/password.service';
@@ -29,7 +30,7 @@ export class UsersService {
 
   async createUser(dto: RegisterDto): Promise<User> {
     const realEmail = dto.email?.trim().toLowerCase();
-    const phone = cleanString(dto.phone);
+    const phone = normalizePhone(dto.phone);
     if (!realEmail && !phone) {
       throw new BadRequestException('An email or phone number is required.');
     }
@@ -148,7 +149,7 @@ export class UsersService {
     }
 
     const nextEmail = dto.email?.trim().toLowerCase();
-    const nextPhone = dto.phone === undefined ? current.phone ?? null : cleanString(dto.phone) ?? null;
+    const nextPhone = dto.phone === undefined ? current.phone ?? null : normalizePhone(dto.phone) ?? null;
     if (nextEmail && nextEmail !== current.email) {
       const existing = await this.usersRepository.findByEmail(nextEmail);
       if (existing && existing.id !== userId) {
@@ -184,7 +185,7 @@ export class UsersService {
   }
 
   async startPhoneVerification(userId: string, phone: string): Promise<{ ok: true; provider: string }> {
-    const normalizedPhone = cleanString(phone);
+    const normalizedPhone = normalizePhone(phone);
     if (!normalizedPhone) throw new BadRequestException('Phone number is required.');
     const provider = process.env.PHONE_VERIFY_PROVIDER ?? (process.env.NODE_ENV === 'production' ? 'twilio' : 'dev');
 
@@ -233,7 +234,7 @@ export class UsersService {
   }
 
   async checkPhoneVerification(userId: string, phone: string, code: string): Promise<{ ok: true }> {
-    const normalizedPhone = cleanString(phone);
+    const normalizedPhone = normalizePhone(phone);
     if (!normalizedPhone || !code.trim()) throw new BadRequestException('Phone number and code are required.');
 
     const record = await this.prisma.phoneVerification.findFirst({
@@ -294,6 +295,16 @@ export class UsersService {
 function cleanString(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+function normalizePhone(value: string | undefined): string | undefined {
+  const trimmed = cleanString(value);
+  if (!trimmed) return undefined;
+  const parsed = parsePhoneNumberFromString(trimmed);
+  if (!parsed?.isValid()) {
+    throw new BadRequestException('A valid international phone number is required.');
+  }
+  return parsed.number;
 }
 
 function sanitizeAddress(address: Record<string, unknown>): Record<string, string> {

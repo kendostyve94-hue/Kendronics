@@ -1,3 +1,5 @@
+import { isValidPhoneNumber } from 'libphonenumber-js/min';
+
 export type AccountType = 'individual' | 'student' | 'startup' | 'company';
 
 export interface RegisterFormState {
@@ -21,6 +23,7 @@ export function validateRegisterForm(values: RegisterFormState): RegisterErrors 
   if (!values.email.trim() && !values.phone.trim()) errors.email = "Renseignez un e-mail ou un numero de telephone.";
   if (values.contactMethod === 'email' && !values.email.trim()) errors.email = "L'e-mail est requis pour cette methode.";
   if (values.contactMethod === 'phone' && !values.phone.trim()) errors.phone = 'Le telephone est requis pour cette methode.';
+  if (values.phone.trim() && !isValidPhoneNumber(values.phone.trim())) errors.phone = 'Entrez un numero international valide.';
   if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) errors.email = 'Entrez une adresse e-mail valide.';
   if (values.password.length < 10) errors.password = 'Le mot de passe doit contenir au moins 10 caracteres.';
   if (values.confirmPassword !== values.password) errors.confirmPassword = 'Les mots de passe ne correspondent pas.';

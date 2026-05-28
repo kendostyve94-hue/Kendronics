@@ -12,6 +12,7 @@ import { validateForgotPasswordForm, validateLoginForm } from '../../lib/login-v
 import type { ForgotPasswordErrors, ForgotPasswordFormState, LoginErrors, LoginFormState } from '../../lib/login-validation';
 import { validateRegisterForm } from '../../lib/register-validation';
 import type { RegisterErrors, RegisterFormState } from '../../lib/register-validation';
+import { InternationalPhoneInput } from '../account/InternationalPhoneInput';
 
 const apiBaseUrl = getApiBaseUrl();
 const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
@@ -623,7 +624,7 @@ function RegisterPanel({
       {values.contactMethod === 'email' ? (
         <TextInput label="E-mail" type="email" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
       ) : (
-        <TextInput label="Telephone" type="tel" value={values.phone} error={errors.phone} autoComplete="tel" onChange={(value) => onUpdate('phone', value)} />
+        <InternationalPhoneInput label="Telephone" value={values.phone} error={errors.phone} onChange={(value) => onUpdate('phone', value)} />
       )}
       <PasswordInput label="Mot de passe" value={values.password} error={errors.password} autoComplete="new-password" onChange={(value) => onUpdate('password', value)} />
       <PasswordInput label="Confirmer le mot de passe" value={values.confirmPassword} error={errors.confirmPassword} autoComplete="new-password" onChange={(value) => onUpdate('confirmPassword', value)} />
