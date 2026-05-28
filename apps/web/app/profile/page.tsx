@@ -99,6 +99,9 @@ type ProfileOrderStatus =
   | 'draft'
   | 'quoted'
   | 'awaiting_payment'
+  | 'payment_authorized'
+  | 'supplier_review_pending'
+  | 'supplier_files_rejected'
   | 'paid'
   | 'supplier_order_pending'
   | 'supplier_ordered'
@@ -115,13 +118,14 @@ type ProfileOrder = {
   id: string;
   orderNumber: string;
   status: ProfileOrderStatus;
-  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentStatus?: 'pending' | 'authorized' | 'paid' | 'failed' | 'canceled' | 'expired' | 'refunded';
   totalPrice?: number;
   currency?: 'EUR';
   externalManufacturingPartner?: string;
   externalSupplierOrderId?: string;
   carrierName?: string;
   trackingNumber?: string;
+  paidAt?: string;
   createdAt: string;
   quoteSnapshot?: {
     productType: string;
@@ -135,6 +139,7 @@ type ProfileOrder = {
     shippingMode?: string;
     breakdown?: Record<string, number>;
     configSnapshot?: Record<string, unknown> | null;
+    createdAt?: string;
   };
 };
 
@@ -573,8 +578,8 @@ function ProfileViewContent({
 }) {
   if (view === 'quotes') return <QuotesHubSection orders={orders} dataStatus={dataStatus} />;
   if (view === 'all-orders') return <OrderReviewSection activeKey="all" title="Toutes commandes" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
-  if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Panier / Examen de votre commande" mode="review" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
-  if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Panier / Examen de votre commande" mode="review" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
+  if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Verification des fichiers" mode="review" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
+  if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Paiement en attente" mode="review" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'production') return <OrderReviewSection activeKey="production" title="Progres de la Fabrication" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'completed') return <OrderReviewSection activeKey="completed" title="Commande completee" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
@@ -634,12 +639,11 @@ function OrderReviewSection({
       <OrderStatusHeader activeKey={activeKey} counts={orderCounts(orders)} />
 
       <div className="border-t-[16px] border-[#eef0f3] px-6 pb-24 pt-5">
-        <div className={`${mode === 'review' ? 'flex h-12 items-center gap-2 border-b border-[#e5e7eb]' : 'flex h-10 items-center gap-2'}`}>
-          {mode === 'review' ? <span className="grid h-[22px] w-[22px] place-items-center bg-[#61bd00] text-[18px] leading-none text-white">✓</span> : null}
+        <div className={`${mode === 'review' ? 'flex h-12 items-center border-b border-[#e5e7eb]' : 'flex h-10 items-center'}`}>
           <h2 className="text-xl font-normal text-black">{title}</h2>
         </div>
 
-        {mode === 'review' ? <ReviewSearchPanel orders={visibleOrders} dataStatus={dataStatus} /> : <OrderTableSearchPanel orders={visibleOrders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />}
+        {mode === 'review' ? <VerificationReviewPanel orders={visibleOrders} dataStatus={dataStatus} /> : <OrderTableSearchPanel orders={visibleOrders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />}
       </div>
     </section>
   );
@@ -670,26 +674,107 @@ function OrderStatusHeader({ activeKey, counts }: { activeKey: OrderStatusKey; c
   );
 }
 
-function ReviewSearchPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+function VerificationReviewPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+  const [detailOrder, setDetailOrder] = useState<ProfileOrder | null>(null);
+
   return (
     <>
-      <div className="flex items-center justify-between py-8 text-xs text-[#8a8f98]">
-        <a href="/quote" className="text-sm text-[#8a8f98] hover:text-[#009a38]">&lt; Ajouter un nouvel article</a>
-        <p>Derniere mise a jour Kendronics : {formatDateTime(new Date())}</p>
-      </div>
-      <form className="border border-[#e1e1e1] bg-white px-4 py-3" onSubmit={(event) => event.preventDefault()}>
-        <div className="flex items-center gap-5 text-[13px] text-black">
-          <SearchField label="Numero de produit:" />
-          <SearchField label="Nom du fichier PCB:" />
-          <SearchField label="Numero de PO:" />
-          <button type="submit" className="ml-auto h-[27px] min-w-[108px] bg-[#ff8a13] px-5 text-sm font-black text-white ring-1 ring-[#f07800] transition hover:bg-[#f07800]">
-            Recherche
-          </button>
+      <div className="mt-4 border border-[#e5e7eb] bg-white">
+        <div className="overflow-x-auto">
+          <div className="grid min-w-[960px] grid-cols-[minmax(360px,1fr)_190px_180px_260px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
+            <span>Article</span>
+            <span>Date d'envoi pour verification</span>
+            <span>Statut de verification</span>
+            <span>Modification du fichier</span>
+          </div>
+          {dataStatus === 'loading' ? (
+            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement des commandes...</p>
+          ) : dataStatus === 'signed-out' ? (
+            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher vos commandes.</p>
+          ) : dataStatus === 'error' ? (
+            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les commandes.</p>
+          ) : orders.length === 0 ? (
+            <p className="min-w-[960px] px-5 py-14 text-center text-base text-[#92979d]">Aucun fichier en verification pour le moment.</p>
+          ) : (
+            <div className="min-w-[960px] divide-y divide-[#e5e7eb]">
+              {orders.map((order) => (
+                <div key={order.id} className="grid grid-cols-[minmax(360px,1fr)_190px_180px_260px] items-start px-5 py-5 text-sm text-[#1f2f43]">
+                  <VerificationArticleCell order={order} onDetail={() => setDetailOrder(order)} />
+                  <span className="pt-2 text-black">{verificationSubmittedDate(order)}</span>
+                  <span className="pt-2 text-black">{verificationStatusLabel(order)}</span>
+                  <VerificationModificationCell order={order} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </form>
-      <OrdersListRows orders={orders} dataStatus={dataStatus} compact />
+      </div>
+      {detailOrder ? <ProductDetailModal order={detailOrder} onClose={() => setDetailOrder(null)} /> : null}
     </>
   );
+}
+
+function VerificationArticleCell({ order, onDetail }: { order: ProfileOrder; onDetail: () => void }) {
+  return (
+    <div className="flex min-w-0 gap-5">
+      <div className="grid h-[84px] w-[84px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-xs text-[#cbd5e1]">Kendronics</div>
+      <div className="min-w-0 py-0.5">
+        <p className="truncate text-black">{orderGerberLabel(order)}</p>
+        <p className="mt-1 text-sm text-[#44546a]">{orderProductOrderLine(order)}</p>
+        <p className="mt-1 text-sm text-[#44546a]">{orderSummaryLine(order)}</p>
+        <button type="button" onClick={onDetail} className="mt-2 text-sm text-[#44546a] hover:text-[#0877ff]">
+          Details du produit
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function VerificationModificationCell({ order }: { order: ProfileOrder }) {
+  if (order.status === 'supplier_files_rejected') {
+    return (
+      <div className="space-y-2 pt-1 text-sm">
+        <a href={rejectionReportHref(order)} download={`motif-rejet-${order.orderNumber}.txt`} className="block text-[#0877ff] hover:text-[#0068e8]">
+          Telecharger le motif du rejet
+        </a>
+        <a href={`/quote?orderId=${encodeURIComponent(order.id)}`} className="block text-[#0f8f6b] hover:text-[#0b7558]">
+          Modifier et resoumettre le fichier
+        </a>
+      </div>
+    );
+  }
+
+  if (order.status === 'supplier_review_pending') return <span className="block pt-2 text-[#8a8f98]">En attente du resultat de verification.</span>;
+  if (order.status === 'awaiting_payment') return <span className="block pt-2 text-[#8a8f98]">La verification demarre apres paiement.</span>;
+  return <span className="block pt-2 text-[#0f8f6b]">Aucune correction demandee.</span>;
+}
+
+function verificationSubmittedDate(order: ProfileOrder) {
+  if (order.status === 'awaiting_payment') return 'Apres paiement';
+  return formatDate(order.paidAt ?? order.quoteSnapshot?.createdAt ?? order.createdAt);
+}
+
+function verificationStatusLabel(order: ProfileOrder) {
+  if (order.status === 'supplier_files_rejected') return 'Fichier rejete';
+  if (order.status === 'supplier_review_pending') return 'Verification en cours';
+  if (order.status === 'awaiting_payment') return 'Non envoye';
+  if (['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'china_3pl_received'].includes(order.status)) return 'Fichier accepte';
+  return orderStatusLabel(order.status);
+}
+
+function rejectionReportHref(order: ProfileOrder) {
+  const config = order.quoteSnapshot?.configSnapshot ?? {};
+  const warnings = Array.isArray(config.gerberWarnings) ? config.gerberWarnings.map(String) : [];
+  const body = [
+    `Commande: ${order.orderNumber}`,
+    `Fichier: ${orderGerberLabel(order)}`,
+    `Statut: ${verificationStatusLabel(order)}`,
+    '',
+    'Motif du rejet:',
+    ...(warnings.length ? warnings.map((warning) => `- ${warning}`) : ['- Fichier refuse pendant la verification technique. Corrigez le fichier Gerber, puis resoumettez la meme commande depuis le bouton de modification.']),
+  ].join('\n');
+
+  return `data:text/plain;charset=utf-8,${encodeURIComponent(body)}`;
 }
 
 function OrderTableSearchPanel({
@@ -3133,7 +3218,7 @@ function countForStatus(key: OrderStatusKey, counts: ReturnType<typeof orderCoun
 
 function orderMatchesStatus(order: ProfileOrder, key: OrderStatusKey) {
   if (key === 'all') return true;
-  if (key === 'verification') return order.status === 'draft' || order.status === 'quoted';
+  if (key === 'verification') return ['payment_authorized', 'supplier_review_pending', 'supplier_files_rejected', 'draft', 'quoted'].includes(order.status);
   if (key === 'payment-pending') return order.status === 'awaiting_payment' || order.paymentStatus === 'pending';
   if (key === 'production') return ['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'china_3pl_received'].includes(order.status);
   if (key === 'delivery') return ['shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status);
@@ -3155,6 +3240,9 @@ function orderStatusLabel(status: ProfileOrderStatus) {
     draft: 'Brouillon',
     quoted: 'Verification',
     awaiting_payment: 'Paiement en attente',
+    payment_authorized: 'Paiement autorise',
+    supplier_review_pending: 'Verification des fichiers',
+    supplier_files_rejected: 'Fichier rejete',
     paid: 'Payee',
     supplier_order_pending: 'Commande fournisseur',
     supplier_ordered: 'Fournisseur confirme',
