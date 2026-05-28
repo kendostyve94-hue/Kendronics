@@ -1,5 +1,6 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { createHash, randomUUID } from 'crypto';
+import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { PasswordService } from '../auth/password.service';
 import { UploadRepository } from '../uploads/repositories/upload.repository';
@@ -23,6 +24,7 @@ export class UsersService {
     private readonly accountDeletionFeedbackRepository: AccountDeletionFeedbackRepository,
     private readonly passwordService: PasswordService,
     private readonly uploadRepository: UploadRepository,
+    private readonly prisma: PrismaService,
   ) {}
 
   async createUser(dto: RegisterDto): Promise<User> {
@@ -114,6 +116,7 @@ export class UsersService {
     }
 
     const nextEmail = dto.email?.trim().toLowerCase();
+    const nextPhone = dto.phone === undefined ? current.phone ?? null : cleanString(dto.phone) ?? null;
     if (nextEmail && nextEmail !== current.email) {
       const existing = await this.usersRepository.findByEmail(nextEmail);
       if (existing && existing.id !== userId) {
@@ -124,12 +127,13 @@ export class UsersService {
     return this.usersRepository.updateProfile(userId, {
       fullName: cleanString(dto.fullName) ?? current.fullName,
       email: nextEmail ?? current.email,
-      phone: cleanString(dto.phone) ?? null,
+      phone: nextPhone,
       companyName: cleanString(dto.companyName) ?? null,
       country: cleanString(dto.country) ?? null,
       avatarDataUrl: validAvatarDataUrl(dto.avatarDataUrl) ? dto.avatarDataUrl : current.avatarDataUrl ?? null,
       profileDetails: sanitizeProfileDetails(dto.profileDetails),
       emailVerifiedAt: nextEmail && nextEmail !== current.email ? null : current.emailVerifiedAt ?? null,
+      phoneVerifiedAt: nextPhone !== (current.phone ?? null) ? null : current.phoneVerifiedAt ?? null,
     });
   }
 
@@ -147,6 +151,86 @@ export class UsersService {
     await this.usersRepository.markEmailVerified(userId);
   }
 
+  async startPhoneVerification(userId: string, phone: string): Promise<{ ok: true; provider: string }> {
+    const normalizedPhone = cleanString(phone);
+    if (!normalizedPhone) throw new BadRequestException('Phone number is required.');
+    const provider = process.env.PHONE_VERIFY_PROVIDER ?? (process.env.NODE_ENV === 'production' ? 'twilio' : 'dev');
+
+    let providerVerificationSid: string | undefined;
+    let codeHash: string | undefined;
+    let code: string | undefined;
+
+    if (provider === 'twilio') {
+      const verification = await twilioVerifyRequest('Verifications', {
+        To: normalizedPhone,
+        Channel: process.env.TWILIO_VERIFY_CHANNEL ?? 'sms',
+      });
+      providerVerificationSid = stringValue(verification.sid);
+    } else if (provider === 'dev') {
+      code = String(Math.floor(100000 + Math.random() * 900000));
+      codeHash = hashCode(code);
+      providerVerificationSid = `dev_${randomUUID()}`;
+    } else {
+      throw new ServiceUnavailableException('Phone verification provider is not configured.');
+    }
+
+    await this.prisma.phoneVerification.create({
+      data: {
+        userId,
+        phone: normalizedPhone,
+        provider,
+        providerVerificationSid,
+        codeHash,
+        status: 'pending',
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+    });
+
+    if (provider === 'dev' && code) {
+      await this.prisma.notification.create({
+        data: {
+          userId,
+          type: 'verification.phone.code',
+          title: 'Code de verification telephone',
+          body: `Code ${code}. Il expire dans 10 minutes.`,
+        },
+      });
+    }
+
+    return { ok: true, provider };
+  }
+
+  async checkPhoneVerification(userId: string, phone: string, code: string): Promise<{ ok: true }> {
+    const normalizedPhone = cleanString(phone);
+    if (!normalizedPhone || !code.trim()) throw new BadRequestException('Phone number and code are required.');
+
+    const record = await this.prisma.phoneVerification.findFirst({
+      where: { userId, phone: normalizedPhone, status: 'pending' },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!record || (record.expiresAt && record.expiresAt.getTime() < Date.now())) {
+      throw new BadRequestException('Phone verification expired or missing.');
+    }
+    if (record.attempts >= 5) {
+      throw new BadRequestException('Phone verification attempts exceeded.');
+    }
+
+    const approved = record.provider === 'twilio'
+      ? await verifyTwilioPhoneCode(normalizedPhone, code.trim())
+      : record.codeHash === hashCode(code.trim());
+    if (!approved) {
+      await this.prisma.phoneVerification.update({ where: { id: record.id }, data: { attempts: { increment: 1 } } });
+      throw new BadRequestException('Invalid verification code.');
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.phoneVerification.update({ where: { id: record.id }, data: { status: 'verified', verifiedAt: new Date() } }),
+      this.prisma.user.update({ where: { id: userId }, data: { phone: normalizedPhone, phoneVerifiedAt: new Date() } }),
+      this.prisma.userAuditLog.create({ data: { userId, actorId: userId, eventType: 'phone.verified' } }),
+    ]);
+    return { ok: true };
+  }
+
   async createAccountDeletionFeedback(user: { id: string; email: string }, dto: AccountDeletionFeedbackDto): Promise<{ ok: true }> {
     return this.accountDeletionFeedbackRepository.create(user, dto);
   }
@@ -156,6 +240,7 @@ export class UsersService {
   }
 
   upsertCookieConsent(userId: string, dto: UpsertCookieConsentDto): Promise<CookieConsent> {
+    void this.usersRepository.updateProfile(userId, { cguAcceptedAt: new Date() }).catch(() => undefined);
     return this.cookieConsentRepository.upsert({
       userId,
       version: dto.version?.trim() || currentCookieConsentVersion,
@@ -236,4 +321,46 @@ function validAvatarDataUrl(value: string | undefined): boolean {
 
 function uniqueRoles(roles: UserRole[]): UserRole[] {
   return Array.from(new Set(roles));
+}
+
+function hashCode(code: string): string {
+  return createHash('sha256').update(code.trim()).digest('hex');
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+async function verifyTwilioPhoneCode(phone: string, code: string): Promise<boolean> {
+  const result = await twilioVerifyRequest('VerificationCheck', { To: phone, Code: code });
+  return result.status === 'approved';
+}
+
+async function twilioVerifyRequest(action: 'Verifications' | 'VerificationCheck', body: Record<string, string>): Promise<Record<string, unknown>> {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+  if (!accountSid || !authToken || !serviceSid) {
+    throw new ServiceUnavailableException('Twilio Verify is not configured.');
+  }
+
+  const response = await fetch(`https://verify.twilio.com/v2/Services/${serviceSid}/${action}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams(body),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new ServiceUnavailableException(typeof payload?.message === 'string' ? payload.message : 'Twilio Verify request failed.');
+  }
+
+  return objectValue(payload);
+}
+
+function objectValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }

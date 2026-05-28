@@ -23,6 +23,7 @@ type ProfileForm = {
   shippingAddress?: AccountAddress;
   billingAddress?: AccountAddress;
   emailVerifiedAt?: string;
+  phoneVerifiedAt?: string;
 };
 
 type ProfileDetails = {
@@ -152,6 +153,18 @@ type ProfileNotification = {
   createdAt: string;
 };
 
+type VerificationStatus = {
+  level: number;
+  levelName: 'UNVERIFIED' | 'ACCOUNT_VERIFIED' | 'IDENTITY_VERIFIED' | 'BUSINESS_VERIFIED';
+  status: string;
+  riskScore: number;
+  checklist: Record<
+    'emailVerified' | 'phoneVerified' | 'countryConfirmed' | 'addressAdded' | 'cguAccepted' | 'identityVerified' | 'businessVerified' | 'mfaEnabled',
+    boolean
+  >;
+  missingSteps: string[];
+};
+
 type DiscoverNewsItem = {
   title: string;
   link: string;
@@ -192,6 +205,7 @@ type ProfileUser = {
   shippingAddress?: AccountAddress;
   billingAddress?: AccountAddress;
   emailVerifiedAt?: string;
+  phoneVerifiedAt?: string;
   createdAt: string;
 };
 
@@ -342,6 +356,7 @@ export default function ProfilePage() {
           shippingAddress: normalizeAddress(userResponse.shippingAddress ?? current.shippingAddress),
           billingAddress: normalizeAddress(userResponse.billingAddress ?? current.billingAddress),
           emailVerifiedAt: userResponse.emailVerifiedAt || '',
+          phoneVerifiedAt: userResponse.phoneVerifiedAt || '',
         }));
         if (userResponse.avatarDataUrl) setAvatarDataUrl(userResponse.avatarDataUrl);
         setAccountId(userResponse.id || sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
@@ -1856,6 +1871,10 @@ function SettingsSection({
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'sending' | 'sent' | 'verifying' | 'verified' | 'error'>('idle');
   const [verificationMessage, setVerificationMessage] = useState('');
+  const [trustStatus, setTrustStatus] = useState<VerificationStatus | null>(null);
+  const [phoneCode, setPhoneCode] = useState('');
+  const [phoneStatus, setPhoneStatus] = useState<'idle' | 'sending' | 'sent' | 'verifying' | 'verified' | 'error'>('idle');
+  const [phoneMessage, setPhoneMessage] = useState('');
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteStep, setDeleteStep] = useState<DeleteModalStep>('feedback');
   const [deleteCode, setDeleteCode] = useState('');
@@ -1865,6 +1884,25 @@ function SettingsSection({
   const [savingDeleteFeedback, setSavingDeleteFeedback] = useState(false);
   const [selectedAlternative, setSelectedAlternative] = useState<DeleteAlternative | null>(null);
   const [deleteFeedback, setDeleteFeedback] = useState<DeleteFeedback>(createEmptyDeleteFeedback());
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadVerificationStatus() {
+      const session = await readFreshAuthSession();
+      if (!session) return;
+      try {
+        const status = await authenticatedFetch<VerificationStatus>('/api/users/me/verification-status', session.accessToken);
+        if (!cancelled) setTrustStatus(status);
+      } catch {
+        if (!cancelled) setTrustStatus(null);
+      }
+    }
+
+    void loadVerificationStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, [profile.emailVerifiedAt, profile.phoneVerifiedAt, profile.country, profile.shippingAddress]);
 
   function closeDeleteModal() {
     if (requestingDeleteCode || deletingAccount || savingDeleteFeedback) return;
@@ -1949,9 +1987,84 @@ function SettingsSection({
       setVerificationCode('');
       setVerificationStatus('verified');
       setVerificationMessage('Compte verifie.');
+      const status = await authenticatedFetch<VerificationStatus>('/api/users/me/verification-status', session.accessToken);
+      setTrustStatus(status);
     } catch {
       setVerificationStatus('error');
       setVerificationMessage('Code invalide ou expire.');
+    }
+  }
+
+  async function requestPhoneVerificationCode() {
+    if (!profile.phone.trim()) {
+      setPhoneStatus('error');
+      setPhoneMessage('Ajoutez un numero de telephone avant la verification.');
+      return;
+    }
+
+    setPhoneStatus('sending');
+    setPhoneMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+
+      const response = await fetch(`${getApiBaseUrl()}/api/users/me/phone-verification/start`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: profile.phone }),
+      });
+
+      if (!response.ok) throw new Error(`Phone verification request failed: ${response.status}`);
+      setPhoneStatus('sent');
+      setPhoneMessage('Code envoye. En local, il apparait aussi dans vos notifications.');
+    } catch {
+      setPhoneStatus('error');
+      setPhoneMessage("Impossible d'envoyer le code telephone pour le moment.");
+    }
+  }
+
+  async function verifyPhoneCode() {
+    if (phoneCode.trim().length !== 6) {
+      setPhoneMessage('Entrez le code telephone a 6 chiffres.');
+      return;
+    }
+
+    setPhoneStatus('verifying');
+    setPhoneMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+
+      const response = await fetch(`${getApiBaseUrl()}/api/users/me/phone-verification/check`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: profile.phone, code: phoneCode.trim() }),
+      });
+
+      if (!response.ok) throw new Error(`Phone verification failed: ${response.status}`);
+      const verifiedAt = new Date().toISOString();
+      onProfileChange((current) => ({ ...current, phoneVerifiedAt: verifiedAt }));
+      writeScopedLocalStorage(profileStorageKey, JSON.stringify({ ...profile, phoneVerifiedAt: verifiedAt }));
+      setPhoneCode('');
+      setPhoneStatus('verified');
+      setPhoneMessage('Telephone verifie.');
+      const status = await authenticatedFetch<VerificationStatus>('/api/users/me/verification-status', session.accessToken);
+      setTrustStatus(status);
+    } catch {
+      setPhoneStatus('error');
+      setPhoneMessage('Code telephone invalide ou expire.');
     }
   }
 
@@ -2003,8 +2116,18 @@ function SettingsSection({
       <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
         <h2 className="text-lg">Verification</h2>
         <div className="grid gap-3 text-[#4b5563]">
+          <div className="border border-[#e5e7eb] bg-[#f8fafc] p-3">
+            <p className="font-black text-[#1f2937]">{trustStatus ? verificationLevelLabel(trustStatus.levelName) : 'Niveau de verification'}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              {verificationChecklistRows(trustStatus, profile).map((item) => (
+                <span key={item.label} className={item.done ? 'text-[#0f8f6b]' : 'text-[#d97706]'}>
+                  {item.done ? 'OK' : 'A faire'} - {item.label}
+                </span>
+              ))}
+            </div>
+          </div>
           <p>E-mail: <span className={profile.emailVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}>{profile.emailVerifiedAt ? 'compte verifie' : 'verification requise'}</span></p>
-          <p>Telephone: <span className="text-[#64748b]">SMS non configure</span></p>
+          <p>Telephone: <span className={trustStatus?.checklist.phoneVerified || profile.phoneVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}>{trustStatus?.checklist.phoneVerified || profile.phoneVerifiedAt ? 'telephone verifie' : 'verification requise'}</span></p>
           {verificationStatus === 'sent' || verificationStatus === 'verifying' || verificationStatus === 'error' ? (
             <div className="flex max-w-md gap-2">
               <input
@@ -2020,10 +2143,30 @@ function SettingsSection({
             </div>
           ) : null}
           {verificationMessage ? <p className={verificationStatus === 'error' ? 'text-red-600' : 'text-[#0f8f6b]'}>{verificationMessage}</p> : null}
+          {phoneStatus === 'sent' || phoneStatus === 'verifying' || phoneStatus === 'error' ? (
+            <div className="flex max-w-md gap-2">
+              <input
+                value={phoneCode}
+                onChange={(event) => setPhoneCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                inputMode="numeric"
+                className="h-10 flex-1 border border-[#cbd5e1] px-3 text-center text-lg tracking-[0.35em] outline-none focus:border-[#0f8f6b]"
+                placeholder="000000"
+              />
+              <button type="button" onClick={() => void verifyPhoneCode()} disabled={phoneStatus === 'verifying'} className="h-10 bg-[#0f8f6b] px-4 text-sm font-semibold text-white disabled:bg-slate-300">
+                Valider SMS
+              </button>
+            </div>
+          ) : null}
+          {phoneMessage ? <p className={phoneStatus === 'error' ? 'text-red-600' : 'text-[#0f8f6b]'}>{phoneMessage}</p> : null}
         </div>
-        <button type="button" onClick={() => void requestAccountVerificationCode()} disabled={verificationStatus === 'sending' || verificationStatus === 'verifying'} className="text-right text-[#0f8f6b] disabled:text-slate-300">
-          {profile.emailVerifiedAt ? 'Renvoyer un code' : verificationStatus === 'sending' ? 'Envoi...' : 'Verifier'}
-        </button>
+        <div className="grid content-start gap-3 text-right">
+          <button type="button" onClick={() => void requestAccountVerificationCode()} disabled={verificationStatus === 'sending' || verificationStatus === 'verifying'} className="text-[#0f8f6b] disabled:text-slate-300">
+            {profile.emailVerifiedAt ? 'Renvoyer e-mail' : verificationStatus === 'sending' ? 'Envoi...' : 'Verifier e-mail'}
+          </button>
+          <button type="button" onClick={() => void requestPhoneVerificationCode()} disabled={phoneStatus === 'sending' || phoneStatus === 'verifying'} className="text-[#0f8f6b] disabled:text-slate-300">
+            {phoneStatus === 'sending' ? 'Envoi...' : 'Verifier telephone'}
+          </button>
+        </div>
       </div>
       <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
         <h2 className="text-lg">Déconnexion</h2>
@@ -2779,6 +2922,28 @@ function maskEmail(email: string) {
   const [name, domain] = email.split('@');
   if (!domain) return email;
   return `${name.slice(0, 4)}***********@${domain}`;
+}
+
+function verificationLevelLabel(levelName: VerificationStatus['levelName']) {
+  const labels: Record<VerificationStatus['levelName'], string> = {
+    UNVERIFIED: 'Niveau 0 - Non verifie',
+    ACCOUNT_VERIFIED: 'Niveau 1 - Compte verifie',
+    IDENTITY_VERIFIED: 'Niveau 2 - Identite certifiee',
+    BUSINESS_VERIFIED: 'Niveau 3 - Entreprise certifiee',
+  };
+  return labels[levelName];
+}
+
+function verificationChecklistRows(status: VerificationStatus | null, profile: ProfileForm) {
+  const checklist = status?.checklist;
+  return [
+    { label: 'E-mail', done: checklist?.emailVerified ?? Boolean(profile.emailVerifiedAt) },
+    { label: 'Telephone', done: checklist?.phoneVerified ?? Boolean(profile.phoneVerifiedAt) },
+    { label: 'Pays', done: checklist?.countryConfirmed ?? Boolean(profile.country) },
+    { label: 'Adresse', done: checklist?.addressAdded ?? Boolean(profile.shippingAddress?.street && profile.shippingAddress.city && profile.shippingAddress.phone) },
+    { label: 'CGU', done: checklist?.cguAccepted ?? false },
+    { label: 'MFA', done: checklist?.mfaEnabled ?? false },
+  ];
 }
 
 function ProductQuickGrid() {

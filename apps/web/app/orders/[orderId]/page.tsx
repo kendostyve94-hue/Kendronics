@@ -145,7 +145,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
 
       if (!response.ok) {
         const error = await response.json().catch(() => null);
-        throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Impossible de lancer le paiement Stripe.');
+        throw new Error(paymentErrorMessage(error, 'Impossible de lancer le paiement Stripe.'));
       }
 
       const checkout = (await response.json()) as { checkoutUrl: string };
@@ -1045,6 +1045,25 @@ function paymentActionLabel(paymentStatus: PaymentStatus, defaultLabel: string):
   if (paymentStatus === 'expired') return 'Autorisation expiree';
   if (paymentStatus === 'failed') return 'Paiement refuse';
   return defaultLabel;
+}
+
+function paymentErrorMessage(error: unknown, fallback: string): string {
+  const payload = error && typeof error === 'object' ? error as Record<string, unknown> : {};
+  const message = payload.message;
+  if (Array.isArray(message)) return message.join(' ');
+  if (typeof message === 'string') return message;
+  if (message && typeof message === 'object') {
+    const nested = message as Record<string, unknown>;
+    const missing = Array.isArray(nested.missing_steps) ? nested.missing_steps.map(String).join(', ') : '';
+    if (typeof nested.message === 'string') {
+      return missing ? `${nested.message} Etapes manquantes: ${missing}.` : nested.message;
+    }
+  }
+  if (typeof payload.required_verification_level === 'string') {
+    const missing = Array.isArray(payload.missing_steps) ? payload.missing_steps.map(String).join(', ') : '';
+    return missing ? `Verification requise avant paiement. Etapes manquantes: ${missing}.` : 'Verification requise avant paiement.';
+  }
+  return fallback;
 }
 
 function paymentTotalLabel(paymentStatus: PaymentStatus): string {

@@ -15,6 +15,12 @@ export class UsersRepository {
         passwordHash: input.passwordHash,
         fullName: input.fullName,
         companyName: input.companyName,
+        accountType: input.accountType ?? 'individual',
+        verificationLevel: input.verificationLevel ?? 0,
+        verificationStatus: input.verificationStatus ?? 'unverified',
+        riskScore: input.riskScore ?? 0,
+        mfaEnabled: input.mfaEnabled ?? false,
+        cguAcceptedAt: input.cguAcceptedAt,
         roles: input.roles ?? [UserRole.User],
         emailVerifiedAt: input.emailVerifiedAt,
       },
@@ -54,11 +60,18 @@ export class UsersRepository {
       fullName?: string;
       email?: string;
       phone?: string | null;
+      phoneVerifiedAt?: Date | null;
       companyName?: string | null;
       country?: string | null;
       avatarDataUrl?: string | null;
       profileDetails?: Prisma.InputJsonValue;
       emailVerifiedAt?: Date | null;
+      accountType?: string;
+      verificationLevel?: number;
+      verificationStatus?: string;
+      riskScore?: number;
+      mfaEnabled?: boolean;
+      cguAcceptedAt?: Date | null;
     },
   ): Promise<User> {
     const user = await this.prisma.user.update({
@@ -102,6 +115,16 @@ export class UsersRepository {
     await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({ where: { id: userId }, select: { email: true } });
       await tx.profileVerificationCode.deleteMany({ where: { userId } });
+      await tx.emailVerification.deleteMany({ where: { userId } });
+      await tx.phoneVerification.deleteMany({ where: { userId } });
+      await tx.identityVerification.deleteMany({ where: { userId } });
+      await tx.businessVerification.deleteMany({ where: { userId } });
+      await tx.verificationDocument.deleteMany({ where: { userId } });
+      await tx.mfaFactor.deleteMany({ where: { userId } });
+      await tx.riskEvent.deleteMany({ where: { userId } });
+      await tx.notificationPreference.deleteMany({ where: { userId } });
+      await tx.pushSubscription.deleteMany({ where: { userId } });
+      await tx.userAuditLog.deleteMany({ where: { OR: [{ userId }, { actorId: userId }] } });
       await tx.passwordResetToken.deleteMany({ where: { userId } });
       await tx.notification.deleteMany({ where: { userId } });
       await tx.cookieConsent.deleteMany({ where: { userId } });
@@ -140,11 +163,18 @@ export class UsersRepository {
     fullName: string;
     companyName: string | null;
     phone: string | null;
+    phoneVerifiedAt: Date | null;
     country: string | null;
     avatarDataUrl: string | null;
     profileDetails: unknown;
     shippingAddress: unknown;
     billingAddress: unknown;
+    accountType: string;
+    verificationLevel: number;
+    verificationStatus: string;
+    riskScore: number;
+    mfaEnabled: boolean;
+    cguAcceptedAt: Date | null;
     roles: string[];
     emailVerifiedAt: Date | null;
     createdAt: Date;
@@ -157,11 +187,18 @@ export class UsersRepository {
       fullName: user.fullName,
       companyName: user.companyName ?? undefined,
       phone: user.phone ?? undefined,
+      phoneVerifiedAt: user.phoneVerifiedAt ?? undefined,
       country: user.country ?? undefined,
       avatarDataUrl: user.avatarDataUrl ?? undefined,
       profileDetails: objectValue(user.profileDetails),
       shippingAddress: objectValue(user.shippingAddress),
       billingAddress: objectValue(user.billingAddress),
+      accountType: user.accountType === 'business' ? 'business' : 'individual',
+      verificationLevel: user.verificationLevel,
+      verificationStatus: user.verificationStatus,
+      riskScore: user.riskScore,
+      mfaEnabled: user.mfaEnabled,
+      cguAcceptedAt: user.cguAcceptedAt ?? undefined,
       roles: user.roles as UserRole[],
       emailVerifiedAt: user.emailVerifiedAt ?? undefined,
       createdAt: user.createdAt,

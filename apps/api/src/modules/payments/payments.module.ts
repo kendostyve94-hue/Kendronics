@@ -3,6 +3,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { OrdersModule } from '../orders/orders.module';
 import { SupportModule } from '../support/support.module';
 import { TrackingModule } from '../tracking/tracking.module';
+import { UsersModule } from '../users/users.module';
 import { CinetPayMobileMoneyProvider } from './providers/cinetpay-mobile-money.provider';
 import { MobileMoneyProvider } from './providers/mobile-money.provider';
 import { PayDunyaMobileMoneyProvider } from './providers/paydunya-mobile-money.provider';
@@ -15,7 +16,7 @@ import { PaymentsRepository } from './repositories/payments.repository';
 import { PaymentWebhookHandler } from './webhooks/payment-webhook.handler';
 
 @Module({
-  imports: [OrdersModule, TrackingModule, NotificationsModule, SupportModule],
+  imports: [OrdersModule, TrackingModule, NotificationsModule, SupportModule, UsersModule],
   controllers: [PaymentsController],
   providers: [
     PaymentsService,

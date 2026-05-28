@@ -6,11 +6,12 @@ import { CookieConsentRepository } from './repositories/cookie-consent.repositor
 import { UsersRepository } from './repositories/users.repository';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { VerificationLevelService } from './verification-level.service';
 
 @Module({
   imports: [UploadsModule],
   controllers: [UsersController],
-  providers: [UsersService, UsersRepository, CookieConsentRepository, AccountDeletionFeedbackRepository, PasswordService],
-  exports: [UsersService],
+  providers: [UsersService, VerificationLevelService, UsersRepository, CookieConsentRepository, AccountDeletionFeedbackRepository, PasswordService],
+  exports: [UsersService, VerificationLevelService],
 })
 export class UsersModule {}

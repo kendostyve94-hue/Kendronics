@@ -4,6 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { OrdersService } from '../orders/orders.service';
 import { EmailNotificationService } from '../support/email-notification.service';
+import { VerificationLevelService } from '../users/verification-level.service';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { CreateMobileMoneyPaymentDto } from './dto/create-mobile-money-payment.dto';
 import { MobileMoneyCallbackDto } from './dto/mobile-money-callback.dto';
@@ -30,12 +31,23 @@ export class PaymentsService {
     private readonly notificationsService: NotificationsService,
     private readonly emailNotificationService: EmailNotificationService,
     private readonly prisma: PrismaService,
+    private readonly verificationLevelService: VerificationLevelService,
   ) {}
 
   async createCheckout(userId: string, customerEmail: string, dto: CreateCheckoutDto): Promise<CheckoutSession> {
     const order = await this.ordersService.findOwnedOrder(userId, dto.orderId);
     if (!order.totalPrice || order.totalPrice < 0.5) {
       throw new BadRequestException('Order quote amount is unavailable for checkout.');
+    }
+    const verification = await this.verificationLevelService.evaluateOrder(userId, order.totalPrice);
+    if (!verification.allowed) {
+      throw new BadRequestException({
+        message: 'Verification required before payment authorization.',
+        allowed: false,
+        required_verification_level: verification.requiredVerificationLevel,
+        missing_steps: verification.missingSteps,
+        risk_score: verification.riskScore,
+      });
     }
 
     const payment = await this.paymentsRepository.createPayment({
@@ -64,6 +76,16 @@ export class PaymentsService {
     const order = await this.ordersService.findOwnedOrder(userId, dto.orderId);
     if (!order.totalPrice || order.totalPrice < 0.5) {
       throw new BadRequestException('Order quote amount is unavailable for Mobile Money payment.');
+    }
+    const verification = await this.verificationLevelService.evaluateOrder(userId, order.totalPrice);
+    if (!verification.allowed) {
+      throw new BadRequestException({
+        message: 'Verification required before payment authorization.',
+        allowed: false,
+        required_verification_level: verification.requiredVerificationLevel,
+        missing_steps: verification.missingSteps,
+        risk_score: verification.riskScore,
+      });
     }
 
     const payment = await this.paymentsRepository.createPayment({

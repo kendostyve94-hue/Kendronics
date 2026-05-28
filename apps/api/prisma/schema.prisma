@@ -14,11 +14,18 @@ model User {
   fullName        String
   companyName     String?
   phone           String?
+  phoneVerifiedAt DateTime?
   country         String?
   avatarDataUrl   String?
   profileDetails  Json?
   shippingAddress Json?
   billingAddress  Json?
+  accountType     String    @default("individual")
+  verificationLevel Int     @default(0)
+  verificationStatus String @default("unverified")
+  riskScore       Int       @default(0)
+  mfaEnabled      Boolean   @default(false)
+  cguAcceptedAt   DateTime?
   roles           String[]  @default(["user"])
   emailVerifiedAt DateTime?
   createdAt       DateTime  @default(now())
@@ -37,6 +44,17 @@ model User {
   profileVerificationCodes ProfileVerificationCode[]
   passwordResetTokens PasswordResetToken[]
   accountDeletionFeedbacks AccountDeletionFeedback[]
+  emailVerifications EmailVerification[]
+  phoneVerifications PhoneVerification[]
+  identityVerifications IdentityVerification[]
+  businessVerifications BusinessVerification[]
+  verificationDocuments VerificationDocument[]
+  mfaFactors MfaFactor[]
+  riskEvents RiskEvent[]
+  notificationPreference NotificationPreference?
+  pushSubscriptions PushSubscription[]
+  userAuditLogs UserAuditLog[] @relation("UserAuditSubject")
+  actorAuditLogs UserAuditLog[] @relation("UserAuditActor")
 }
 
 model CookieConsent {
@@ -205,6 +223,9 @@ model Session {
   userId           String
   email            String
   refreshTokenHash String
+  ipAddress        String?
+  userAgent        String?
+  deviceFingerprint String?
   expiresAt        DateTime
   revokedAt        DateTime?
   createdAt        DateTime  @default(now())
@@ -212,6 +233,179 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([refreshTokenHash])
+  @@index([userId])
+}
+
+model EmailVerification {
+  id          String    @id @default(uuid())
+  userId      String
+  email       String
+  tokenHash   String
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  attempts    Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+model PhoneVerification {
+  id                      String    @id @default(uuid())
+  userId                  String
+  phone                   String
+  provider                String
+  providerVerificationSid String?
+  codeHash                String?
+  status                  String    @default("pending")
+  attempts                Int       @default(0)
+  expiresAt               DateTime?
+  verifiedAt              DateTime?
+  createdAt               DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([phone])
+  @@index([status])
+}
+
+model IdentityVerification {
+  id                        String    @id @default(uuid())
+  userId                    String
+  provider                  String
+  providerSessionId         String?
+  providerClientReferenceId String?
+  status                    String    @default("pending")
+  documentType              String?
+  country                   String?
+  verifiedName              String?
+  verifiedBirthDate         DateTime?
+  mismatchReason            String?
+  rawProviderResultJson     Json?
+  startedAt                 DateTime  @default(now())
+  completedAt               DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([providerSessionId])
+  @@index([status])
+}
+
+model BusinessVerification {
+  id                 String    @id @default(uuid())
+  userId             String
+  companyName        String
+  registrationNumber String?
+  taxId              String?
+  companyAddressId   String?
+  businessEmail      String?
+  website            String?
+  status             String    @default("pending")
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  rejectionReason    String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model VerificationDocument {
+  id               String   @id @default(uuid())
+  userId           String
+  verificationType String
+  fileUrl          String
+  fileType         String
+  storageProvider  String
+  status           String   @default("uploaded")
+  uploadedAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([verificationType])
+}
+
+model MfaFactor {
+  id              String    @id @default(uuid())
+  userId          String
+  type            String
+  provider        String?
+  secretEncrypted String?
+  verifiedAt      DateTime?
+  lastUsedAt      DateTime?
+  enabled         Boolean   @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([enabled])
+}
+
+model RiskEvent {
+  id             String   @id @default(uuid())
+  userId         String
+  eventType      String
+  riskScoreDelta Int
+  metadataJson   Json?
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([eventType])
+}
+
+model UserAuditLog {
+  id           String   @id @default(uuid())
+  userId       String?
+  actorId      String?
+  eventType    String
+  ipAddress    String?
+  userAgent    String?
+  metadataJson Json?
+  createdAt    DateTime @default(now())
+
+  user User? @relation("UserAuditSubject", fields: [userId], references: [id], onDelete: SetNull)
+  actor User? @relation("UserAuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([actorId])
+  @@index([eventType])
+}
+
+model NotificationPreference {
+  userId          String  @id
+  emailEnabled    Boolean @default(true)
+  pushEnabled     Boolean @default(true)
+  smsEnabled      Boolean @default(false)
+  whatsappEnabled Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PushSubscription {
+  id             String   @id @default(uuid())
+  userId         String
+  provider       String   @default("onesignal")
+  externalId     String
+  subscriptionId String
+  deviceType     String?
+  optedIn        Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, subscriptionId])
   @@index([userId])
 }
 
