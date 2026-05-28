@@ -579,7 +579,7 @@ function ProfileViewContent({
   if (view === 'quotes') return <QuotesHubSection orders={orders} dataStatus={dataStatus} />;
   if (view === 'all-orders') return <OrderReviewSection activeKey="all" title="Toutes commandes" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Verification des fichiers" mode="review" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
-  if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Paiement en attente" mode="review" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
+  if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Paiements effectues" mode="payment" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'production') return <OrderReviewSection activeKey="production" title="Progres de la Fabrication" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'completed') return <OrderReviewSection activeKey="completed" title="Commande completee" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
@@ -602,7 +602,7 @@ type OrderServiceFilter = OrderProductFilter | 'all';
 
 const orderStatuses: Array<{ key: Extract<OrderStatusKey, 'verification' | 'payment-pending' | 'production' | 'delivery' | 'comments'>; label: string }> = [
   { key: 'verification', label: 'Vérification en cours' },
-  { key: 'payment-pending', label: 'Paiement en attente' },
+  { key: 'payment-pending', label: 'Paiement effectue' },
   { key: 'production', label: 'Production terminée' },
   { key: 'delivery', label: 'Livraison' },
   { key: 'comments', label: 'Commentaires' },
@@ -627,7 +627,7 @@ function OrderReviewSection({
 }: {
   activeKey: OrderStatusKey;
   title: string;
-  mode: 'review' | 'table';
+  mode: 'review' | 'payment' | 'table';
   orders?: ProfileOrder[];
   dataStatus?: 'loading' | 'ready' | 'signed-out' | 'error';
   onOrdersChange: (orders: ProfileOrder[] | ((current: ProfileOrder[]) => ProfileOrder[])) => void;
@@ -639,11 +639,17 @@ function OrderReviewSection({
       <OrderStatusHeader activeKey={activeKey} counts={orderCounts(orders)} />
 
       <div className="border-t-[16px] border-[#eef0f3] px-6 pb-24 pt-5">
-        <div className={`${mode === 'review' ? 'flex h-12 items-center border-b border-[#e5e7eb]' : 'flex h-10 items-center'}`}>
+        <div className={`${mode !== 'table' ? 'flex h-12 items-center border-b border-[#e5e7eb]' : 'flex h-10 items-center'}`}>
           <h2 className="text-xl font-normal text-black">{title}</h2>
         </div>
 
-        {mode === 'review' ? <VerificationReviewPanel orders={visibleOrders} dataStatus={dataStatus} /> : <OrderTableSearchPanel orders={visibleOrders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />}
+        {mode === 'review' ? (
+          <VerificationReviewPanel orders={visibleOrders} dataStatus={dataStatus} />
+        ) : mode === 'payment' ? (
+          <PaymentReviewPanel orders={visibleOrders} dataStatus={dataStatus} />
+        ) : (
+          <OrderTableSearchPanel orders={visibleOrders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />
+        )}
       </div>
     </section>
   );
@@ -714,6 +720,48 @@ function VerificationReviewPanel({ orders, dataStatus }: { orders: ProfileOrder[
   );
 }
 
+function PaymentReviewPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+  const [detailOrder, setDetailOrder] = useState<ProfileOrder | null>(null);
+
+  return (
+    <>
+      <div className="mt-4 border border-[#e5e7eb] bg-white">
+        <div className="overflow-x-auto">
+          <div className="grid min-w-[960px] grid-cols-[minmax(360px,1fr)_150px_150px_160px_110px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
+            <span>Article</span>
+            <span>Date de paiement</span>
+            <span>Facture</span>
+            <span>Etat du paiement</span>
+            <span>Qte commandee</span>
+          </div>
+          {dataStatus === 'loading' ? (
+            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement des paiements...</p>
+          ) : dataStatus === 'signed-out' ? (
+            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher vos paiements.</p>
+          ) : dataStatus === 'error' ? (
+            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les paiements.</p>
+          ) : orders.length === 0 ? (
+            <p className="min-w-[960px] px-5 py-14 text-center text-base text-[#92979d]">Aucune commande payee pour le moment.</p>
+          ) : (
+            <div className="min-w-[960px] divide-y divide-[#e5e7eb]">
+              {orders.map((order) => (
+                <div key={order.id} className="grid grid-cols-[minmax(360px,1fr)_150px_150px_160px_110px] items-start px-5 py-5 text-sm text-[#1f2f43]">
+                  <VerificationArticleCell order={order} onDetail={() => setDetailOrder(order)} />
+                  <span className="pt-2 text-black">{paymentPaidDate(order)}</span>
+                  <span className="pt-2 text-black">{orderInvoiceAvailability(order)}</span>
+                  <span className="pt-2 text-black">{orderPaymentStatusLabel(order)}</span>
+                  <span className="pt-2 text-black">{orderQuantity(order)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      {detailOrder ? <ProductDetailModal order={detailOrder} onClose={() => setDetailOrder(null)} /> : null}
+    </>
+  );
+}
+
 function VerificationArticleCell({ order, onDetail }: { order: ProfileOrder; onDetail: () => void }) {
   return (
     <div className="flex min-w-0 gap-5">
@@ -760,6 +808,29 @@ function verificationStatusLabel(order: ProfileOrder) {
   if (order.status === 'awaiting_payment') return 'Non envoye';
   if (['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'china_3pl_received'].includes(order.status)) return 'Fichier accepte';
   return orderStatusLabel(order.status);
+}
+
+function paymentPaidDate(order: ProfileOrder) {
+  return order.paidAt ? formatDate(order.paidAt) : '-';
+}
+
+function orderInvoiceAvailability(order: ProfileOrder) {
+  return isPaidOrder(order) ? 'Disponible' : 'Non disponible';
+}
+
+function orderPaymentStatusLabel(order: ProfileOrder) {
+  const status = order.paymentStatus ?? (isPaidOrder(order) ? 'paid' : 'pending');
+  const labels: Record<NonNullable<ProfileOrder['paymentStatus']>, string> = {
+    pending: 'En attente',
+    authorized: 'Autorise',
+    paid: 'Paye',
+    failed: 'Refuse',
+    canceled: 'Annule',
+    expired: 'Expire',
+    refunded: 'Rembourse',
+  };
+
+  return labels[status];
 }
 
 function rejectionReportHref(order: ProfileOrder) {
@@ -1207,7 +1278,7 @@ function booleanText(value: unknown) {
 }
 
 function isSelectableCartOrder(order: ProfileOrder) {
-  return order.status !== 'cancelled' && order.status !== 'refunded';
+  return ['draft', 'quoted', 'awaiting_payment'].includes(order.status) && order.status !== 'cancelled' && order.status !== 'refunded';
 }
 
 function orderMatchesQuery(order: ProfileOrder, query: string) {
@@ -3214,12 +3285,18 @@ function countForStatus(key: OrderStatusKey, counts: ReturnType<typeof orderCoun
 function orderMatchesStatus(order: ProfileOrder, key: OrderStatusKey) {
   if (key === 'all') return true;
   if (key === 'verification') return ['payment_authorized', 'supplier_review_pending', 'supplier_files_rejected', 'draft', 'quoted'].includes(order.status);
-  if (key === 'payment-pending') return order.status === 'awaiting_payment' || order.paymentStatus === 'pending';
+  if (key === 'payment-pending') return isPaidOrder(order);
   if (key === 'production') return ['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'china_3pl_received'].includes(order.status);
   if (key === 'delivery') return ['shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status);
   if (key === 'completed') return order.status === 'delivered';
   if (key === 'comments') return order.status === 'delivered';
   return false;
+}
+
+function isPaidOrder(order: ProfileOrder) {
+  if (order.paymentStatus === 'paid') return true;
+  if (order.paidAt) return true;
+  return ['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'china_3pl_received', 'shipped_to_africa', 'customs_processing', 'out_for_delivery', 'delivered'].includes(order.status);
 }
 
 function unreadNotifications(notifications: ProfileNotification[]) {
