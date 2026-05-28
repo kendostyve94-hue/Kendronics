@@ -810,76 +810,78 @@ function OrderTableSearchPanel({
             </label>
           </div>
 
-          <div className="grid grid-cols-[32px_minmax(0,1fr)_130px_155px_130px_70px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
-            <input type="checkbox" checked={visibleOrders.length > 0 && allVisibleSelected} onChange={toggleVisibleSelection} className="h-4 w-4 accent-[#0877ff]" aria-label="Selectionner toutes les commandes visibles" />
-            <span>Article</span>
-            <span>Qte</span>
-            <span>Delais prod</span>
-            <span>Prix</span>
-            <span className="text-center text-[#9ca3af]">Action</span>
-          </div>
+          <div className="overflow-x-auto">
+            <div className="grid min-w-[760px] grid-cols-[32px_minmax(360px,1fr)_100px_130px_100px_46px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
+              <input type="checkbox" checked={visibleOrders.length > 0 && allVisibleSelected} onChange={toggleVisibleSelection} className="h-4 w-4 accent-[#0877ff]" aria-label="Selectionner toutes les commandes visibles" />
+              <span>Article</span>
+              <span>Qte</span>
+              <span>Delais prod</span>
+              <span>Prix</span>
+              <span className="text-center text-[#9ca3af]">Action</span>
+            </div>
 
-          {dataStatus === 'loading' ? (
-            <p className="px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement des commandes...</p>
-          ) : dataStatus === 'signed-out' ? (
-            <p className="px-5 py-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher vos commandes.</p>
-          ) : dataStatus === 'error' ? (
-            <p className="px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les commandes.</p>
-          ) : orders.length === 0 ? (
-            <div className="px-5 py-12 text-center">
-              <p className="text-base font-semibold text-[#92979d]">Votre panier est vide.</p>
-              <a href="/quote" className="mt-4 inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-semibold text-white hover:bg-[#0b7558]">Ajouter un nouvel article</a>
-            </div>
-          ) : visibleOrders.length === 0 ? (
-            <div className="px-5 py-12 text-center">
-              <p className="text-base font-semibold text-[#92979d]">Votre recherche ne correspond a aucune commande.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-[#e5e7eb]">
-              {visibleOrders.map((order) => (
-                <div key={order.id} className="grid grid-cols-[32px_minmax(0,1fr)_130px_155px_130px_70px] items-start px-5 py-5 text-sm text-[#1f2f43]">
-                  <input type="checkbox" checked={selectedOrderIds.includes(order.id)} disabled={!isSelectableCartOrder(order)} onChange={() => toggleOrderSelection(order.id)} className="mt-10 h-4 w-4 accent-[#0877ff]" aria-label={`Selectionner ${order.orderNumber}`} />
-                  <div className="flex min-w-0 gap-5">
-                    <div className="grid h-[84px] w-[84px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-xs text-[#cbd5e1]">Kendronics</div>
-                    <div className="min-w-0 py-1">
-                      <p className="text-black">{orderGerberLabel(order)}</p>
-                      <p className="mt-1 text-sm text-[#44546a]">{orderProductOrderLine(order)}</p>
-                      <p className="mt-1 text-sm text-[#44546a]">{orderSummaryLine(order)}</p>
-                      <div className="mt-3 flex flex-wrap gap-4 text-sm">
-                        <button type="button" onClick={() => setDetailOrder(order)} className="text-[#44546a] hover:text-[#0877ff]">Detail du produit</button>
-                        <a href={`/quote?orderId=${encodeURIComponent(order.id)}`} className="text-[#44546a] hover:text-[#0877ff]">Modifier la commande</a>
+            {dataStatus === 'loading' ? (
+              <p className="min-w-[760px] px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement des commandes...</p>
+            ) : dataStatus === 'signed-out' ? (
+              <p className="min-w-[760px] px-5 py-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher vos commandes.</p>
+            ) : dataStatus === 'error' ? (
+              <p className="min-w-[760px] px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les commandes.</p>
+            ) : orders.length === 0 ? (
+              <div className="min-w-[760px] px-5 py-12 text-center">
+                <p className="text-base font-semibold text-[#92979d]">Votre panier est vide.</p>
+                <a href="/quote" className="mt-4 inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-semibold text-white hover:bg-[#0b7558]">Ajouter un nouvel article</a>
+              </div>
+            ) : visibleOrders.length === 0 ? (
+              <div className="min-w-[760px] px-5 py-12 text-center">
+                <p className="text-base font-semibold text-[#92979d]">Votre recherche ne correspond a aucune commande.</p>
+              </div>
+            ) : (
+              <div className="min-w-[760px] divide-y divide-[#e5e7eb]">
+                {visibleOrders.map((order) => (
+                  <div key={order.id} className="grid grid-cols-[32px_minmax(360px,1fr)_100px_130px_100px_46px] items-start px-5 py-5 text-sm text-[#1f2f43]">
+                    <input type="checkbox" checked={selectedOrderIds.includes(order.id)} disabled={!isSelectableCartOrder(order)} onChange={() => toggleOrderSelection(order.id)} className="mt-8 h-4 w-4 accent-[#0877ff]" aria-label={`Selectionner ${order.orderNumber}`} />
+                    <div className="flex min-w-0 gap-5">
+                      <div className="grid h-[84px] w-[84px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-xs text-[#cbd5e1]">Kendronics</div>
+                      <div className="min-w-0 py-0.5">
+                        <p className="truncate text-black">{orderGerberLabel(order)}</p>
+                        <p className="mt-1 text-sm text-[#44546a]">{orderProductOrderLine(order)}</p>
+                        <p className="mt-1 text-sm text-[#44546a]">{orderSummaryLine(order)}</p>
+                        <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                          <button type="button" onClick={() => setDetailOrder(order)} className="text-[#44546a] hover:text-[#0877ff]">Details du produit</button>
+                          <a href={`/quote?orderId=${encodeURIComponent(order.id)}`} className="text-[#44546a] hover:text-[#0877ff]">Modifier la commande</a>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="pt-5">
-                    <select
-                      value={orderQuantity(order)}
-                      onChange={(event) => void updateOrderQuantity(order, Number(event.target.value))}
-                      disabled={quantityUpdatingOrderId === order.id || !canUpdateOrderQuantity(order)}
-                      className="h-9 w-[82px] border border-[#d1d5db] bg-white px-3 text-sm outline-none disabled:cursor-not-allowed disabled:bg-[#f1f5f9]"
+                    <div className="pt-4">
+                      <select
+                        value={orderQuantity(order)}
+                        onChange={(event) => void updateOrderQuantity(order, Number(event.target.value))}
+                        disabled={quantityUpdatingOrderId === order.id || !canUpdateOrderQuantity(order)}
+                        className="h-9 w-[82px] border border-[#d1d5db] bg-white px-3 text-sm outline-none disabled:cursor-not-allowed disabled:bg-[#f1f5f9]"
+                      >
+                        {quantityOptions(orderQuantity(order)).map((quantity) => (
+                          <option key={quantity} value={quantity}>{quantity}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <span className="pt-5 text-sm text-black">{orderProductionDelay(order)}</span>
+                    <div className="pt-5">
+                      <p className="text-[#ff7a00]">{formatMoney(orderProductionTotal(order))}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => deleteOrder(order.id)}
+                      disabled={deletingOrderId === order.id || !isSelectableCartOrder(order)}
+                      className="pt-5 text-center text-[#9ca3af] hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-label={`Supprimer ${order.orderNumber}`}
                     >
-                      {quantityOptions(orderQuantity(order)).map((quantity) => (
-                        <option key={quantity} value={quantity}>{quantity}</option>
-                      ))}
-                    </select>
+                      {deletingOrderId === order.id ? '...' : 'x'}
+                    </button>
                   </div>
-                  <span className="pt-6 text-sm text-black">{orderProductionDelay(order)}</span>
-                  <div className="pt-6">
-                    <p className="text-[#ff7a00]">{formatMoney(orderProductionTotal(order))}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => deleteOrder(order.id)}
-                    disabled={deletingOrderId === order.id || !isSelectableCartOrder(order)}
-                    className="pt-6 text-center text-[#9ca3af] hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
-                    aria-label={`Supprimer ${order.orderNumber}`}
-                  >
-                    {deletingOrderId === order.id ? '...' : 'x'}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
