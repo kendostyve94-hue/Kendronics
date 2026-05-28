@@ -8,6 +8,7 @@ import {
 } from '../orders/dto/admin-order-update.dto';
 import { OrdersService } from '../orders/orders.service';
 import { PaymentsService } from '../payments/payments.service';
+import { SupplierReviewResultDto } from '../payments/dto/order-workflow.dto';
 import { UpsertPricingRuleDto } from '../pricing/dto/upsert-pricing-rule.dto';
 import { PrepareSupplierOrderDto } from '../pricing/dto/prepare-supplier-order.dto';
 import { RecordSupplierRealPriceDto } from '../pricing/dto/record-supplier-real-price.dto';
@@ -196,6 +197,14 @@ export class AdminService {
       orderId,
     );
     return supplierOrder;
+  }
+
+  async recordSupplierReviewResult(admin: AuthenticatedUser, orderId: string, dto: SupplierReviewResultDto) {
+    const order = await this.paymentsService.recordSupplierReviewResult(orderId, dto);
+    await this.auditRepository.record(admin.id, 'admin.orders.supplier_review.result', 'order', orderId, {
+      metadata: { status: dto.status, externalReviewId: dto.externalReviewId },
+    });
+    return order;
   }
 
   async updateShipment(admin: AuthenticatedUser, orderId: string, dto: UpdateShipmentDto) {

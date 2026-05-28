@@ -17,8 +17,20 @@ type OrderRecord = Omit<
   | 'estimatedDeliveryAt'
   | 'paidAt'
   | 'deliveredAt'
+  | 'supplierReviewStatus'
+  | 'reviewAttemptCount'
+  | 'maxReviewAttempts'
+  | 'customerDecisionAfterRejection'
+  | 'supplierFeedback'
+  | 'currentFileVersion'
 > & {
   status: string;
+  supplierReviewStatus: string;
+  reviewAttemptCount: number;
+  maxReviewAttempts: number;
+  customerDecisionAfterRejection: string | null;
+  supplierFeedback: string | null;
+  currentFileVersion: number;
   externalManufacturingPartner: string | null;
   externalSupplierOrderId: string | null;
   carrierName: string | null;
@@ -51,7 +63,7 @@ export class OrdersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateOrderDto): Promise<Order> {
-    return this.prisma.order.create({
+    const order = await this.prisma.order.create({
       data: {
         orderNumber: `KEN-${Date.now()}`,
         userId,
@@ -59,7 +71,9 @@ export class OrdersRepository {
         destinationCountryIso2: dto.destinationCountryIso2,
         status: 'awaiting_payment',
       },
-    }) as Promise<Order>;
+    });
+    await this.initializeWorkflowRecords(order.id);
+    return this.findById(order.id) as Promise<Order>;
   }
 
   async findById(id: string): Promise<Order | null> {
@@ -126,6 +140,27 @@ export class OrdersRepository {
     return this.toOrder(order);
   }
 
+  async markPaymentAuthorized(id: string): Promise<Order> {
+    const order = await this.prisma.order.update({
+      where: { id },
+      data: {
+        status: 'payment_authorized',
+        supplierReviewStatus: 'sent',
+        reviewAttemptCount: { increment: 1 },
+        supplierReviews: {
+          create: {
+            attemptNumber: 1,
+            supplier: 'manufacturing_network',
+            supplierStatus: 'under_review',
+            technicalPackageVersion: 1,
+          },
+        },
+      },
+      include: { quote: true, payments: { orderBy: { createdAt: 'desc' }, take: 1 } },
+    });
+    return this.toOrder(order);
+  }
+
   async updateSupplierReference(
     id: string,
     input: { externalManufacturingPartner: string; externalSupplierOrderId: string },
@@ -185,6 +220,12 @@ export class OrdersRepository {
     return {
       ...order,
       status: order.status as OrderStatus,
+      supplierReviewStatus: order.supplierReviewStatus,
+      reviewAttemptCount: order.reviewAttemptCount,
+      maxReviewAttempts: order.maxReviewAttempts,
+      customerDecisionAfterRejection: order.customerDecisionAfterRejection ?? undefined,
+      supplierFeedback: order.supplierFeedback ?? undefined,
+      currentFileVersion: order.currentFileVersion,
       externalManufacturingPartner: order.externalManufacturingPartner ?? undefined,
       externalSupplierOrderId: order.externalSupplierOrderId ?? undefined,
       carrierName: order.carrierName ?? undefined,
@@ -215,5 +256,48 @@ export class OrdersRepository {
           }
         : undefined,
     };
+  }
+
+  private async initializeWorkflowRecords(orderId: string): Promise<void> {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { quote: true },
+    });
+    if (!order?.quote) return;
+
+    const files = [
+      { fileType: 'gerber', uploadId: order.quote.gerberFileId },
+      { fileType: 'bom', uploadId: order.quote.bomFileId },
+      { fileType: 'cpl', uploadId: order.quote.cplFileId },
+    ].filter((file): file is { fileType: string; uploadId: string } => Boolean(file.uploadId));
+
+    await this.prisma.$transaction([
+      ...files.map((file) =>
+        this.prisma.orderFile.upsert({
+          where: { orderId_fileType_fileVersion: { orderId, fileType: file.fileType, fileVersion: 1 } },
+          create: { orderId, fileType: file.fileType, uploadId: file.uploadId, fileVersion: 1, isCurrentVersion: true },
+          update: { uploadId: file.uploadId, isCurrentVersion: true },
+        }),
+      ),
+      this.prisma.technicalSpecFile.upsert({
+        where: { orderId_fileVersion: { orderId, fileVersion: 1 } },
+        create: {
+          orderId,
+          fileVersion: 1,
+          isCurrentVersion: true,
+          payload: {
+            orderNumber: order.orderNumber,
+            productType: order.quote.productType,
+            layers: order.quote.layers,
+            lengthMm: order.quote.lengthMm.toNumber(),
+            widthMm: order.quote.widthMm.toNumber(),
+            quantity: order.quote.quantity,
+            shippingMode: order.quote.shippingMode,
+            configSnapshot: order.quote.configSnapshot,
+          },
+        },
+        update: { isCurrentVersion: true },
+      }),
+    ]);
   }
 }

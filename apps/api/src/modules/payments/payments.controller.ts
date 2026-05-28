@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Headers, NotFoundException, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, NotFoundException, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { CreateMobileMoneyPaymentDto } from './dto/create-mobile-money-payment.dto';
 import { MobileMoneyCallbackDto } from './dto/mobile-money-callback.dto';
+import { ReuploadCorrectedFilesDto } from './dto/order-workflow.dto';
 import { PaymentsService } from './payments.service';
 
 @Controller('payments')
@@ -21,6 +22,22 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard)
   mobileMoney(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateMobileMoneyPaymentDto) {
     return this.paymentsService.initiateMobileMoneyPayment(user.id, dto);
+  }
+
+  @Post('orders/:orderId/cancel-after-rejection')
+  @UseGuards(JwtAuthGuard)
+  cancelAfterRejection(@CurrentUser() user: AuthenticatedUser, @Param('orderId') orderId: string) {
+    return this.paymentsService.cancelAfterFirstRejection(user.id, orderId);
+  }
+
+  @Post('orders/:orderId/reupload-corrected-files')
+  @UseGuards(JwtAuthGuard)
+  reuploadCorrectedFiles(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('orderId') orderId: string,
+    @Body() dto: ReuploadCorrectedFilesDto,
+  ) {
+    return this.paymentsService.reuploadCorrectedFiles(user.id, orderId, dto);
   }
 
   @Post('mobile-money/simulated-callback')

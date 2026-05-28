@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { OrdersService } from '../../orders/orders.service';
+import { EmailNotificationService } from '../../support/email-notification.service';
 import { TrackingService } from '../../tracking/tracking.service';
 import { MobileMoneyCallbackDto } from '../dto/mobile-money-callback.dto';
 import { PaymentsRepository } from '../repositories/payments.repository';
@@ -13,6 +15,8 @@ export class PaymentWebhookHandler {
     private readonly ordersService: OrdersService,
     private readonly trackingService: TrackingService,
     private readonly notificationsService: NotificationsService,
+    private readonly emailNotificationService: EmailNotificationService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async handleStripeEvent(event: VerifiedStripePaymentEvent) {
@@ -59,6 +63,7 @@ export class PaymentWebhookHandler {
         title: 'Paiement autorise',
         body: `Votre paiement de ${payment.amount.toFixed(2)} ${payment.currency} est autorise. Les fichiers passent en controle technique avant encaissement.`,
       });
+      await this.sendWorkflowEmail(payment.userId, payment.orderId, 'order_authorized_received');
       await this.trackingService.addAdminStatusEvent(
         payment.orderId,
         'payment_authorized',
@@ -75,6 +80,7 @@ export class PaymentWebhookHandler {
         title: 'Paiement capture',
         body: `Votre paiement de ${payment.amount.toFixed(2)} ${payment.currency} a ete capture apres acceptation technique des fichiers.`,
       });
+      await this.sendWorkflowEmail(payment.userId, payment.orderId, 'supplier_approved_payment_captured');
       await this.trackingService.addAdminStatusEvent(
         payment.orderId,
         'paid',
@@ -90,6 +96,7 @@ export class PaymentWebhookHandler {
         title: 'Paiement non confirme',
         body: 'Le paiement de votre commande n’a pas pu etre confirme. Vous pouvez reessayer ou contacter le support.',
       });
+      await this.sendWorkflowEmail(payment.userId, payment.orderId, 'order_cancelled_authorization_released');
     }
 
     if (event.paymentStatus === 'canceled' || event.paymentStatus === 'expired') {
@@ -105,6 +112,15 @@ export class PaymentWebhookHandler {
 
     await this.paymentsRepository.markEventProcessed('stripe', event.id);
     return { received: true, duplicate: false };
+  }
+
+  private async sendWorkflowEmail(userId: string, orderId: string, template: Parameters<EmailNotificationService['sendOrderWorkflowEmail']>[0]['template']) {
+    const [user, order] = await Promise.all([
+      this.prisma.user.findUnique({ where: { id: userId }, select: { email: true } }),
+      this.prisma.order.findUnique({ where: { id: orderId }, select: { orderNumber: true } }),
+    ]);
+    if (!user?.email || !order?.orderNumber) return;
+    await this.emailNotificationService.sendOrderWorkflowEmail({ to: user.email, template, orderNumber: order.orderNumber });
   }
 
   private async findStripePayment(event: VerifiedStripePaymentEvent) {

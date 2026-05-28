@@ -222,6 +222,12 @@ model Order {
   quoteId                      String
   destinationCountryIso2       String
   status                       String    @default("awaiting_payment")
+  supplierReviewStatus         String    @default("not_sent")
+  reviewAttemptCount           Int       @default(0)
+  maxReviewAttempts            Int       @default(2)
+  customerDecisionAfterRejection String?
+  supplierFeedback             String?
+  currentFileVersion           Int       @default(1)
   externalManufacturingPartner String?
   externalSupplierOrderId      String?
   carrierName                  String?
@@ -236,8 +242,170 @@ model Order {
   quote    Quote     @relation(fields: [quoteId], references: [id], onDelete: Restrict)
   payments Payment[]
   trackingEvents TrackingEvent[]
+  orderFiles OrderFile[]
+  technicalSpecFiles TechnicalSpecFile[]
+  supplierReviews SupplierReview[]
+  financeRecords FinanceRecord[]
+  invoices Invoice[]
+  productionJobs ProductionJob[]
+  internationalShipments InternationalShipment[]
+  localShipments LocalShipment[]
+  mondaySyncLogs MondaySyncLog[]
 
   @@index([userId])
+  @@index([status])
+  @@index([supplierReviewStatus])
+}
+
+model OrderFile {
+  id               String   @id @default(uuid())
+  orderId          String
+  fileType         String
+  uploadId         String?
+  fileUrl          String?
+  fileVersion      Int
+  isCurrentVersion Boolean  @default(true)
+  uploadedAt       DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, fileType, fileVersion])
+  @@index([orderId, isCurrentVersion])
+  @@index([uploadId])
+}
+
+model TechnicalSpecFile {
+  id                 String   @id @default(uuid())
+  orderId            String
+  fileVersion        Int
+  storageKey         String?
+  payload            Json
+  isCurrentVersion   Boolean  @default(true)
+  createdAt          DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, fileVersion])
+  @@index([orderId, isCurrentVersion])
+}
+
+model SupplierReview {
+  id                      String    @id @default(uuid())
+  orderId                 String
+  attemptNumber           Int
+  supplier                String
+  supplierStatus          String
+  supplierFeedback        String?
+  externalReviewId        String?
+  technicalPackageVersion Int
+  reviewedAt              DateTime?
+  createdAt               DateTime  @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([orderId, attemptNumber, supplier, externalReviewId])
+  @@index([orderId, attemptNumber])
+  @@index([supplierStatus])
+}
+
+model FinanceRecord {
+  id          String   @id @default(uuid())
+  orderId     String
+  type        String
+  amount      Decimal  @db.Decimal(12, 2)
+  currency    String   @default("EUR")
+  status      String   @default("recorded")
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([type])
+}
+
+model Invoice {
+  id          String    @id @default(uuid())
+  orderId     String
+  invoiceNumber String @unique
+  status      String    @default("issued")
+  pdfUrl      String?
+  issuedAt    DateTime  @default(now())
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model ProductionJob {
+  id          String    @id @default(uuid())
+  orderId     String
+  internalReference String @unique
+  status      String    @default("created")
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model InternationalShipment {
+  id          String   @id @default(uuid())
+  orderId     String
+  status      String   @default("pending")
+  carrierName String?
+  trackingNumber String?
+  cost        Decimal? @db.Decimal(12, 2)
+  currency    String   @default("EUR")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model LocalShipment {
+  id          String   @id @default(uuid())
+  orderId     String
+  status      String   @default("pending")
+  carrierName String?
+  trackingNumber String?
+  cost        Decimal? @db.Decimal(12, 2)
+  currency    String   @default("EUR")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model MondaySyncLog {
+  id            String    @id @default(uuid())
+  orderId       String?
+  board         String
+  itemId        String?
+  operation     String
+  sourceEventId String
+  status        String    @default("pending")
+  payload       Json?
+  processedAt   DateTime?
+  error         String?
+  createdAt     DateTime  @default(now())
+
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@unique([board, operation, sourceEventId])
+  @@index([orderId])
   @@index([status])
 }
 

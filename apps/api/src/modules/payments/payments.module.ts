@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { OrdersModule } from '../orders/orders.module';
+import { SupportModule } from '../support/support.module';
 import { TrackingModule } from '../tracking/tracking.module';
 import { CinetPayMobileMoneyProvider } from './providers/cinetpay-mobile-money.provider';
 import { MobileMoneyProvider } from './providers/mobile-money.provider';
@@ -14,7 +15,7 @@ import { PaymentsRepository } from './repositories/payments.repository';
 import { PaymentWebhookHandler } from './webhooks/payment-webhook.handler';
 
 @Module({
-  imports: [OrdersModule, TrackingModule, NotificationsModule],
+  imports: [OrdersModule, TrackingModule, NotificationsModule, SupportModule],
   controllers: [PaymentsController],
   providers: [
     PaymentsService,

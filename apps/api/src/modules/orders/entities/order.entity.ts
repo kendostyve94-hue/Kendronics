@@ -24,6 +24,12 @@ export interface Order {
   quoteId: string;
   destinationCountryIso2: string;
   status: OrderStatus;
+  supplierReviewStatus?: string;
+  reviewAttemptCount?: number;
+  maxReviewAttempts?: number;
+  customerDecisionAfterRejection?: string;
+  supplierFeedback?: string;
+  currentFileVersion?: number;
   totalPrice?: number;
   currency?: 'EUR';
   paymentStatus?: 'pending' | 'authorized' | 'paid' | 'failed' | 'canceled' | 'expired' | 'refunded';

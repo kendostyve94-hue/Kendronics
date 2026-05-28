@@ -21,6 +21,14 @@ type EmailMessage = {
   text: string;
 };
 
+type OrderWorkflowTemplate =
+  | 'order_authorized_received'
+  | 'supplier_approved_payment_captured'
+  | 'supplier_rejected_first_attempt'
+  | 'order_cancelled_authorization_released'
+  | 'supplier_rejected_second_attempt'
+  | 'authorization_expiring';
+
 @Injectable()
 export class EmailNotificationService {
   async sendSupportTicketNotification(ticket: SupportTicket): Promise<void> {
@@ -122,6 +130,53 @@ export class EmailNotificationService {
       throw new ServiceUnavailableException(`SMTP admin access code send failed. ${message}`);
     }
   }
+
+  async sendOrderWorkflowEmail(input: { to: string; template: OrderWorkflowTemplate; orderNumber: string; feedback?: string }): Promise<void> {
+    const copy = orderWorkflowCopy(input.template, input.orderNumber, input.feedback);
+    await sendTransactionalMail({
+      to: input.to,
+      subject: copy.subject,
+      text: copy.body,
+    });
+  }
+}
+
+function orderWorkflowCopy(template: OrderWorkflowTemplate, orderNumber: string, feedback?: string): { subject: string; body: string } {
+  const suffix = `Commande ${orderNumber}`;
+  if (template === 'order_authorized_received') {
+    return {
+      subject: `[Kendronics] Paiement autorise - ${suffix}`,
+      body: `Votre paiement est autorise. Vos fichiers techniques sont en controle avant lancement. Commande: ${orderNumber}`,
+    };
+  }
+  if (template === 'supplier_approved_payment_captured') {
+    return {
+      subject: `[Kendronics] Paiement confirme - ${suffix}`,
+      body: `Vos fichiers sont acceptes. Le paiement est confirme et la production demarre. Commande: ${orderNumber}`,
+    };
+  }
+  if (template === 'supplier_rejected_first_attempt') {
+    return {
+      subject: `[Kendronics] Correction requise - ${suffix}`,
+      body: [`Vos fichiers necessitent une correction.`, feedback ? `Motif: ${feedback}` : undefined, 'Vous pouvez annuler la commande ou envoyer des fichiers corriges depuis votre espace client.'].filter(Boolean).join('\n'),
+    };
+  }
+  if (template === 'order_cancelled_authorization_released') {
+    return {
+      subject: `[Kendronics] Autorisation liberee - ${suffix}`,
+      body: `Votre commande a ete annulee et l autorisation de paiement a ete liberee. Commande: ${orderNumber}`,
+    };
+  }
+  if (template === 'supplier_rejected_second_attempt') {
+    return {
+      subject: `[Kendronics] Commande annulee - ${suffix}`,
+      body: `Vos fichiers ont ete refuses une seconde fois. L autorisation de paiement a ete annulee automatiquement. Commande: ${orderNumber}`,
+    };
+  }
+  return {
+    subject: `[Kendronics] Autorisation proche expiration - ${suffix}`,
+    body: `Votre autorisation de paiement expire bientot. Le controle technique doit etre termine avant capture. Commande: ${orderNumber}`,
+  };
 }
 
 async function sendTransactionalMail(message: EmailMessage): Promise<void> {

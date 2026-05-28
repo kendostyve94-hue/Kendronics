@@ -116,7 +116,7 @@ export class OrdersService {
     }
 
     if (order.status === 'awaiting_payment') {
-      return this.ordersRepository.updateStatus(orderId, 'payment_authorized');
+      return this.ordersRepository.markPaymentAuthorized(orderId);
     }
 
     return order;
