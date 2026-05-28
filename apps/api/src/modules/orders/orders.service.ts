@@ -1,4 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { PricingService } from '../pricing/pricing.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import {
   AddSupplierOrderReferenceDto,
@@ -11,7 +12,10 @@ import { OrdersRepository } from './repositories/orders.repository';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly ordersRepository: OrdersRepository) {}
+  constructor(
+    private readonly ordersRepository: OrdersRepository,
+    private readonly pricingService: PricingService,
+  ) {}
 
   create(userId: string, dto: CreateOrderDto): Promise<Order> {
     return this.ordersRepository.create(userId, dto);
@@ -35,6 +39,37 @@ export class OrdersService {
   async deleteOwnedOrder(userId: string, orderId: string): Promise<void> {
     await this.findOwnedOrder(userId, orderId);
     await this.ordersRepository.delete(orderId);
+  }
+
+  async updateOwnedOrderQuantity(userId: string, orderId: string, quantity: number): Promise<Order> {
+    const order = await this.findOwnedOrder(userId, orderId);
+    if (!order.quoteSnapshot) {
+      throw new BadRequestException('This order cannot be updated because no quote is attached.');
+    }
+    if (!['draft', 'quoted', 'awaiting_payment'].includes(order.status)) {
+      throw new BadRequestException('Only unpaid orders can be updated.');
+    }
+
+    const quote = order.quoteSnapshot;
+    const configSnapshot = {
+      ...(quote.configSnapshot ?? {}),
+      quantity,
+    };
+    const nextQuote = await this.pricingService.createQuote(userId, {
+      productType: quote.productType,
+      gerberFileId: quote.gerberFileId,
+      bomFileId: quote.bomFileId,
+      cplFileId: quote.cplFileId,
+      layers: quote.layers,
+      lengthMm: quote.lengthMm,
+      widthMm: quote.widthMm,
+      quantity,
+      destinationCountryIso2: order.destinationCountryIso2,
+      shippingMode: quote.shippingMode as 'economy' | 'standard' | 'express',
+      configSnapshot,
+    });
+
+    return this.ordersRepository.updateQuote(order.id, nextQuote.id);
   }
 
   async findByIdForInternal(orderId: string): Promise<Order> {

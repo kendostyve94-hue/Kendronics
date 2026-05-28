@@ -39,6 +39,8 @@ export interface Order {
   quoteSnapshot?: {
     productType: string;
     gerberFileId: string;
+    bomFileId?: string;
+    cplFileId?: string;
     layers: number;
     lengthMm: number;
     widthMm: number;

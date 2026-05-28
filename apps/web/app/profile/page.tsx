@@ -593,6 +593,7 @@ function ProfileViewContent({
 
 type OrderStatusKey = 'all' | 'verification' | 'payment-pending' | 'production' | 'delivery' | 'completed' | 'comments';
 type OrderProductFilter = 'standard_pcb' | 'advanced_pcb' | 'fpc_rigid_flex' | 'pcb_assembly' | 'smt_stencil';
+type OrderTableFilter = Extract<OrderStatusKey, 'payment-pending' | 'production' | 'delivery' | 'completed'>;
 
 const orderStatuses: Array<{ key: Extract<OrderStatusKey, 'verification' | 'payment-pending' | 'production' | 'delivery' | 'comments'>; label: string }> = [
   { key: 'verification', label: 'Vérification en cours' },
@@ -600,6 +601,13 @@ const orderStatuses: Array<{ key: Extract<OrderStatusKey, 'verification' | 'paym
   { key: 'production', label: 'Production terminée' },
   { key: 'delivery', label: 'Livraison' },
   { key: 'comments', label: 'Commentaires' },
+];
+
+const orderTableFilters: Array<{ key: OrderTableFilter; label: string }> = [
+  { key: 'payment-pending', label: 'Paiement' },
+  { key: 'production', label: 'Production' },
+  { key: 'delivery', label: 'Livraison' },
+  { key: 'completed', label: 'Terminees' },
 ];
 
 function OrderReviewSection({
@@ -625,7 +633,7 @@ function OrderReviewSection({
 
       <div className="border-t-[16px] border-[#eef0f3] px-6 pb-24 pt-5">
         <div className={`${mode === 'review' ? 'flex h-12 items-center gap-2 border-b border-[#e5e7eb]' : 'flex h-10 items-center gap-2'}`}>
-          <span className="grid h-[22px] w-[22px] place-items-center bg-[#61bd00] text-[18px] font-black leading-none text-white">{mode === 'review' ? '✓' : '⚙'}</span>
+          {mode === 'review' ? <span className="grid h-[22px] w-[22px] place-items-center bg-[#61bd00] text-[18px] leading-none text-white">✓</span> : null}
           <h2 className="text-xl font-normal text-black">{title}</h2>
         </div>
 
@@ -693,10 +701,11 @@ function OrderTableSearchPanel({
 }) {
   const [query, setQuery] = useState('');
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
-  const [productFilter, setProductFilter] = useState<OrderProductFilter>('standard_pcb');
+  const [tableFilter, setTableFilter] = useState<OrderTableFilter>('payment-pending');
   const [deletingOrderId, setDeletingOrderId] = useState('');
+  const [quantityUpdatingOrderId, setQuantityUpdatingOrderId] = useState('');
   const [detailOrder, setDetailOrder] = useState<ProfileOrder | null>(null);
-  const filteredOrders = orders.filter((order) => orderProductFilterKey(order) === productFilter);
+  const filteredOrders = orders.filter((order) => orderMatchesStatus(order, tableFilter));
   const visibleOrders = filteredOrders.filter((order) => orderMatchesQuery(order, query));
   const selectedOrders = orders.filter((order) => selectedOrderIds.includes(order.id) && isSelectableCartOrder(order));
   const allVisibleSelected = visibleOrders.filter(isSelectableCartOrder).every((order) => selectedOrderIds.includes(order.id));
@@ -748,36 +757,50 @@ function OrderTableSearchPanel({
     }
   }
 
+  async function updateOrderQuantity(order: ProfileOrder, quantity: number) {
+    if (quantity === orderQuantity(order) || quantityUpdatingOrderId) return;
+    setQuantityUpdatingOrderId(order.id);
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) throw new Error('Session expiree.');
+
+      const response = await fetch(`${getApiBaseUrl()}/api/orders/${order.id}/quantity`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `${session.tokenType} ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ quantity }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Impossible de mettre a jour la quantite.');
+      }
+
+      const updatedOrder = (await response.json()) as ProfileOrder;
+      onOrdersChange((current) => current.map((item) => (item.id === updatedOrder.id ? updatedOrder : item)));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'Impossible de mettre a jour la quantite.');
+    } finally {
+      setQuantityUpdatingOrderId('');
+    }
+  }
+
   return (
     <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
       <div className="min-w-0">
         <div className="border border-[#e5e7eb] bg-white">
-          <div className="grid gap-2 border-b border-[#e5e7eb] bg-[#f3f6fa] p-2 sm:grid-cols-2 lg:grid-cols-5">
-            {orderProductFilters.map((filter) => (
-              <button
-                key={filter.key}
-                type="button"
-                onClick={() => setProductFilter(filter.key)}
-                className={`relative flex min-h-[64px] items-center gap-3 border px-3 text-left text-sm transition ${
-                  productFilter === filter.key ? 'border-[#0f8f6b] bg-[#0f8f6b] text-white' : 'border-[#bfcbd8] bg-white text-black hover:border-[#0f8f6b]'
-                }`}
-              >
-                {filter.badge ? <span className="absolute right-0 top-0 bg-[#00b050] px-1 text-[9px] text-white">{filter.badge}</span> : null}
-                <img src={filter.image} alt="" className="h-11 w-16 object-contain" />
-                <span>{filter.label}</span>
-              </button>
-            ))}
-          </div>
-
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5e7eb] px-5 py-4">
             <div className="flex flex-wrap items-center gap-5 text-sm text-black">
-              {orderStatuses.filter((status) => status.key !== 'verification' && status.key !== 'comments').map((filter) => (
+              {orderTableFilters.map((filter) => (
                 <button
                   key={filter.key}
                   type="button"
-                  className="text-black"
+                  onClick={() => setTableFilter(filter.key)}
+                  className={tableFilter === filter.key ? 'text-[#0f8f6b]' : 'text-black hover:text-[#0f8f6b]'}
                 >
-                  {shortOrderStatusLabel(filter.key)} ({orders.filter((order) => orderProductFilterKey(order) === productFilter && orderMatchesStatus(order, filter.key)).length})
+                  {filter.label} ({orders.filter((order) => orderMatchesStatus(order, filter.key)).length})
                 </button>
               ))}
             </div>
@@ -787,7 +810,7 @@ function OrderTableSearchPanel({
             </label>
           </div>
 
-          <div className="grid grid-cols-[32px_minmax(0,1fr)_110px_135px_120px_50px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
+          <div className="grid grid-cols-[32px_minmax(0,1fr)_130px_155px_130px_70px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
             <input type="checkbox" checked={visibleOrders.length > 0 && allVisibleSelected} onChange={toggleVisibleSelection} className="h-4 w-4 accent-[#0877ff]" aria-label="Selectionner toutes les commandes visibles" />
             <span>Article</span>
             <span>Qte</span>
@@ -813,23 +836,15 @@ function OrderTableSearchPanel({
             </div>
           ) : (
             <div className="divide-y divide-[#e5e7eb]">
-              <div className="grid grid-cols-[32px_minmax(0,1fr)_110px_135px_120px_50px] items-center px-5 py-3 text-sm text-black">
-                <span />
-                <span>{productFilterGroupLabel(productFilter)}</span>
-                <span />
-                <span />
-                <span />
-                <span />
-              </div>
               {visibleOrders.map((order) => (
-                <div key={order.id} className="grid grid-cols-[32px_minmax(0,1fr)_110px_135px_120px_50px] items-start px-5 py-5 text-sm text-[#1f2f43]">
+                <div key={order.id} className="grid grid-cols-[32px_minmax(0,1fr)_130px_155px_130px_70px] items-start px-5 py-5 text-sm text-[#1f2f43]">
                   <input type="checkbox" checked={selectedOrderIds.includes(order.id)} disabled={!isSelectableCartOrder(order)} onChange={() => toggleOrderSelection(order.id)} className="mt-10 h-4 w-4 accent-[#0877ff]" aria-label={`Selectionner ${order.orderNumber}`} />
                   <div className="flex min-w-0 gap-5">
-                    <div className="grid h-[116px] w-[116px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-sm text-[#64748b]">{orderProviderLabel(order)}</div>
+                    <div className="grid h-[84px] w-[84px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-xs text-[#cbd5e1]">Kendronics</div>
                     <div className="min-w-0 py-1">
                       <p className="text-black">{orderGerberLabel(order)}</p>
+                      <p className="mt-1 text-sm text-[#44546a]">{orderProductOrderLine(order)}</p>
                       <p className="mt-1 text-sm text-[#44546a]">{orderSummaryLine(order)}</p>
-                      <p className="mt-1 text-sm text-[#44546a]">Client #: <span className="text-[#0877ff]">{order.orderNumber}</span></p>
                       <div className="mt-3 flex flex-wrap gap-4 text-sm">
                         <button type="button" onClick={() => setDetailOrder(order)} className="text-[#44546a] hover:text-[#0877ff]">Detail du produit</button>
                         <a href={`/quote?orderId=${encodeURIComponent(order.id)}`} className="text-[#44546a] hover:text-[#0877ff]">Modifier la commande</a>
@@ -837,8 +852,15 @@ function OrderTableSearchPanel({
                     </div>
                   </div>
                   <div className="pt-5">
-                    <select className="h-9 w-[82px] border border-[#d1d5db] bg-white px-3 text-sm outline-none" disabled>
-                      <option>{orderQuantity(order)}</option>
+                    <select
+                      value={orderQuantity(order)}
+                      onChange={(event) => void updateOrderQuantity(order, Number(event.target.value))}
+                      disabled={quantityUpdatingOrderId === order.id || !canUpdateOrderQuantity(order)}
+                      className="h-9 w-[82px] border border-[#d1d5db] bg-white px-3 text-sm outline-none disabled:cursor-not-allowed disabled:bg-[#f1f5f9]"
+                    >
+                      {quantityOptions(orderQuantity(order)).map((quantity) => (
+                        <option key={quantity} value={quantity}>{quantity}</option>
+                      ))}
                     </select>
                   </div>
                   <span className="pt-6 text-sm text-black">{orderProductionDelay(order)}</span>
@@ -963,13 +985,26 @@ function orderSummaryLine(order: ProfileOrder) {
   const color = stringConfig(config.solderMaskColor) || 'Couleur a confirmer';
   const thickness = stringConfig(config.thickness) || 'Epaisseur a confirmer';
   const finish = stringConfig(config.surfaceFinish) || 'Finition a confirmer';
-  return `${orderProductLabel(order)}: ${color}, ${thickness}, ${finish}`;
+  return `${color}, ${thickness}, ${finish}`;
+}
+
+function orderProductOrderLine(order: ProfileOrder) {
+  const product = orderProductLabel(order);
+  const publicReference = order.orderNumber.replace(/^KEN-/, 'Y4-');
+  return `${product}:${publicReference}`;
 }
 
 function orderProductionDelay(order: ProfileOrder) {
   const config = order.quoteSnapshot?.configSnapshot ?? {};
-  const days = numberConfig(config.productionBuildDays) ?? numberConfig(config.buildTimeDays);
-  if (days && days > 0) return `${days} days`;
+  const explicitLabel = stringConfig(config.buildTimeLabel) || stringConfig(config.productionLeadTimeLabel) || stringConfig(config.supplierLeadTimeLabel);
+  if (explicitLabel) return explicitLabel;
+
+  const days = numberConfig(config.productionBuildDays)
+    ?? numberConfig(config.supplierLeadTimeDays)
+    ?? numberConfig(config.buildTimeDays)
+    ?? numberConfig(order.quoteSnapshot?.breakdown?.productionBuildDays)
+    ?? numberConfig(order.quoteSnapshot?.breakdown?.supplierLeadTimeDays);
+  if (days && days > 0) return `${days} jour${days > 1 ? 's' : ''}`;
   return orderLeadTime(order);
 }
 
@@ -1094,6 +1129,14 @@ function orderMatchesQuery(order: ProfileOrder, query: string) {
 
 function orderQuantity(order: ProfileOrder) {
   return order.quoteSnapshot?.quantity ?? 1;
+}
+
+function quantityOptions(current: number) {
+  return Array.from(new Set([current, 5, 10, 20, 30, 50, 100, 200, 500].filter((value) => value > 0))).sort((a, b) => a - b);
+}
+
+function canUpdateOrderQuantity(order: ProfileOrder) {
+  return ['draft', 'quoted', 'awaiting_payment'].includes(order.status);
 }
 
 function orderLeadTime(order: ProfileOrder) {

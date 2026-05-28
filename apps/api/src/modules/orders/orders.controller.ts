@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderQuantityDto } from './dto/update-order-quantity.dto';
 import { OrdersService } from './orders.service';
 
 @Controller('orders')
@@ -23,6 +24,11 @@ export class OrdersController {
   @Get(':id')
   findOne(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.ordersService.findOwnedOrder(user.id, id);
+  }
+
+  @Patch(':id/quantity')
+  updateQuantity(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() dto: UpdateOrderQuantityDto) {
+    return this.ordersService.updateOwnedOrderQuantity(user.id, id, dto.quantity);
   }
 
   @Delete(':id')

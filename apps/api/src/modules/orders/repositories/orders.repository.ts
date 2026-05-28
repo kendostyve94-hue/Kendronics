@@ -29,6 +29,8 @@ type OrderRecord = Omit<
   quote?: {
     productType: string;
     gerberFileId: string;
+    bomFileId: string | null;
+    cplFileId: string | null;
     layers: number;
     lengthMm: Prisma.Decimal;
     widthMm: Prisma.Decimal;
@@ -152,6 +154,15 @@ export class OrdersRepository {
     return this.toOrder(order);
   }
 
+  async updateQuote(id: string, quoteId: string): Promise<Order> {
+    const order = await this.prisma.order.update({
+      where: { id },
+      data: { quoteId },
+      include: { quote: true, payments: { orderBy: { createdAt: 'desc' }, take: 1 } },
+    });
+    return this.toOrder(order);
+  }
+
   async delete(id: string): Promise<void> {
     await this.prisma.order.delete({ where: { id } });
   }
@@ -188,6 +199,8 @@ export class OrdersRepository {
         ? {
             productType: order.quote.productType,
             gerberFileId: order.quote.gerberFileId,
+            bomFileId: order.quote.bomFileId ?? undefined,
+            cplFileId: order.quote.cplFileId ?? undefined,
             layers: order.quote.layers,
             lengthMm: order.quote.lengthMm.toNumber(),
             widthMm: order.quote.widthMm.toNumber(),
