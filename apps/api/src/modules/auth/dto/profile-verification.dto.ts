@@ -1,6 +1,6 @@
 import { IsIn, IsString, Length } from 'class-validator';
 
-export const profileVerificationActions = ['account', 'contacts', 'delete'] as const;
+export const profileVerificationActions = ['account', 'contacts', 'delete', 'email_change', 'password_change'] as const;
 
 export type ProfileVerificationAction = (typeof profileVerificationActions)[number];
 

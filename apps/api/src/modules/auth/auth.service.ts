@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmailNotificationService } from '../support/email-notification.service';
@@ -101,6 +101,105 @@ export class AuthService {
       data: { usedAt: new Date() },
     });
     await this.sessionRepository.revokeAllForUser(resetToken.userId);
+    return { ok: true };
+  }
+
+  async requestEmailChange(userId: string, newEmail: string): Promise<{ ok: true }> {
+    const normalizedEmail = newEmail.trim().toLowerCase();
+    const existing = await this.usersService.findByEmail(normalizedEmail);
+    if (existing && existing.id !== userId) {
+      throw new ConflictException('An account already exists for this email.');
+    }
+
+    await this.profileVerificationService.requestCode({
+      userId,
+      email: normalizedEmail,
+      action: 'email_change',
+      metadata: { newEmail: normalizedEmail },
+    });
+    await this.prisma.userAuditLog.create({ data: { userId, actorId: userId, eventType: 'email_change.requested', metadataJson: { newEmail: normalizedEmail } } });
+    return { ok: true };
+  }
+
+  async confirmEmailChange(userId: string, newEmail: string, code: string): Promise<{ ok: true }> {
+    const normalizedEmail = newEmail.trim().toLowerCase();
+    const verification = await this.profileVerificationService.verifyCode({ userId, action: 'email_change', code });
+    if (verification.metadata?.newEmail !== normalizedEmail) {
+      throw new BadRequestException('Verification code does not match this email.');
+    }
+
+    const previous = await this.usersService.findById(userId);
+    const existing = await this.usersService.findByEmail(normalizedEmail);
+    if (existing && existing.id !== userId) {
+      throw new ConflictException('An account already exists for this email.');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { email: normalizedEmail, emailVerifiedAt: new Date() },
+    });
+    await this.sessionRepository.revokeAllForUser(userId);
+    await this.prisma.notification.create({
+      data: {
+        userId,
+        type: 'security.email_changed',
+        title: 'E-mail modifie',
+        body: 'Votre adresse e-mail Kendronics a ete modifiee et verifiee.',
+      },
+    });
+    await this.prisma.userAuditLog.create({ data: { userId, actorId: userId, eventType: 'email_change.confirmed', metadataJson: { newEmail: normalizedEmail } } });
+    if (previous?.email && isRealEmail(previous.email)) {
+      void this.emailNotificationService.sendSecurityNotice({
+        to: previous.email,
+        subject: 'Adresse e-mail modifiee',
+        lines: [
+          'Votre adresse e-mail Kendronics vient d etre modifiee.',
+          `Nouvelle adresse: ${normalizedEmail}`,
+          '',
+          'Si vous n etes pas a l origine de cette action, contactez immediatement le support Kendronics.',
+        ],
+      }).catch(() => undefined);
+    }
+    return { ok: true };
+  }
+
+  async requestPasswordChange(userId: string): Promise<{ ok: true }> {
+    const user = await this.usersService.findById(userId);
+    if (!user) throw new UnauthorizedException('User not found.');
+    if (!isRealEmail(user.email)) {
+      throw new BadRequestException('A verified email is required before changing the password from this screen.');
+    }
+    await this.profileVerificationService.requestCode({ userId, email: user.email, action: 'password_change' });
+    await this.prisma.userAuditLog.create({ data: { userId, actorId: userId, eventType: 'password_change.requested' } });
+    return { ok: true };
+  }
+
+  async confirmPasswordChange(userId: string, newPassword: string, code: string): Promise<{ ok: true }> {
+    await this.profileVerificationService.verifyCode({ userId, action: 'password_change', code });
+    await this.usersService.updatePassword(userId, newPassword);
+    await this.sessionRepository.revokeAllForUser(userId);
+    await this.prisma.notification.create({
+      data: {
+        userId,
+        type: 'security.password_changed',
+        title: 'Mot de passe modifie',
+        body: 'Votre mot de passe Kendronics a ete modifie. Les autres sessions ont ete deconnectees.',
+      },
+    });
+    await this.prisma.userAuditLog.create({ data: { userId, actorId: userId, eventType: 'password_change.confirmed' } });
+    const user = await this.usersService.findById(userId);
+    if (user?.email && isRealEmail(user.email)) {
+      void this.emailNotificationService.sendSecurityNotice({
+        to: user.email,
+        subject: 'Mot de passe modifie',
+        lines: [
+          'Votre mot de passe Kendronics vient d etre modifie.',
+          'Les autres sessions ouvertes ont ete deconnectees.',
+          '',
+          'Si vous n etes pas a l origine de cette action, contactez immediatement le support Kendronics.',
+        ],
+      }).catch(() => undefined);
+    }
     return { ok: true };
   }
 

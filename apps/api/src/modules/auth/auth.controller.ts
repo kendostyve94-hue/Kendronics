@@ -11,6 +11,26 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ProfileVerificationService } from './profile-verification.service';
 import { UsersService } from '../users/users.service';
+import { IsEmail, IsString, MinLength } from 'class-validator';
+
+class RequestEmailChangeDto {
+  @IsEmail()
+  newEmail!: string;
+}
+
+class ConfirmEmailChangeDto extends RequestEmailChangeDto {
+  @IsString()
+  code!: string;
+}
+
+class ConfirmPasswordChangeDto {
+  @IsString()
+  code!: string;
+
+  @IsString()
+  @MinLength(10)
+  newPassword!: string;
+}
 
 @Controller('auth')
 export class AuthController {
@@ -92,5 +112,29 @@ export class AuthController {
       action: dto.action,
       code: dto.code,
     });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('email-change/request')
+  requestEmailChange(@CurrentUser() user: AuthenticatedUser, @Body() dto: RequestEmailChangeDto) {
+    return this.authService.requestEmailChange(user.id, dto.newEmail);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('email-change/confirm')
+  confirmEmailChange(@CurrentUser() user: AuthenticatedUser, @Body() dto: ConfirmEmailChangeDto) {
+    return this.authService.confirmEmailChange(user.id, dto.newEmail, dto.code);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('password-change/request')
+  requestPasswordChange(@CurrentUser() user: AuthenticatedUser) {
+    return this.authService.requestPasswordChange(user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('password-change/confirm')
+  confirmPasswordChange(@CurrentUser() user: AuthenticatedUser, @Body() dto: ConfirmPasswordChangeDto) {
+    return this.authService.confirmPasswordChange(user.id, dto.newPassword, dto.code);
   }
 }

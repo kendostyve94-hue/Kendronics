@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { EmailNotificationService } from '../support/email-notification.service';
@@ -14,7 +15,7 @@ export class ProfileVerificationService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async requestCode(input: { userId: string; email: string; action: ProfileVerificationAction }): Promise<{ ok: true }> {
+  async requestCode(input: { userId: string; email: string; action: ProfileVerificationAction; metadata?: Prisma.InputJsonValue }): Promise<{ ok: true }> {
     if (!input.email) {
       throw new BadRequestException('Account email is required before verification.');
     }
@@ -31,10 +32,12 @@ export class ProfileVerificationService {
         userId: input.userId,
         action: input.action,
         code,
+        metadata: input.metadata,
         expiresAt: this.expiresAt(),
       },
       update: {
         code,
+        metadata: input.metadata,
         expiresAt: this.expiresAt(),
       },
     });
@@ -73,7 +76,7 @@ export class ProfileVerificationService {
     return { ok: true };
   }
 
-  async verifyCode(input: { userId: string; action: ProfileVerificationAction; code: string }): Promise<{ ok: true }> {
+  async verifyCode(input: { userId: string; action: ProfileVerificationAction; code: string }): Promise<{ ok: true; metadata?: Record<string, unknown> }> {
     const record = await this.prisma.profileVerificationCode.findUnique({
       where: {
         userId_action: {
@@ -92,11 +95,12 @@ export class ProfileVerificationService {
       throw new BadRequestException('Invalid verification code.');
     }
 
+    const metadata = objectValue(record.metadata);
     await this.deleteCode(input.userId, input.action);
     if (input.action === 'account') {
       await this.usersService.markEmailVerified(input.userId);
     }
-    return { ok: true };
+    return { ok: true, metadata };
   }
 
   private expiresAt(): Date {
@@ -129,10 +133,16 @@ function smtpErrorDetails(error: unknown): string {
 function labelForAction(action: string) {
   if (action === 'account') return 'Modification du compte';
   if (action === 'contacts') return 'Changement des contacts';
+  if (action === 'email_change') return "Changement d'e-mail";
+  if (action === 'password_change') return 'Changement du mot de passe';
   if (action === 'delete') return 'Suppression du compte';
   return 'Verification du compte';
 }
 
 function shouldAwaitVerificationEmail(): boolean {
   return process.env.NODE_ENV === 'production' || process.env.VERIFICATION_CODE_EMAIL_REQUIRED === 'true';
+}
+
+function objectValue(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
 }

@@ -750,6 +750,7 @@ model ProfileVerificationCode {
   userId    String
   action    String
   code      String
+  metadata  Json?
   expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

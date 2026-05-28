@@ -1877,6 +1877,8 @@ function SettingsSection({
   const [phoneCode, setPhoneCode] = useState('');
   const [phoneStatus, setPhoneStatus] = useState<'idle' | 'sending' | 'sent' | 'verifying' | 'verified' | 'error'>('idle');
   const [phoneMessage, setPhoneMessage] = useState('');
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteStep, setDeleteStep] = useState<DeleteModalStep>('feedback');
   const [deleteCode, setDeleteCode] = useState('');
@@ -2126,7 +2128,13 @@ function SettingsSection({
         <div key={label} className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
           <h2 className="text-lg">{label}</h2>
           <p className={!profile.email && label === 'E-mail' || label === 'Adresse de livraison' && !isCompleteProfileAddress(profile.shippingAddress) ? 'text-[#d97706]' : 'text-[#4b5563]'}>{value}</p>
-          <a href={href} className="text-right text-[#0f8f6b]">{action}</a>
+          {label === 'E-mail' ? (
+            <button type="button" onClick={() => setEmailModalOpen(true)} className="text-right text-[#0f8f6b]">{action}</button>
+          ) : label === 'Mot de passe' ? (
+            <button type="button" onClick={() => setPasswordModalOpen(true)} className="text-right text-[#0f8f6b]">{action}</button>
+          ) : (
+            <a href={href} className="text-right text-[#0f8f6b]">{action}</a>
+          )}
         </div>
       ))}
       <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
@@ -2220,6 +2228,18 @@ function SettingsSection({
           onDelete={() => void deleteAccount(deleteCode, setDeletingAccount)}
         />
       ) : null}
+      {emailModalOpen ? (
+        <EmailChangeModal
+          currentEmail={profile.email}
+          onClose={() => setEmailModalOpen(false)}
+          onChanged={(email) => {
+            const verifiedAt = new Date().toISOString();
+            onProfileChange((current) => ({ ...current, email, emailVerifiedAt: verifiedAt }));
+            setEmailModalOpen(false);
+          }}
+        />
+      ) : null}
+      {passwordModalOpen ? <PasswordChangeModal onClose={() => setPasswordModalOpen(false)} /> : null}
     </section>
   );
 }
@@ -2770,6 +2790,175 @@ function DeleteAccountModal({
               </div>
             </div>
           ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmailChangeModal({ currentEmail, onClose, onChanged }: { currentEmail: string; onClose: () => void; onChanged: (email: string) => void }) {
+  const [newEmail, setNewEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'saving' | 'done' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  async function requestCode() {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
+      setStatus('error');
+      setMessage('Entrez une adresse e-mail valide.');
+      return;
+    }
+    setStatus('sending');
+    setMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/email-change/request`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newEmail: newEmail.trim().toLowerCase() }),
+      });
+      if (!response.ok) throw new Error(`Email change request failed: ${response.status}`);
+      setStatus('sent');
+      setMessage('Code envoye au nouveau mail. Il reste valide 10 minutes.');
+    } catch {
+      setStatus('error');
+      setMessage("Impossible d'envoyer le code pour le moment.");
+    }
+  }
+
+  async function confirmChange() {
+    if (code.trim().length !== 6) {
+      setStatus('error');
+      setMessage('Entrez le code a 6 chiffres.');
+      return;
+    }
+    setStatus('saving');
+    setMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+      const email = newEmail.trim().toLowerCase();
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/email-change/confirm`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newEmail: email, code: code.trim() }),
+      });
+      if (!response.ok) throw new Error(`Email change confirm failed: ${response.status}`);
+      onChanged(email);
+    } catch {
+      setStatus('error');
+      setMessage('Code invalide, expire ou e-mail deja utilise.');
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950/45 px-4">
+      <div className="w-full max-w-lg border border-slate-300 bg-white p-6 text-black">
+        <h2 className="text-xl font-black">Modifier l'e-mail</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Adresse actuelle: {currentEmail ? maskEmail(currentEmail) : 'aucune adresse enregistree'}</p>
+        <div className="mt-5 grid gap-3">
+          <input value={newEmail} onChange={(event) => setNewEmail(event.target.value)} className={profileModalFieldClassName} placeholder="Nouveau mail" type="email" />
+          {status === 'sent' || status === 'saving' || code ? (
+            <input value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} className={profileModalFieldClassName} placeholder="Code a 6 chiffres" inputMode="numeric" />
+          ) : null}
+          {message ? <p className={status === 'error' ? 'text-sm font-semibold text-red-600' : 'text-sm font-semibold text-[#0f8f6b]'}>{message}</p> : null}
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <button type="button" onClick={onClose} disabled={status === 'saving' || status === 'sending'} className={profileModalSecondaryButtonClassName}>Annuler</button>
+          <button type="button" onClick={() => void requestCode()} disabled={status === 'sending' || status === 'saving'} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : 'Envoyer le code'}</button>
+          <button type="button" onClick={() => void confirmChange()} disabled={status === 'saving'} className={profileModalPrimaryButtonClassName}>{status === 'saving' ? 'Validation...' : 'Valider'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PasswordChangeModal({ onClose }: { onClose: () => void }) {
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [code, setCode] = useState('');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'saving' | 'done' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  async function requestCode() {
+    setStatus('sending');
+    setMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/password-change/request`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+      });
+      if (!response.ok) throw new Error(`Password change request failed: ${response.status}`);
+      setStatus('sent');
+      setMessage('Code envoye par e-mail. Il reste valide 10 minutes.');
+    } catch {
+      setStatus('error');
+      setMessage("Impossible d'envoyer le code. Verifiez qu'un e-mail est enregistre et verifie.");
+    }
+  }
+
+  async function confirmChange() {
+    if (password.length < 10 || password !== confirmPassword) {
+      setStatus('error');
+      setMessage('Le mot de passe doit contenir au moins 10 caracteres et correspondre a la confirmation.');
+      return;
+    }
+    if (code.trim().length !== 6) {
+      setStatus('error');
+      setMessage('Entrez le code a 6 chiffres.');
+      return;
+    }
+    setStatus('saving');
+    setMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/password-change/confirm`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword: password, code: code.trim() }),
+      });
+      if (!response.ok) throw new Error(`Password change confirm failed: ${response.status}`);
+      setStatus('done');
+      setMessage('Mot de passe modifie. Les autres sessions ont ete deconnectees.');
+    } catch {
+      setStatus('error');
+      setMessage('Code invalide ou expire.');
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950/45 px-4">
+      <div className="w-full max-w-lg border border-slate-300 bg-white p-6 text-black">
+        <h2 className="text-xl font-black">Modifier le mot de passe</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Un code de securite est requis avant modification.</p>
+        <div className="mt-5 grid gap-3">
+          <input value={password} onChange={(event) => setPassword(event.target.value)} className={profileModalFieldClassName} placeholder="Nouveau mot de passe" type="password" />
+          <input value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className={profileModalFieldClassName} placeholder="Confirmer le mot de passe" type="password" />
+          {status === 'sent' || status === 'saving' || code ? (
+            <input value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} className={profileModalFieldClassName} placeholder="Code a 6 chiffres" inputMode="numeric" />
+          ) : null}
+          {message ? <p className={status === 'error' ? 'text-sm font-semibold text-red-600' : 'text-sm font-semibold text-[#0f8f6b]'}>{message}</p> : null}
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <button type="button" onClick={onClose} disabled={status === 'saving' || status === 'sending'} className={profileModalSecondaryButtonClassName}>Fermer</button>
+          <button type="button" onClick={() => void requestCode()} disabled={status === 'sending' || status === 'saving'} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : 'Envoyer le code'}</button>
+          <button type="button" onClick={() => void confirmChange()} disabled={status === 'saving'} className={profileModalPrimaryButtonClassName}>{status === 'saving' ? 'Validation...' : 'Modifier'}</button>
         </div>
       </div>
     </div>

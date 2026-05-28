@@ -107,6 +107,14 @@ export class EmailNotificationService {
     }
   }
 
+  async sendSecurityNotice(input: { to: string; subject: string; lines: string[] }): Promise<void> {
+    await sendTransactionalMail({
+      to: input.to,
+      subject: `[Kendronics] ${input.subject}`,
+      text: input.lines.join('\n'),
+    });
+  }
+
   async sendAdminSetupCode(input: { to: string; code: string }): Promise<void> {
     const subject = '[Kendronics] Code d acces administrateur';
     const body = [
