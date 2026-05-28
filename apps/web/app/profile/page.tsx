@@ -580,7 +580,7 @@ function ProfileViewContent({
   if (view === 'all-orders') return <OrderReviewSection activeKey="all" title="Toutes commandes" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Verification des fichiers" mode="review" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Paiements effectues" mode="payment" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
-  if (view === 'production') return <OrderReviewSection activeKey="production" title="Progres de la Fabrication" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
+  if (view === 'production') return <OrderReviewSection activeKey="production" title="Progres de la fabrication" mode="production" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'completed') return <OrderReviewSection activeKey="completed" title="Commande completee" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'comments') return <CommentsManagementSection orders={orders} dataStatus={dataStatus} />;
@@ -627,7 +627,7 @@ function OrderReviewSection({
 }: {
   activeKey: OrderStatusKey;
   title: string;
-  mode: 'review' | 'payment' | 'table';
+  mode: 'review' | 'payment' | 'production' | 'table';
   orders?: ProfileOrder[];
   dataStatus?: 'loading' | 'ready' | 'signed-out' | 'error';
   onOrdersChange: (orders: ProfileOrder[] | ((current: ProfileOrder[]) => ProfileOrder[])) => void;
@@ -647,6 +647,8 @@ function OrderReviewSection({
           <VerificationReviewPanel orders={visibleOrders} dataStatus={dataStatus} />
         ) : mode === 'payment' ? (
           <PaymentReviewPanel orders={visibleOrders} dataStatus={dataStatus} />
+        ) : mode === 'production' ? (
+          <ProductionReviewPanel orders={visibleOrders} dataStatus={dataStatus} />
         ) : (
           <OrderTableSearchPanel orders={visibleOrders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />
         )}
@@ -687,26 +689,30 @@ function VerificationReviewPanel({ orders, dataStatus }: { orders: ProfileOrder[
     <>
       <div className="mt-4 border border-[#e5e7eb] bg-white">
         <div className="overflow-x-auto">
-          <div className="grid min-w-[960px] grid-cols-[minmax(360px,1fr)_190px_180px_260px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
+          <div className="grid min-w-[1120px] grid-cols-[minmax(330px,1fr)_130px_120px_150px_140px_220px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
             <span>Article</span>
             <span>Date d'autorisation</span>
+            <span>Tentative</span>
+            <span>Montant autorise</span>
             <span>Statut de verification</span>
             <span>Correction du fichier</span>
           </div>
           {dataStatus === 'loading' ? (
-            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement des commandes...</p>
+            <p className="min-w-[1120px] px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement des commandes...</p>
           ) : dataStatus === 'signed-out' ? (
-            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher vos commandes.</p>
+            <p className="min-w-[1120px] px-5 py-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher vos commandes.</p>
           ) : dataStatus === 'error' ? (
-            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les commandes.</p>
+            <p className="min-w-[1120px] px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les commandes.</p>
           ) : orders.length === 0 ? (
-            <p className="min-w-[960px] px-5 py-14 text-center text-base text-[#92979d]">Aucun fichier en verification pour le moment.</p>
+            <p className="min-w-[1120px] px-5 py-14 text-center text-base text-[#92979d]">Aucun fichier en verification pour le moment.</p>
           ) : (
-            <div className="min-w-[960px] divide-y divide-[#e5e7eb]">
+            <div className="min-w-[1120px] divide-y divide-[#e5e7eb]">
               {orders.map((order) => (
-                <div key={order.id} className="grid grid-cols-[minmax(360px,1fr)_190px_180px_260px] items-start px-5 py-5 text-sm text-[#1f2f43]">
+                <div key={order.id} className="grid grid-cols-[minmax(330px,1fr)_130px_120px_150px_140px_220px] items-start px-5 py-5 text-sm text-[#1f2f43]">
                   <VerificationArticleCell order={order} onDetail={() => setDetailOrder(order)} />
                   <span className="pt-2 text-black">{verificationSubmittedDate(order)}</span>
+                  <span className="pt-2 text-black">{verificationAttemptLabel(order)}</span>
+                  <span className="pt-2 text-black">{formatMoney(orderTotal(order))}</span>
                   <span className="pt-2 text-black">{verificationStatusLabel(order)}</span>
                   <VerificationModificationCell order={order} />
                 </div>
@@ -727,30 +733,80 @@ function PaymentReviewPanel({ orders, dataStatus }: { orders: ProfileOrder[]; da
     <>
       <div className="mt-4 border border-[#e5e7eb] bg-white">
         <div className="overflow-x-auto">
-          <div className="grid min-w-[960px] grid-cols-[minmax(360px,1fr)_150px_150px_160px_110px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
+          <div className="grid min-w-[1120px] grid-cols-[minmax(330px,1fr)_140px_140px_140px_150px_110px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
             <span>Article</span>
-            <span>Date de paiement</span>
+            <span>Montant autorise</span>
+            <span>Date autorisation</span>
+            <span>Date capture</span>
             <span>Facture</span>
             <span>Etat du paiement</span>
-            <span>Qte commandee</span>
           </div>
           {dataStatus === 'loading' ? (
-            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement des paiements...</p>
+            <p className="min-w-[1120px] px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement des paiements...</p>
           ) : dataStatus === 'signed-out' ? (
-            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher vos paiements.</p>
+            <p className="min-w-[1120px] px-5 py-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher vos paiements.</p>
           ) : dataStatus === 'error' ? (
-            <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les paiements.</p>
+            <p className="min-w-[1120px] px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les paiements.</p>
           ) : orders.length === 0 ? (
-            <p className="min-w-[960px] px-5 py-14 text-center text-base text-[#92979d]">Aucune commande payee pour le moment.</p>
+            <p className="min-w-[1120px] px-5 py-14 text-center text-base text-[#92979d]">Aucune commande payee pour le moment.</p>
           ) : (
-            <div className="min-w-[960px] divide-y divide-[#e5e7eb]">
+            <div className="min-w-[1120px] divide-y divide-[#e5e7eb]">
               {orders.map((order) => (
-                <div key={order.id} className="grid grid-cols-[minmax(360px,1fr)_150px_150px_160px_110px] items-start px-5 py-5 text-sm text-[#1f2f43]">
+                <div key={order.id} className="grid grid-cols-[minmax(330px,1fr)_140px_140px_140px_150px_110px] items-start px-5 py-5 text-sm text-[#1f2f43]">
                   <VerificationArticleCell order={order} onDetail={() => setDetailOrder(order)} />
+                  <span className="pt-2 text-black">{formatMoney(orderTotal(order))}</span>
+                  <span className="pt-2 text-black">{paymentAuthorizationDate(order)}</span>
                   <span className="pt-2 text-black">{paymentPaidDate(order)}</span>
                   <span className="pt-2 text-black">{orderInvoiceAvailability(order)}</span>
                   <span className="pt-2 text-black">{orderPaymentStatusLabel(order)}</span>
-                  <span className="pt-2 text-black">{orderQuantity(order)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      {detailOrder ? <ProductDetailModal order={detailOrder} onClose={() => setDetailOrder(null)} /> : null}
+    </>
+  );
+}
+
+function ProductionReviewPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+  const [detailOrder, setDetailOrder] = useState<ProfileOrder | null>(null);
+
+  return (
+    <>
+      <div className="mt-4 border border-[#e5e7eb] bg-white">
+        <div className="overflow-x-auto">
+          <div className="grid min-w-[1240px] grid-cols-[minmax(330px,1fr)_140px_150px_130px_150px_150px_140px_90px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
+            <span>Article</span>
+            <span>Lancement</span>
+            <span>Etat production</span>
+            <span>Delai prod</span>
+            <span>Fin estimee</span>
+            <span>Reference interne</span>
+            <span>Controle qualite</span>
+            <span>Action</span>
+          </div>
+          {dataStatus === 'loading' ? (
+            <p className="min-w-[1240px] px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement de la production...</p>
+          ) : dataStatus === 'signed-out' ? (
+            <p className="min-w-[1240px] px-5 py-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher la production.</p>
+          ) : dataStatus === 'error' ? (
+            <p className="min-w-[1240px] px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger la production.</p>
+          ) : orders.length === 0 ? (
+            <p className="min-w-[1240px] px-5 py-14 text-center text-base text-[#92979d]">Aucune commande en production reelle pour le moment.</p>
+          ) : (
+            <div className="min-w-[1240px] divide-y divide-[#e5e7eb]">
+              {orders.map((order) => (
+                <div key={order.id} className="grid grid-cols-[minmax(330px,1fr)_140px_150px_130px_150px_150px_140px_90px] items-start px-5 py-5 text-sm text-[#1f2f43]">
+                  <VerificationArticleCell order={order} onDetail={() => setDetailOrder(order)} />
+                  <span className="pt-2 text-black">{productionStartedDate(order)}</span>
+                  <span className="pt-2 text-black">{productionStatusLabel(order)}</span>
+                  <span className="pt-2 text-black">{orderProductionDelay(order)}</span>
+                  <span className="pt-2 text-black">{productionEndDate(order)}</span>
+                  <span className="pt-2 text-black">{productionReference(order)}</span>
+                  <span className="pt-2 text-black">{qualityStatusLabel(order)}</span>
+                  <a href={`/orders/${order.id}`} className="pt-2 text-[#0877ff] hover:text-[#0068e8]">Voir</a>
                 </div>
               ))}
             </div>
@@ -812,6 +868,15 @@ function verificationStatusLabel(order: ProfileOrder) {
   return orderStatusLabel(order.status);
 }
 
+function verificationAttemptLabel(order: ProfileOrder) {
+  return order.status === 'supplier_files_rejected' ? '1 / 2' : '1 / 2 active';
+}
+
+function paymentAuthorizationDate(order: ProfileOrder) {
+  if (order.paymentStatus === 'authorized') return formatDate(order.quoteSnapshot?.createdAt ?? order.createdAt);
+  return formatDate(order.paidAt ?? order.quoteSnapshot?.createdAt ?? order.createdAt);
+}
+
 function paymentPaidDate(order: ProfileOrder) {
   return order.paidAt ? formatDate(order.paidAt) : '-';
 }
@@ -833,6 +898,49 @@ function orderPaymentStatusLabel(order: ProfileOrder) {
   };
 
   return labels[status];
+}
+
+function productionStartedDate(order: ProfileOrder) {
+  return order.paidAt ? formatDate(order.paidAt) : formatDate(order.createdAt);
+}
+
+function productionStatusLabel(order: ProfileOrder) {
+  if (order.status === 'paid') return 'Preparation';
+  if (order.status === 'supplier_order_pending') return 'Commande transmise';
+  if (order.status === 'supplier_ordered') return 'Lancement confirme';
+  if (order.status === 'supplier_in_production') return 'Production en cours';
+  if (order.status === 'china_3pl_received') return 'Reception plateforme';
+  return orderStatusLabel(order.status);
+}
+
+function productionEndDate(order: ProfileOrder) {
+  const start = new Date(order.paidAt ?? order.createdAt);
+  if (Number.isNaN(start.getTime())) return '-';
+  const days = productionDelayDays(order);
+  if (!days) return 'A confirmer';
+  const end = addCalendarDays(start, days);
+  return formatDate(end.toISOString());
+}
+
+function productionDelayDays(order: ProfileOrder) {
+  const config = order.quoteSnapshot?.configSnapshot ?? {};
+  return numberConfig(config.productionBuildDays)
+    ?? numberConfig(config.supplierLeadTimeDays)
+    ?? numberConfig(config.buildTimeDays)
+    ?? numberConfig(order.quoteSnapshot?.breakdown?.productionBuildDays)
+    ?? numberConfig(order.quoteSnapshot?.breakdown?.supplierLeadTimeDays)
+    ?? extractFirstNumber(orderProductionDelay(order));
+}
+
+function productionReference(order: ProfileOrder) {
+  return `KPR-${order.orderNumber.replace(/[^a-zA-Z0-9]/g, '').slice(-8) || order.id.slice(0, 8)}`;
+}
+
+function qualityStatusLabel(order: ProfileOrder) {
+  if (order.status === 'china_3pl_received') return 'Controle reception';
+  if (order.status === 'supplier_in_production') return 'En attente';
+  if (order.status === 'supplier_ordered' || order.status === 'supplier_order_pending') return 'Planifie';
+  return 'Preparation';
 }
 
 function rejectionReportHref(order: ProfileOrder) {
@@ -1199,6 +1307,17 @@ function stringConfig(value: unknown) {
 
 function numberConfig(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function extractFirstNumber(value: string) {
+  const match = value.match(/\d+/);
+  return match ? Number(match[0]) : undefined;
+}
+
+function addCalendarDays(startDate: Date, days: number) {
+  const date = new Date(startDate);
+  date.setDate(date.getDate() + days);
+  return date;
 }
 
 function ProductDetailModal({ order, onClose }: { order: ProfileOrder; onClose: () => void }) {
