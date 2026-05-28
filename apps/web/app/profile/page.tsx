@@ -786,14 +786,13 @@ function OrderTableSearchPanel({
   dataStatus: 'loading' | 'ready' | 'signed-out' | 'error';
   onOrdersChange: (orders: ProfileOrder[] | ((current: ProfileOrder[]) => ProfileOrder[])) => void;
 }) {
-  const [query, setQuery] = useState('');
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [serviceFilter, setServiceFilter] = useState<OrderServiceFilter>('all');
   const [deletingOrderId, setDeletingOrderId] = useState('');
   const [quantityUpdatingOrderId, setQuantityUpdatingOrderId] = useState('');
   const [detailOrder, setDetailOrder] = useState<ProfileOrder | null>(null);
   const filteredOrders = orders.filter((order) => serviceFilter === 'all' || orderProductFilterKey(order) === serviceFilter);
-  const visibleOrders = filteredOrders.filter((order) => orderMatchesQuery(order, query));
+  const visibleOrders = filteredOrders;
   const selectedOrders = orders.filter((order) => selectedOrderIds.includes(order.id) && isSelectableCartOrder(order));
   const allVisibleSelected = visibleOrders.filter(isSelectableCartOrder).every((order) => selectedOrderIds.includes(order.id));
   const merchandiseTotal = selectedOrders.reduce((total, order) => total + orderProductionTotal(order), 0);
@@ -877,8 +876,8 @@ function OrderTableSearchPanel({
   return (
     <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
       <div className="min-w-0">
-        <div className="border border-[#e5e7eb] bg-white">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5e7eb] px-5 py-4">
+        <div className="bg-white">
+          <div className="flex flex-wrap items-center gap-5 border-b border-[#e5e7eb] py-4 text-sm text-black">
             <div className="flex flex-wrap items-center gap-5 text-sm text-black">
               {orderServiceFilters.map((filter) => (
                 <button
@@ -891,14 +890,10 @@ function OrderTableSearchPanel({
                 </button>
               ))}
             </div>
-            <label className="flex h-9 w-[180px] items-center gap-2 border border-[#d1d5db] bg-white px-3 text-sm text-[#8a8f98]">
-              <input value={query} onChange={(event) => setQuery(event.target.value)} className="min-w-0 flex-1 outline-none" placeholder="Rechercher" />
-              <span className="text-lg leading-none">Q</span>
-            </label>
           </div>
 
           <div className="overflow-x-auto">
-            <div className="grid min-w-[760px] grid-cols-[32px_minmax(360px,1fr)_100px_130px_100px_46px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
+            <div className="grid min-w-[760px] grid-cols-[32px_minmax(360px,1fr)_100px_130px_100px_46px] items-center bg-[#f4f5f7] py-3 text-sm text-black">
               <input type="checkbox" checked={visibleOrders.length > 0 && allVisibleSelected} onChange={toggleVisibleSelection} className="h-4 w-4 accent-[#0877ff]" aria-label="Selectionner toutes les commandes visibles" />
               <span>Article</span>
               <span>Qte</span>
@@ -914,18 +909,18 @@ function OrderTableSearchPanel({
             ) : dataStatus === 'error' ? (
               <p className="min-w-[760px] px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les commandes.</p>
             ) : orders.length === 0 ? (
-              <div className="min-w-[760px] px-5 py-12 text-center">
+              <div className="min-w-[760px] py-12 text-center">
                 <p className="text-base font-semibold text-[#92979d]">Votre panier est vide.</p>
                 <a href="/quote" className="mt-4 inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-semibold text-white hover:bg-[#0b7558]">Ajouter un nouvel article</a>
               </div>
             ) : visibleOrders.length === 0 ? (
-              <div className="min-w-[760px] px-5 py-12 text-center">
-                <p className="text-base font-semibold text-[#92979d]">Votre recherche ne correspond a aucune commande.</p>
+              <div className="min-w-[760px] py-12 text-center">
+                <p className="text-base font-semibold text-[#92979d]">Aucune commande pour ce service.</p>
               </div>
             ) : (
               <div className="min-w-[760px] divide-y divide-[#e5e7eb]">
                 {visibleOrders.map((order) => (
-                  <div key={order.id} className="grid grid-cols-[32px_minmax(360px,1fr)_100px_130px_100px_46px] items-start px-5 py-5 text-sm text-[#1f2f43]">
+                  <div key={order.id} className="grid grid-cols-[32px_minmax(360px,1fr)_100px_130px_100px_46px] items-start py-5 text-sm text-[#1f2f43]">
                     <input type="checkbox" checked={selectedOrderIds.includes(order.id)} disabled={!isSelectableCartOrder(order)} onChange={() => toggleOrderSelection(order.id)} className="mt-8 h-4 w-4 accent-[#0877ff]" aria-label={`Selectionner ${order.orderNumber}`} />
                     <div className="flex min-w-0 gap-5">
                       <div className="grid h-[84px] w-[84px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-xs text-[#cbd5e1]">Kendronics</div>
@@ -933,7 +928,7 @@ function OrderTableSearchPanel({
                         <p className="truncate text-black">{orderGerberLabel(order)}</p>
                         <p className="mt-1 text-sm text-[#44546a]">{orderProductOrderLine(order)}</p>
                         <p className="mt-1 text-sm text-[#44546a]">{orderSummaryLine(order)}</p>
-                        <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                        <div className="mt-2 grid gap-1 text-sm">
                           <button type="button" onClick={() => setDetailOrder(order)} className="text-[#44546a] hover:text-[#0877ff]">Details du produit</button>
                           <a href={`/quote?orderId=${encodeURIComponent(order.id)}`} className="text-[#44546a] hover:text-[#0877ff]">Modifier la commande</a>
                         </div>

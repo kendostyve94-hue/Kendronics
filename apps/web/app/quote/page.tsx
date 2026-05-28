@@ -129,7 +129,7 @@ const initialConfig: QuoteConfig = {
   length: 80,
   width: 60,
   unit: 'mm',
-  quantity: 10,
+  quantity: 5,
   differentDesigns: 1,
   usageType: 'consumer_industrial',
   deliveryFormat: 'single_pcb',
