@@ -343,9 +343,10 @@ export default function QuotePage() {
   const [apiPricing, setApiPricing] = useState<PricingBreakdown | null>(null);
   const [pricingPreview, setPricingPreview] = useState<PricingPreviewState>({
     status: 'local',
-    message: 'Calcul du prix fournisseur en direct...',
+    message: 'Calcul du prix de fabrication en direct...',
   });
   const [editOrder, setEditOrder] = useState<EditableOrder | null>(null);
+  const [authorizationRuleAccepted, setAuthorizationRuleAccepted] = useState(false);
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === config.destinationCountry) ?? africanCountries[0],
@@ -412,7 +413,7 @@ export default function QuotePage() {
 
         setPricingPreview({
           status: 'loading',
-          message: 'Calcul du prix fournisseur en direct...',
+          message: 'Calcul du prix de fabrication en direct...',
         });
 
         const headers: HeadersInit = {
@@ -441,8 +442,8 @@ export default function QuotePage() {
             status: normalizedPricing.pricingSource === 'supplier_api' ? 'direct' : 'local',
             message:
               normalizedPricing.pricingSource === 'supplier_api'
-                ? `Prix direct ${data.supplier ?? 'fournisseur'} applique. Aucune commande fournisseur creee.`
-                : "Prix local affiche: le fournisseur direct n'a pas ete utilise pour cet apercu.",
+                ? 'Prix de fabrication applique. Aucune production n est lancee a cette etape.'
+                : "Prix estime affiche: le calcul final sera confirme avant le lancement.",
           });
         }
       } catch (error) {
@@ -450,7 +451,7 @@ export default function QuotePage() {
           setApiPricing(null);
           setPricingPreview({
             status: 'error',
-            message: 'Apercu fournisseur indisponible. Le prix local reste visible, puis le devis sera recalcule avant commande.',
+            message: 'Apercu indisponible. Le prix estime reste visible, puis le devis sera recalcule avant commande.',
           });
         }
       }
@@ -685,6 +686,10 @@ export default function QuotePage() {
         throw new Error('Televersez un fichier Gerber ZIP avant de sauvegarder le devis.');
       }
 
+      if (!authorizationRuleAccepted) {
+        throw new Error("Acceptez la regle d'autorisation et de controle technique avant de soumettre la commande.");
+      }
+
       if (editOrder) {
         const orderResponse = await fetch(`${apiBaseUrl}/api/orders/${editOrder.id}/quote`, {
           method: 'PATCH',
@@ -707,7 +712,7 @@ export default function QuotePage() {
         setQuoteSave({
           status: 'saved',
           orderId: order.id,
-          message: `Commande ${order.orderNumber} modifiee. Le nouveau devis est rattache a la meme commande.`,
+          message: `Commande ${order.orderNumber} modifiee. Le nouveau devis est rattache a la meme commande et suivra le controle technique avant capture.`,
         });
         return;
       }
@@ -753,8 +758,8 @@ export default function QuotePage() {
         orderId: order.id,
         message:
           quote.breakdown?.supplier && quote.breakdown.supplier !== 'local_calibrated_supplier_estimate'
-            ? `Commande ouverte sans paiement reel: ${order.orderNumber}. Le devis direct ${quote.breakdown.supplier} a ete enregistre.`
-            : `Commande ouverte sans paiement reel: ${order.orderNumber}. Le devis a ete enregistre et reste a valider avant paiement.`,
+            ? `Commande soumise: ${order.orderNumber}. Le montant sera d'abord autorise, puis capture uniquement si les fichiers sont acceptes.`
+            : `Commande soumise: ${order.orderNumber}. Le montant sera d'abord autorise, puis capture uniquement si les fichiers sont acceptes.`,
       });
     } catch (error) {
       setQuoteSave({
@@ -897,14 +902,14 @@ export default function QuotePage() {
               <QuoteRow label="Designs differents" help="Nombre de designs uniques separes par V-cut, mouse bites ou fraisage.">
                 <Pills value={config.differentDesigns} onChange={(value) => update('differentDesigns', Number(value))} options={[1, 2, 3, 4]} />
               </QuoteRow>
-              <MobileSheetRow label="Format de livraison" help="Carte seule, panneau client ou panneau cree par le fournisseur." summary={String(config.deliveryFormat).replaceAll('_', ' ')} sheetId="deliveryFormat" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
+              <MobileSheetRow label="Format de livraison" help="Carte seule, panneau client ou panneau cree par le service de fabrication." summary={String(config.deliveryFormat).replaceAll('_', ' ')} sheetId="deliveryFormat" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
                 <Pills
                   value={config.deliveryFormat}
                   onChange={(value) => update('deliveryFormat', value as QuoteConfig['deliveryFormat'])}
                   options={[
                     ['single_pcb', 'PCB seul'],
                     ['customer_panel', 'Panneau client'],
-                    ['panel_by_partner', 'Panneau fournisseur'],
+                    ['panel_by_partner', 'Panneau fabrication'],
                   ]}
                 />
               </MobileSheetRow>
@@ -1016,7 +1021,7 @@ export default function QuotePage() {
 
           {saved ? (
             <div className="rounded-sm border border-[#b9ebda] bg-[#eefbf6] p-3 text-sm font-medium text-[#116b52] sm:p-4">
-              Devis sauvegarde cote serveur. Validation fournisseur requise avant paiement final.
+              Commande enregistree. Le montant est autorise au paiement, puis capture uniquement apres acceptation technique des fichiers.
             </div>
           ) : null}
           {quoteSave.status === 'error' ? (
@@ -1055,6 +1060,8 @@ export default function QuotePage() {
             selectedLiveShippingRateId={config.liveShippingRateId}
             onLiveShippingRateSelect={selectLiveShippingRate}
             pricingPreview={pricingPreview}
+            authorizationRuleAccepted={authorizationRuleAccepted}
+            onAuthorizationRuleAcceptedChange={setAuthorizationRuleAccepted}
           />
         </div>
       </section>
@@ -1158,7 +1165,7 @@ function normalizeApiPricingPreview(data: ApiPricingPreview, fallback: PricingBr
     pricingSource,
     transparencyNote:
       pricingSource === 'supplier_api'
-        ? 'Prix PCB calcule depuis le fournisseur direct, puis Smart Buffer Kendronics applique.'
+        ? 'Prix PCB calcule depuis le reseau de fabrication, puis ajustement Kendronics applique.'
         : fallback.transparencyNote,
   };
 }

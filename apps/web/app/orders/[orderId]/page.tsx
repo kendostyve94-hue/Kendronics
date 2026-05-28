@@ -604,10 +604,10 @@ function CheckoutSubmitCard({
       <h2 className="text-2xl text-black">3. Soumettre la commande</h2>
       <div className="mt-6 space-y-5 text-sm leading-6 text-[#334155]">
         <p>
-          En continuant, votre commande passe au paiement securise. Le montant est traite par carte via Stripe selon le mode configure sur la plateforme. Apres paiement, les fichiers et les parametres techniques sont verifies avant le lancement de la production.
+          En continuant, votre commande passe au paiement securise par carte. Le montant est d'abord autorise, sans capture immediate. Les fichiers et les parametres techniques sont controles avant le lancement de la production.
         </p>
         <p>
-          Si une anomalie bloque la production, Kendronics vous contacte avec les corrections attendues. Tant que la commande ne peut pas etre lancee correctement, le dossier reste en verification et les actions de remboursement ou de correction sont gerees depuis votre espace client.
+          Si les fichiers sont acceptes, le paiement est capture et la production demarre. Si une anomalie bloque le lancement, vous pouvez corriger une fois ou abandonner. Apres un second refus, l'autorisation est annulee automatiquement et le montant est libere.
         </p>
         <div className="grid gap-3 border border-[#dfe5ec] bg-[#f8fafc] p-4">
           <label className="flex items-start gap-3 text-black">
@@ -618,17 +618,7 @@ function CheckoutSubmitCard({
               onChange={() => onModeChange('direct')}
               className="mt-1 h-4 w-4 accent-[#0877ff]"
             />
-            <span>Payer maintenant et lancer la verification de production.</span>
-          </label>
-          <label className="flex items-start gap-3 text-black">
-            <input
-              type="radio"
-              name="submission-mode"
-              checked={mode === 'review_first'}
-              onChange={() => onModeChange('review_first')}
-              className="mt-1 h-4 w-4 accent-[#0877ff]"
-            />
-            <span>Demander une verification avant paiement.</span>
+            <span>Autoriser le paiement et lancer le controle technique.</span>
           </label>
         </div>
         <label className="flex items-start gap-3 border border-[#dfe5ec] p-4 text-black">
@@ -639,7 +629,7 @@ function CheckoutSubmitCard({
             className="mt-1 h-4 w-4 accent-[#0f8f6b]"
           />
           <span>
-            J'accepte que Kendronics utilise les informations de cette commande pour verifier le dossier, calculer les frais applicables, lancer le paiement choisi et suivre la production selon les conditions d'utilisation et la politique de remboursement.
+            J'accepte que le montant soit autorise avant le controle technique, puis capture uniquement si les fichiers sont acceptes. En cas de refus, je peux corriger une fois ou abandonner; apres un second refus, l'autorisation est annulee et le montant est libere.
           </span>
         </label>
       </div>
@@ -927,10 +917,10 @@ function buildOrderDetail(orderPayload: CustomerOrderSummary, trackingPayload: u
 
 function breakdownLines(breakdown: Record<string, number>): PricingLineItem[] {
   const labels: Record<string, string> = {
-    partnerManufacturingCost: 'Prix fournisseur estimé',
-    partnerHandlingCost: 'Traitement fournisseur',
-    ChinaToFranceLogistics: 'Logistique fournisseur',
-    FranceProcessingFee: 'Traitement fournisseur',
+    partnerManufacturingCost: 'Prix fabrication estime',
+    partnerHandlingCost: 'Traitement fabrication',
+    ChinaToFranceLogistics: 'Logistique fabrication',
+    FranceProcessingFee: 'Traitement fabrication',
     FranceToAfricaDelivery: 'Livraison choisie',
     customsRiskBuffer: 'Buffer intelligent',
     paymentProcessingFee: 'Frais paiement',
@@ -1040,7 +1030,7 @@ function stringValue(value: unknown): string | undefined {
 
 function stripeButtonLabel(paymentStatus: PaymentStatus, checkoutStatus: CheckoutStatus): string {
   if (checkoutStatus === 'loading') return 'Ouverture de Stripe...';
-  return paymentActionLabel(paymentStatus, 'Payer par carte');
+  return paymentActionLabel(paymentStatus, 'Autoriser le paiement');
 }
 
 function mobileMoneyButtonLabel(paymentStatus: PaymentStatus, mobileMoneyStatus: MobileMoneyStatus): string {

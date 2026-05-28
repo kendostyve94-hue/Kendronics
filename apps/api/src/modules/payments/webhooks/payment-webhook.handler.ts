@@ -57,7 +57,7 @@ export class PaymentWebhookHandler {
         userId: payment.userId,
         type: 'payment.authorized',
         title: 'Paiement autorise',
-        body: `Votre paiement de ${payment.amount.toFixed(2)} ${payment.currency} est autorise. Les fichiers passent en verification fournisseur avant encaissement.`,
+        body: `Votre paiement de ${payment.amount.toFixed(2)} ${payment.currency} est autorise. Les fichiers passent en controle technique avant encaissement.`,
       });
       await this.trackingService.addAdminStatusEvent(
         payment.orderId,
@@ -73,7 +73,7 @@ export class PaymentWebhookHandler {
         userId: payment.userId,
         type: 'payment.succeeded',
         title: 'Paiement capture',
-        body: `Votre paiement de ${payment.amount.toFixed(2)} ${payment.currency} a ete capture apres validation fournisseur.`,
+        body: `Votre paiement de ${payment.amount.toFixed(2)} ${payment.currency} a ete capture apres acceptation technique des fichiers.`,
       });
       await this.trackingService.addAdminStatusEvent(
         payment.orderId,

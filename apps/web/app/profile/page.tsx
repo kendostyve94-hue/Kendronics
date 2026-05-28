@@ -601,9 +601,9 @@ type OrderProductFilter = 'standard_pcb' | 'advanced_pcb' | 'fpc_rigid_flex' | '
 type OrderServiceFilter = OrderProductFilter | 'all';
 
 const orderStatuses: Array<{ key: Extract<OrderStatusKey, 'verification' | 'payment-pending' | 'production' | 'delivery' | 'comments'>; label: string }> = [
-  { key: 'verification', label: 'Vérification en cours' },
+  { key: 'verification', label: 'Verification fichiers' },
   { key: 'payment-pending', label: 'Paiement effectue' },
-  { key: 'production', label: 'Production terminée' },
+  { key: 'production', label: 'Production' },
   { key: 'delivery', label: 'Livraison' },
   { key: 'comments', label: 'Commentaires' },
 ];
@@ -689,9 +689,9 @@ function VerificationReviewPanel({ orders, dataStatus }: { orders: ProfileOrder[
         <div className="overflow-x-auto">
           <div className="grid min-w-[960px] grid-cols-[minmax(360px,1fr)_190px_180px_260px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
             <span>Article</span>
-            <span>Date d'envoi pour verification</span>
+            <span>Date d'autorisation</span>
             <span>Statut de verification</span>
-            <span>Modification du fichier</span>
+            <span>Correction du fichier</span>
           </div>
           {dataStatus === 'loading' ? (
             <p className="min-w-[960px] px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement des commandes...</p>
@@ -792,19 +792,21 @@ function VerificationModificationCell({ order }: { order: ProfileOrder }) {
     );
   }
 
-  if (order.status === 'supplier_review_pending') return <span className="block pt-2 text-[#8a8f98]">En attente du resultat de verification.</span>;
-  if (order.status === 'awaiting_payment') return <span className="block pt-2 text-[#8a8f98]">La verification demarre apres paiement.</span>;
+  if (order.status === 'payment_authorized') return <span className="block pt-2 text-[#8a8f98]">Controle technique en attente.</span>;
+  if (order.status === 'supplier_review_pending') return <span className="block pt-2 text-[#8a8f98]">Controle technique en cours.</span>;
+  if (order.status === 'awaiting_payment') return <span className="block pt-2 text-[#8a8f98]">Le controle demarre apres autorisation.</span>;
   return <span className="block pt-2 text-[#0f8f6b]">Aucune correction demandee.</span>;
 }
 
 function verificationSubmittedDate(order: ProfileOrder) {
-  if (order.status === 'awaiting_payment') return 'Apres paiement';
+  if (order.status === 'awaiting_payment') return 'Apres autorisation';
   return formatDate(order.paidAt ?? order.quoteSnapshot?.createdAt ?? order.createdAt);
 }
 
 function verificationStatusLabel(order: ProfileOrder) {
   if (order.status === 'supplier_files_rejected') return 'Fichier rejete';
-  if (order.status === 'supplier_review_pending') return 'Verification en cours';
+  if (order.status === 'payment_authorized') return 'Autorisation recue';
+  if (order.status === 'supplier_review_pending') return 'Controle en cours';
   if (order.status === 'awaiting_payment') return 'Non envoye';
   if (['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'china_3pl_received'].includes(order.status)) return 'Fichier accepte';
   return orderStatusLabel(order.status);
@@ -1305,7 +1307,7 @@ function canUpdateOrderQuantity(order: ProfileOrder) {
 function orderLeadTime(order: ProfileOrder) {
   if (order.status === 'delivered') return 'Termine';
   if (order.status === 'cancelled' || order.status === 'refunded') return '-';
-  if (order.status === 'awaiting_payment' || order.paymentStatus === 'pending') return 'Apres paiement';
+  if (order.status === 'awaiting_payment' || order.paymentStatus === 'pending') return 'Apres autorisation';
   if (order.status === 'supplier_in_production') return 'En production';
   if (order.status === 'shipped_to_africa' || order.status === 'customs_processing' || order.status === 'out_for_delivery') return 'En transit';
   return 'Selon revue';
@@ -3284,7 +3286,7 @@ function countForStatus(key: OrderStatusKey, counts: ReturnType<typeof orderCoun
 
 function orderMatchesStatus(order: ProfileOrder, key: OrderStatusKey) {
   if (key === 'all') return true;
-  if (key === 'verification') return ['payment_authorized', 'supplier_review_pending', 'supplier_files_rejected', 'draft', 'quoted'].includes(order.status);
+  if (key === 'verification') return ['payment_authorized', 'supplier_review_pending', 'supplier_files_rejected'].includes(order.status);
   if (key === 'payment-pending') return isPaidOrder(order);
   if (key === 'production') return ['paid', 'supplier_order_pending', 'supplier_ordered', 'supplier_in_production', 'china_3pl_received'].includes(order.status);
   if (key === 'delivery') return ['shipped_to_africa', 'customs_processing', 'out_for_delivery'].includes(order.status);

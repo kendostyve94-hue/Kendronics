@@ -58,7 +58,7 @@ export class StripePaymentProvider {
             unit_amount: Math.round(input.amount * 100),
             product_data: {
               name: `Kendronics PCB order ${input.orderId}`,
-              description: 'PCB ordering and logistics service using trusted external manufacturing partners.',
+              description: 'PCB ordering, technical review, production coordination and logistics service.',
             },
           },
         },
