@@ -28,15 +28,40 @@ export class UsersService {
   ) {}
 
   async createUser(dto: RegisterDto): Promise<User> {
-    const email = dto.email.toLowerCase();
-    const existingUser = await this.usersRepository.findByEmail(email);
-    if (existingUser) {
-      throw new ConflictException('An account already exists for this email.');
+    const realEmail = dto.email?.trim().toLowerCase();
+    const phone = cleanString(dto.phone);
+    if (!realEmail && !phone) {
+      throw new BadRequestException('An email or phone number is required.');
+    }
+    if (realEmail) {
+      const existingUser = await this.usersRepository.findByEmail(realEmail);
+      if (existingUser) {
+        throw new ConflictException('An account already exists for this email.');
+      }
+    }
+    if (phone) {
+      const existingPhone = await this.usersRepository.findByPhone(phone);
+      if (existingPhone) {
+        throw new ConflictException('An account already exists for this phone number.');
+      }
     }
 
+    const email = realEmail ?? internalPhoneEmail(phone ?? randomUUID());
+    const profile = dto.profile;
+    const accountType = profile?.accountType === 'company' ? 'business' : 'individual';
     return this.usersRepository.create({
       email,
       fullName: dto.fullName,
+      phone,
+      country: cleanString(profile?.country),
+      accountType,
+      cguAcceptedAt: new Date(),
+      profileDetails: sanitizeProfileDetails({
+        accountType: profile?.accountType,
+        customerType: profile?.accountType,
+        firstName: dto.fullName.trim().split(/\s+/)[0] ?? '',
+        lastName: dto.fullName.trim().split(/\s+/).slice(1).join(' '),
+      }),
       passwordHash: await this.passwordService.hash(dto.password),
       roles: this.rolesForEmail(email),
     });
@@ -58,8 +83,11 @@ export class UsersService {
     });
   }
 
-  async validateCredentials(email: string, password: string): Promise<User | null> {
-    const user = await this.usersRepository.findByEmail(email.toLowerCase());
+  async validateCredentials(contact: string, password: string): Promise<User | null> {
+    const normalized = contact.trim().toLowerCase();
+    const user = normalized.includes('@')
+      ? await this.usersRepository.findByEmail(normalized)
+      : await this.usersRepository.findByPhone(contact.trim());
     if (!user) {
       return null;
     }
@@ -74,6 +102,10 @@ export class UsersService {
 
   findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findByEmail(email.toLowerCase());
+  }
+
+  findByPhone(phone: string): Promise<User | null> {
+    return this.usersRepository.findByPhone(phone.trim());
   }
 
   listAdmins(): Promise<User[]> {
@@ -325,6 +357,10 @@ function uniqueRoles(roles: UserRole[]): UserRole[] {
 
 function hashCode(code: string): string {
   return createHash('sha256').update(code.trim()).digest('hex');
+}
+
+function internalPhoneEmail(phone: string): string {
+  return `phone-${createHash('sha256').update(phone).digest('hex').slice(0, 24)}@kendronics.local`;
 }
 
 function stringValue(value: unknown): string | undefined {

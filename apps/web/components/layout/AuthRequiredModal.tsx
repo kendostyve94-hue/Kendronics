@@ -60,6 +60,8 @@ const initialForgotValues: ForgotPasswordFormState = {
 const initialRegisterValues: RegisterFormState = {
   username: '',
   email: '',
+  phone: '',
+  contactMethod: 'email',
   password: '',
   confirmPassword: '',
   country: '',
@@ -159,7 +161,7 @@ export function AuthRequiredModal() {
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (loginValues.email.trim() && !isEmail(loginValues.email)) {
+    if (loginValues.email.trim().includes('@') && !isEmail(loginValues.email)) {
       setLoginErrors({ email: 'Utilisez une adresse e-mail valide.' });
       setLoginMetaErrors(validateLoginMeta(loginMetaValues));
       return;
@@ -179,7 +181,8 @@ export function AuthRequiredModal() {
         method: authApiContract.login.method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: loginValues.email.trim().toLowerCase(),
+          contact: loginValues.email.trim(),
+          email: loginValues.email.trim().includes('@') ? loginValues.email.trim().toLowerCase() : undefined,
           password: loginValues.password,
         }),
       });
@@ -196,7 +199,7 @@ export function AuthRequiredModal() {
       await startAccountVerification({
         tokens,
         remember: rememberMe,
-        contact: loginValues.email.trim().toLowerCase(),
+        contact: loginValues.email.trim(),
         source: 'login',
       });
     } catch {
@@ -225,6 +228,8 @@ export function AuthRequiredModal() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: registerValues.email.trim().toLowerCase(),
+          phone: registerValues.phone.trim(),
+          contactMethod: registerValues.contactMethod,
           password: registerValues.password,
           fullName: registerValues.username.trim(),
           profile: {
@@ -244,7 +249,7 @@ export function AuthRequiredModal() {
       await startAccountVerification({
         tokens,
         remember: true,
-        contact: registerValues.email.trim().toLowerCase(),
+        contact: registerValues.contactMethod === 'phone' ? registerValues.phone.trim() : registerValues.email.trim().toLowerCase(),
         source: 'register',
       });
     } catch (error) {
@@ -603,7 +608,23 @@ function RegisterPanel({
       {errors.form && <AlertBox message={errors.form} tone="error" />}
 
       <TextInput label="Nom d'utilisateur" value={values.username} error={errors.username} onChange={(value) => onUpdate('username', value)} />
-      <TextInput label="E-mail" type="email" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
+      <div className="grid grid-cols-2 gap-2">
+        {(['email', 'phone'] as const).map((method) => (
+          <button
+            key={method}
+            type="button"
+            onClick={() => onUpdate('contactMethod', method)}
+            className={`h-9 border text-xs font-semibold ${values.contactMethod === method ? 'border-[#0f8f6b] bg-emerald-50 text-[#0f8f6b]' : 'border-slate-300 bg-white text-slate-600'}`}
+          >
+            {method === 'email' ? 'E-mail' : 'Telephone'}
+          </button>
+        ))}
+      </div>
+      {values.contactMethod === 'email' ? (
+        <TextInput label="E-mail" type="email" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
+      ) : (
+        <TextInput label="Telephone" type="tel" value={values.phone} error={errors.phone} autoComplete="tel" onChange={(value) => onUpdate('phone', value)} />
+      )}
       <PasswordInput label="Mot de passe" value={values.password} error={errors.password} autoComplete="new-password" onChange={(value) => onUpdate('password', value)} />
       <PasswordInput label="Confirmer le mot de passe" value={values.confirmPassword} error={errors.confirmPassword} autoComplete="new-password" onChange={(value) => onUpdate('confirmPassword', value)} />
 

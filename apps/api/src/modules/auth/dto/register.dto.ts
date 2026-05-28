@@ -13,8 +13,17 @@ class RegisterProfileDto {
 }
 
 export class RegisterDto {
+  @IsOptional()
   @IsEmail()
-  email!: string;
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsIn(['email', 'phone'])
+  contactMethod?: 'email' | 'phone';
 
   @IsString()
   @MinLength(10)

@@ -69,6 +69,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   const [orders, setOrders] = useState<string[]>([]);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [avatarDataUrl, setAvatarDataUrl] = useState('');
   const [firstName, setFirstName] = useState('Rafale');
   const headerRef = useRef<HTMLElement | null>(null);
@@ -159,14 +160,36 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
       }
     }
 
+    async function refreshNotifications() {
+      const session = readAuthSession();
+      if (!session) {
+        setUnreadNotifications(0);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/notifications`, {
+          headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+          cache: 'no-store',
+        });
+        if (!response.ok) return;
+        const payload = (await response.json()) as Array<{ readAt?: string | null }>;
+        setUnreadNotifications(payload.filter((notification) => !notification.readAt).length);
+      } catch {
+        setUnreadNotifications(0);
+      }
+    }
+
     function refreshSessionState() {
       refreshClientState();
       void refreshServerOrders();
       void refreshAdminRole();
+      void refreshNotifications();
     }
 
     void refreshServerOrders();
     void refreshAdminRole();
+    void refreshNotifications();
     window.addEventListener('storage', refreshSessionState);
     window.addEventListener('kendronics:auth-updated', refreshSessionState);
     window.addEventListener('kendronics:orders-updated', refreshSessionState);
@@ -232,6 +255,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
 
           <nav className="hidden shrink-0 items-center justify-end gap-3 text-[15px] font-normal text-slate-800 xl:gap-4 lg:flex">
             <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} />
+            {isSignedIn ? <NotificationBell count={unreadNotifications} /> : null}
             <CartLink href={cartHref} count={orders.length} />
             <LoginMenu isSignedIn={isSignedIn} avatarDataUrl={avatarDataUrl} firstName={firstName} t={t} />
           </nav>
@@ -239,9 +263,12 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
             <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} compact />
             {isSignedIn ? (
-              <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-sm border border-[#d1d5db] bg-[#0b1724] text-xs font-black text-white" aria-label={t('nav.openAccount')}>
-                <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
-              </a>
+              <>
+                <NotificationBell count={unreadNotifications} compact />
+                <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-sm border border-[#d1d5db] bg-[#0b1724] text-xs font-black text-white" aria-label={t('nav.openAccount')}>
+                  <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
+                </a>
+              </>
             ) : (
               <a href="/login" onClick={(event) => { event.preventDefault(); openAuthRequired('login'); }} className="inline-flex h-9 items-center gap-1.5 px-1 text-xs font-semibold text-[#111827] transition hover:text-[#0f8f6b]" aria-label={t('nav.login')}>
                 <UserIcon />
@@ -323,6 +350,19 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
     </header>}
     <MobileDock cartHref={cartHref} orderCount={orders.length} pathname={pathname} />
     </>
+  );
+}
+
+function NotificationBell({ count, compact = false }: { count: number; compact?: boolean }) {
+  return (
+    <a href="/profile?view=notifications" className={`relative inline-flex items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] ${compact ? 'h-9 w-9' : 'h-10 w-10'}`} aria-label="Notifications">
+      <BellIcon />
+      {count > 0 ? (
+        <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#f59e0b] px-1 text-[10px] font-medium leading-none text-white">
+          {count > 9 ? '9+' : count}
+        </span>
+      ) : null}
+    </a>
   );
 }
 
@@ -536,6 +576,15 @@ function CartIcon() {
       <circle cx="9" cy="20" r="1.4" />
       <circle cx="18" cy="20" r="1.4" />
       <path d="M3 4h2l2.3 11.2a2 2 0 0 0 2 1.6h8.5a2 2 0 0 0 1.9-1.4L21 8H6.2" />
+    </svg>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+      <path d="M10 21h4" />
     </svg>
   );
 }

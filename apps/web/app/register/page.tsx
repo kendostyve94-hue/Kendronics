@@ -12,6 +12,8 @@ import type { AccountType, RegisterErrors, RegisterFormState } from '../../lib/r
 const initialValues: RegisterFormState = {
   username: '',
   email: '',
+  phone: '',
+  contactMethod: 'email',
   password: '',
   confirmPassword: '',
   country: '',
@@ -51,6 +53,8 @@ export default function RegisterPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: values.email.trim().toLowerCase(),
+          phone: values.phone.trim(),
+          contactMethod: values.contactMethod,
           password: values.password,
           fullName: values.username.trim(),
           profile: {
@@ -122,7 +126,7 @@ export default function RegisterPage() {
           <div className="rounded-2xl border border-slate-200 bg-[#f1f5f9] p-3 text-ink sm:rounded-3xl sm:bg-white sm:p-7">
             <MobileAuthTabs active="register" />
             {status === 'account_created' ? (
-              <AccountCreatedState email={values.email} />
+              <AccountCreatedState email={values.contactMethod === 'phone' ? values.phone : values.email} />
             ) : (
               <form onSubmit={submit} className="space-y-3 sm:space-y-5" noValidate>
                 <div>
@@ -134,9 +138,28 @@ export default function RegisterPage() {
 
                 {errors.form && <ErrorBox message={errors.form} />}
 
+                <div className="grid grid-cols-2 gap-2">
+                  {(['email', 'phone'] as const).map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      onClick={() => update('contactMethod', method)}
+                      className={`h-10 rounded-xl border text-xs font-black transition ${
+                        values.contactMethod === method ? 'border-sky-300 bg-sky-50 text-deepblue' : 'border-slate-200 bg-white text-slate-600'
+                      }`}
+                    >
+                      {method === 'email' ? 'E-mail' : 'Telephone'}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                   <TextInput label="Nom d'utilisateur" value={values.username} error={errors.username} onChange={(value) => update('username', value)} />
-                  <TextInput label="E-mail" type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
+                  {values.contactMethod === 'email' ? (
+                    <TextInput label="E-mail" type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
+                  ) : (
+                    <TextInput label="Telephone" type="tel" value={values.phone} error={errors.phone} onChange={(value) => update('phone', value)} />
+                  )}
                   <PasswordInput label="Mot de passe" value={values.password} error={errors.password} onChange={(value) => update('password', value)} />
                   <PasswordInput label="Confirmer le mot de passe" value={values.confirmPassword} error={errors.confirmPassword} onChange={(value) => update('confirmPassword', value)} />
                   <SelectInput
@@ -246,7 +269,7 @@ function MobileRegisterScreen({
   if (status === 'account_created') {
     return (
       <section className="auth-neumo mx-auto max-w-md px-4 pb-8 pt-28 sm:px-0 sm:pt-32">
-        <AccountCreatedState email={values.email} />
+        <AccountCreatedState email={values.contactMethod === 'phone' ? values.phone : values.email} />
       </section>
     );
   }
@@ -270,19 +293,44 @@ function MobileRegisterScreen({
 
         {errors.form && <ErrorBox message={errors.form} />}
 
+        <div className="grid grid-cols-2 gap-2">
+          {(['email', 'phone'] as const).map((method) => (
+            <button
+              key={method}
+              type="button"
+              onClick={() => onUpdate('contactMethod', method)}
+              className={`h-11 rounded-xl border text-sm font-black ${
+                values.contactMethod === method ? 'border-sky-300 bg-sky-50 text-deepblue' : 'border-slate-200 bg-white text-slate-600'
+              }`}
+            >
+              {method === 'email' ? 'E-mail' : 'Telephone'}
+            </button>
+          ))}
+        </div>
+
         <MobileInput
           placeholder="Nom d'utilisateur"
           value={values.username}
           error={errors.username}
           onChange={(value) => onUpdate('username', value)}
         />
-        <MobileInput
-          placeholder="E-mail"
-          type="email"
-          value={values.email}
-          error={errors.email}
-          onChange={(value) => onUpdate('email', value)}
-        />
+        {values.contactMethod === 'email' ? (
+          <MobileInput
+            placeholder="E-mail"
+            type="email"
+            value={values.email}
+            error={errors.email}
+            onChange={(value) => onUpdate('email', value)}
+          />
+        ) : (
+          <MobileInput
+            placeholder="Telephone"
+            type="tel"
+            value={values.phone}
+            error={errors.phone}
+            onChange={(value) => onUpdate('phone', value)}
+          />
+        )}
         <MobileInput
           placeholder="Mot de passe"
           type="password"

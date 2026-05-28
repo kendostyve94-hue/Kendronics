@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthTokens } from './entities/auth-tokens.entity';
+import { ProfileVerificationService } from './profile-verification.service';
 import { SessionRepository } from './repositories/session.repository';
 import { AuthTokenService } from './auth-token.service';
 
@@ -19,15 +20,30 @@ export class AuthService {
     private readonly authTokenService: AuthTokenService,
     private readonly prisma: PrismaService,
     private readonly emailNotificationService: EmailNotificationService,
+    private readonly profileVerificationService: ProfileVerificationService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthTokens> {
     const user = await this.usersService.createUser(dto);
+    await this.prisma.notification.create({
+      data: {
+        userId: user.id,
+        type: 'account.complete_profile',
+        title: 'Completez votre compte',
+        body: 'Ajoutez votre telephone, vos informations de profil et votre adresse de livraison pour pouvoir soumettre une commande.',
+      },
+    });
+    if (isRealEmail(user.email) && (dto.contactMethod ?? 'email') === 'email') {
+      await this.profileVerificationService.requestCode({ userId: user.id, email: user.email, action: 'account' });
+    } else if (user.phone) {
+      await this.usersService.startPhoneVerification(user.id, user.phone);
+    }
     return this.issueTokens(user.id, user.email);
   }
 
   async login(dto: LoginDto): Promise<AuthTokens> {
-    const user = await this.usersService.validateCredentials(dto.email, dto.password);
+    const contact = dto.contact ?? dto.email ?? '';
+    const user = await this.usersService.validateCredentials(contact, dto.password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials.');
     }
@@ -135,4 +151,8 @@ export class AuthService {
     url.searchParams.set('token', token);
     return url.toString();
   }
+}
+
+function isRealEmail(email: string): boolean {
+  return !email.endsWith('@kendronics.local');
 }

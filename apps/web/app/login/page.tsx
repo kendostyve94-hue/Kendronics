@@ -89,7 +89,8 @@ export default function LoginPage() {
         method: authApiContract.login.method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: loginValues.email.trim().toLowerCase(),
+          contact: loginValues.email.trim(),
+          email: loginValues.email.trim().includes('@') ? loginValues.email.trim().toLowerCase() : undefined,
           password: loginValues.password,
         }),
       });
@@ -102,7 +103,7 @@ export default function LoginPage() {
       await startVerification({
         tokens,
         remember: rememberMe,
-        contact: loginValues.email.trim().toLowerCase(),
+        contact: loginValues.email.trim(),
       });
     } catch {
       setLoginErrors({ form: authApiContract.login.failureMessage });

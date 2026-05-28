@@ -347,7 +347,7 @@ export default function ProfilePage() {
 
         setProfile((current) => ({
           name: userResponse.fullName || current.name,
-          email: userResponse.email || current.email,
+          email: isInternalAccountEmail(userResponse.email) ? current.email : userResponse.email || current.email,
           phone: userResponse.phone || current.phone,
           company: userResponse.companyName || current.company,
           country: normalizeProfileCountry(userResponse.country || current.country),
@@ -383,7 +383,7 @@ export default function ProfilePage() {
       <Navbar />
       <div className="w-full pt-[70px]">
         <div className="mx-auto grid min-w-[1328px] max-w-[1368px] grid-cols-[250px_minmax(0,1fr)] gap-4 px-5 py-4">
-          <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} counts={orderCounts(orders)} unreadNotifications={unreadNotifications(notifications)} />
+          <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} counts={orderCounts(orders)} unreadNotifications={unreadNotifications(notifications)} profile={profile} />
 
           <section className="min-w-0">
             {activeProfileView ? (
@@ -459,11 +459,13 @@ function ProfileSidebar({
   onSelectView,
   counts,
   unreadNotifications,
+  profile,
 }: {
   activeProfileView: ProfileView;
   onSelectView: (view: ProfileView) => void;
   counts: ReturnType<typeof orderCounts>;
   unreadNotifications: number;
+  profile: ProfileForm;
 }) {
   const groups = profileSidebarGroups(counts, unreadNotifications);
 
@@ -488,7 +490,7 @@ function ProfileSidebar({
                   <span className={`grid h-4 w-4 shrink-0 place-items-center border text-[9px] ${
                     isActive ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-[#dbe4ee] text-[#94a3b8]'
                   }`}>{index + 1}</span>
-                  <span className="min-w-0 truncate">{item.label}</span>
+                  <span className={`min-w-0 truncate ${item.view === 'shipping-address' && !isCompleteProfileAddress(profile.shippingAddress) ? 'text-[#d97706]' : ''}`}>{item.label}</span>
                   {item.count && item.count > 0 ? <span className="ml-auto bg-[#102033] px-1.5 text-[10px] font-black text-white">{item.count}</span> : null}
                   {isActive ? <span className="absolute right-0 top-0 h-full w-[4px] bg-[#0f8f6b]" /> : null}
                 </button>
@@ -2099,17 +2101,31 @@ function SettingsSection({
           {profile.profileDetails?.accountType === 'company' ? <p className="text-[#6b7280]">Societe <span className="ml-24 text-black">{profile.company || 'Non renseignee'}</span></p> : null}
         </div>
         <button type="button" onClick={() => setEditingProfile(true)} className="self-start pt-12 text-right text-sm text-[#0f8f6b]">
-          Modifier le profil
+          {isAccountLevelOne(profile) ? 'Modifier le profil' : 'Completer le profil'}
         </button>
       </div>
+      <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
+        <h2 className="text-lg">Statut compte</h2>
+        <p className={isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}>
+          {isAccountLevelOne(profile)
+            ? 'Votre compte est verifie et peut soumettre des commandes.'
+            : 'Votre compte doit etre complete avant de soumettre une commande.'}
+        </p>
+        <a href={isAccountLevelOne(profile) ? '/terms' : '/profile?view=settings'} className={`text-right ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
+          {isAccountLevelOne(profile) ? 'Verifie' : 'A completer'}
+        </a>
+      </div>
       {[
-        ['E-mail', profile.email ? maskEmail(profile.email) : 'Non renseigne', profile.emailVerifiedAt ? 'Verifie' : 'A verifier', '/profile?view=settings'],
-        ['Mot de passe', '********', 'Changer le mot de passe', '/reset-password'],
-        ['Adresse de livraison', 'Ajouter une adresse de livraison pour vos commandes Kendronics.', 'Modifier', '/profile?view=shipping-address'],
+        ['E-mail', profile.email ? `${maskEmail(profile.email)} ${profile.emailVerifiedAt ? '✓' : ''}` : 'Enregistrer un mail', 'Modifier', '/profile?view=settings'],
+        ['Mot de passe', '********', 'Modifier', '/reset-password'],
+        ['Adresse de livraison', isCompleteProfileAddress(profile.shippingAddress) ? 'Adresse de livraison configuree.' : 'Ajouter une adresse de livraison pour vos commandes Kendronics.', 'Modifier', '/profile?view=shipping-address'],
+        ['Conditions utilisation', 'Regles de compte, verification, commande et paiement.', 'Decouvrir', '/terms'],
+        ['A propos', 'Comprendre Kendronics et le fonctionnement de la plateforme.', 'Decouvrir', '/how-it-works'],
+        ["Besoin d'aide", 'Ouvrir un ticket support pour une question de compte ou commande.', 'Ticket support', '/contact'],
       ].map(([label, value, action, href]) => (
         <div key={label} className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
           <h2 className="text-lg">{label}</h2>
-          <p className="text-[#4b5563]">{value}</p>
+          <p className={!profile.email && label === 'E-mail' || label === 'Adresse de livraison' && !isCompleteProfileAddress(profile.shippingAddress) ? 'text-[#d97706]' : 'text-[#4b5563]'}>{value}</p>
           <a href={href} className="text-right text-[#0f8f6b]">{action}</a>
         </div>
       ))}
@@ -2127,7 +2143,7 @@ function SettingsSection({
             </div>
           </div>
           <p>E-mail: <span className={profile.emailVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}>{profile.emailVerifiedAt ? 'compte verifie' : 'verification requise'}</span></p>
-          <p>Telephone: <span className={trustStatus?.checklist.phoneVerified || profile.phoneVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}>{trustStatus?.checklist.phoneVerified || profile.phoneVerifiedAt ? 'telephone verifie' : 'verification requise'}</span></p>
+          <p>Telephone: <span className={trustStatus?.checklist.phoneVerified || profile.phoneVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}>{trustStatus?.checklist.phoneVerified || profile.phoneVerifiedAt ? `${maskPhone(profile.phone)} ✓` : 'verification requise'}</span></p>
           {verificationStatus === 'sent' || verificationStatus === 'verifying' || verificationStatus === 'error' ? (
             <div className="flex max-w-md gap-2">
               <input
@@ -2274,6 +2290,12 @@ function AccountProfileEditForm({
       return;
     }
 
+    if (!phone.trim()) {
+      setSaving(false);
+      setMessage('Renseignez puis verifiez votre numero de telephone avant d enregistrer le profil.');
+      return;
+    }
+
     if (details.accountType === 'company' && !company.trim()) {
       setSaving(false);
       setMessage('Renseignez le nom de la societe.');
@@ -2323,7 +2345,7 @@ function AccountProfileEditForm({
       const nextProfile: ProfileForm = {
         ...profile,
         name: user.fullName || fullName,
-        email: user.email || email,
+        email: isInternalAccountEmail(user.email) ? email : user.email || email,
         phone: user.phone || phone,
         company: user.companyName || (details.accountType === 'company' ? company : ''),
         country: normalizeProfileCountry(user.country || country),
@@ -2332,6 +2354,7 @@ function AccountProfileEditForm({
         shippingAddress: normalizeAddress(user.shippingAddress ?? profile.shippingAddress),
         billingAddress: normalizeAddress(user.billingAddress ?? profile.billingAddress),
         emailVerifiedAt: user.emailVerifiedAt || profile.emailVerifiedAt || '',
+        phoneVerifiedAt: user.phoneVerifiedAt || (user.phone === profile.phone ? profile.phoneVerifiedAt : ''),
       };
 
       writeScopedLocalStorage(profileStorageKey, JSON.stringify(nextProfile));
@@ -2467,16 +2490,8 @@ function ProfileReadonlyRow({ label, value }: { label: string; value: string }) 
 }
 
 function AccountTypeBadge({ profile }: { profile: ProfileForm }) {
-  const accountType = profile.profileDetails?.accountType;
-  if (accountType === 'individual') {
-    return <span className="ml-2 rounded-none bg-[#2563eb] px-2 py-1 text-xs font-black text-white">Individuel</span>;
-  }
-
-  if (accountType === 'company' || profile.company) {
-    return <span className="ml-2 rounded-none bg-[#0f8f6b] px-2 py-1 text-xs font-black text-white">Societe</span>;
-  }
-
-  return <span className="ml-2 rounded-none bg-[#94a3b8] px-2 py-1 text-xs font-black text-white">A configurer</span>;
+  const badge = accountBadge(profile);
+  return <span className="ml-2 rounded-none px-2 py-1 text-xs font-black text-white" style={{ backgroundColor: badge.color }}>{badge.label}</span>;
 }
 
 function ProfileTextField({
@@ -2944,6 +2959,30 @@ function verificationChecklistRows(status: VerificationStatus | null, profile: P
     { label: 'CGU', done: checklist?.cguAccepted ?? false },
     { label: 'MFA', done: checklist?.mfaEnabled ?? false },
   ];
+}
+
+function isInternalAccountEmail(email: string | undefined): boolean {
+  return Boolean(email?.endsWith('@kendronics.local'));
+}
+
+function isCompleteProfileAddress(address?: AccountAddress): boolean {
+  return Boolean(address?.street?.trim() && address.city?.trim() && address.country?.trim() && address.phone?.trim());
+}
+
+function isAccountLevelOne(profile: ProfileForm): boolean {
+  return Boolean(profile.email && profile.emailVerifiedAt && profile.phone && profile.phoneVerifiedAt && profile.name && profile.country && isCompleteProfileAddress(profile.shippingAddress));
+}
+
+function accountBadge(profile: ProfileForm): { label: string; color: string } {
+  if (!isAccountLevelOne(profile)) return { label: 'Niveau 0', color: '#94a3b8' };
+  if (profile.profileDetails?.accountType === 'company' || profile.company) return { label: 'Industriel certifie', color: '#0f8f6b' };
+  return { label: 'Individuel verifie', color: '#f59e0b' };
+}
+
+function maskPhone(phone: string): string {
+  const cleaned = phone.replace(/\s+/g, '');
+  if (cleaned.length <= 5) return phone || 'Telephone';
+  return `${cleaned.slice(0, 4)}***${cleaned.slice(-2)}`;
 }
 
 function ProductQuickGrid() {

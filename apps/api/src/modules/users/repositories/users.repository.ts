@@ -15,6 +15,9 @@ export class UsersRepository {
         passwordHash: input.passwordHash,
         fullName: input.fullName,
         companyName: input.companyName,
+        phone: input.phone,
+        country: input.country,
+        profileDetails: input.profileDetails as Prisma.InputJsonValue | undefined,
         accountType: input.accountType ?? 'individual',
         verificationLevel: input.verificationLevel ?? 0,
         verificationStatus: input.verificationStatus ?? 'unverified',
@@ -35,6 +38,11 @@ export class UsersRepository {
 
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({ where: { email } });
+    return user ? this.toUser(user) : null;
+  }
+
+  async findByPhone(phone: string): Promise<User | null> {
+    const user = await this.prisma.user.findFirst({ where: { phone } });
     return user ? this.toUser(user) : null;
   }
 
