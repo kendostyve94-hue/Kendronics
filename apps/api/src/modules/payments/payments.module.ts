@@ -7,6 +7,7 @@ import { MobileMoneyProvider } from './providers/mobile-money.provider';
 import { PayDunyaMobileMoneyProvider } from './providers/paydunya-mobile-money.provider';
 import { SimulatedMobileMoneyProvider } from './providers/simulated-mobile-money.provider';
 import { StripePaymentProvider } from './providers/stripe-payment.provider';
+import { PaymentAuthorizationMonitorService } from './payment-authorization-monitor.service';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { PaymentsRepository } from './repositories/payments.repository';
@@ -18,6 +19,7 @@ import { PaymentWebhookHandler } from './webhooks/payment-webhook.handler';
   providers: [
     PaymentsService,
     PaymentsRepository,
+    PaymentAuthorizationMonitorService,
     StripePaymentProvider,
     PaymentWebhookHandler,
     CinetPayMobileMoneyProvider,

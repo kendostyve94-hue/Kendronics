@@ -92,9 +92,18 @@ export class PaymentsService {
   }
 
   async captureAuthorizedStripePaymentForOrder(orderId: string) {
+    const order = await this.ordersService.findByIdForInternal(orderId);
+    if (!['payment_authorized', 'supplier_review_pending'].includes(order.status)) {
+      throw new BadRequestException(`Order status ${order.status} is not eligible for manual capture.`);
+    }
+
     const payment = await this.paymentsRepository.findLatestAuthorizedByOrderId(orderId);
     if (!payment?.providerIntentId) {
       throw new BadRequestException('No authorized Stripe payment is available for capture.');
+    }
+    if (payment.captureBefore && payment.captureBefore.getTime() <= Date.now()) {
+      await this.paymentsRepository.updateStatus(payment.id, 'expired');
+      throw new BadRequestException('Stripe authorization expired before capture.');
     }
 
     await this.stripeProvider.capturePaymentIntent(payment.providerIntentId);
@@ -103,6 +112,11 @@ export class PaymentsService {
   }
 
   async cancelAuthorizedStripePaymentForOrder(orderId: string) {
+    const order = await this.ordersService.findByIdForInternal(orderId);
+    if (!['awaiting_payment', 'payment_authorized', 'supplier_review_pending', 'supplier_files_rejected'].includes(order.status)) {
+      throw new BadRequestException(`Order status ${order.status} is not eligible for authorization cancellation.`);
+    }
+
     const payment = await this.paymentsRepository.findLatestAuthorizedByOrderId(orderId);
     if (!payment?.providerIntentId) {
       return { ok: true, skipped: true };

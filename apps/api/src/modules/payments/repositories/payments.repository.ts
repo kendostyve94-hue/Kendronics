@@ -71,6 +71,19 @@ export class PaymentsRepository {
     return payment ? this.toPayment(payment) : null;
   }
 
+  async findAuthorizedCaptureBefore(cutoff: Date): Promise<Payment[]> {
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        provider: 'stripe',
+        status: 'authorized',
+        providerIntentId: { not: null },
+        captureBefore: { lte: cutoff },
+      },
+      orderBy: { captureBefore: 'asc' },
+    });
+    return payments.map((payment) => this.toPayment(payment));
+  }
+
   async updateStatus(paymentId: string, status: PaymentStatus, input: { providerIntentId?: string; captureBefore?: Date } = {}): Promise<Payment> {
     const payment = await this.prisma.payment.update({
       where: { id: paymentId },
