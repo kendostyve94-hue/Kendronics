@@ -928,8 +928,8 @@ function OrderTableSearchPanel({
                         <p className="truncate text-black">{orderGerberLabel(order)}</p>
                         <p className="mt-1 text-sm text-[#44546a]">{orderProductOrderLine(order)}</p>
                         <p className="mt-1 text-sm text-[#44546a]">{orderSummaryLine(order)}</p>
-                        <div className="mt-2 grid gap-1 text-sm">
-                          <button type="button" onClick={() => setDetailOrder(order)} className="text-[#44546a] hover:text-[#0877ff]">Details du produit</button>
+                        <div className="mt-2 grid justify-items-start gap-1 text-sm">
+                          <button type="button" onClick={() => setDetailOrder(order)} className="text-left text-[#44546a] hover:text-[#0877ff]">Details du produit</button>
                           <a href={`/quote?orderId=${encodeURIComponent(order.id)}`} className="text-[#44546a] hover:text-[#0877ff]">Modifier la commande</a>
                         </div>
                       </div>
