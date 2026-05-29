@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { EmailNotificationService } from '../support/email-notification.service';
 
 export type TrustLevelName = 'UNVERIFIED' | 'ACCOUNT_VERIFIED' | 'IDENTITY_VERIFIED' | 'BUSINESS_VERIFIED';
 
@@ -23,7 +25,13 @@ export type VerificationStatusPayload = {
 
 @Injectable()
 export class VerificationLevelService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(VerificationLevelService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+    private readonly emailNotificationService: EmailNotificationService,
+  ) {}
 
   async getStatus(userId: string): Promise<VerificationStatusPayload> {
     const user = await this.prisma.user.findUnique({
@@ -61,10 +69,16 @@ export class VerificationLevelService {
           ? 'unverified'
           : 'verified';
 
+    const previousLevel = user.verificationLevel ?? 0;
+
     await this.prisma.user.update({
       where: { id: userId },
       data: { verificationLevel: level, verificationStatus: status, mfaEnabled: checklist.mfaEnabled },
     });
+
+    if (previousLevel < 1 && level >= 1) {
+      await this.notifyAccountVerified(userId, user.email);
+    }
 
     return {
       level,
@@ -85,6 +99,43 @@ export class VerificationLevelService {
       missingSteps: status.level >= requiredLevel ? [] : status.missingSteps,
       riskScore: status.riskScore,
     };
+  }
+
+  private async notifyAccountVerified(userId: string, email: string): Promise<void> {
+    await this.prisma.userAuditLog.create({
+      data: {
+        userId,
+        actorId: userId,
+        eventType: 'account.verified.level1',
+        metadataJson: { verificationLevel: 1, verificationStatus: 'verified' },
+      },
+    });
+
+    await this.notificationsService.create({
+      userId,
+      type: 'account.verified.level1',
+      title: 'Compte verifie',
+      body: 'Votre compte est maintenant verifie. Vous pouvez soumettre une commande selon les conditions d utilisation Kendronics.',
+    });
+
+    if (!isInternalPhoneAccountEmail(email)) {
+      try {
+        await this.emailNotificationService.sendSecurityNotice({
+          to: email,
+          subject: 'Compte verifie',
+          lines: [
+            'Bonjour,',
+            '',
+            'Votre compte Kendronics est maintenant verifie.',
+            'Vous pouvez soumettre une commande selon les conditions d utilisation Kendronics.',
+            '',
+            `${frontendOrigin()}/conditions`,
+          ],
+        });
+      } catch (error) {
+        this.logger.warn(`Account verification email failed for ${userId}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
   }
 }
 
@@ -125,6 +176,14 @@ function hasCompleteAddress(address: Record<string, unknown> | undefined) {
 
 function objectValue(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined;
+}
+
+function isInternalPhoneAccountEmail(email: string): boolean {
+  return email.endsWith('@kendronics.local');
+}
+
+function frontendOrigin(): string {
+  return process.env.FRONTEND_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://kendronics.com';
 }
 
 function emptyStatus(): VerificationStatusPayload {
