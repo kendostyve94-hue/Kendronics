@@ -1860,6 +1860,7 @@ function SettingsSection({
 }) {
   const [editingProfile, setEditingProfile] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteStep, setDeleteStep] = useState<DeleteModalStep>('feedback');
@@ -1942,6 +1943,7 @@ function SettingsSection({
       </div>
       {[
         ['E-mail', profile.email ? `${maskEmail(profile.email)} ${profile.emailVerifiedAt ? '✓' : ''}` : 'Enregistrer un mail', 'Modifier', '/profile?view=settings'],
+        ['Téléphone', profile.phone ? `${maskPhone(profile.phone)} ${profile.phoneVerifiedAt ? '✓' : ''}` : 'Enregistrer un telephone', profile.phoneVerifiedAt ? 'Modifier' : 'Verifier', '/profile?view=settings'],
         ['Mot de passe', '********', 'Modifier', '/reset-password'],
         ['Adresse de livraison', isCompleteProfileAddress(profile.shippingAddress) ? 'Adresse de livraison configuree.' : 'Ajouter une adresse de livraison pour vos commandes Kendronics.', 'Modifier', '/profile?view=shipping-address'],
         ['Conditions utilisation', 'Regles de compte, verification, commande et paiement.', 'Decouvrir', '/terms'],
@@ -1950,9 +1952,11 @@ function SettingsSection({
       ].map(([label, value, action, href]) => (
         <div key={label} className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
           <h2 className="text-lg">{label}</h2>
-          <p className={!profile.email && label === 'E-mail' || label === 'Adresse de livraison' && !isCompleteProfileAddress(profile.shippingAddress) ? 'text-[#d97706]' : 'text-[#4b5563]'}>{value}</p>
+          <p className={!profile.email && label === 'E-mail' || label === 'Téléphone' && !profile.phoneVerifiedAt || label === 'Adresse de livraison' && !isCompleteProfileAddress(profile.shippingAddress) ? 'text-[#d97706]' : 'text-[#4b5563]'}>{value}</p>
           {label === 'E-mail' ? (
             <button type="button" onClick={() => setEmailModalOpen(true)} className="text-right text-[#0f8f6b]">{action}</button>
+          ) : label === 'Téléphone' ? (
+            <button type="button" onClick={() => setPhoneModalOpen(true)} className="text-right text-[#0f8f6b]">{action}</button>
           ) : label === 'Mot de passe' ? (
             <button type="button" onClick={() => setPasswordModalOpen(true)} className="text-right text-[#0f8f6b]">{action}</button>
           ) : (
@@ -2004,6 +2008,17 @@ function SettingsSection({
             const verifiedAt = new Date().toISOString();
             onProfileChange((current) => ({ ...current, email, emailVerifiedAt: verifiedAt }));
             setEmailModalOpen(false);
+          }}
+        />
+      ) : null}
+      {phoneModalOpen ? (
+        <PhoneChangeModal
+          currentPhone={profile.phone}
+          onClose={() => setPhoneModalOpen(false)}
+          onChanged={(phone) => {
+            const verifiedAt = new Date().toISOString();
+            onProfileChange((current) => ({ ...current, phone, phoneVerifiedAt: verifiedAt }));
+            setPhoneModalOpen(false);
           }}
         />
       ) : null}
@@ -2651,6 +2666,98 @@ function EmailChangeModal({ currentEmail, onClose, onChanged }: { currentEmail: 
   );
 }
 
+function PhoneChangeModal({ currentPhone, onClose, onChanged }: { currentPhone: string; onClose: () => void; onChanged: (phone: string) => void }) {
+  const [phone, setPhone] = useState(currentPhone);
+  const [phoneValid, setPhoneValid] = useState(Boolean(currentPhone));
+  const [code, setCode] = useState('');
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'saving' | 'done' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  async function requestCode() {
+    if (!phone.trim() || !phoneValid) {
+      setStatus('error');
+      setMessage('Entrez un numero international valide.');
+      return;
+    }
+    setStatus('sending');
+    setMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+      const response = await fetch(`${getApiBaseUrl()}/api/users/me/phone-verification/start`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      if (!response.ok) throw new Error(`Phone verification request failed: ${response.status}`);
+      setStatus('sent');
+      setMessage('Code envoye par SMS. Il reste valide 10 minutes.');
+    } catch {
+      setStatus('error');
+      setMessage("Impossible d'envoyer le code SMS pour le moment.");
+    }
+  }
+
+  async function confirmChange() {
+    if (code.trim().length !== 6) {
+      setStatus('error');
+      setMessage('Entrez le code a 6 chiffres.');
+      return;
+    }
+    setStatus('saving');
+    setMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        window.location.assign('/login');
+        return;
+      }
+      const response = await fetch(`${getApiBaseUrl()}/api/users/me/phone-verification/check`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, code: code.trim() }),
+      });
+      if (!response.ok) throw new Error(`Phone verification confirm failed: ${response.status}`);
+      onChanged(phone);
+    } catch {
+      setStatus('error');
+      setMessage('Code SMS invalide ou expire.');
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950/45 px-4">
+      <div className="w-full max-w-lg border border-slate-300 bg-white p-6 text-black">
+        <h2 className="text-xl font-black">Modifier le telephone</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Numero actuel: {currentPhone ? maskPhone(currentPhone) : 'aucun numero enregistre'}</p>
+        <div className="mt-5 grid gap-3">
+          <InternationalPhoneInput
+            value={phone}
+            error={status === 'error' && !phoneValid ? message : undefined}
+            onChange={(value, meta) => {
+              setPhone(value);
+              setPhoneValid(meta.isValid);
+              if (status === 'error') setMessage('');
+            }}
+          />
+          {status === 'sent' || status === 'saving' || code ? (
+            <input value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} className={profileModalFieldClassName} placeholder="Code SMS a 6 chiffres" inputMode="numeric" />
+          ) : null}
+          {message && (phoneValid || status !== 'error') ? <p className={status === 'error' ? 'text-sm font-semibold text-red-600' : 'text-sm font-semibold text-[#0f8f6b]'}>{message}</p> : null}
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <button type="button" onClick={onClose} disabled={status === 'saving' || status === 'sending'} className={profileModalSecondaryButtonClassName}>Annuler</button>
+          <button type="button" onClick={() => void requestCode()} disabled={status === 'sending' || status === 'saving'} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : 'Envoyer le code'}</button>
+          <button type="button" onClick={() => void confirmChange()} disabled={status === 'saving'} className={profileModalPrimaryButtonClassName}>{status === 'saving' ? 'Validation...' : 'Valider'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PasswordChangeModal({ onClose }: { onClose: () => void }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -2915,6 +3022,13 @@ function accountBadge(profile: ProfileForm): { label: string; color: string } {
   if (!isAccountLevelOne(profile)) return { label: 'Niveau 0', color: '#94a3b8' };
   if (profile.profileDetails?.accountType === 'company' || profile.company) return { label: 'Industriel certifie', color: '#0f8f6b' };
   return { label: 'Individuel verifie', color: '#f59e0b' };
+}
+
+function maskPhone(phone: string): string {
+  const compact = phone.replace(/\s+/g, '');
+  if (!compact) return '';
+  if (compact.length <= 7) return compact;
+  return `${compact.slice(0, 4)}********${compact.slice(-2)}`;
 }
 
 function ProductQuickGrid() {
