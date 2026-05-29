@@ -7,8 +7,8 @@ import { ViewportScaleRuntime } from '../components/layout/ViewportScaleRuntime'
 import './globals.css';
 
 export const viewport: Viewport = {
-  width: 1328,
-  initialScale: 0.29,
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export const metadata: Metadata = {
