@@ -375,7 +375,7 @@ export default function ProfilePage() {
     <main className="min-h-screen overflow-x-hidden bg-[#f3f6fa] text-[#1f2f43]">
       <Navbar />
       <div className="w-full pt-[70px]">
-        <div className="mx-auto grid min-w-[1328px] max-w-[1368px] grid-cols-[250px_minmax(0,1fr)] gap-4 px-5 py-4">
+        <div className="mx-auto grid w-full max-w-[23rem] gap-4 px-3 py-3 sm:max-w-[40rem] lg:min-w-[1328px] lg:max-w-[1368px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
           <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} counts={orderCounts(orders)} unreadNotifications={unreadNotifications(notifications)} profile={profile} />
 
           <section className="min-w-0">
@@ -384,14 +384,23 @@ export default function ProfilePage() {
             ) : (
               <>
                 <div className="grid min-w-0 gap-4">
+                  <div className="lg:hidden">
+                    <LivePromoFlash />
+                  </div>
                   <ProductQuickGrid />
-                  <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_300px] gap-4">
+                  <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
                     <div className="grid min-w-0 gap-4">
-                      <DashboardPanel firstName={firstName} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} />
-                      <StatusStrip counts={orderCounts(orders)} />
-                      <CommunityPublishPanel firstName={firstName} avatarDataUrl={avatarDataUrl} />
+                      <DashboardPanel firstName={firstName} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} dataStatus={dataStatus} />
+                      <div className="hidden lg:block">
+                        <StatusStrip counts={orderCounts(orders)} />
+                      </div>
+                      <div className="hidden lg:block">
+                        <CommunityPublishPanel firstName={firstName} avatarDataUrl={avatarDataUrl} />
+                      </div>
                     </div>
-                    <DiscoverNewsRail />
+                    <div className="hidden lg:block">
+                      <DiscoverNewsRail />
+                    </div>
                   </div>
                 </div>
               </>
@@ -399,7 +408,9 @@ export default function ProfilePage() {
           </section>
         </div>
 
-        <Footer forceDesktop />
+        <div className="hidden lg:block">
+          <Footer forceDesktop />
+        </div>
       </div>
     </main>
   );
@@ -463,7 +474,7 @@ function ProfileSidebar({
   const groups = profileSidebarGroups(counts, unreadNotifications);
 
   return (
-    <aside className="sticky top-[86px] block self-start bg-white shadow-sm ring-1 ring-[#dbe4ee]">
+    <aside className="sticky top-[86px] hidden self-start bg-white shadow-sm ring-1 ring-[#dbe4ee] lg:block">
       {groups.map((group) => (
         <section key={group.title} className="border-b border-[#e4ebf2] last:border-b-0">
           <h2 className="px-4 pb-2 pt-5 text-[11px] font-black uppercase tracking-[0.14em] text-[#64748b]">{group.title}</h2>
@@ -1541,8 +1552,8 @@ function NotificationsSection({
           {markingRead ? 'Mise a jour...' : 'Tout marquer comme lu'}
         </button>
       </div>
-      <div className="mt-5 bg-white px-5 py-4">
-        <div className="grid grid-cols-[1fr_1fr_160px] bg-[#f0f0f0] px-5 py-4 text-xs font-black">
+      <div className="mt-5 bg-white px-3 py-4 sm:px-5">
+        <div className="hidden grid-cols-[1fr_1fr_160px] bg-[#f0f0f0] px-5 py-4 text-xs font-black sm:grid">
           <span>Notifications</span>
           <span>Article</span>
           <span>Date</span>
@@ -1568,10 +1579,10 @@ function NotificationsList({ notifications, dataStatus }: { notifications: Profi
   return (
     <div className="divide-y divide-slate-200 text-xs">
       {notifications.map((notification) => (
-        <div key={notification.id} className="grid grid-cols-[1fr_1fr_160px] px-5 py-4">
+        <div key={notification.id} className="grid gap-2 px-2 py-4 sm:grid-cols-[1fr_1fr_160px] sm:px-5">
           <span className={notification.readAt ? 'text-[#6b7280]' : 'font-black text-black'}>{notification.title}</span>
           <span>{notification.body || notification.type}</span>
-          <span>{formatDate(notification.createdAt)}</span>
+          <span className="text-[#64748b]">{formatDate(notification.createdAt)}</span>
         </div>
       ))}
     </div>
@@ -3052,7 +3063,7 @@ function maskPhone(phone: string): string {
 
 function ProductQuickGrid() {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_302px] gap-3">
+    <div className="hidden grid-cols-[minmax(0,1fr)_302px] gap-3 lg:grid">
       <section className="bg-white p-3 shadow-sm ring-1 ring-[#dbe4ee]">
         <div className="mb-3 flex items-center justify-between">
           <div>
@@ -3108,14 +3119,12 @@ function DashboardPanel({
   userId,
   avatarDataUrl,
   orders,
-  notifications,
 }: {
   firstName: string;
   profile: ProfileForm;
   userId: string;
   avatarDataUrl: string;
   orders: ProfileOrder[];
-  notifications: ProfileNotification[];
   dataStatus: 'loading' | 'ready' | 'signed-out' | 'error';
 }) {
   const paidTotal = orders.filter((order) => order.paymentStatus === 'paid').reduce((total, order) => total + (order.totalPrice ?? order.quoteSnapshot?.finalTotal ?? 0), 0);
@@ -3126,8 +3135,8 @@ function DashboardPanel({
   const location = profile.country || 'Pays non renseigné';
 
   return (
-    <section className="grid grid-cols-[190px_minmax(0,1fr)] bg-white shadow-sm ring-1 ring-[#dbe4ee]">
-      <div className="grid place-items-center border-r border-[#e4ebf2] px-4 py-8 text-center">
+    <section className="grid bg-white shadow-sm ring-1 ring-[#dbe4ee] lg:grid-cols-[190px_minmax(0,1fr)]">
+      <div className="hidden place-items-center border-r border-[#e4ebf2] px-4 py-8 text-center lg:grid">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div>
           <h1 className="mt-4 text-lg font-semibold text-[#102033]">{displayName}</h1>
@@ -3139,16 +3148,16 @@ function DashboardPanel({
         </div>
       </div>
 
-      <div className="p-5">
-        <div className="flex items-start justify-between">
+      <div className="p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0f8f6b]">Espace client</p>
             <h2 className="mt-1 text-xl font-semibold text-[#102033]">Vue d'ensemble</h2>
           </div>
-          <a href="/quote" className="border border-[#0f8f6b] px-4 py-2 text-xs font-semibold text-[#0f8f6b] transition hover:bg-[#0f8f6b] hover:text-white">Nouveau devis</a>
+          <a href="/quote" className="inline-flex min-h-10 items-center justify-center border border-[#0f8f6b] px-4 py-2 text-xs font-semibold text-[#0f8f6b] transition hover:bg-[#0f8f6b] hover:text-white">Nouveau devis</a>
         </div>
-        <div className="mt-4 grid grid-cols-[1fr_180px] gap-4">
-          <div className="grid grid-cols-2 border border-[#e4ebf2]">
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_180px]">
+          <div className="grid border border-[#e4ebf2] sm:grid-cols-2">
             <MetricCell label="Total payé (EUR)" value={formatMoney(paidTotal)} detail={`En attente : ${formatMoney(pendingTotal)}`} />
             <MetricCell label="Commandes" value={String(orders.length)} valueClass="text-[#102033]" />
             <MetricCell label="En production" value={String(counts.production)} />
@@ -3156,8 +3165,6 @@ function DashboardPanel({
           </div>
           <div className="grid gap-2">
             <SmallInfo label="Coupons actifs" value="0" />
-            <SmallInfo label="Suivis" value="0" action="Voir" />
-            <SmallInfo label="Notifications" value={String(unreadNotifications(notifications))} danger />
           </div>
         </div>
       </div>

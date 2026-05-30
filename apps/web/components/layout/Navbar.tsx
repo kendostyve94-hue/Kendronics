@@ -72,6 +72,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [avatarDataUrl, setAvatarDataUrl] = useState('');
   const [firstName, setFirstName] = useState('Rafale');
+  const [profileView, setProfileView] = useState('');
   const headerRef = useRef<HTMLElement | null>(null);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
@@ -201,6 +202,16 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
       window.removeEventListener('kendronics:avatar-updated', refreshSessionState);
     };
   }, []);
+
+  useEffect(() => {
+    function refreshProfileView() {
+      setProfileView(new URLSearchParams(window.location.search).get('view') ?? '');
+    }
+
+    refreshProfileView();
+    window.addEventListener('popstate', refreshProfileView);
+    return () => window.removeEventListener('popstate', refreshProfileView);
+  }, [pathname]);
 
   useEffect(() => {
     function closeMobilePanels(event: PointerEvent) {
@@ -347,7 +358,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         ) : null}
       </div>
     </header>}
-    <MobileDock cartHref={cartHref} orderCount={orders.length} pathname={pathname} />
+    <MobileDock cartHref={cartHref} orderCount={orders.length} pathname={pathname} profileView={profileView} />
     </>
   );
 }
@@ -365,7 +376,7 @@ function NotificationBell({ count, compact = false }: { count: number; compact?:
   );
 }
 
-function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orderCount: number; pathname: string }) {
+function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref: string; orderCount: number; pathname: string; profileView: string }) {
   const { t } = useI18n();
   const items = [
     { labelKey: 'nav.home' as const, href: '/', icon: <HomeIcon /> },
@@ -386,8 +397,10 @@ function MobileDock({ cartHref, orderCount, pathname }: { cartHref: string; orde
             item.href === '/'
               ? pathname === '/'
               : item.labelKey === 'nav.cart'
-                ? pathname.startsWith('/orders') || pathname.startsWith('/profile') || (orderCount === 0 && pathname.startsWith('/quote'))
-                : pathname.startsWith(item.href);
+                ? pathname.startsWith('/orders') || (pathname === '/profile' && profileView === 'orders') || (orderCount === 0 && pathname.startsWith('/quote'))
+                : item.labelKey === 'nav.account'
+                  ? pathname === '/profile' && profileView !== 'orders'
+                  : pathname.startsWith(item.href);
 
           return (
             <a
