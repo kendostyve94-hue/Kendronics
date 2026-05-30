@@ -180,7 +180,7 @@ export default async function HomePage() {
   const recentProductionActivity = await getRecentProductionActivity();
 
   return (
-    <main className="overflow-hidden bg-[#eef2f6] text-ink">
+    <main className="home-page overflow-hidden bg-[#eef2f6] text-ink">
       <Navbar />
       <Hero />
       <ProductCatalog />

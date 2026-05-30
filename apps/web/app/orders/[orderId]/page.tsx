@@ -72,7 +72,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
       try {
         const session = await readFreshAuthSession();
         const headers: HeadersInit = session
-          ? { Authorization: `${session.tokenType} ${session.accessToken}` }
+          ? { Authorization: `Bearer ${session.accessToken}` }
           : {};
 
         const [orderResponse, trackingResponse] = await Promise.all([
@@ -133,7 +133,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
       const response = await fetch(`${apiBaseUrl}/api/payments/checkout`, {
         method: 'POST',
         headers: {
-          Authorization: `${session.tokenType} ${session.accessToken}`,
+          Authorization: `Bearer ${session.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -170,7 +170,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
       const response = await fetch(`${apiBaseUrl}/api/payments/mobile-money`, {
         method: 'POST',
         headers: {
-          Authorization: `${session.tokenType} ${session.accessToken}`,
+          Authorization: `Bearer ${session.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -213,7 +213,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
         const response = await fetch(`${apiBaseUrl}${orderDetailApiContract.deleteOrder.path.replace(':orderId', detail.order.id)}`, {
           method: orderDetailApiContract.deleteOrder.method,
           headers: {
-            Authorization: `${session.tokenType} ${session.accessToken}`,
+            Authorization: `Bearer ${session.accessToken}`,
           },
         });
 
@@ -234,31 +234,35 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   return (
     <main className="min-h-screen bg-[#eef1f5] text-[#111827]">
       <header className="border-b border-[#e5e7eb] bg-white">
-        <div className="mx-auto flex h-[72px] max-w-[1360px] items-center gap-8 px-5">
+        <div className="mx-auto flex min-h-[72px] max-w-[1360px] items-center gap-5 px-4 py-3 sm:gap-8 sm:px-5 sm:py-0">
           <a href="/" aria-label="Kendronics accueil" className="shrink-0">
-            <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-11 w-auto" />
+            <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-10 w-auto sm:h-11" />
           </a>
-          <div>
-            <h1 className="text-base uppercase text-black">Caisse s&eacute;curis&eacute;e SSL</h1>
-            <p className="mt-2 text-sm text-[#8b929b]">Vos informations sont prot&eacute;g&eacute;es</p>
+          <div className="min-w-0">
+            <h1 className="text-sm uppercase text-black sm:text-base">Caisse s&eacute;curis&eacute;e SSL</h1>
+            <p className="mt-1 text-xs leading-5 text-[#8b929b] sm:mt-2 sm:text-sm">Vos informations sont prot&eacute;g&eacute;es</p>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-[1360px] px-5 py-8">
-        <a href="/profile?view=orders" className="mb-4 inline-flex items-center gap-2 text-sm text-black hover:text-[#0877ff]">
+      <section className="mx-auto max-w-[1360px] px-4 py-5 sm:px-5 sm:py-8">
+        <a href="/profile?view=orders" className="mb-5 inline-flex items-center gap-2 text-sm text-black hover:text-[#0877ff]">
           <span aria-hidden="true">&larr;</span>
           Retour au panier
         </a>
         {status === 'error' && (
-          <div className="mb-5 border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="mb-4 bg-red-50 p-3 text-sm leading-6 text-red-700 sm:border sm:border-red-200 sm:p-4">
             Impossible de charger cette commande. Connectez-vous avec le bon compte ou cr&eacute;ez un nouveau devis.
             <a href="/quote" className="ml-2 underline">Ouvrir le devis</a>
           </div>
         )}
-        {status === 'loading' || !detail ? (
-          <div className="border border-line bg-white p-6 text-sm text-slate-600">
-            {status === 'loading' ? 'Chargement de la commande...' : 'Aucune donnee de commande a afficher.'}
+        {status === 'loading' ? (
+          <div className="bg-white p-0 text-sm text-slate-600 sm:border sm:border-line sm:p-6">
+            Chargement de la commande...
+          </div>
+        ) : status === 'error' ? null : !detail ? (
+          <div className="bg-white p-0 text-sm text-slate-600 sm:border sm:border-line sm:p-6">
+            Aucune donnee de commande a afficher.
           </div>
         ) : (
         <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_380px]">
@@ -335,7 +339,7 @@ function SummaryCard({
   const canSubmit = canCheckout && addressConfirmed && shippingConfirmed && termsAccepted && checkoutStatus !== 'loading';
 
   return (
-    <aside className="bg-white p-8 shadow-sm ring-1 ring-[#e3e7ec]">
+    <aside className="bg-white p-0 sm:p-8 sm:shadow-sm sm:ring-1 sm:ring-[#e3e7ec]">
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-2xl uppercase text-black">R&eacute;sum&eacute;</h2>
         <a href="/profile?view=orders" className="text-sm text-[#0877ff]">1 articles &gt;</a>
@@ -431,7 +435,7 @@ function CheckoutAddressCard({
       const response = await fetch(`${apiBaseUrl}/api/users/me/shipping-address`, {
         method: 'PUT',
         headers: {
-          Authorization: `${session.tokenType} ${session.accessToken}`,
+          Authorization: `Bearer ${session.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ address: formAddress }),
@@ -451,7 +455,7 @@ function CheckoutAddressCard({
   }
 
   return (
-    <section className="bg-white p-5 shadow-sm ring-1 ring-[#e3e7ec]">
+    <section className="bg-white p-0 sm:p-5 sm:shadow-sm sm:ring-1 sm:ring-[#e3e7ec]">
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-2xl text-black">1. Adresse de livraison</h2>
       </div>
@@ -514,7 +518,7 @@ function CheckoutShippingCard({
   onChange: () => void;
 }) {
   return (
-    <section className="bg-white p-5 shadow-sm ring-1 ring-[#e3e7ec]">
+    <section className="bg-white p-0 sm:p-5 sm:shadow-sm sm:ring-1 sm:ring-[#e3e7ec]">
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-2xl text-black">2. M&eacute;thode d'exp&eacute;dition</h2>
         {confirmed ? <button type="button" onClick={onChange} className="text-sm text-[#8b929b] hover:text-[#0877ff]">Changer</button> : null}
@@ -600,7 +604,7 @@ function CheckoutSubmitCard({
   onAcceptedChange: (accepted: boolean) => void;
 }) {
   return (
-    <section className="bg-white p-5 shadow-sm ring-1 ring-[#e3e7ec]">
+    <section className="bg-white p-0 sm:p-5 sm:shadow-sm sm:ring-1 sm:ring-[#e3e7ec]">
       <h2 className="text-2xl text-black">3. Soumettre la commande</h2>
       <div className="mt-6 space-y-5 text-sm leading-6 text-[#334155]">
         <p>
