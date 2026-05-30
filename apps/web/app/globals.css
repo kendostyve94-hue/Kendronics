@@ -15,7 +15,9 @@
   --surface-muted: #eef6fb;
   --surface-raised: #ffffff;
   --surface-tint: #e8f7f1;
-  --neumo-radius: 8px;
+  --surface-radius: 8px;
+  --control-radius: 3px;
+  --neumo-radius: var(--control-radius);
   --brand-gradient: linear-gradient(90deg, #0f8f6b, #12a87c);
   --glass-light: rgba(255, 255, 255, 0.92);
   --glass-dark: rgba(248, 251, 254, 0.92);
@@ -60,11 +62,14 @@ body * {
 .rounded-sm,
 .rounded,
 .rounded-md,
-.rounded-lg,
+.rounded-lg {
+  border-radius: var(--control-radius) !important;
+}
+
 .rounded-xl,
 .rounded-2xl,
 .rounded-3xl {
-  border-radius: var(--neumo-radius) !important;
+  border-radius: var(--surface-radius) !important;
 }
 
 .rounded-full {
@@ -75,21 +80,8 @@ article,
 aside,
 form,
 details,
-summary,
-fieldset,
-table,
-thead,
-tbody,
-[role="button"],
-[class*="border"],
-[class*="bg-white"],
-[class*="bg-slate-50"],
-[class*="bg-slate-100"],
-[class*="bg-cloud"],
-[class*="bg-[#f4f7fa]"],
-[class*="bg-[#f3f5f7]"],
-[class*="bg-[#eaf2fb]"] {
-  border-radius: var(--neumo-radius);
+fieldset {
+  border-radius: var(--surface-radius);
 }
 
 main {
@@ -132,7 +124,7 @@ button[class*="border"][class*="bg-slate"] {
 summary,
 details > summary[class*="bg-slate"] {
   background: var(--surface-muted) !important;
-  border-radius: var(--neumo-radius) var(--neumo-radius) 0 0 !important;
+  border-radius: var(--control-radius) var(--control-radius) 0 0 !important;
 }
 
 details[open] > summary {
@@ -168,6 +160,7 @@ select,
 textarea {
   background: #ffffff !important;
   border-color: rgba(82, 108, 134, 0.36) !important;
+  border-radius: var(--control-radius) !important;
   min-height: 2.75rem;
   outline: none;
 }
@@ -220,7 +213,7 @@ summary:focus-visible {
 .auth-neumo button,
 .auth-neumo a[class*="flex"],
 .auth-neumo [class*="border"] {
-  border-radius: var(--neumo-radius) !important;
+  border-radius: var(--control-radius) !important;
   box-shadow: none !important;
 }
 
@@ -348,7 +341,7 @@ section.bg-ink .inline-flex {
   border-color: rgba(255, 255, 255, 0.26) !important;
   background-color: rgba(255, 255, 255, 0.12) !important;
   color: #dffbf1 !important;
-  border-radius: var(--neumo-radius) !important;
+  border-radius: var(--control-radius) !important;
 }
 
 section.bg-ink h1 {
@@ -445,7 +438,7 @@ section.bg-ink p {
 .rounded-xl,
 .rounded-2xl,
 .rounded-3xl {
-  border-radius: var(--neumo-radius) !important;
+  border-radius: var(--surface-radius) !important;
 }
 
 input,
@@ -805,12 +798,43 @@ nav[class*="fixed"],
 article[class*="border"],
 aside[class*="border"],
 form[class*="border"],
-details[class*="border"],
-div[class*="border"][class*="bg-white"],
-div[class*="border"][class*="bg-slate"],
-a[class*="border"][class*="bg-white"],
-button[class*="border"][class*="bg-white"] {
+details[class*="border"] {
   box-shadow: 0 1px 2px rgba(11, 23, 36, 0.04), 0 12px 34px rgba(11, 23, 36, 0.035);
+}
+
+main > section > div[class*="border"],
+main > div[class*="border"],
+section > div[class*="mx-auto"][class*="border"],
+.glass,
+.glass-light {
+  border-radius: var(--surface-radius) !important;
+}
+
+table,
+thead,
+tbody,
+tr,
+td,
+th,
+label,
+input,
+select,
+textarea,
+button,
+a[class*="border"],
+div[class*="grid"][class*="border"],
+div[class*="flex"][class*="border"],
+div[class*="min-w-"][class*="border"],
+span[class*="border"] {
+  border-radius: var(--control-radius) !important;
+}
+
+main > section > div[class*="border"],
+main > div[class*="border"],
+section > div[class*="mx-auto"][class*="border"],
+.glass,
+.glass-light {
+  border-radius: var(--surface-radius) !important;
 }
 
 table,
