@@ -6,7 +6,7 @@ import { Navbar } from '../../../components/layout/Navbar';
 import { Card } from '../../../components/ui/Card';
 import { getApiBaseUrl } from '../../../lib/api-base-url';
 import { africanCountries } from '../../../lib/african-countries';
-import { readAuthSession, readFreshAuthSession } from '../../../lib/auth-session';
+import { readFreshAuthSession } from '../../../lib/auth-session';
 import { readScopedLocalStorage, writeScopedLocalStorage } from '../../../lib/user-scoped-storage';
 import {
   isCustomerTrackingStatus,
@@ -70,7 +70,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
       setStatus('loading');
 
       try {
-        const session = readAuthSession();
+        const session = await readFreshAuthSession();
         const headers: HeadersInit = session
           ? { Authorization: `${session.tokenType} ${session.accessToken}` }
           : {};

@@ -993,6 +993,7 @@ function OrderTableSearchPanel({
   const [deletingOrderId, setDeletingOrderId] = useState('');
   const [quantityUpdatingOrderId, setQuantityUpdatingOrderId] = useState('');
   const [detailOrder, setDetailOrder] = useState<ProfileOrder | null>(null);
+  const [cartTermsAccepted, setCartTermsAccepted] = useState(false);
   const filteredOrders = orders.filter((order) => serviceFilter === 'all' || orderProductFilterKey(order) === serviceFilter);
   const visibleOrders = filteredOrders;
   const selectedOrders = orders.filter((order) => selectedOrderIds.includes(order.id) && isSelectableCartOrder(order));
@@ -1002,6 +1003,11 @@ function OrderTableSearchPanel({
   const taxesTotal = selectedOrders.reduce((total, order) => total + orderTaxesTotal(order), 0);
   const payableTotal = merchandiseTotal + shippingTotal + taxesTotal;
   const totalWeightKg = selectedOrders.reduce((total, order) => total + orderWeightKg(order), 0);
+  const canProceedToPayment = selectedOrders.length === 1 && cartTermsAccepted;
+
+  useEffect(() => {
+    setCartTermsAccepted(false);
+  }, [selectedOrderIds.join('|')]);
 
   function toggleOrderSelection(orderId: string) {
     setSelectedOrderIds((current) => (current.includes(orderId) ? current.filter((id) => id !== orderId) : [...current, orderId]));
@@ -1234,15 +1240,15 @@ function OrderTableSearchPanel({
             <span>Poids</span>
             <span>{selectedOrders.length ? `${formatWeight(totalWeightKg)}kg` : '--'}</span>
           </div>
-          {selectedOrders.length > 0 ? <PaymentAuthorizationSummary /> : null}
+          {selectedOrders.length > 0 ? <PaymentAuthorizationSummary checked={cartTermsAccepted} onChange={setCartTermsAccepted} /> : null}
         </div>
-        {selectedOrders.length === 1 ? (
+        {canProceedToPayment ? (
           <a href={`/orders/${selectedOrders[0].id}`} className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#0877ff] px-5 text-base font-semibold text-white hover:bg-[#0068e8]">
             Paiement securise
           </a>
         ) : (
           <span className="mt-5 inline-flex h-12 w-full cursor-not-allowed items-center justify-center rounded-full bg-[#cbd5e1] px-5 text-base font-semibold text-white">
-            Selectionnez un article
+            {selectedOrders.length === 1 ? 'Acceptez la regle' : 'Selectionnez un article'}
           </span>
         )}
         <a href="/quote" className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-full border border-[#0877ff] px-5 text-base text-[#0877ff] hover:bg-[#eef6ff]">
@@ -1254,16 +1260,16 @@ function OrderTableSearchPanel({
   );
 }
 
-function PaymentAuthorizationSummary() {
+function PaymentAuthorizationSummary({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
   return (
-    <div className="border border-[#b9ebda] bg-[#eefbf6] p-3 text-xs leading-5 text-[#0f4f3f]">
+    <label className="block cursor-pointer border border-[#b9ebda] bg-[#eefbf6] p-3 text-xs leading-5 text-[#0f4f3f]">
       <div className="flex gap-2">
-        <span className="mt-0.5 h-4 w-4 shrink-0 border border-[#94cdb9] bg-white" aria-hidden="true" />
-        <p>
+        <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-[#0f8f6b]" />
+        <span>
           Le montant est d'abord autorise, sans capture immediate. Les fichiers sont controles avant lancement. Si les fichiers sont acceptes, le paiement est capture et la production demarre. Si les fichiers sont refuses, vous pouvez corriger une fois ou abandonner; apres un second refus, l'autorisation est annulee et le montant est libere.
-        </p>
+        </span>
       </div>
-    </div>
+    </label>
   );
 }
 
@@ -1636,7 +1642,7 @@ function NotificationsSection({
   const [markingRead, setMarkingRead] = useState(false);
 
   return (
-    <section className="min-h-[690px] bg-[#eef0f3] p-3 text-black sm:p-5 lg:shadow-sm lg:ring-1 lg:ring-slate-200">
+    <section className="min-h-[690px] bg-white p-0 text-black sm:p-5 lg:bg-[#eef0f3] lg:shadow-sm lg:ring-1 lg:ring-slate-200">
       <h1 className="text-xl font-normal">Notifications</h1>
       <div className="mt-4 grid gap-3 bg-white px-3 py-3 sm:mt-5 sm:flex sm:h-[58px] sm:items-center sm:justify-between sm:px-5 sm:ring-1 sm:ring-[#e5e7eb]">
         <div className="flex gap-2 overflow-x-auto text-sm sm:items-center sm:gap-5 sm:overflow-visible">
@@ -3145,7 +3151,7 @@ function isAccountLevelOne(profile: ProfileForm): boolean {
 }
 
 function accountBadge(profile: ProfileForm): { label: string; color: string } {
-  if (!isAccountLevelOne(profile)) return { label: 'Niveau 0', color: '#94a3b8' };
+  if (!isAccountLevelOne(profile)) return { label: 'Individuel', color: '#94a3b8' };
   if (profile.profileDetails?.accountType === 'company' || profile.company) return { label: 'Industriel certifie', color: '#0f8f6b' };
   return { label: 'Individuel verifie', color: '#f59e0b' };
 }

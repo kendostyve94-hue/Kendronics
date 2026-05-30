@@ -355,6 +355,21 @@ export default function QuotePage() {
   const pricing = apiPricing ?? localPricing;
   const mobilePcbPrice = pricing.pcbClientPrice ?? pricing.supplierEstimatedPrice ?? pricing.partnerManufacturingCost + pricing.kendronicsServiceFee;
   const errors = useMemo(() => validateQuoteConfig(config), [config]);
+  const pricingSummarySaveState = quoteSave.status === 'saved' && gerberUpload.status === 'idle' ? 'idle' : quoteSave.status;
+
+  function resetQuoteFormForNewOrder() {
+    const nextConfig = initialConfig;
+    setConfig(nextConfig);
+    setGerberUpload({ status: 'idle' });
+    setApiPricing(null);
+    setEditOrder(null);
+    setOpenPanel('base');
+    setMobileSheet(null);
+    setSelectedProductTitle(productCards.find((product) => product.value === nextConfig.productType)?.title ?? productCards[0].title);
+    if (typeof window !== 'undefined' && window.location.search) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -748,6 +763,7 @@ export default function QuotePage() {
       const order = (await orderResponse.json()) as { id: string; orderNumber: string };
       rememberCustomerOrder(order.id);
       setEnregistre(true);
+      resetQuoteFormForNewOrder();
       setQuoteSave({
         status: 'saved',
         quoteId: quote.id,
@@ -1042,7 +1058,7 @@ export default function QuotePage() {
             pricing={pricing}
             errors={errors}
             onSave={saveQuote}
-            saveState={quoteSave.status}
+            saveState={pricingSummarySaveState}
             productionSpeed={config.productionSpeed}
             onProductionSpeedChange={(value) => update('productionSpeed', value)}
             selectedBuildTimeOptionId={config.buildTimeOptionId}
