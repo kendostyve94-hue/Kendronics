@@ -1191,6 +1191,7 @@ function OrderTableSearchPanel({
             <span>Poids</span>
             <span>{selectedOrders.length ? `${formatWeight(totalWeightKg)}kg` : '--'}</span>
           </div>
+          <PaymentAuthorizationSummary />
         </div>
         {selectedOrders.length === 1 ? (
           <a href={`/orders/${selectedOrders[0].id}`} className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#0877ff] px-5 text-base font-semibold text-white hover:bg-[#0068e8]">
@@ -1206,6 +1207,19 @@ function OrderTableSearchPanel({
         </a>
       </aside>
       {detailOrder ? <ProductDetailModal order={detailOrder} onClose={() => setDetailOrder(null)} /> : null}
+    </div>
+  );
+}
+
+function PaymentAuthorizationSummary() {
+  return (
+    <div className="border border-[#b9ebda] bg-[#eefbf6] p-3 text-xs leading-5 text-[#0f4f3f]">
+      <div className="flex gap-2">
+        <span className="mt-0.5 h-4 w-4 shrink-0 border border-[#94cdb9] bg-white" aria-hidden="true" />
+        <p>
+          Le montant est d'abord autorise, sans capture immediate. Les fichiers sont controles avant lancement. Si les fichiers sont acceptes, le paiement est capture et la production demarre. Si les fichiers sont refuses, vous pouvez corriger une fois ou abandonner; apres un second refus, l'autorisation est annulee et le montant est libere.
+        </p>
+      </div>
     </div>
   );
 }

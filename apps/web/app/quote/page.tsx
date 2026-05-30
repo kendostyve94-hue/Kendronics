@@ -346,7 +346,6 @@ export default function QuotePage() {
     message: 'Calcul du prix de fabrication en direct...',
   });
   const [editOrder, setEditOrder] = useState<EditableOrder | null>(null);
-  const [authorizationRuleAccepted, setAuthorizationRuleAccepted] = useState(false);
 
   const selectedCountry = useMemo(
     () => africanCountries.find((country) => country.iso2 === config.destinationCountry) ?? africanCountries[0],
@@ -684,10 +683,6 @@ export default function QuotePage() {
 
       if (!gerberUpload.uploadId) {
         throw new Error('Televersez un fichier Gerber ZIP avant de sauvegarder le devis.');
-      }
-
-      if (!authorizationRuleAccepted) {
-        throw new Error("Acceptez la regle d'autorisation et de controle technique avant de soumettre la commande.");
       }
 
       if (editOrder) {
@@ -1060,8 +1055,6 @@ export default function QuotePage() {
             selectedLiveShippingRateId={config.liveShippingRateId}
             onLiveShippingRateSelect={selectLiveShippingRate}
             pricingPreview={pricingPreview}
-            authorizationRuleAccepted={authorizationRuleAccepted}
-            onAuthorizationRuleAcceptedChange={setAuthorizationRuleAccepted}
           />
         </div>
       </section>

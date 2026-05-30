@@ -59,8 +59,6 @@ export function PricingSummary({
   selectedLiveShippingRateId,
   onLiveShippingRateSelect,
   pricingPreview,
-  authorizationRuleAccepted,
-  onAuthorizationRuleAcceptedChange,
 }: {
   pricing: PricingBreakdown;
   errors: string[];
@@ -79,8 +77,6 @@ export function PricingSummary({
   selectedLiveShippingRateId?: string;
   onLiveShippingRateSelect: (rate: ShippingRateSelection) => void;
   pricingPreview: PricingPreviewState;
-  authorizationRuleAccepted: boolean;
-  onAuthorizationRuleAcceptedChange: (value: boolean) => void;
 }) {
   const [shippingDialogOpen, setShippingDialogOpen] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
@@ -91,7 +87,7 @@ export function PricingSummary({
   const countryMenuRef = useRef<HTMLDivElement>(null);
   const hasProductionPricing = pricingPreview.status === 'direct' || pricingPreview.status === 'local';
   const hasPreviewPrice = pricingPreview.status !== 'loading' && pricingPreview.status !== 'error';
-  const canSave = errors.length === 0 && saveState !== 'saving' && authorizationRuleAccepted && hasProductionPricing;
+  const canSave = errors.length === 0 && saveState !== 'saving' && hasProductionPricing;
 
   const selectedCountry = countries.find((country) => country.iso2 === destinationCountry) ?? countries[0];
   const isSupplierPrice = pricing.pricingSource === 'supplier_api';
@@ -360,8 +356,6 @@ export function PricingSummary({
             </div>
           ) : null}
 
-          <AuthorizationRuleNotice checked={authorizationRuleAccepted} onChange={onAuthorizationRuleAcceptedChange} />
-
           <button
             type="button"
             onClick={onSave}
@@ -415,12 +409,6 @@ export function PricingSummary({
               {saveState === 'saving' ? 'Soumission...' : 'Soumettre'}
             </button>
           </div>
-
-          {!priceDetailsOpen ? (
-            <div className="mt-2">
-              <AuthorizationRuleNotice checked={authorizationRuleAccepted} onChange={onAuthorizationRuleAcceptedChange} compact />
-            </div>
-          ) : null}
 
           {priceDetailsOpen ? (
             <div className="mt-3 max-h-[54vh] overflow-y-auto border-t border-slate-200 pt-3">
@@ -491,7 +479,6 @@ export function PricingSummary({
                 </div>
               ) : null}
 
-              <AuthorizationRuleNotice checked={authorizationRuleAccepted} onChange={onAuthorizationRuleAcceptedChange} compact />
             </div>
           ) : null}
         </div>
@@ -549,30 +536,6 @@ export function PricingSummary({
         />
       ) : null}
     </aside>
-  );
-}
-
-function AuthorizationRuleNotice({
-  checked,
-  onChange,
-  compact = false,
-}: {
-  checked: boolean;
-  onChange: (value: boolean) => void;
-  compact?: boolean;
-}) {
-  return (
-    <label className={`mt-3 flex cursor-pointer gap-2 border border-[#b9ebda] bg-[#eefbf6] text-[#0f4f3f] ${compact ? 'p-2 text-[11px] leading-4' : 'p-3 text-xs leading-5'}`}>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 h-4 w-4 shrink-0 accent-[#0f8f6b]"
-      />
-      <span>
-        J'accepte que le montant soit d'abord autorise, sans capture immediate. Les fichiers sont controles avant lancement. Si les fichiers sont acceptes, le paiement est capture et la production demarre. Si les fichiers sont refuses, je peux corriger une fois ou abandonner; apres un second refus, l'autorisation est annulee et le montant est libere.
-      </span>
-    </label>
   );
 }
 
