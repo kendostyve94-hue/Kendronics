@@ -857,32 +857,32 @@ button {
     scroll-margin-top: 5rem;
   }
 
-  main:not(.home-page) header > div,
-  main:not(.home-page) .glass,
-  main:not(.home-page) .glass-light,
-  main:not(.home-page) article[class*="border"],
-  main:not(.home-page) aside[class*="border"],
-  main:not(.home-page) form[class*="border"],
-  main:not(.home-page) details[class*="border"],
-  main:not(.home-page) section[class*="shadow"],
-  main:not(.home-page) aside[class*="shadow"],
-  main:not(.home-page) article[class*="shadow"],
-  main:not(.home-page) div[class*="shadow"][class*="bg-white"],
-  main:not(.home-page) section[class*="ring-1"],
-  main:not(.home-page) aside[class*="ring-1"],
-  main:not(.home-page) article[class*="ring-1"],
-  main:not(.home-page) div[class*="ring-1"][class*="bg-white"] {
+  main.mobile-free-page header > div,
+  main.mobile-free-page .glass,
+  main.mobile-free-page .glass-light,
+  main.mobile-free-page article[class*="border"],
+  main.mobile-free-page aside[class*="border"],
+  main.mobile-free-page form[class*="border"],
+  main.mobile-free-page details[class*="border"],
+  main.mobile-free-page section[class*="shadow"],
+  main.mobile-free-page aside[class*="shadow"],
+  main.mobile-free-page article[class*="shadow"],
+  main.mobile-free-page div[class*="shadow"][class*="bg-white"],
+  main.mobile-free-page section[class*="ring-1"],
+  main.mobile-free-page aside[class*="ring-1"],
+  main.mobile-free-page article[class*="ring-1"],
+  main.mobile-free-page div[class*="ring-1"][class*="bg-white"] {
     box-shadow: none !important;
   }
 
-  main:not(.home-page) section[class*="ring-1"],
-  main:not(.home-page) aside[class*="ring-1"],
-  main:not(.home-page) article[class*="ring-1"],
-  main:not(.home-page) div[class*="ring-1"][class*="bg-white"] {
+  main.mobile-free-page section[class*="ring-1"],
+  main.mobile-free-page aside[class*="ring-1"],
+  main.mobile-free-page article[class*="ring-1"],
+  main.mobile-free-page div[class*="ring-1"][class*="bg-white"] {
     --tw-ring-shadow: 0 0 #0000 !important;
   }
 
-  main:not(.home-page) section[class*="min-h-[690px]"] {
+  main.mobile-free-page section[class*="min-h-[690px]"] {
     min-height: auto !important;
     padding-left: 0 !important;
     padding-right: 0 !important;

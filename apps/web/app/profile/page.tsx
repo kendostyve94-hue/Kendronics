@@ -372,7 +372,7 @@ export default function ProfilePage() {
   const userId = formatUserId(accountId);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#f3f6fa] text-[#1f2f43]">
+    <main className="mobile-free-page min-h-screen overflow-x-hidden bg-[#f3f6fa] text-[#1f2f43]">
       <Navbar />
       <div className="w-full pt-[70px]">
         <div className="mx-auto grid w-full max-w-none gap-4 px-4 py-3 sm:max-w-[40rem] lg:min-w-[1328px] lg:max-w-[1368px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">

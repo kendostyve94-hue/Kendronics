@@ -232,7 +232,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   }
 
   return (
-    <main className="min-h-screen bg-[#eef1f5] text-[#111827]">
+    <main className="mobile-free-page min-h-screen bg-[#eef1f5] text-[#111827]">
       <header className="border-b border-[#e5e7eb] bg-white">
         <div className="mx-auto flex min-h-[72px] max-w-[1360px] items-center gap-5 px-4 py-3 sm:gap-8 sm:px-5 sm:py-0">
           <a href="/" aria-label="Kendronics accueil" className="shrink-0">
