@@ -306,11 +306,17 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             )}
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558]"
+              disabled={!isSignedIn}
+              className={`inline-flex h-9 w-9 items-center justify-center transition ${
+                isSignedIn
+                  ? 'text-[#0f8f6b] hover:text-[#0b7558]'
+                  : 'cursor-not-allowed text-[#9aa6b2] opacity-60'
+              }`}
               aria-label={isMenuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation"
               onClick={() => {
+                if (!isSignedIn) return;
                 setIsMenuOpen((open) => !open);
                 setIsSearchOpen(false);
                 setOpenMobileSection(null);

@@ -3221,6 +3221,7 @@ function DashboardPanel({
   userId,
   avatarDataUrl,
   orders,
+  dataStatus,
 }: {
   firstName: string;
   profile: ProfileForm;
@@ -3238,7 +3239,11 @@ function DashboardPanel({
 
   return (
     <section className="grid bg-white lg:grid-cols-[190px_minmax(0,1fr)] lg:shadow-sm lg:ring-1 lg:ring-[#dbe4ee]">
-      <MobileAccountCard firstName={firstName} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} />
+      {dataStatus === 'signed-out' ? (
+        <SignedOutMobileAccount />
+      ) : (
+        <MobileAccountCard firstName={firstName} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} />
+      )}
       <div className="hidden place-items-center border-r border-[#e4ebf2] px-4 py-8 text-center lg:grid">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div>
@@ -3305,6 +3310,41 @@ function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firs
         <p className="mt-1 text-xs text-[#64748b]">{location}</p>
         <a href="/profile?view=settings" className="mt-2 inline-flex text-xs font-semibold text-[#0f8f6b]">Gerer mon compte</a>
       </div>
+    </div>
+  );
+}
+
+function SignedOutMobileAccount() {
+  return (
+    <div className="grid gap-5 bg-white py-4 text-[#102033] lg:hidden">
+      <section className="grid gap-3">
+        <h1 className="text-2xl leading-tight">Bienvenue sur Kendronics</h1>
+        <p className="text-sm leading-6 text-[#53657a]">
+          Connectez-vous ou creez un compte pour retrouver vos devis, commandes, notifications et informations de livraison.
+        </p>
+      </section>
+
+      <section className="grid gap-3">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.14em] text-[#0f8f6b]">Nouveau client</p>
+          <h2 className="mt-1 text-xl">Creer un compte</h2>
+          <p className="mt-2 text-sm leading-6 text-[#53657a]">Enregistrez votre e-mail ou telephone, puis completez votre profil avant de commander.</p>
+        </div>
+        <a href="/register" className="inline-flex min-h-11 items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white">
+          Creer un nouveau compte
+        </a>
+      </section>
+
+      <section className="grid gap-3">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.14em] text-[#0f8f6b]">Deja client</p>
+          <h2 className="mt-1 text-xl">Se connecter</h2>
+          <p className="mt-2 text-sm leading-6 text-[#53657a]">Accedez directement a votre espace client, au panier et au suivi des commandes.</p>
+        </div>
+        <a href="/login" className="inline-flex min-h-11 items-center justify-center border border-[#0f8f6b] px-4 text-sm font-semibold text-[#0f8f6b]">
+          Se connecter
+        </a>
+      </section>
     </div>
   );
 }
