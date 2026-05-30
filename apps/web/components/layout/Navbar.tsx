@@ -14,30 +14,8 @@ const apiBaseUrl = getApiBaseUrl();
 type NavLabelKey = TranslationKey;
 type NavItem = { labelKey: NavLabelKey; href: string };
 type SearchItem = NavItem & { keywords: string };
-
-const productItems = [
-  { labelKey: 'nav.item.prototype', href: '/services#pcb-standard' },
-  { labelKey: 'nav.item.smallSeries', href: '/services#pcb-petit-lot' },
-  { labelKey: 'nav.item.advanced', href: '/services#pcb-avance' },
-  { labelKey: 'nav.item.gerberHelp', href: '/services#assistance-technique' },
-  { labelKey: 'nav.item.howItWorks', href: '/how-it-works' },
-] satisfies NavItem[];
-
-const supportItems = [
-  { labelKey: 'nav.item.helpCenter', href: '/centre-aide' },
-  { labelKey: 'nav.item.faq', href: '/faq' },
-  { labelKey: 'nav.item.technicalGuide', href: '/guide-technique' },
-  { labelKey: 'nav.tracking', href: '/tracking' },
-  { labelKey: 'nav.item.contact', href: '/contact' },
-] satisfies NavItem[];
-
-const aboutItems = [
-  { labelKey: 'nav.item.aboutUs', href: '/how-it-works' },
-  { labelKey: 'nav.item.faq', href: '/faq' },
-  { labelKey: 'nav.item.refund', href: '/refund-policy' },
-  { labelKey: 'nav.item.terms', href: '/terms' },
-  { labelKey: 'nav.item.cookies', href: '/cookie-policy' },
-] satisfies NavItem[];
+type MobileProfileMenuItem = { label: string; href: string; count?: number };
+type MobileProfileMenuGroup = { title: string; items: MobileProfileMenuItem[] };
 
 const searchItems = [
   { labelKey: 'nav.home', href: '/', keywords: 'home accueil kendronics' },
@@ -59,6 +37,47 @@ const profileNavItems = [
   { label: 'Comment ca marche', href: '/how-it-works' },
   { label: 'Admin', href: '/admin' },
 ] satisfies Array<{ label: string; href: string }>;
+
+function mobileProfileMenuGroups(unreadNotifications: number): MobileProfileMenuGroup[] {
+  return [
+    {
+      title: 'Espace client',
+      items: [
+        { label: 'Tableau de bord', href: '/profile' },
+        { label: 'Mes commandes', href: '/profile?view=orders' },
+        { label: 'Notifications', href: '/profile?view=notifications', count: unreadNotifications },
+      ],
+    },
+    {
+      title: 'Suivi commande',
+      items: [
+        { label: 'Verification', href: '/profile?view=verification' },
+        { label: 'Paiement', href: '/profile?view=payment-pending' },
+        { label: 'Production', href: '/profile?view=production' },
+        { label: 'Livraison', href: '/profile?view=delivery' },
+        { label: 'Commentaires', href: '/profile?view=comments' },
+      ],
+    },
+    {
+      title: 'Services',
+      items: [
+        { label: 'Services et demandes', href: '/profile?view=services' },
+        { label: 'Support', href: '/profile?view=support' },
+        { label: 'Parrainage', href: '/profile?view=invite' },
+        { label: 'Centre aide', href: '/centre-aide' },
+      ],
+    },
+    {
+      title: 'Profil',
+      items: [
+        { label: 'Adresse livraison', href: '/profile?view=shipping-address' },
+        { label: 'Historique des commandes', href: '/profile?view=all-orders' },
+        { label: 'Parametres', href: '/profile?view=settings' },
+        { label: 'Deconnexion et securite', href: '/profile?view=settings' },
+      ],
+    },
+  ];
+}
 
 export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -348,11 +367,25 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         ) : null}
 
         {isMenuOpen ? (
-          <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-5.5rem)] max-w-[21.5rem] overflow-y-auto border-t border-slate-200 pt-2 sm:max-w-[1180px] lg:hidden">
-            <div className="grid gap-2">
-              <MobileSection title={t('nav.product')} sectionId="product" items={productItems} t={t} isOpen={openMobileSection === 'product'} onToggle={() => setOpenMobileSection((current) => (current === 'product' ? null : 'product'))} onNavigate={() => setIsMenuOpen(false)} />
-              <MobileSection title={t('nav.support')} sectionId="support" items={supportItems} t={t} isOpen={openMobileSection === 'support'} onToggle={() => setOpenMobileSection((current) => (current === 'support' ? null : 'support'))} onNavigate={() => setIsMenuOpen(false)} />
-              <MobileSection title={t('nav.about')} sectionId="about" items={aboutItems} t={t} isOpen={openMobileSection === 'about'} onToggle={() => setOpenMobileSection((current) => (current === 'about' ? null : 'about'))} onNavigate={() => setIsMenuOpen(false)} />
+          <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6rem)] max-w-[21.5rem] overflow-y-auto border-t border-slate-200 bg-white px-1 pb-5 pt-3 sm:max-w-[40rem] lg:hidden">
+            <div className="grid">
+              {mobileProfileMenuGroups(unreadNotifications).map((group) => (
+                <MobileProfileSection
+                  key={group.title}
+                  group={group}
+                  isOpen={openMobileSection === group.title}
+                  onToggle={() => setOpenMobileSection((current) => (current === group.title ? null : group.title))}
+                  onNavigate={() => setIsMenuOpen(false)}
+                />
+              ))}
+            </div>
+            <div className="mt-8 grid gap-3">
+              <a href="/quote" onClick={() => setIsMenuOpen(false)} className="flex min-h-14 items-center justify-center gap-3 rounded-sm bg-[#0f8f6b] px-4 text-base font-semibold text-white transition hover:bg-[#0b7558]">
+                Demarrer maintenant <span aria-hidden="true">›</span>
+              </a>
+              <a href="/contact" onClick={() => setIsMenuOpen(false)} className="flex min-h-14 items-center justify-center rounded-sm border border-[#0f8f6b]/35 bg-white px-4 text-base font-semibold text-[#0f8f6b] transition hover:border-[#0f8f6b] hover:bg-[#eefbf6]">
+                Contacter notre equipe
+              </a>
             </div>
           </nav>
         ) : null}
@@ -430,38 +463,24 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
   );
 }
 
-function MobileSection({
-  title,
-  sectionId: _sectionId,
-  items,
-  t,
-  isOpen,
-  onToggle,
-  onNavigate,
-}: {
-  title: string;
-  sectionId: string;
-  items: NavItem[];
-  t: (key: NavLabelKey) => string;
-  isOpen: boolean;
-  onToggle: () => void;
-  onNavigate: () => void;
-}) {
+function MobileProfileSection({ group, isOpen, onToggle, onNavigate }: { group: MobileProfileMenuGroup; isOpen: boolean; onToggle: () => void; onNavigate: () => void }) {
   return (
-    <div className="rounded-sm border border-slate-200 bg-[#edf3f8]">
-      <button type="button" className="flex min-h-11 w-full items-center px-4 text-left text-base font-semibold text-slate-800" aria-expanded={isOpen} onClick={onToggle}>
-        {title}
+    <div className="border-b border-dashed border-slate-200 last:border-b-0">
+      <button type="button" className="flex min-h-[4.6rem] w-full items-center justify-between text-left text-[1.7rem] font-semibold leading-none text-[#0b1724]" aria-expanded={isOpen} onClick={onToggle}>
+        <span>{group.title}</span>
+        <span className={`text-3xl leading-none text-[#0f8f6b] transition ${isOpen ? 'rotate-90' : ''}`} aria-hidden="true">›</span>
       </button>
       {isOpen ? (
-      <div className="grid border-t border-slate-200 bg-[#e5edf4] p-1.5">
-        {items.map((item) => (
+      <div className="grid gap-1 pb-4">
+        {group.items.map((item) => (
           <a
             key={item.href}
             href={item.href}
-            className="flex min-h-10 items-center rounded-sm px-3 text-sm font-medium text-slate-700 transition hover:bg-[#edf3f8] hover:text-[#0f8f6b]"
+            className="flex min-h-11 items-center justify-between rounded-sm bg-[#eef6fb] px-3 text-sm font-medium text-[#243447] transition hover:bg-[#e4f7f0] hover:text-[#0f8f6b]"
             onClick={onNavigate}
           >
-            {t(item.labelKey)}
+            <span>{item.label}</span>
+            {item.count && item.count > 0 ? <span className="grid min-h-5 min-w-5 place-items-center rounded-full bg-[#f59e0b] px-1 text-[10px] font-semibold text-white">{item.count > 9 ? '9+' : item.count}</span> : null}
           </a>
         ))}
       </div>
