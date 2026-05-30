@@ -90,7 +90,6 @@ export function PricingSummary({
   const canSave = errors.length === 0 && saveState !== 'saving' && hasProductionPricing;
 
   const selectedCountry = countries.find((country) => country.iso2 === destinationCountry) ?? countries[0];
-  const isSupplierPrice = pricing.pricingSource === 'supplier_api';
   const supplierEstimatedPrice = pricing.supplierEstimatedPrice ?? pricing.partnerManufacturingCost;
   const pcbClientPrice = pricing.pcbClientPrice ?? supplierEstimatedPrice + pricing.kendronicsServiceFee;
   const standardBuildPrice = Math.max(5, supplierEstimatedPrice);
@@ -390,13 +389,17 @@ export function PricingSummary({
               }`}>
                 {pricingPreview.status === 'direct' ? 'Prix direct' : pricingPreview.status === 'loading' ? 'Calcul...' : pricingPreview.status === 'error' ? 'A verifier' : 'Estime'}
               </p>
-              <p className="mt-0.5 text-lg font-semibold text-[#ff7a00]">{hasPreviewPrice ? `$${pcbClientPrice.toFixed(2)}` : 'Calcul...'}</p>
-              {!hasProductionPricing ? <p className="mt-0.5 text-[11px] font-medium normal-case tracking-normal text-slate-500">{pricingPreview.message}</p> : null}
+              <p className="mt-0.5 flex items-baseline gap-1.5 text-lg font-semibold text-[#ff7a00]">
+                <span>{hasPreviewPrice ? `$${pcbClientPrice.toFixed(2)}` : 'Calcul...'}</span>
+                <span className="text-[10px] font-medium text-[#c45100]">voir total</span>
+              </p>
             </button>
-            <button type="button" className="w-20 shrink-0 border border-slate-200 bg-white px-2 py-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Changer le delai de fabrication">
+            <button type="button" className="h-11 w-[6.35rem] shrink-0 border border-slate-200 bg-white px-2 py-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Changer le delai de fabrication">
               <span className="block text-[9px] font-semibold uppercase tracking-[0.08em] text-slate-500">Delai</span>
-              <span className="mt-0.5 block text-xs font-semibold text-slate-900">{activeBuildOption.buildDays}j</span>
-              {buildOptions.length > 1 ? <span className="block text-[10px] text-[#0f8f6b]">Changer</span> : null}
+              <span className="mt-0.5 flex items-baseline gap-1.5">
+                <span className="text-xs font-semibold text-slate-900">{activeBuildOption.buildDays}j</span>
+                {buildOptions.length > 1 ? <span className="text-[10px] text-[#0f8f6b]">Changer</span> : null}
+              </span>
             </button>
             <button
               type="button"
@@ -416,7 +419,7 @@ export function PricingSummary({
               <div className="mb-2 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-sm font-semibold text-slate-950">Prix et delai de fabrication</h2>
-                  <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{isSupplierPrice ? 'Prix direct Kendronics.' : pricingPreview.message}</p>
+                  {pricingPreview.status === 'error' ? <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{pricingPreview.message}</p> : null}
                 </div>
                 <button type="button" className="grid h-8 w-8 place-items-center rounded-full bg-white text-base font-medium text-slate-700" onClick={() => setPriceDetailsOpen(false)} aria-label="Fermer">
                   x

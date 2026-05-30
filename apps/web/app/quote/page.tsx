@@ -343,7 +343,7 @@ export default function QuotePage() {
   const [apiPricing, setApiPricing] = useState<PricingBreakdown | null>(null);
   const [pricingPreview, setPricingPreview] = useState<PricingPreviewState>({
     status: 'loading',
-    message: 'Calcul du prix de fabrication en direct...',
+    message: 'Calcul...',
   });
   const [editOrder, setEditOrder] = useState<EditableOrder | null>(null);
 
@@ -353,6 +353,7 @@ export default function QuotePage() {
   );
   const localPricing = useMemo(() => calculatePCBQuote(config), [config]);
   const pricing = apiPricing ?? localPricing;
+  const mobilePcbPrice = pricing.pcbClientPrice ?? pricing.supplierEstimatedPrice ?? pricing.partnerManufacturingCost + pricing.kendronicsServiceFee;
   const errors = useMemo(() => validateQuoteConfig(config), [config]);
 
   useEffect(() => {
@@ -412,7 +413,7 @@ export default function QuotePage() {
 
         setPricingPreview({
           status: 'loading',
-          message: 'Calcul du prix de fabrication en direct...',
+          message: 'Calcul...',
         });
 
         const headers: HeadersInit = {
@@ -856,7 +857,7 @@ export default function QuotePage() {
               ]}
             />
             <PanelGrid>
-              <MobileSheetRow label="Couches" help="Les nombres impairs sont souvent ajustes au nombre pair superieur par les fabricants." summary={`${config.layers} couches`} sheetId="layers" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
+              <MobileSheetRow label="Couches" help="Les nombres impairs sont souvent ajustes au nombre pair superieur par les fabricants." summary={`${config.layers} couches`} sheetId="layers" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
                 <Pills value={config.layers} onChange={(value) => update('layers', Number(value))} options={[1, 2, 4, 6, 8, 10, 12, 14, 16]} />
               </MobileSheetRow>
               <QuoteRow label="Dimensions" help="Dimensions du PCB seul ou du panneau televerse." mobileWide>
@@ -866,13 +867,13 @@ export default function QuotePage() {
                   <SelectBox value={config.unit} onChange={(value) => update('unit', value as QuoteConfig['unit'])} options={['mm', 'inch']} />
                 </div>
               </QuoteRow>
-              <MobileSheetRow label="Quantite PCB" help="Choisissez une quantite courante ou entrez une valeur personnalisee." summary={`${config.quantity} pcs`} sheetId="quantity" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal} mobileWide>
+              <MobileSheetRow label="Quantite PCB" help="Choisissez une quantite courante ou entrez une valeur personnalisee." summary={`${config.quantity} pcs`} sheetId="quantity" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice} mobileWide>
                 <div className="space-y-2 sm:space-y-3">
                   <Pills value={config.quantity} onChange={(value) => update('quantity', Number(value))} options={quantityOptions} />
                   <NumberBox label="Quantite personnalisee" value={config.quantity} min={1} onChange={(value) => update('quantity', value)} />
                 </div>
               </MobileSheetRow>
-              <MobileSheetRow label="Type d'usage" help="Les exigences medicales et aerospatiales ajoutent des couts de validation." summary={String(config.usageType).replaceAll('_', ' ')} sheetId="usage" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
+              <MobileSheetRow label="Type d'usage" help="Les exigences medicales et aerospatiales ajoutent des couts de validation." summary={String(config.usageType).replaceAll('_', ' ')} sheetId="usage" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
                 <Pills
                   value={config.usageType}
                   onChange={(value) => update('usageType', value as QuoteConfig['usageType'])}
@@ -897,7 +898,7 @@ export default function QuotePage() {
               <QuoteRow label="Designs differents" help="Nombre de designs uniques separes par V-cut, mouse bites ou fraisage.">
                 <Pills value={config.differentDesigns} onChange={(value) => update('differentDesigns', Number(value))} options={[1, 2, 3, 4]} />
               </QuoteRow>
-              <MobileSheetRow label="Format de livraison" help="Carte seule, panneau client ou panneau cree par le service de fabrication." summary={String(config.deliveryFormat).replaceAll('_', ' ')} sheetId="deliveryFormat" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
+              <MobileSheetRow label="Format de livraison" help="Carte seule, panneau client ou panneau cree par le service de fabrication." summary={String(config.deliveryFormat).replaceAll('_', ' ')} sheetId="deliveryFormat" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
                 <Pills
                   value={config.deliveryFormat}
                   onChange={(value) => update('deliveryFormat', value as QuoteConfig['deliveryFormat'])}
@@ -908,10 +909,10 @@ export default function QuotePage() {
                   ]}
                 />
               </MobileSheetRow>
-              <MobileSheetRow label="Epaisseur PCB" help="Epaisseur finale de la carte. Les cartes fines ou epaisses influencent le prix." summary={config.thickness} sheetId="thickness" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
+              <MobileSheetRow label="Epaisseur PCB" help="Epaisseur finale de la carte. Les cartes fines ou epaisses influencent le prix." summary={config.thickness} sheetId="thickness" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
                 <Pills value={config.thickness} onChange={(value) => update('thickness', String(value))} options={['0.8mm', '1.0mm', '1.2mm', '1.6mm', '2.0mm']} />
               </MobileSheetRow>
-              <MobileSheetRow label="Couleur PCB" help="Le vert est generalement la couleur de masque la plus rapide et economique." summary={config.solderMaskColor} sheetId="solderMask" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
+              <MobileSheetRow label="Couleur PCB" help="Le vert est generalement la couleur de masque la plus rapide et economique." summary={config.solderMaskColor} sheetId="solderMask" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
                 <ColorPills value={config.solderMaskColor} onChange={(value) => update('solderMaskColor', value)} />
               </MobileSheetRow>
               <QuoteRow label="Serigraphie" help="References et libelles imprimes sur la carte." className="quote-mobile-solid-white">
@@ -919,13 +920,13 @@ export default function QuotePage() {
                   <Pills value={config.silkscreenColor} onChange={(value) => update('silkscreenColor', String(value))} options={['White', 'Black', 'Yellow']} />
                 </div>
               </QuoteRow>
-              <MobileSheetRow label="Finition de surface" help="HASL est economique ; ENIG apporte planeite, duree de stockage et tolerances plus serrees." summary={config.surfaceFinish} sheetId="surfaceFinish" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
+              <MobileSheetRow label="Finition de surface" help="HASL est economique ; ENIG apporte planeite, duree de stockage et tolerances plus serrees." summary={config.surfaceFinish} sheetId="surfaceFinish" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
                 <Pills value={config.surfaceFinish} onChange={(value) => update('surfaceFinish', String(value))} options={['HASL lead-free', 'ENIG', 'OSP', 'Immersion silver']} />
               </MobileSheetRow>
-              <MobileSheetRow label="Recouvrement des vias" help="Le recouvrement des vias influence la fabrication et le cout." summary={config.viaCovering} sheetId="viaCovering" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
+              <MobileSheetRow label="Recouvrement des vias" help="Le recouvrement des vias influence la fabrication et le cout." summary={config.viaCovering} sheetId="viaCovering" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
                 <Pills value={config.viaCovering} onChange={(value) => update('viaCovering', String(value))} options={['Tented', 'Plugged', 'Epoxy filled']} />
               </MobileSheetRow>
-              <MobileSheetRow label="Cuivre externe" help="Epaisseur de cuivre sur les couches externes." summary={`${config.outerCopperWeight} / ${config.innerCopperWeight}`} sheetId="copper" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
+              <MobileSheetRow label="Cuivre externe" help="Epaisseur de cuivre sur les couches externes." summary={`${config.outerCopperWeight} / ${config.innerCopperWeight}`} sheetId="copper" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
                 <Pills value={config.outerCopperWeight} onChange={(value) => update('outerCopperWeight', String(value))} options={['1 oz', '2 oz', '3 oz']} />
               </MobileSheetRow>
               <QuoteRow label="Cuivre interne" help="Epaisseur de cuivre sur les couches internes des cartes multicouches." className="quote-mobile-solid-white quote-mobile-full-bleed">
@@ -949,7 +950,7 @@ export default function QuotePage() {
                   <SelectBox value={config.viaDiameter} onChange={(value) => update('viaDiameter', value)} options={['0.45mm', '0.5mm', '0.6mm', '0.8mm']} />
                 </div>
               </QuoteRow>
-              <MobileSheetRow label="Marquage PCB" help="Choisissez numero de commande, code-barres, serie ou suppression du marquage." summary={config.orderNumberMarking ? 'Numero de commande' : 'A configurer'} sheetId="marking" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal} mobileWide>
+              <MobileSheetRow label="Marquage PCB" help="Choisissez numero de commande, code-barres, serie ou suppression du marquage." summary={config.orderNumberMarking ? 'Numero de commande' : 'A configurer'} sheetId="marking" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice} mobileWide>
                 <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                   <Switch label="Numero de commande" checked={config.orderNumberMarking} onChange={(value) => update('orderNumberMarking', value)} />
                   <Switch label="Position precisee" checked={config.markingLocationSpecified} onChange={(value) => update('markingLocationSpecified', value)} />
@@ -958,7 +959,7 @@ export default function QuotePage() {
                   <Switch label="Numero de serie" checked={config.serialNumber} onChange={(value) => update('serialNumber', value)} />
                 </div>
               </MobileSheetRow>
-              <MobileSheetRow label="Test electrique" help="Les choix de test influencent qualite et delai." summary={config.flyingProbe ? 'Flying Probe' : 'A configurer'} sheetId="testing" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal} mobileWide>
+              <MobileSheetRow label="Test electrique" help="Les choix de test influencent qualite et delai." summary={config.flyingProbe ? 'Flying Probe' : 'A configurer'} sheetId="testing" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice} mobileWide>
                 <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                   <Switch label="Flying Probe" checked={config.flyingProbe} onChange={(value) => update('flyingProbe', value)} />
                   <Switch label="Test complet" checked={config.fullElectricalTest} onChange={(value) => update('fullElectricalTest', value)} />
@@ -967,7 +968,7 @@ export default function QuotePage() {
                   <Switch label="AOI" checked={config.aoi} onChange={(value) => update('aoi', value)} />
                 </div>
               </MobileSheetRow>
-              <MobileSheetRow label="Procedes speciaux" help="Les options avancees sont revues avant production." summary="Options de fabrication" sheetId="special" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal} mobileWide>
+              <MobileSheetRow label="Procedes speciaux" help="Les options avancees sont revues avant production." summary="Options de fabrication" sheetId="special" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice} mobileWide>
                 <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                   <Switch label="Impedance controlee" checked={config.impedanceControl} onChange={(value) => update('impedanceControl', value)} />
                   <Switch label="Gold Fingers" checked={config.goldFingers} onChange={(value) => update('goldFingers', value)} />
@@ -990,7 +991,7 @@ export default function QuotePage() {
             isOpen={openPanel === 'advanced'}
             onToggle={() => setOpenPanel('advanced')}
           >
-            <MobileSheetRow label="Coverlay / renfort" help="Ajoutez les informations de renfort et coverlay pour les circuits flexibles." summary={config.coverlayThickness || config.stiffenerType || 'Optionnel'} sheetId="flex" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
+            <MobileSheetRow label="Coverlay / renfort" help="Ajoutez les informations de renfort et coverlay pour les circuits flexibles." summary={config.coverlayThickness || config.stiffenerType || 'Optionnel'} sheetId="flex" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
               <div className="grid gap-3 md:grid-cols-3">
                 <SelectBox value={config.coverlayThickness} onChange={(value) => update('coverlayThickness', value)} options={['', '12.5um', '25um', '50um']} />
                 <SelectBox value={config.stiffenerType} onChange={(value) => update('stiffenerType', value)} options={['', 'FR4', 'PI', 'Steel']} />
@@ -1000,7 +1001,7 @@ export default function QuotePage() {
                 <SelectBox value={config.adhesiveType} onChange={(value) => update('adhesiveType', value)} options={['', 'Acrylic', 'Epoxy']} />
               </div>
             </MobileSheetRow>
-            <MobileSheetRow label="Destination" help="Le pays influence les frais de livraison Afrique et le delai estime." summary={`${selectedCountry.name} / ${config.shippingMode}`} sheetId="destination" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedTotal={pricing.finalTotal}>
+            <MobileSheetRow label="Destination" help="Le pays influence les frais de livraison Afrique et le delai estime." summary={`${selectedCountry.name} / ${config.shippingMode}`} sheetId="destination" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
               <div className="grid gap-3 md:grid-cols-3">
                 <SelectBox
                   value={config.destinationCountry}
@@ -1288,7 +1289,7 @@ function MobileSheetRow({
   sheetId,
   openSheet,
   onOpenSheet,
-  estimatedTotal,
+  estimatedPcbPrice,
   mobileWide = false,
   children,
 }: {
@@ -1298,7 +1299,7 @@ function MobileSheetRow({
   sheetId: MobileSheetId;
   openSheet: MobileSheetId | null;
   onOpenSheet: (sheet: MobileSheetId | null) => void;
-  estimatedTotal?: number;
+  estimatedPcbPrice?: number;
   mobileWide?: boolean;
   children: React.ReactNode;
 }) {
@@ -1323,10 +1324,10 @@ function MobileSheetRow({
       {isOpen ? (
         <div className="sheet-backdrop-in fixed inset-0 z-[70] bg-slate-950/35 sm:hidden" role="dialog" aria-modal="true" aria-label={label} onClick={() => onOpenSheet(null)}>
           <div className="sheet-panel-in absolute inset-x-0 bottom-0 max-h-[82vh] overflow-y-auto rounded-t-2xl bg-[#ffffff] p-4" onClick={(event) => event.stopPropagation()}>
-            {typeof estimatedTotal === 'number' ? (
+            {typeof estimatedPcbPrice === 'number' ? (
               <div className="quote-sheet-total sticky top-0 z-10 -mx-4 -mt-4 mb-3 flex items-center justify-between border-b border-slate-200 bg-[#ffffff] px-4 py-3">
-                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Total estime</span>
-                <span className="text-lg font-semibold text-[#ff7a00]">${estimatedTotal.toFixed(2)}</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Cout PCB</span>
+                <span className="text-lg font-semibold text-[#ff7a00]">${estimatedPcbPrice.toFixed(2)}</span>
               </div>
             ) : null}
             <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-slate-300" />
