@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { getCountryCallingCode, parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js/min';
 import { africanCountries } from '../../lib/african-countries';
 
@@ -12,7 +13,7 @@ type PhoneValue = {
 };
 
 type Props = {
-  label?: string;
+  label?: ReactNode;
   value: string;
   error?: string;
   placeholder?: string;
@@ -90,7 +91,7 @@ export function InternationalPhoneInput({ label, value, error, placeholder = 'Nu
 
   return (
     <div ref={rootRef} className="relative">
-      {label ? <label className="mb-1 block text-[11px] font-semibold text-slate-600">{label}</label> : null}
+      {label ? <div className="mb-1 block text-[11px] font-semibold text-slate-600">{label}</div> : null}
       <div className={`flex h-11 items-center border bg-white ${error ? 'border-red-300' : 'border-slate-300'}`}>
         <button type="button" onClick={() => setOpen((current) => !current)} className="flex h-full shrink-0 items-center gap-2 border-r border-slate-200 px-3 text-sm text-slate-900">
           <span>{flagEmoji(country.iso2)}</span>

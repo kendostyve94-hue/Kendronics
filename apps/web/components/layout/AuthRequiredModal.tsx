@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { africanCountries } from '../../lib/african-countries';
 import { getApiBaseUrl } from '../../lib/api-base-url';
@@ -448,9 +448,6 @@ export function AuthRequiredModal() {
               Retour
             </button>
           </div>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            Creez votre compte ou connectez-vous ici pour acceder aux fonctionnalites Kendronics.
-          </p>
         </div>
 
         {pendingVerification ? (
@@ -609,22 +606,17 @@ function RegisterPanel({
       {errors.form && <AlertBox message={errors.form} tone="error" />}
 
       <TextInput label="Nom d'utilisateur" value={values.username} error={errors.username} onChange={(value) => onUpdate('username', value)} />
-      <div className="grid grid-cols-2 gap-2">
-        {(['email', 'phone'] as const).map((method) => (
-          <button
-            key={method}
-            type="button"
-            onClick={() => onUpdate('contactMethod', method)}
-            className={`h-9 border text-xs font-semibold ${values.contactMethod === method ? 'border-[#0f8f6b] bg-emerald-50 text-[#0f8f6b]' : 'border-slate-300 bg-white text-slate-600'}`}
-          >
-            {method === 'email' ? 'E-mail' : 'Telephone'}
-          </button>
-        ))}
-      </div>
       {values.contactMethod === 'email' ? (
-        <TextInput label="E-mail" type="email" value={values.email} error={errors.email} autoComplete="email" onChange={(value) => onUpdate('email', value)} />
+        <TextInput
+          label={<ContactMethodLabel active={values.contactMethod} onChange={(method) => onUpdate('contactMethod', method)} />}
+          type="email"
+          value={values.email}
+          error={errors.email}
+          autoComplete="email"
+          onChange={(value) => onUpdate('email', value)}
+        />
       ) : (
-        <InternationalPhoneInput label="Telephone" value={values.phone} error={errors.phone} onChange={(value) => onUpdate('phone', value)} />
+        <InternationalPhoneInput label={<ContactMethodLabel active={values.contactMethod} onChange={(method) => onUpdate('contactMethod', method)} />} value={values.phone} error={errors.phone} onChange={(value) => onUpdate('phone', value)} />
       )}
       <PasswordInput label="Mot de passe" value={values.password} error={errors.password} autoComplete="new-password" onChange={(value) => onUpdate('password', value)} />
       <PasswordInput label="Confirmer le mot de passe" value={values.confirmPassword} error={errors.confirmPassword} autoComplete="new-password" onChange={(value) => onUpdate('confirmPassword', value)} />
@@ -875,6 +867,25 @@ function VerificationPanel({
   );
 }
 
+function ContactMethodLabel({ active, onChange }: { active: RegisterFormState['contactMethod']; onChange: (method: RegisterFormState['contactMethod']) => void }) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      {(['email', 'phone'] as const).map((method, index) => (
+        <span key={method} className="inline-flex items-center gap-2">
+          {index > 0 ? <span className="text-slate-300">|</span> : null}
+          <button
+            type="button"
+            onClick={() => onChange(method)}
+            className={`bg-transparent p-0 text-[11px] font-semibold leading-none ${active === method ? 'text-[#0f8f6b]' : 'text-slate-500 hover:text-[#0f8f6b]'}`}
+          >
+            {method === 'email' ? 'E-mail' : 'Telephone'}
+          </button>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 function TextInput({
   label,
   value,
@@ -883,7 +894,7 @@ function TextInput({
   type = 'text',
   autoComplete,
 }: {
-  label: string;
+  label: ReactNode;
   value: string;
   onChange: (value: string) => void;
   error?: string;
@@ -891,7 +902,7 @@ function TextInput({
   autoComplete?: string;
 }) {
   return (
-    <label className="block">
+    <div className="block">
       <span className="mb-1 block text-[11px] font-semibold text-slate-600">{label}</span>
       <input
         type={type}
@@ -902,7 +913,7 @@ function TextInput({
         className={`h-9 w-full border bg-white px-3 text-sm text-ink outline-none focus:border-[#0f8f6b] ${error ? 'border-red-300' : 'border-slate-300'}`}
       />
       {error && <span className="mt-1 block text-xs font-medium text-red-600">{error}</span>}
-    </label>
+    </div>
   );
 }
 

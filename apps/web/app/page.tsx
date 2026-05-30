@@ -211,13 +211,13 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
     <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
       <div className="mx-auto max-w-none border-t-2 border-[#a88c00] bg-white">
         <div className="grid border border-slate-200 lg:grid-cols-[minmax(18rem,25rem)_1fr]">
-          <div className="border-b border-slate-200 p-5 sm:p-6 lg:border-b-0 lg:border-r">
-            <h2 className="text-xl font-normal tracking-tight text-slate-800">Pourquoi commander vos circuits imprimes chez Kendronics ?</h2>
+          <div className="min-w-0 border-b border-slate-200 p-5 sm:p-6 lg:border-b-0 lg:border-r">
+            <h2 className="max-w-full break-words text-lg font-normal tracking-tight text-slate-800 sm:text-xl">Pourquoi commander vos circuits imprimes chez Kendronics ?</h2>
             <ul className="mt-5 space-y-2 text-sm leading-5 text-slate-600">
               {kendronicsChoiceReasons.map((reason) => (
                 <li key={reason} className="flex gap-3">
                   <span className="mt-0.5 text-base font-semibold text-[#87c98a]">v</span>
-                  <span>{reason}</span>
+                  <span className="min-w-0 break-words">{reason}</span>
                 </li>
               ))}
             </ul>
@@ -233,11 +233,11 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
             </a>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <div className="relative">
-              <div className="grid gap-0 overflow-hidden sm:grid-cols-3">
+              <div className="flex gap-2 overflow-x-auto pb-2 sm:grid sm:grid-cols-3 sm:gap-0 sm:overflow-hidden sm:pb-0">
                 {kendronicsChoiceCards.map((card) => (
-                  <a key={card.title} href={card.href} className="group relative h-[18rem] min-w-[17rem] overflow-hidden border-r border-slate-200 last:border-r-0 sm:min-w-0">
+                  <a key={card.title} href={card.href} className="group relative h-[18rem] min-w-[18rem] overflow-hidden border-r border-slate-200 last:border-r-0 sm:min-w-0">
                     <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
                     <span className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/20 to-slate-950/0" />
                     <span className="relative block p-5 text-white">
@@ -256,7 +256,8 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
                 </div>
                 <p className="text-xs text-slate-500">Donnees issues des commandes reelles.</p>
               </div>
-              <div className="overflow-hidden border border-slate-200">
+              <div className="overflow-x-auto border border-slate-200">
+                <div className="min-w-[34rem]">
                 <div className="grid grid-cols-[3.2rem_3rem_4rem_minmax(7rem,1fr)_4.5rem_8.5rem] border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
                   <span>Date</span>
                   <span>Zone</span>
@@ -284,6 +285,7 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
                 ) : (
                   <p className="px-3 py-4 text-xs text-slate-500">Les commandes confirmees apparaitront ici automatiquement.</p>
                 )}
+                </div>
               </div>
             </div>
           </div>
