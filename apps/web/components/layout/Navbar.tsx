@@ -261,7 +261,6 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
-            <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} compact />
             {isSignedIn ? (
               <>
                 <NotificationBell count={unreadNotifications} compact />

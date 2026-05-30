@@ -110,7 +110,7 @@ export function ProductCatalog() {
 
           <div className="min-w-0">
 
-            <div className="grid grid-cols-2 gap-px bg-line p-px md:grid-cols-3 xl:grid-cols-6">
+            <div className="flex gap-2 overflow-x-auto bg-line p-px pb-2 md:grid md:grid-cols-3 md:gap-px md:overflow-visible md:pb-0 xl:grid-cols-6">
               {productCards.map((card, index) => {
                 const isActive = index === activeIndex;
 
@@ -119,7 +119,7 @@ export function ProductCatalog() {
                     key={card.title}
                     type="button"
                     onClick={() => setActiveIndex(index)}
-                    className={`group block bg-white p-3 text-center transition hover:bg-[#f3f8fc] sm:p-4 ${
+                    className={`group block min-w-[10.25rem] bg-white p-3 text-center transition hover:bg-[#f3f8fc] sm:min-w-[11rem] sm:p-4 md:min-w-0 ${
                       isActive ? 'outline outline-2 outline-deepblue outline-offset-[-2px]' : ''
                     }`}
                   >

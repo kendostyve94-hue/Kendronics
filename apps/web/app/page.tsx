@@ -235,9 +235,6 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
 
           <div>
             <div className="relative">
-              <button type="button" aria-label="Previous PCB category" className="absolute left-1 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 border border-slate-200 bg-white text-3xl leading-none text-slate-600 lg:grid lg:place-items-center">
-                &lt;
-              </button>
               <div className="grid gap-0 overflow-hidden sm:grid-cols-3">
                 {kendronicsChoiceCards.map((card) => (
                   <a key={card.title} href={card.href} className="group relative h-[18rem] min-w-[17rem] overflow-hidden border-r border-slate-200 last:border-r-0 sm:min-w-0">
@@ -250,9 +247,6 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
                   </a>
                 ))}
               </div>
-              <button type="button" aria-label="Next PCB category" className="absolute right-1 top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 border border-slate-200 bg-white text-3xl leading-none text-slate-600 lg:grid lg:place-items-center">
-                &gt;
-              </button>
             </div>
             <div className="border-t border-slate-200 bg-white px-5 py-5">
               <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">

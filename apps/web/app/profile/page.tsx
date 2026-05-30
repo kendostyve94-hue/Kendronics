@@ -347,7 +347,11 @@ export default function ProfilePage() {
           emailVerifiedAt: userResponse.emailVerifiedAt || '',
           phoneVerifiedAt: userResponse.phoneVerifiedAt || '',
         }));
-        if (userResponse.avatarDataUrl) setAvatarDataUrl(userResponse.avatarDataUrl);
+        if (userResponse.avatarDataUrl) {
+          setAvatarDataUrl(userResponse.avatarDataUrl);
+          writeScopedLocalStorage(avatarStorageKey, userResponse.avatarDataUrl);
+          window.dispatchEvent(new Event('kendronics:avatar-updated'));
+        }
         setAccountId(userResponse.id || sessionProfile.id || storedProfile.email || sessionProfile.email || 'kendronics');
         setOrders(ordersResponse);
         setNotifications(notificationsResponse);
@@ -2162,6 +2166,7 @@ function AccountProfileEditForm({
 
       writeScopedLocalStorage(profileStorageKey, JSON.stringify(nextProfile));
       if (nextProfile.avatarDataUrl) writeScopedLocalStorage(avatarStorageKey, nextProfile.avatarDataUrl);
+      window.dispatchEvent(new Event('kendronics:avatar-updated'));
       onSaved(nextProfile);
     } catch {
       setMessage("Impossible d'enregistrer le profil pour le moment.");

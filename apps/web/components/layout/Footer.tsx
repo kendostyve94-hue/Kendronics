@@ -36,13 +36,15 @@ const footerGroups = [
 const deliveryLogos = [
   {
     name: 'DHL Express',
-    src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/DHL_Express_logo.svg',
+    label: 'DHL',
     className: 'bg-[#ffcc00]',
+    textClassName: 'text-[#d40511]',
   },
   {
     name: 'FedEx Express',
-    src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/FedEx_Express.svg',
+    label: 'FedEx',
     className: 'bg-[#4d148c]',
+    textClassName: 'text-white',
   },
 ];
 
@@ -182,8 +184,8 @@ function DeliveryLogoStrip() {
       <h3 className="text-sm font-medium text-slate-300">Services de livraison</h3>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {deliveryLogos.map((logo) => (
-          <span key={logo.name} className={`inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-sm border border-[#5d6670] px-0.5 ${logo.className}`}>
-            <img src={logo.src} alt={logo.name} className="max-h-6 max-w-7 object-contain" />
+          <span key={logo.name} aria-label={logo.name} className={`inline-flex h-8 min-w-8 items-center justify-center overflow-hidden rounded-sm border border-[#5d6670] px-1.5 ${logo.className}`}>
+            <span className={`font-sans text-[10px] font-bold leading-none ${logo.textClassName}`}>{logo.label}</span>
           </span>
         ))}
       </div>

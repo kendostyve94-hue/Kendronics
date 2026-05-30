@@ -148,6 +148,17 @@ summary,
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+button,
+a[class*="inline-flex"][class*="bg-"],
+a[class*="inline-flex"][class*="border"] {
+  border-radius: var(--control-radius) !important;
+}
+
+button[class*="rounded-full"],
+a[class*="rounded-full"] {
+  border-radius: var(--control-radius) !important;
+}
+
 button:active,
 a[class*="rounded"]:active,
 label[class*="rounded"]:active,
