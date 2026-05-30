@@ -434,14 +434,14 @@ export function AuthRequiredModal() {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] grid min-h-screen place-items-center bg-[#06101f]/70 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="auth-required-title">
+    <div className="fixed inset-0 z-[60] grid min-h-screen place-items-center bg-[#06101f]/70 px-3 py-4 backdrop-blur-sm sm:px-4 sm:py-6" role="dialog" aria-modal="true" aria-labelledby="auth-required-title">
       {authStep === 'choice' ? (
         <ChoicePanel onRegister={chooseRegister} onLogin={chooseLogin} onDismiss={dismissModal} />
       ) : (
-        <div className="max-h-[calc(100vh-3rem)] w-full max-w-3xl overflow-y-auto border border-slate-200 bg-white text-ink">
-          <div className="border-b border-slate-200 px-5 py-4 sm:px-6">
+        <div className="max-h-[calc(100vh-6rem)] w-full max-w-[22rem] overflow-y-auto rounded-lg border border-slate-200 bg-white text-ink sm:max-h-[calc(100vh-3rem)] sm:max-w-3xl sm:rounded-lg">
+          <div className="border-b border-slate-200 px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center justify-between gap-4">
-            <h1 id="auth-required-title" className="text-2xl font-bold tracking-normal text-ink sm:text-[28px]">
+            <h1 id="auth-required-title" className="text-xl font-bold tracking-normal text-ink sm:text-[28px]">
               Rejoindre ou se connecter
             </h1>
             <button type="button" onClick={backToChoice} className="shrink-0 text-xs font-medium text-slate-400 transition hover:text-slate-600">
@@ -507,7 +507,7 @@ export function AuthRequiredModal() {
 
 function ChoicePanel({ onRegister, onLogin, onDismiss }: { onRegister: () => void; onLogin: () => void; onDismiss: () => void }) {
   return (
-    <div className="grid max-h-[calc(100vh-3rem)] w-full max-w-4xl overflow-y-auto border border-slate-200 bg-white text-ink sm:grid-cols-[0.9fr_1.1fr]">
+    <div className="grid max-h-[calc(100vh-6rem)] w-full max-w-[22rem] overflow-y-auto rounded-lg border border-slate-200 bg-white text-ink sm:max-h-[calc(100vh-3rem)] sm:max-w-4xl sm:grid-cols-[0.9fr_1.1fr]">
       <div className="relative hidden min-h-[460px] overflow-hidden bg-[#10233a] sm:block">
         <video className="absolute inset-0 h-full w-full object-cover opacity-80" autoPlay muted loop playsInline preload="metadata" aria-label="Video Kendronics">
           <source src="/videos/auth-required-background.mov" type="video/quicktime" />
@@ -528,33 +528,33 @@ function ChoicePanel({ onRegister, onLogin, onDismiss }: { onRegister: () => voi
         </div>
       </div>
 
-      <div className="flex min-h-[460px] flex-col justify-center px-5 py-7 sm:px-9">
-        <h1 className="text-2xl font-bold tracking-normal text-ink sm:text-[28px]">Bienvenue sur Kendronics</h1>
-        <p className="mt-3 text-sm leading-6 text-slate-600">
+      <div className="flex min-h-0 flex-col justify-center px-4 py-5 sm:min-h-[460px] sm:px-9 sm:py-7">
+        <h1 className="text-xl font-bold tracking-normal text-ink sm:text-[28px]">Bienvenue sur Kendronics</h1>
+        <p className="mt-2 text-sm leading-6 text-slate-600 sm:mt-3">
           Pour utiliser les fonctionnalites du site, creez d'abord votre compte ou connectez-vous si vous en avez deja un.
         </p>
 
-        <div className="mt-6 grid gap-3">
-          <button type="button" onClick={onRegister} className="flex h-11 items-center justify-center border border-[#0f8f6b] bg-[#0f8f6b] px-5 text-sm font-semibold text-white transition hover:bg-[#0b7558]">
+        <div className="mt-4 grid gap-2 sm:mt-6 sm:gap-3">
+          <button type="button" onClick={onRegister} className="flex h-10 items-center justify-center border border-[#0f8f6b] bg-[#0f8f6b] px-5 text-sm font-semibold text-white transition hover:bg-[#0b7558] sm:h-11">
             Creer un nouveau compte
           </button>
-          <button type="button" onClick={onLogin} className="flex h-11 items-center justify-center border border-slate-300 bg-white px-5 text-sm font-semibold text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+          <button type="button" onClick={onLogin} className="flex h-10 items-center justify-center border border-slate-300 bg-white px-5 text-sm font-semibold text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] sm:h-11">
             Se connecter
           </button>
         </div>
 
-        <div className="my-6 flex items-center gap-3 text-xs font-medium text-slate-400">
+        <div className="my-4 flex items-center gap-3 text-xs font-medium text-slate-400 sm:my-6">
           <span className="h-px flex-1 bg-slate-200" />
           <span>ou continuer avec</span>
           <span className="h-px flex-1 bg-slate-200" />
         </div>
 
-        <div className="grid gap-3">
+        <div className="grid gap-2 sm:gap-3">
           <SocialProviderLink provider="google" label="Continuer avec Google" href={googleOAuthUrl} />
           <SocialProviderLink provider="apple" label="Continuer avec Apple" href={appleOAuthUrl} />
         </div>
 
-        <p className="mt-6 text-xs leading-5 text-slate-500">
+        <p className="mt-4 text-xs leading-5 text-slate-500 sm:mt-6">
           En creant un compte, vous acceptez nos <a href="/terms" className="font-semibold text-[#0f8f6b] underline">conditions d'utilisation</a> et notre{' '}
           <a href="/privacy" className="font-semibold text-[#0f8f6b] underline">politique de confidentialite</a>.
         </p>
@@ -595,7 +595,7 @@ function RegisterPanel({
   onSwitch: () => void;
 }) {
   return (
-    <form onSubmit={onSubmit} className="space-y-2.5 px-5 py-4 sm:px-6" noValidate>
+    <form onSubmit={onSubmit} className="space-y-2.5 px-4 py-4 sm:px-6" noValidate>
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-lg font-bold text-ink">Creer un compte</h2>
         <button type="button" onClick={onSwitch} className="text-xs font-semibold text-[#0f8f6b] lg:hidden">
@@ -638,37 +638,19 @@ function RegisterPanel({
         {errors.country && <span className="mt-1 block text-xs font-medium text-red-600">{errors.country}</span>}
       </label>
 
-      <div>
+      <label className="block">
         <span className="mb-1 block text-[11px] font-semibold text-slate-600">Type de compte</span>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {[
-            ['individual', 'Compte individuel', '#2563eb'],
-            ['company', 'Societe / professionnel', '#0f8f6b'],
-          ].map(([value, label, color]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => onUpdate('accountType', value as RegisterFormState['accountType'])}
-              className="flex h-9 items-center gap-2 border bg-white px-3 text-left text-xs font-semibold transition hover:border-slate-400"
-              style={{
-                borderColor: values.accountType === value ? color : '#cbd5e1',
-                color: values.accountType === value ? color : '#475569',
-                backgroundColor: values.accountType === value ? `${color}12` : '#ffffff',
-              }}
-            >
-              <span
-                className="grid h-4 w-4 place-items-center rounded-full border"
-                style={{ borderColor: values.accountType === value ? color : '#cbd5e1' }}
-                aria-hidden="true"
-              >
-                {values.accountType === value ? <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} /> : null}
-              </span>
-              {label}
-            </button>
-          ))}
-        </div>
+        <select
+          value={values.accountType}
+          onChange={(event) => onUpdate('accountType', event.target.value as RegisterFormState['accountType'])}
+          className={`h-9 w-full border bg-white px-3 text-sm text-ink outline-none focus:border-[#0f8f6b] ${errors.accountType ? 'border-red-300' : 'border-slate-300'}`}
+        >
+          <option value="">Selectionner un type de compte</option>
+          <option value="individual">Compte individuel</option>
+          <option value="company">Societe / professionnel</option>
+        </select>
         {errors.accountType && <span className="mt-1 block text-xs font-medium text-red-600">{errors.accountType}</span>}
-      </div>
+      </label>
 
       <label className="flex gap-3 text-xs leading-5 text-slate-600">
         <input
@@ -835,7 +817,7 @@ function VerificationPanel({
   onResend: () => void;
 }) {
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-3 px-5 py-6 sm:px-6" noValidate>
+    <form onSubmit={onSubmit} className="mx-auto max-w-md space-y-3 px-4 py-5 sm:px-6 sm:py-6" noValidate>
       <div>
         <h2 className="text-lg font-bold text-ink">Verifier votre compte</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">

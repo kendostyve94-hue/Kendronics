@@ -41,7 +41,7 @@ export function HeroQuickQuote() {
   return (
     <aside className="w-full border border-[#d8e2ea] bg-white text-ink">
       <div className="grid lg:grid-cols-[11.5rem_1fr]">
-        <nav className="grid border-b border-[#d8e2ea] bg-[#0f8f6b] text-white lg:border-b-0 lg:border-r">
+        <nav className="flex overflow-x-auto border-b border-[#d8e2ea] bg-[#0f8f6b] text-white lg:grid lg:overflow-visible lg:border-b-0 lg:border-r">
           {productOptions.map((option) => {
             const isActive = option.value === productType;
 
@@ -50,7 +50,7 @@ export function HeroQuickQuote() {
                 key={option.value}
                 type="button"
                 onClick={() => setProductType(option.value)}
-                className={`min-h-10 border-b border-white/20 px-4 text-left text-sm font-normal transition last:border-b-0 ${
+                className={`min-h-8 min-w-[7.5rem] border-r border-white/20 px-3 text-left text-xs font-normal transition last:border-r-0 lg:min-h-10 lg:min-w-0 lg:border-b lg:border-r-0 lg:px-4 lg:text-sm lg:last:border-b-0 ${
                   isActive ? 'bg-white text-ink' : 'bg-[#0f8f6b] hover:bg-[#0b7558]'
                 }`}
               >
@@ -60,15 +60,15 @@ export function HeroQuickQuote() {
           })}
         </nav>
 
-        <div className="bg-[#f4f7fa] p-4 sm:p-5">
-          <div className="mb-3">
-            <h1 className="text-2xl font-black leading-tight text-[#0f8f6b]">Devis immediat</h1>
-            <p className="mt-1 text-sm text-slate-500">Vos circuits imprimes au meilleur prix.</p>
+        <div className="bg-[#f4f7fa] p-3 sm:p-5">
+          <div className="mb-2 sm:mb-3">
+            <h1 className="text-lg font-black leading-tight text-[#0f8f6b] sm:text-2xl">Devis immediat</h1>
+            <p className="mt-0.5 text-xs text-slate-500 sm:mt-1 sm:text-sm">Vos circuits imprimes au meilleur prix.</p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
             <div className="sm:col-span-2">
-              <p className="mb-1.5 text-sm font-normal text-ink">Dimension</p>
+              <p className="mb-1 text-xs font-normal text-ink sm:mb-1.5 sm:text-sm">Dimension</p>
               <div className="grid grid-cols-[1fr_auto_1fr_auto] border border-[#aeb8c2] bg-white">
                 <NumberInput label="Longueur" value={length} onChange={setLength} />
                 <span className="grid w-8 place-items-center border-l border-r border-[#aeb8c2] text-sm font-normal text-slate-600">x</span>
@@ -120,11 +120,11 @@ export function HeroQuickQuote() {
             />
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <a href={quoteHref} className="inline-flex min-h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-3">
+            <a href={quoteHref} className="inline-flex min-h-9 items-center justify-center bg-[#0f8f6b] px-4 text-xs font-black text-white transition hover:bg-[#0b7558] sm:min-h-10 sm:px-5 sm:text-sm">
               Finaliser
             </a>
-            <a href="/capabilities" className="inline-flex min-h-10 items-center justify-center border border-[#0f8f6b] bg-white px-5 text-sm font-black text-ink transition hover:bg-[#f4fbf8] hover:text-[#0f8f6b]">
+            <a href="/capabilities" className="inline-flex min-h-9 items-center justify-center border border-[#0f8f6b] bg-white px-4 text-xs font-black text-ink transition hover:bg-[#f4fbf8] hover:text-[#0f8f6b] sm:min-h-10 sm:px-5 sm:text-sm">
               Capacites
             </a>
           </div>
@@ -144,7 +144,7 @@ function NumberInput({ label, value, onChange }: { label: string; value: number;
         value={value}
         placeholder={label}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-10 w-full border-0 bg-white px-3 text-sm text-ink outline-none placeholder:text-slate-400"
+        className="h-9 w-full border-0 bg-white px-2 text-xs text-ink outline-none placeholder:text-slate-400 sm:h-10 sm:px-3 sm:text-sm"
       />
     </label>
   );
@@ -163,11 +163,11 @@ function SelectField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-normal text-ink">{label}</span>
+      <span className="mb-1 block text-xs font-normal text-ink sm:mb-1.5 sm:text-sm">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full border border-[#aeb8c2] bg-white px-3 text-sm text-ink outline-none"
+        className="h-9 w-full border border-[#aeb8c2] bg-white px-2 text-xs text-ink outline-none sm:h-10 sm:px-3 sm:text-sm"
       >
         {options.map(([optionValue, labelText]) => (
           <option key={String(optionValue)} value={optionValue}>
