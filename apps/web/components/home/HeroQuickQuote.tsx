@@ -40,8 +40,8 @@ export function HeroQuickQuote() {
 
   return (
     <aside className="w-full border border-[#d8e2ea] bg-white text-ink">
-      <div className="grid lg:grid-cols-[11.5rem_1fr]">
-        <nav className="flex overflow-x-auto border-b border-[#d8e2ea] bg-[#0f8f6b] text-white lg:grid lg:overflow-visible lg:border-b-0 lg:border-r">
+      <div className="grid grid-cols-[7.6rem_minmax(0,1fr)] sm:grid-cols-[11.5rem_1fr]">
+        <nav className="grid border-r border-[#d8e2ea] bg-[#0f8f6b] text-white">
           {productOptions.map((option) => {
             const isActive = option.value === productType;
 
@@ -50,7 +50,7 @@ export function HeroQuickQuote() {
                 key={option.value}
                 type="button"
                 onClick={() => setProductType(option.value)}
-                className={`min-h-8 min-w-[7.5rem] border-r border-white/20 px-3 text-left text-xs font-normal transition last:border-r-0 lg:min-h-10 lg:min-w-0 lg:border-b lg:border-r-0 lg:px-4 lg:text-sm lg:last:border-b-0 ${
+                className={`min-h-9 border-b border-white/20 px-2 text-left text-[11px] font-normal leading-4 transition last:border-b-0 sm:min-h-10 sm:px-4 sm:text-sm ${
                   isActive ? 'bg-white text-ink' : 'bg-[#0f8f6b] hover:bg-[#0b7558]'
                 }`}
               >
@@ -60,14 +60,14 @@ export function HeroQuickQuote() {
           })}
         </nav>
 
-        <div className="bg-[#f4f7fa] p-3 sm:p-5">
+        <div className="min-w-0 bg-[#f4f7fa] p-3 sm:p-5">
           <div className="mb-2 sm:mb-3">
             <h1 className="text-lg font-black leading-tight text-[#0f8f6b] sm:text-2xl">Devis immediat</h1>
             <p className="mt-0.5 text-xs text-slate-500 sm:mt-1 sm:text-sm">Vos circuits imprimes au meilleur prix.</p>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
-            <div className="sm:col-span-2">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="col-span-2">
               <p className="mb-1 text-xs font-normal text-ink sm:mb-1.5 sm:text-sm">Dimension</p>
               <div className="grid grid-cols-[1fr_auto_1fr_auto] border border-[#aeb8c2] bg-white">
                 <NumberInput label="Longueur" value={length} onChange={setLength} />

@@ -588,7 +588,7 @@ function Hero() {
         ))}
       </div>
 
-      <div className="relative grid min-h-[23rem] gap-2 px-2 pb-4 pt-3 sm:min-h-[27rem] sm:gap-3 sm:px-4 sm:pb-6 sm:pt-4 lg:min-h-[25rem] lg:grid-cols-[minmax(0,43rem)_minmax(10rem,1fr)_26rem] lg:items-end lg:pl-3 lg:pr-8">
+      <div className="relative grid min-h-[25rem] gap-2 px-1 pb-4 pt-3 sm:min-h-[27rem] sm:gap-3 sm:px-4 sm:pb-6 sm:pt-4 lg:min-h-[25rem] lg:grid-cols-[minmax(0,43rem)_minmax(10rem,1fr)_26rem] lg:items-end lg:pl-3 lg:pr-8">
         <div className="w-full">
           <HeroQuickQuote />
         </div>
@@ -601,22 +601,22 @@ function Hero() {
 
 function HeroPromoPanels() {
   return (
-    <aside className="grid gap-2 sm:grid-cols-2 lg:self-end" aria-label="Offres PCB">
-      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=5&thickness=1.6mm" className="relative min-h-[7.5rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2 text-center transition hover:border-[#0f8f6b] sm:min-h-[10.25rem] sm:p-3">
+    <aside className="grid grid-cols-2 gap-2 lg:self-end" aria-label="Offres PCB">
+      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=5&thickness=1.6mm" className="relative min-h-[8rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2 text-center transition hover:border-[#0f8f6b] sm:min-h-[10.25rem] sm:p-3">
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
         <p className="text-lg font-normal leading-none text-[#0f8f6b] sm:text-2xl">$ 6.75</p>
         <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:mt-2 sm:text-xs">5 pieces, 1-2 couches</p>
         <p className="text-xs leading-4 text-slate-600">Production: 24 heures</p>
         <p className="text-xs leading-4 text-slate-600">PCB prototypes</p>
-        <img src="/images/product-pcb-standard-transparent.png" alt="" className="mx-auto mt-1 h-10 w-full object-contain sm:mt-2 sm:h-16" />
+        <img src="/images/product-pcb-standard-transparent.png" alt="" className="mx-auto mt-1 h-12 w-full object-contain sm:mt-2 sm:h-16" />
       </a>
-      <a href="/quote?productType=advanced_pcb&layers=4&length=100&width=100&quantity=30&thickness=1.6mm" className="relative min-h-[7.5rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2 text-center transition hover:border-[#0f8f6b] sm:min-h-[10.25rem] sm:p-3">
+      <a href="/quote?productType=advanced_pcb&layers=4&length=100&width=100&quantity=30&thickness=1.6mm" className="relative min-h-[8rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2 text-center transition hover:border-[#0f8f6b] sm:min-h-[10.25rem] sm:p-3">
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
         <p className="text-lg font-normal leading-none text-[#0f8f6b] sm:text-2xl">$ 221.72</p>
         <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:mt-2 sm:text-xs">4 couches, 5-30 pieces</p>
         <p className="text-xs leading-4 text-slate-600">Production: 8-9 jours</p>
         <p className="text-xs leading-4 text-slate-600">PCB avance</p>
-        <img src="/images/product-pcb-advanced.png" alt="" className="mx-auto mt-1 h-10 w-full object-contain sm:mt-2 sm:h-16" />
+        <img src="/images/product-pcb-advanced.png" alt="" className="mx-auto mt-1 h-12 w-full object-contain sm:mt-2 sm:h-16" />
       </a>
     </aside>
   );

@@ -149,17 +149,6 @@ export function AuthRequiredModal() {
     return () => window.removeEventListener('kendronics:open-auth-required', openAuthRequired);
   }, []);
 
-  useEffect(() => {
-    if (!shouldShow) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [shouldShow]);
-
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (loginValues.email.trim().includes('@') && !isEmail(loginValues.email)) {
@@ -438,10 +427,10 @@ export function AuthRequiredModal() {
       {authStep === 'choice' ? (
         <ChoicePanel onRegister={chooseRegister} onLogin={chooseLogin} onDismiss={dismissModal} />
       ) : (
-        <div className="max-h-[calc(100vh-6rem)] w-full max-w-[22rem] overflow-y-auto rounded-lg border border-slate-200 bg-white text-ink sm:max-h-[calc(100vh-3rem)] sm:max-w-3xl sm:rounded-lg">
-          <div className="border-b border-slate-200 px-4 py-3 sm:px-6 sm:py-4">
+        <div className="max-h-[calc(100vh-8rem)] w-full max-w-[20.5rem] overflow-y-auto rounded-lg border border-slate-200 bg-white text-ink sm:max-h-[calc(100vh-3rem)] sm:max-w-3xl sm:rounded-lg">
+          <div className="border-b border-slate-200 px-3.5 py-2.5 sm:px-6 sm:py-4">
           <div className="flex items-center justify-between gap-4">
-            <h1 id="auth-required-title" className="text-xl font-bold tracking-normal text-ink sm:text-[28px]">
+            <h1 id="auth-required-title" className="text-lg font-bold tracking-normal text-ink sm:text-[28px]">
               Rejoindre ou se connecter
             </h1>
             <button type="button" onClick={backToChoice} className="shrink-0 text-xs font-medium text-slate-400 transition hover:text-slate-600">
@@ -507,7 +496,7 @@ export function AuthRequiredModal() {
 
 function ChoicePanel({ onRegister, onLogin, onDismiss }: { onRegister: () => void; onLogin: () => void; onDismiss: () => void }) {
   return (
-    <div className="grid max-h-[calc(100vh-6rem)] w-full max-w-[22rem] overflow-y-auto rounded-lg border border-slate-200 bg-white text-ink sm:max-h-[calc(100vh-3rem)] sm:max-w-4xl sm:grid-cols-[0.9fr_1.1fr]">
+    <div className="grid max-h-[calc(100vh-8rem)] w-full max-w-[20.5rem] overflow-y-auto rounded-lg border border-slate-200 bg-white text-ink sm:max-h-[calc(100vh-3rem)] sm:max-w-4xl sm:grid-cols-[0.9fr_1.1fr]">
       <div className="relative hidden min-h-[460px] overflow-hidden bg-[#10233a] sm:block">
         <video className="absolute inset-0 h-full w-full object-cover opacity-80" autoPlay muted loop playsInline preload="metadata" aria-label="Video Kendronics">
           <source src="/videos/auth-required-background.mov" type="video/quicktime" />
@@ -528,22 +517,22 @@ function ChoicePanel({ onRegister, onLogin, onDismiss }: { onRegister: () => voi
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-col justify-center px-4 py-5 sm:min-h-[460px] sm:px-9 sm:py-7">
-        <h1 className="text-xl font-bold tracking-normal text-ink sm:text-[28px]">Bienvenue sur Kendronics</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-600 sm:mt-3">
+      <div className="flex min-h-0 flex-col justify-center px-3.5 py-4 sm:min-h-[460px] sm:px-9 sm:py-7">
+        <h1 className="text-lg font-bold tracking-normal text-ink sm:text-[28px]">Bienvenue sur Kendronics</h1>
+        <p className="mt-2 text-xs leading-5 text-slate-600 sm:mt-3 sm:text-sm sm:leading-6">
           Pour utiliser les fonctionnalites du site, creez d'abord votre compte ou connectez-vous si vous en avez deja un.
         </p>
 
-        <div className="mt-4 grid gap-2 sm:mt-6 sm:gap-3">
-          <button type="button" onClick={onRegister} className="flex h-10 items-center justify-center border border-[#0f8f6b] bg-[#0f8f6b] px-5 text-sm font-semibold text-white transition hover:bg-[#0b7558] sm:h-11">
+        <div className="mt-3 grid gap-2 sm:mt-6 sm:gap-3">
+          <button type="button" onClick={onRegister} className="flex h-9 items-center justify-center border border-[#0f8f6b] bg-[#0f8f6b] px-4 text-xs font-semibold text-white transition hover:bg-[#0b7558] sm:h-11 sm:px-5 sm:text-sm">
             Creer un nouveau compte
           </button>
-          <button type="button" onClick={onLogin} className="flex h-10 items-center justify-center border border-slate-300 bg-white px-5 text-sm font-semibold text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] sm:h-11">
+          <button type="button" onClick={onLogin} className="flex h-9 items-center justify-center border border-slate-300 bg-white px-4 text-xs font-semibold text-ink transition hover:border-[#0f8f6b] hover:text-[#0f8f6b] sm:h-11 sm:px-5 sm:text-sm">
             Se connecter
           </button>
         </div>
 
-        <div className="my-4 flex items-center gap-3 text-xs font-medium text-slate-400 sm:my-6">
+        <div className="my-3 flex items-center gap-2 text-[11px] font-medium text-slate-400 sm:my-6 sm:gap-3 sm:text-xs">
           <span className="h-px flex-1 bg-slate-200" />
           <span>ou continuer avec</span>
           <span className="h-px flex-1 bg-slate-200" />
@@ -554,7 +543,7 @@ function ChoicePanel({ onRegister, onLogin, onDismiss }: { onRegister: () => voi
           <SocialProviderLink provider="apple" label="Continuer avec Apple" href={appleOAuthUrl} />
         </div>
 
-        <p className="mt-4 text-xs leading-5 text-slate-500 sm:mt-6">
+        <p className="mt-3 text-[11px] leading-5 text-slate-500 sm:mt-6 sm:text-xs">
           En creant un compte, vous acceptez nos <a href="/terms" className="font-semibold text-[#0f8f6b] underline">conditions d'utilisation</a> et notre{' '}
           <a href="/privacy" className="font-semibold text-[#0f8f6b] underline">politique de confidentialite</a>.
         </p>
@@ -595,9 +584,9 @@ function RegisterPanel({
   onSwitch: () => void;
 }) {
   return (
-    <form onSubmit={onSubmit} className="space-y-2.5 px-4 py-4 sm:px-6" noValidate>
+    <form onSubmit={onSubmit} className="space-y-2 px-3.5 py-3 sm:space-y-2.5 sm:px-6 sm:py-4" noValidate>
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-bold text-ink">Creer un compte</h2>
+        <h2 className="text-base font-bold text-ink sm:text-lg">Creer un compte</h2>
         <button type="button" onClick={onSwitch} className="text-xs font-semibold text-[#0f8f6b] lg:hidden">
           Se connecter
         </button>
@@ -740,9 +729,9 @@ function LoginPanel({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-2.5 px-5 py-4 sm:px-6" noValidate>
+    <form onSubmit={onSubmit} className="space-y-2 px-3.5 py-3 sm:space-y-2.5 sm:px-6 sm:py-4" noValidate>
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-bold text-ink">Se connecter</h2>
+        <h2 className="text-base font-bold text-ink sm:text-lg">Se connecter</h2>
         <button type="button" onClick={onSwitch} className="text-xs font-semibold text-[#0f8f6b] lg:hidden">
           Creer un compte
         </button>
