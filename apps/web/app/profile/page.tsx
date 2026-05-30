@@ -656,10 +656,10 @@ function OrderReviewSection({
   const visibleOrders = orders.filter((order) => orderMatchesStatus(order, activeKey));
 
   return (
-    <section className="min-h-[690px] bg-white text-[#111827] shadow-sm ring-1 ring-slate-200">
+    <section className="min-h-[690px] bg-white text-[#111827] lg:shadow-sm lg:ring-1 lg:ring-slate-200">
       <OrderStatusHeader activeKey={activeKey} counts={orderCounts(orders)} />
 
-      <div className="border-t-[16px] border-[#eef0f3] px-6 pb-24 pt-5">
+      <div className="border-t-[10px] border-[#eef0f3] px-3 pb-24 pt-5 sm:px-6 lg:border-t-[16px]">
         <div className={`${mode !== 'table' ? 'flex h-12 items-center border-b border-[#e5e7eb]' : 'flex h-10 items-center'}`}>
           <h2 className="text-xl font-normal text-black">{title}</h2>
         </div>
@@ -680,21 +680,21 @@ function OrderReviewSection({
 
 function OrderStatusHeader({ activeKey, counts }: { activeKey: OrderStatusKey; counts: ReturnType<typeof orderCounts> }) {
   return (
-    <div className="px-6 pt-4">
+    <div className="px-3 pt-4 sm:px-6">
       <div className="flex h-11 items-center gap-3 border-b border-[#e5e7eb]">
         <span className="grid h-6 w-6 place-items-center text-xl text-[#b8b8b8]">▤</span>
         <h1 className="text-xl font-normal">Mes commandes</h1>
       </div>
-      <div className="grid h-[112px] grid-cols-5 items-start px-1 pt-6">
+      <div className="grid h-auto grid-cols-5 items-start overflow-hidden px-0 pt-4 sm:h-[112px] sm:px-1 sm:pt-6">
         {orderStatuses.map((status) => {
           const active = status.key === activeKey;
 
           return (
-            <div key={status.key} className="grid min-h-[72px] place-items-center border-r border-[#e5e7eb] px-3 text-center last:border-r-0">
-              <span className={`text-[28px] font-black leading-7 ${active ? 'text-[#ff5a00]' : 'text-[#1f2937]'}`}>
+            <div key={status.key} className="grid min-h-[64px] place-items-center border-r border-[#e5e7eb] px-1 text-center last:border-r-0 sm:min-h-[72px] sm:px-3">
+              <span className={`text-[22px] font-black leading-6 sm:text-[28px] sm:leading-7 ${active ? 'text-[#ff5a00]' : 'text-[#1f2937]'}`}>
                 {countForStatus(status.key, counts)}
               </span>
-              <span className={`mt-1 text-[14px] leading-4 ${active ? 'text-[#ff5a00]' : 'text-[#8a8f98]'}`}>{status.label}</span>
+              <span className={`mt-1 text-[10px] leading-3 sm:text-[14px] sm:leading-4 ${active ? 'text-[#ff5a00]' : 'text-[#8a8f98]'}`}>{status.label}</span>
             </div>
           );
         })}
@@ -1079,8 +1079,8 @@ function OrderTableSearchPanel({
     <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
       <div className="min-w-0">
         <div className="bg-white">
-          <div className="flex flex-wrap items-center gap-5 border-b border-[#e5e7eb] py-4 text-sm text-black">
-            <div className="flex flex-wrap items-center gap-5 text-sm text-black">
+          <div className="flex flex-wrap items-center gap-3 border-b border-[#e5e7eb] py-4 text-sm text-black sm:gap-5">
+            <div className="grid w-full grid-cols-2 gap-3 text-sm text-black sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-5">
               {orderServiceFilters.map((filter) => (
                 <button
                   key={filter.key}
@@ -1094,7 +1094,40 @@ function OrderTableSearchPanel({
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="sm:hidden">
+            {dataStatus === 'loading' ? (
+              <p className="px-2 py-12 text-center text-sm font-semibold text-[#92979d]">Chargement des commandes...</p>
+            ) : dataStatus === 'signed-out' ? (
+              <p className="px-2 py-12 text-center text-sm font-semibold text-[#92979d]">Connectez-vous pour afficher vos commandes.</p>
+            ) : dataStatus === 'error' ? (
+              <p className="px-2 py-12 text-center text-sm font-semibold text-red-600">Impossible de charger les commandes.</p>
+            ) : orders.length === 0 ? (
+              <div className="py-10 text-center">
+                <p className="text-sm font-semibold text-[#92979d]">Votre panier est vide.</p>
+                <a href="/quote" className="mt-4 inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-semibold text-white hover:bg-[#0b7558]">Ajouter un nouvel article</a>
+              </div>
+            ) : visibleOrders.length === 0 ? (
+              <p className="px-2 py-12 text-center text-sm font-semibold text-[#92979d]">Aucune commande pour ce service.</p>
+            ) : (
+              <div className="grid gap-3 py-3">
+                {visibleOrders.map((order) => (
+                  <MobileOrderCard
+                    key={order.id}
+                    order={order}
+                    selected={selectedOrderIds.includes(order.id)}
+                    deleting={deletingOrderId === order.id}
+                    quantityUpdating={quantityUpdatingOrderId === order.id}
+                    onToggle={() => toggleOrderSelection(order.id)}
+                    onDetail={() => setDetailOrder(order)}
+                    onDelete={() => void deleteOrder(order.id)}
+                    onQuantityChange={(quantity) => void updateOrderQuantity(order, quantity)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="hidden overflow-x-auto sm:block">
             <div className="grid min-w-[760px] grid-cols-[32px_minmax(360px,1fr)_100px_130px_100px_46px] items-center bg-[#f4f5f7] py-3 text-sm text-black">
               <input type="checkbox" checked={visibleOrders.length > 0 && allVisibleSelected} onChange={toggleVisibleSelection} className="h-4 w-4 accent-[#0877ff]" aria-label="Selectionner toutes les commandes visibles" />
               <span>Article</span>
@@ -1169,14 +1202,14 @@ function OrderTableSearchPanel({
         </div>
       </div>
 
-      <aside className="border border-[#e5e7eb] bg-white p-5 text-black">
+      <aside className="bg-white p-4 text-black sm:border sm:border-[#e5e7eb] sm:p-5">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">RESUME</h3>
           <span className="text-sm text-[#0877ff]">{selectedOrders.length} Article&gt;</span>
         </div>
         <div className="mt-5 space-y-4 text-sm">
           <div className="flex justify-between gap-4">
-            <span>Total marchandises</span>
+            <span>Cout PCB</span>
             <span>{formatMoney(merchandiseTotal)}</span>
           </div>
           <div className="flex justify-between gap-4">
@@ -1202,7 +1235,7 @@ function OrderTableSearchPanel({
             <span>Poids</span>
             <span>{selectedOrders.length ? `${formatWeight(totalWeightKg)}kg` : '--'}</span>
           </div>
-          <PaymentAuthorizationSummary />
+          {selectedOrders.length > 0 ? <PaymentAuthorizationSummary /> : null}
         </div>
         {selectedOrders.length === 1 ? (
           <a href={`/orders/${selectedOrders[0].id}`} className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#0877ff] px-5 text-base font-semibold text-white hover:bg-[#0068e8]">
@@ -1232,6 +1265,68 @@ function PaymentAuthorizationSummary() {
         </p>
       </div>
     </div>
+  );
+}
+
+function MobileOrderCard({
+  order,
+  selected,
+  deleting,
+  quantityUpdating,
+  onToggle,
+  onDetail,
+  onDelete,
+  onQuantityChange,
+}: {
+  order: ProfileOrder;
+  selected: boolean;
+  deleting: boolean;
+  quantityUpdating: boolean;
+  onToggle: () => void;
+  onDetail: () => void;
+  onDelete: () => void;
+  onQuantityChange: (quantity: number) => void;
+}) {
+  const selectable = isSelectableCartOrder(order);
+
+  return (
+    <article className="border border-[#e5e7eb] bg-white p-3 text-sm text-[#1f2f43]">
+      <div className="flex gap-3">
+        <input type="checkbox" checked={selected} disabled={!selectable} onChange={onToggle} className="mt-8 h-5 w-5 shrink-0 accent-[#0f8f6b]" aria-label={`Selectionner ${order.orderNumber}`} />
+        <div className="grid h-[76px] w-[76px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-[10px] text-[#94a3b8]">Kendronics</div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-black">{orderGerberLabel(order)}</p>
+          <p className="mt-1 text-xs text-[#44546a]">{orderProductOrderLine(order)}</p>
+          <p className="mt-1 text-xs text-[#44546a]">{orderSummaryLine(order)}</p>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <button type="button" onClick={onDetail} className="text-[#44546a] hover:text-[#0877ff]">Details du produit</button>
+            <a href={`/quote?orderId=${encodeURIComponent(order.id)}`} className="text-[#44546a] hover:text-[#0877ff]">Modifier la commande</a>
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-[1fr_1fr_auto] items-end gap-3 border-t border-[#eef0f3] pt-3">
+        <label className="grid gap-1 text-xs text-[#64748b]">
+          Qte
+          <select
+            value={orderQuantity(order)}
+            onChange={(event) => onQuantityChange(Number(event.target.value))}
+            disabled={quantityUpdating || !canUpdateOrderQuantity(order)}
+            className="h-9 border border-[#d1d5db] bg-white px-2 text-sm text-black outline-none disabled:cursor-not-allowed disabled:bg-[#f1f5f9]"
+          >
+            {quantityOptions(orderQuantity(order)).map((quantity) => (
+              <option key={quantity} value={quantity}>{quantity}</option>
+            ))}
+          </select>
+        </label>
+        <div>
+          <p className="text-xs text-[#64748b]">Cout PCB</p>
+          <p className="text-base font-semibold text-[#ff7a00]">{formatMoney(orderProductionTotal(order))}</p>
+        </div>
+        <button type="button" onClick={onDelete} disabled={deleting || !selectable} className="h-9 px-2 text-[#9ca3af] hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40" aria-label={`Supprimer ${order.orderNumber}`}>
+          {deleting ? '...' : 'x'}
+        </button>
+      </div>
+    </article>
   );
 }
 
@@ -1359,19 +1454,19 @@ function ProductDetailModal({ order, onClose }: { order: ProfileOrder; onClose: 
   const rows = productDetailRows(order);
 
   return (
-    <div className="fixed inset-0 z-[90] bg-black/55 px-4 py-10">
-      <div className="mx-auto max-h-[86vh] max-w-[1100px] overflow-auto bg-white p-7 text-black shadow-xl">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-lg">Detail du produit</h2>
-          <button type="button" onClick={onClose} className="grid h-8 w-8 place-items-center text-2xl text-[#6b7280] hover:text-black" aria-label="Fermer">
+    <div className="fixed inset-0 z-[90] bg-black/55 px-0 py-0 sm:px-4 sm:py-10">
+      <div className="absolute inset-x-0 bottom-0 max-h-[88vh] overflow-auto rounded-t-2xl bg-white p-4 text-black shadow-xl sm:relative sm:mx-auto sm:max-h-[86vh] sm:max-w-[1100px] sm:rounded-none sm:p-7">
+        <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-4 flex items-center justify-between gap-4 border-b border-[#dfe5ec] bg-white px-4 py-3 sm:static sm:mx-0 sm:mt-0 sm:border-b-0 sm:p-0">
+          <h2 className="text-lg font-semibold">Detail du produit</h2>
+          <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center bg-[#f1f5f9] text-2xl text-[#6b7280] hover:text-black sm:bg-transparent" aria-label="Fermer">
             x
           </button>
         </div>
         <div className="grid border border-[#dfe5ec] text-sm md:grid-cols-2">
           {rows.map((row) => (
-            <div key={row.label} className="grid grid-cols-[200px_minmax(0,1fr)] border-b border-[#dfe5ec] md:border-r md:even:border-r-0">
-              <span className="bg-[#f0f3f7] px-3 py-3 text-[#1f2f43]">{row.label}</span>
-              <span className="px-3 py-3">{row.value || 'A confirmer'}</span>
+            <div key={row.label} className="grid border-b border-[#dfe5ec] md:grid-cols-[200px_minmax(0,1fr)] md:border-r md:even:border-r-0">
+              <span className="bg-[#f0f3f7] px-3 py-2 text-xs font-semibold uppercase tracking-[0.04em] text-[#1f2f43] md:py-3 md:text-sm md:normal-case md:tracking-normal">{row.label}</span>
+              <span className="min-w-0 break-words px-3 py-2 md:py-3">{row.value || 'A confirmer'}</span>
             </div>
           ))}
         </div>
@@ -3135,7 +3230,8 @@ function DashboardPanel({
   const location = profile.country || 'Pays non renseigné';
 
   return (
-    <section className="grid bg-white shadow-sm ring-1 ring-[#dbe4ee] lg:grid-cols-[190px_minmax(0,1fr)]">
+    <section className="grid bg-white lg:grid-cols-[190px_minmax(0,1fr)] lg:shadow-sm lg:ring-1 lg:ring-[#dbe4ee]">
+      <MobileAccountCard firstName={firstName} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} />
       <div className="hidden place-items-center border-r border-[#e4ebf2] px-4 py-8 text-center lg:grid">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div>
@@ -3148,7 +3244,7 @@ function DashboardPanel({
         </div>
       </div>
 
-      <div className="p-4 sm:p-5">
+      <div className="p-0 sm:p-5 lg:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0f8f6b]">Espace client</p>
@@ -3157,7 +3253,7 @@ function DashboardPanel({
           <a href="/quote" className="inline-flex min-h-10 items-center justify-center border border-[#0f8f6b] px-4 py-2 text-xs font-semibold text-[#0f8f6b] transition hover:bg-[#0f8f6b] hover:text-white">Nouveau devis</a>
         </div>
         <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_180px]">
-          <div className="grid border border-[#e4ebf2] sm:grid-cols-2">
+          <div className="grid sm:grid-cols-2 sm:border sm:border-[#e4ebf2]">
             <MetricCell label="Total payé (EUR)" value={formatMoney(paidTotal)} detail={`En attente : ${formatMoney(pendingTotal)}`} />
             <MetricCell label="Commandes" value={String(orders.length)} valueClass="text-[#102033]" />
             <MetricCell label="En production" value={String(counts.production)} />
@@ -3174,10 +3270,29 @@ function DashboardPanel({
 
 function MetricCell({ label, value, detail, valueClass = 'text-[#1f2937]' }: { label: string; value: string; detail?: string; valueClass?: string }) {
   return (
-    <div className="min-h-[84px] border-b border-r border-slate-200 p-4 last:border-r-0">
+    <div className="min-h-[84px] border-b border-slate-200 p-4 sm:border-r sm:last:border-r-0">
       <p className="text-xs text-[#64748b]">{label}</p>
       <p className={`mt-2 text-2xl font-black ${valueClass}`}>{value}</p>
       {detail ? <p className="mt-1 text-xs text-[#475569]">{detail}</p> : null}
+    </div>
+  );
+}
+
+function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firstName: string; profile: ProfileForm; userId: string; avatarDataUrl: string }) {
+  const displayName = profile.name || firstName || 'Client Kendronics';
+  const companyOrType = profile.company || 'Compte client';
+  const location = profile.country || 'Pays non renseigne';
+
+  return (
+    <div className="mb-4 grid place-items-center bg-white py-5 text-center lg:hidden">
+      <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
+      <h1 className="mt-4 text-lg font-semibold text-[#102033]">{displayName}</h1>
+      <p className="mt-1 text-sm text-[#102033]">{companyOrType}</p>
+      <p className="mt-2 text-xs font-semibold text-[#0f8f6b]">Compte client</p>
+      <p className="mt-1 text-xs text-[#64748b]">ID Client: {userId}</p>
+      <p className="mt-1 max-w-[15rem] truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : location}</p>
+      <p className="mt-1 text-xs text-[#64748b]">{location}</p>
+      <a href="/profile?view=settings" className="mt-4 inline-flex text-xs font-semibold text-[#0f8f6b]">Gerer mon compte</a>
     </div>
   );
 }

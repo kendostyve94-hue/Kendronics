@@ -466,9 +466,9 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
 function MobileProfileSection({ group, isOpen, onToggle, onNavigate }: { group: MobileProfileMenuGroup; isOpen: boolean; onToggle: () => void; onNavigate: () => void }) {
   return (
     <div className="border-b border-dashed border-slate-200 last:border-b-0">
-      <button type="button" className="flex min-h-[4.6rem] w-full items-center justify-between text-left text-[1.7rem] font-semibold leading-none text-[#0b1724]" aria-expanded={isOpen} onClick={onToggle}>
+      <button type="button" className="flex min-h-[3.55rem] w-full items-center justify-between text-left text-[1.35rem] font-semibold leading-none text-[#0b1724]" aria-expanded={isOpen} onClick={onToggle}>
         <span>{group.title}</span>
-        <span className={`text-3xl leading-none text-[#0f8f6b] transition ${isOpen ? 'rotate-90' : ''}`} aria-hidden="true">›</span>
+        <span className={`text-2xl leading-none text-[#0f8f6b] transition ${isOpen ? 'rotate-90' : ''}`} aria-hidden="true">›</span>
       </button>
       {isOpen ? (
       <div className="grid gap-1 pb-4">
@@ -476,7 +476,7 @@ function MobileProfileSection({ group, isOpen, onToggle, onNavigate }: { group: 
           <a
             key={item.href}
             href={item.href}
-            className="flex min-h-11 items-center justify-between rounded-sm bg-[#eef6fb] px-3 text-sm font-medium text-[#243447] transition hover:bg-[#e4f7f0] hover:text-[#0f8f6b]"
+            className="flex min-h-10 items-center justify-between rounded-sm bg-[#eef6fb] px-3 text-sm font-medium text-[#243447] transition hover:bg-[#e4f7f0] hover:text-[#0f8f6b]"
             onClick={onNavigate}
           >
             <span>{item.label}</span>
