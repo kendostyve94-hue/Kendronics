@@ -367,7 +367,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         ) : null}
 
         {isMenuOpen ? (
-          <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6rem)] max-w-[21.5rem] overflow-y-auto border-t border-slate-200 bg-white px-1 pb-5 pt-3 sm:max-w-[40rem] lg:hidden">
+          <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6rem)] max-w-[21.5rem] overflow-y-auto border-t border-slate-200 bg-white px-1 pb-4 pt-2 sm:max-w-[40rem] lg:hidden">
             <div className="grid">
               {mobileProfileMenuGroups(unreadNotifications).map((group) => (
                 <MobileProfileSection
@@ -379,11 +379,11 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
                 />
               ))}
             </div>
-            <div className="mt-8 grid gap-3">
-              <a href="/quote" onClick={() => setIsMenuOpen(false)} className="flex min-h-14 items-center justify-center gap-3 rounded-sm bg-[#0f8f6b] px-4 text-base font-semibold text-white transition hover:bg-[#0b7558]">
+            <div className="mt-5 grid gap-2.5">
+              <a href="/quote" onClick={() => setIsMenuOpen(false)} className="flex min-h-12 items-center justify-center gap-2 rounded-sm bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558]">
                 Demarrer maintenant <span aria-hidden="true">›</span>
               </a>
-              <a href="/contact" onClick={() => setIsMenuOpen(false)} className="flex min-h-14 items-center justify-center rounded-sm border border-[#0f8f6b]/35 bg-white px-4 text-base font-semibold text-[#0f8f6b] transition hover:border-[#0f8f6b] hover:bg-[#eefbf6]">
+              <a href="/contact" onClick={() => setIsMenuOpen(false)} className="flex min-h-12 items-center justify-center rounded-sm border border-[#0f8f6b]/35 bg-white px-4 text-sm font-semibold text-[#0f8f6b] transition hover:border-[#0f8f6b] hover:bg-[#eefbf6]">
                 Contacter notre equipe
               </a>
             </div>
@@ -466,17 +466,17 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
 function MobileProfileSection({ group, isOpen, onToggle, onNavigate }: { group: MobileProfileMenuGroup; isOpen: boolean; onToggle: () => void; onNavigate: () => void }) {
   return (
     <div className="border-b border-dashed border-slate-200 last:border-b-0">
-      <button type="button" className="flex min-h-[3.55rem] w-full items-center justify-between text-left text-[1.35rem] font-semibold leading-none text-[#0b1724]" aria-expanded={isOpen} onClick={onToggle}>
+      <button type="button" className="flex min-h-[2.9rem] w-full items-center justify-between text-left text-[1.08rem] font-semibold leading-none text-[#0b1724]" aria-expanded={isOpen} onClick={onToggle}>
         <span>{group.title}</span>
-        <span className={`text-2xl leading-none text-[#0f8f6b] transition ${isOpen ? 'rotate-90' : ''}`} aria-hidden="true">›</span>
+        <span className={`text-xl leading-none text-[#0f8f6b] transition ${isOpen ? 'rotate-90' : ''}`} aria-hidden="true">›</span>
       </button>
       {isOpen ? (
-      <div className="grid gap-1 pb-4">
+      <div className="grid gap-1 pb-2">
         {group.items.map((item) => (
           <a
             key={item.href}
             href={item.href}
-            className="flex min-h-10 items-center justify-between rounded-sm bg-[#eef6fb] px-3 text-sm font-medium text-[#243447] transition hover:bg-[#e4f7f0] hover:text-[#0f8f6b]"
+            className="flex min-h-9 items-center justify-between rounded-sm bg-[#eef6fb] px-3 text-xs font-medium text-[#243447] transition hover:bg-[#e4f7f0] hover:text-[#0f8f6b]"
             onClick={onNavigate}
           >
             <span>{item.label}</span>

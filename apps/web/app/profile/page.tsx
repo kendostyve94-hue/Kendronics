@@ -1079,14 +1079,14 @@ function OrderTableSearchPanel({
     <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
       <div className="min-w-0">
         <div className="bg-white">
-          <div className="flex flex-wrap items-center gap-3 border-b border-[#e5e7eb] py-4 text-sm text-black sm:gap-5">
-            <div className="grid w-full grid-cols-2 gap-3 text-sm text-black sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-5">
+          <div className="border-b border-[#e5e7eb] py-3 text-sm text-black sm:flex sm:flex-wrap sm:items-center sm:gap-5 sm:py-4">
+            <div className="flex snap-x gap-2 overflow-x-auto pb-1 text-sm text-black sm:w-auto sm:flex-wrap sm:items-center sm:gap-5 sm:overflow-visible sm:pb-0">
               {orderServiceFilters.map((filter) => (
                 <button
                   key={filter.key}
                   type="button"
                   onClick={() => setServiceFilter(filter.key)}
-                  className={serviceFilter === filter.key ? 'text-[#0f8f6b]' : 'text-black hover:text-[#0f8f6b]'}
+                  className={`min-w-max snap-start px-3 py-2 sm:px-0 sm:py-0 ${serviceFilter === filter.key ? 'bg-[#eefbf6] text-[#0f8f6b] sm:bg-transparent' : 'text-black hover:text-[#0f8f6b]'}`}
                 >
                   {filter.label} ({orders.filter((order) => filter.key === 'all' || orderProductFilterKey(order) === filter.key).length})
                 </button>
@@ -1202,16 +1202,15 @@ function OrderTableSearchPanel({
         </div>
       </div>
 
-      <aside className="bg-white p-4 text-black sm:border sm:border-[#e5e7eb] sm:p-5">
+      <aside className="bg-white p-3 text-black sm:border sm:border-[#e5e7eb] sm:p-5">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">RESUME</h3>
-          <span className="text-sm text-[#0877ff]">{selectedOrders.length} Article&gt;</span>
-        </div>
-        <div className="mt-5 space-y-4 text-sm">
-          <div className="flex justify-between gap-4">
-            <span>Cout PCB</span>
-            <span>{formatMoney(merchandiseTotal)}</span>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Cout PCB</p>
+            <p className="mt-1 text-xl font-semibold text-[#ff7a00]">{formatMoney(merchandiseTotal)}</p>
           </div>
+          <span className="text-xs text-[#0877ff]">{selectedOrders.length} Article&gt;</span>
+        </div>
+        <div className="mt-4 space-y-3 text-sm">
           <div className="flex justify-between gap-4">
             <span>Estimation des frais de port</span>
             <span>{selectedOrders.length ? formatMoney(shippingTotal) : '--'}</span>
@@ -1220,16 +1219,16 @@ function OrderTableSearchPanel({
             <span>Droits de douane et taxes</span>
             <span>{selectedOrders.length ? formatMoney(taxesTotal) : '--'}</span>
           </div>
-          <div className="flex justify-between gap-4 border-t border-[#e5e7eb] pt-4 text-base font-semibold">
+          <div className="flex justify-between gap-4 border-t border-[#e5e7eb] pt-3 text-base font-semibold">
             <span>Total</span>
             <span className="text-[#ff7a00]">{formatMoney(payableTotal)}</span>
           </div>
-          <div className="border-t border-[#e5e7eb] pt-4">
+          <div className="border-t border-[#e5e7eb] pt-3">
             <div className="flex justify-between gap-4">
               <span>Paiement</span>
               <span>{selectedOrders.length === 1 ? 'Pret' : 'Un article a la fois'}</span>
             </div>
-            <p className="mt-3 text-sm leading-5 text-[#8a8f98]">Le paiement et le detail logistique se font sur la page de chaque commande.</p>
+            <p className="mt-2 text-xs leading-5 text-[#8a8f98]">Le paiement et le detail logistique se font sur la page de chaque commande.</p>
           </div>
           <div className="flex justify-between gap-4">
             <span>Poids</span>
@@ -1455,20 +1454,22 @@ function ProductDetailModal({ order, onClose }: { order: ProfileOrder; onClose: 
 
   return (
     <div className="fixed inset-0 z-[90] bg-black/55 px-0 py-0 sm:px-4 sm:py-10">
-      <div className="absolute inset-x-0 bottom-0 max-h-[88vh] overflow-auto rounded-t-2xl bg-white p-4 text-black shadow-xl sm:relative sm:mx-auto sm:max-h-[86vh] sm:max-w-[1100px] sm:rounded-none sm:p-7">
-        <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-4 flex items-center justify-between gap-4 border-b border-[#dfe5ec] bg-white px-4 py-3 sm:static sm:mx-0 sm:mt-0 sm:border-b-0 sm:p-0">
+      <div className="absolute inset-x-0 bottom-0 max-h-[72vh] overflow-hidden rounded-t-2xl bg-white text-black shadow-xl sm:relative sm:mx-auto sm:max-h-[86vh] sm:max-w-[1100px] sm:rounded-none">
+        <div className="sticky top-0 z-10 mb-3 flex items-center justify-between gap-4 border-b border-[#dfe5ec] bg-white px-4 py-3 sm:static sm:mb-4 sm:border-b-0 sm:px-7 sm:py-5">
           <h2 className="text-lg font-semibold">Detail du produit</h2>
           <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center bg-[#f1f5f9] text-2xl text-[#6b7280] hover:text-black sm:bg-transparent" aria-label="Fermer">
             x
           </button>
         </div>
-        <div className="grid border border-[#dfe5ec] text-sm md:grid-cols-2">
-          {rows.map((row) => (
-            <div key={row.label} className="grid border-b border-[#dfe5ec] md:grid-cols-[200px_minmax(0,1fr)] md:border-r md:even:border-r-0">
-              <span className="bg-[#f0f3f7] px-3 py-2 text-xs font-semibold uppercase tracking-[0.04em] text-[#1f2f43] md:py-3 md:text-sm md:normal-case md:tracking-normal">{row.label}</span>
-              <span className="min-w-0 break-words px-3 py-2 md:py-3">{row.value || 'A confirmer'}</span>
-            </div>
-          ))}
+        <div className="max-h-[calc(72vh-3.8rem)] overflow-y-auto overscroll-contain px-4 pb-4 sm:max-h-[calc(86vh-4rem)] sm:px-7 sm:pb-7">
+          <div className="grid border border-[#dfe5ec] text-sm md:grid-cols-2">
+            {rows.map((row) => (
+              <div key={row.label} className="grid border-b border-[#dfe5ec] md:grid-cols-[200px_minmax(0,1fr)] md:border-r md:even:border-r-0">
+                <span className="bg-[#f0f3f7] px-3 py-2 text-xs font-semibold uppercase tracking-[0.04em] text-[#1f2f43] md:py-3 md:text-sm md:normal-case md:tracking-normal">{row.label}</span>
+                <span className="min-w-0 break-words px-3 py-2 md:py-3">{row.value || 'A confirmer'}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -1635,19 +1636,19 @@ function NotificationsSection({
   const [markingRead, setMarkingRead] = useState(false);
 
   return (
-    <section className="min-h-[690px] bg-[#eef0f3] p-5 text-black shadow-sm ring-1 ring-slate-200">
+    <section className="min-h-[690px] bg-[#eef0f3] p-3 text-black sm:p-5 lg:shadow-sm lg:ring-1 lg:ring-slate-200">
       <h1 className="text-xl font-normal">Notifications</h1>
-      <div className="mt-5 flex h-[58px] items-center justify-between bg-white px-5 ring-1 ring-[#e5e7eb]">
-        <div className="flex items-center gap-5 text-sm">
-          <button className="border-r border-[#b8b8b8] pr-5 text-[#ff5a00]" type="button">Tout</button>
-          <button className="border-r border-[#b8b8b8] pr-5" type="button">Not. centre aide</button>
-          <button type="button">Not. Product</button>
+      <div className="mt-4 grid gap-3 bg-white px-3 py-3 sm:mt-5 sm:flex sm:h-[58px] sm:items-center sm:justify-between sm:px-5 sm:ring-1 sm:ring-[#e5e7eb]">
+        <div className="flex gap-2 overflow-x-auto text-sm sm:items-center sm:gap-5 sm:overflow-visible">
+          <button className="min-w-max bg-[#eefbf6] px-3 py-2 text-[#0f8f6b] sm:border-r sm:border-[#b8b8b8] sm:bg-transparent sm:py-0 sm:pr-5 sm:text-[#ff5a00]" type="button">Tout</button>
+          <button className="min-w-max px-3 py-2 sm:border-r sm:border-[#b8b8b8] sm:py-0 sm:pr-5" type="button">Centre aide</button>
+          <button className="min-w-max px-3 py-2 sm:py-0" type="button">Produit</button>
         </div>
-        <button type="button" disabled={markingRead || notifications.every((notification) => notification.readAt)} onClick={() => void markAllNotificationsRead(notifications, onNotificationsChange, setMarkingRead)} className="rounded-none border border-[#b8b8b8] px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="button" disabled={markingRead || notifications.every((notification) => notification.readAt)} onClick={() => void markAllNotificationsRead(notifications, onNotificationsChange, setMarkingRead)} className="h-10 border border-[#b8b8b8] px-3 text-xs disabled:cursor-not-allowed disabled:opacity-50 sm:h-auto sm:py-2">
           {markingRead ? 'Mise a jour...' : 'Tout marquer comme lu'}
         </button>
       </div>
-      <div className="mt-5 bg-white px-3 py-4 sm:px-5">
+      <div className="mt-4 bg-white px-3 py-3 sm:mt-5 sm:px-5 sm:py-4">
         <div className="hidden grid-cols-[1fr_1fr_160px] bg-[#f0f0f0] px-5 py-4 text-xs font-black sm:grid">
           <span>Notifications</span>
           <span>Article</span>
@@ -1672,9 +1673,9 @@ function NotificationsList({ notifications, dataStatus }: { notifications: Profi
   }
 
   return (
-    <div className="divide-y divide-slate-200 text-xs">
+    <div className="grid gap-2 text-xs sm:block sm:divide-y sm:divide-slate-200">
       {notifications.map((notification) => (
-        <div key={notification.id} className="grid gap-2 px-2 py-4 sm:grid-cols-[1fr_1fr_160px] sm:px-5">
+        <div key={notification.id} className="grid gap-2 border border-[#e5e7eb] bg-white px-3 py-3 sm:border-0 sm:bg-transparent sm:grid-cols-[1fr_1fr_160px] sm:px-5 sm:py-4">
           <span className={notification.readAt ? 'text-[#6b7280]' : 'font-black text-black'}>{notification.title}</span>
           <span>{notification.body || notification.type}</span>
           <span className="text-[#64748b]">{formatDate(notification.createdAt)}</span>
@@ -3282,17 +3283,22 @@ function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firs
   const displayName = profile.name || firstName || 'Client Kendronics';
   const companyOrType = profile.company || 'Compte client';
   const location = profile.country || 'Pays non renseigne';
+  const badge = accountBadge(profile);
 
   return (
-    <div className="mb-4 grid place-items-center bg-white py-5 text-center lg:hidden">
-      <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
-      <h1 className="mt-4 text-lg font-semibold text-[#102033]">{displayName}</h1>
-      <p className="mt-1 text-sm text-[#102033]">{companyOrType}</p>
-      <p className="mt-2 text-xs font-semibold text-[#0f8f6b]">Compte client</p>
-      <p className="mt-1 text-xs text-[#64748b]">ID Client: {userId}</p>
-      <p className="mt-1 max-w-[15rem] truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : location}</p>
-      <p className="mt-1 text-xs text-[#64748b]">{location}</p>
-      <a href="/profile?view=settings" className="mt-4 inline-flex text-xs font-semibold text-[#0f8f6b]">Gerer mon compte</a>
+    <div className="mb-4 flex items-center gap-4 bg-white py-4 text-left lg:hidden">
+      <div className="shrink-0">
+        <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h1 className="truncate text-base font-semibold text-[#102033]">{displayName}</h1>
+        <p className="mt-0.5 truncate text-sm text-[#102033]">{companyOrType}</p>
+        <p className="mt-1 text-xs font-semibold" style={{ color: badge.color }}>{badge.label}</p>
+        <p className="mt-1 text-xs text-[#64748b]">ID Client: {userId}</p>
+        <p className="mt-1 truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : location}</p>
+        <p className="mt-1 text-xs text-[#64748b]">{location}</p>
+        <a href="/profile?view=settings" className="mt-2 inline-flex text-xs font-semibold text-[#0f8f6b]">Gerer mon compte</a>
+      </div>
     </div>
   );
 }
