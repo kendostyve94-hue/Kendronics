@@ -89,7 +89,9 @@ export function PricingSummary({
   const [ratesState, setRatesState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [priceDetailsOpen, setPriceDetailsOpen] = useState(false);
   const countryMenuRef = useRef<HTMLDivElement>(null);
-  const canSave = errors.length === 0 && saveState !== 'saving' && authorizationRuleAccepted;
+  const hasProductionPricing = pricingPreview.status === 'direct' || pricingPreview.status === 'local';
+  const hasPreviewPrice = pricingPreview.status !== 'loading' && pricingPreview.status !== 'error';
+  const canSave = errors.length === 0 && saveState !== 'saving' && authorizationRuleAccepted && hasProductionPricing;
 
   const selectedCountry = countries.find((country) => country.iso2 === destinationCountry) ?? countries[0];
   const isSupplierPrice = pricing.pricingSource === 'supplier_api';
@@ -384,7 +386,8 @@ export function PricingSummary({
               }`}>
                 {pricingPreview.status === 'direct' ? 'Prix direct' : pricingPreview.status === 'loading' ? 'Calcul...' : pricingPreview.status === 'error' ? 'A verifier' : 'Estime'}
               </p>
-              <p className="mt-0.5 text-lg font-semibold text-[#ff7a00]">${pricing.finalTotal.toFixed(2)}</p>
+              <p className="mt-0.5 text-lg font-semibold text-[#ff7a00]">{hasPreviewPrice ? `$${pricing.finalTotal.toFixed(2)}` : 'Calcul...'}</p>
+              {!hasProductionPricing ? <p className="mt-0.5 text-[11px] font-medium normal-case tracking-normal text-slate-500">{pricingPreview.message}</p> : null}
             </button>
             <button
               type="button"
@@ -410,7 +413,7 @@ export function PricingSummary({
               <div className="mb-2 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-sm font-semibold text-slate-950">Prix et delai de fabrication</h2>
-                  <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{isSupplierPrice ? 'Prix direct Kendronics.' : 'Prix estime avec livraison integree.'}</p>
+                  <p className="mt-0.5 text-[11px] leading-4 text-slate-500">{isSupplierPrice ? 'Prix direct Kendronics.' : pricingPreview.message}</p>
                 </div>
                 <button type="button" className="grid h-8 w-8 place-items-center rounded-full bg-white text-base font-medium text-slate-700" onClick={() => setPriceDetailsOpen(false)} aria-label="Fermer">
                   x

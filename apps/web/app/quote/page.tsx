@@ -342,7 +342,7 @@ export default function QuotePage() {
   const [selectedProductTitle, setSelectedProductTitle] = useState(productCards.find((product) => product.value === initialQuoteConfig.productType)?.title ?? productCards[0].title);
   const [apiPricing, setApiPricing] = useState<PricingBreakdown | null>(null);
   const [pricingPreview, setPricingPreview] = useState<PricingPreviewState>({
-    status: 'local',
+    status: 'loading',
     message: 'Calcul du prix de fabrication en direct...',
   });
   const [editOrder, setEditOrder] = useState<EditableOrder | null>(null);
