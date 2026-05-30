@@ -183,7 +183,6 @@ export default async function HomePage() {
     <main className="overflow-hidden bg-[#eef2f6] text-ink">
       <Navbar />
       <Hero />
-      <MobileQuickAccess />
       <ProductCatalog />
       <HomeCapabilityMatrix />
       <WhyBuyPcbSection recentProductionActivity={recentProductionActivity} />

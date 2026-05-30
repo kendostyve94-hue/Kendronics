@@ -284,14 +284,18 @@ export function PricingSummary({
             </div>
 
             <p className="mt-3 text-[11px] font-medium text-[#ff7a00]">
-              {pricing.pricingSource === 'supplier_api' ? 'Les delais viennent du calcul de fabrication.' : "Les delais s'ajustent selon les options PCB et l'analyse Gerber."}
+              {hasProductionPricing
+                ? pricing.pricingSource === 'supplier_api'
+                  ? 'Les delais viennent du calcul de fabrication.'
+                  : pricingPreview.message
+                : pricingPreview.message}
             </p>
           </div>
 
           <div className="mb-3">
             <div className="mb-1 flex items-center justify-between text-sm">
               <span className="font-semibold text-slate-700">Frais de livraison :</span>
-              <span className="text-slate-700">${pricing.franceToAfricaDelivery.toFixed(2)}</span>
+              <span className="text-slate-700">{hasPreviewPrice ? `$${pricing.franceToAfricaDelivery.toFixed(2)}` : 'Calcul...'}</span>
             </div>
             <div className="grid grid-cols-[1fr_5rem] gap-2">
               <CountryDropdown
@@ -330,11 +334,17 @@ export function PricingSummary({
           </div>
 
           <div className="space-y-1 border-b border-slate-200 pb-3 text-sm">
-            <FeeLine label="Cout PCB :" value={pcbClientPrice} />
-            <FeeLine label="Livraison :" value={pricing.franceToAfricaDelivery} />
+            {hasPreviewPrice ? (
+              <>
+                <FeeLine label="Cout PCB :" value={pcbClientPrice} />
+                <FeeLine label="Livraison :" value={pricing.franceToAfricaDelivery} />
+              </>
+            ) : (
+              <div className="border border-slate-200 bg-slate-50 p-2 text-xs font-medium text-slate-600">{pricingPreview.message}</div>
+            )}
             <div className="flex items-center justify-between pt-1 font-semibold">
               <span className="text-slate-700">Total :</span>
-              <span className="text-lg font-semibold text-black">${pricing.finalTotal.toFixed(2)}</span>
+              <span className="text-lg font-semibold text-black">{hasPreviewPrice ? `$${pricing.finalTotal.toFixed(2)}` : 'Calcul...'}</span>
             </div>
             <p className="pt-2 text-right text-[10px] text-slate-500">Note : droits de douane et TVA non inclus.</p>
           </div>
@@ -380,14 +390,19 @@ export function PricingSummary({
         <div className="mx-auto max-w-md">
           <div className="flex items-center gap-3">
             <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Afficher le detail du prix" aria-expanded={priceDetailsOpen}>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total estime</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Cout PCB</p>
               <p className={`mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] ${
                 pricingPreview.status === 'direct' ? 'text-[#0f8f6b]' : pricingPreview.status === 'error' ? 'text-[#c45100]' : 'text-slate-500'
               }`}>
                 {pricingPreview.status === 'direct' ? 'Prix direct' : pricingPreview.status === 'loading' ? 'Calcul...' : pricingPreview.status === 'error' ? 'A verifier' : 'Estime'}
               </p>
-              <p className="mt-0.5 text-lg font-semibold text-[#ff7a00]">{hasPreviewPrice ? `$${pricing.finalTotal.toFixed(2)}` : 'Calcul...'}</p>
+              <p className="mt-0.5 text-lg font-semibold text-[#ff7a00]">{hasPreviewPrice ? `$${pcbClientPrice.toFixed(2)}` : 'Calcul...'}</p>
               {!hasProductionPricing ? <p className="mt-0.5 text-[11px] font-medium normal-case tracking-normal text-slate-500">{pricingPreview.message}</p> : null}
+            </button>
+            <button type="button" className="w-20 shrink-0 border border-slate-200 bg-white px-2 py-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Changer le delai de fabrication">
+              <span className="block text-[9px] font-semibold uppercase tracking-[0.08em] text-slate-500">Delai</span>
+              <span className="mt-0.5 block text-xs font-semibold text-slate-900">{activeBuildOption.buildDays}j</span>
+              {buildOptions.length > 1 ? <span className="block text-[10px] text-[#0f8f6b]">Changer</span> : null}
             </button>
             <button
               type="button"
@@ -421,13 +436,42 @@ export function PricingSummary({
               </div>
 
               <div className="rounded-sm border border-slate-200 bg-white p-2.5">
-                <div className="space-y-2 border-b border-slate-200 pb-2 text-xs">
-                  <FeeLine label="Cout PCB :" value={pcbClientPrice} />
-                  <FeeLine label="Livraison :" value={pricing.franceToAfricaDelivery} />
-                  <div className="flex items-center justify-between font-semibold">
-                    <span>Total :</span>
-                    <span>${pricing.finalTotal.toFixed(2)}</span>
+                {buildOptions.length > 1 ? (
+                  <div className="mb-3 border-b border-slate-200 pb-2">
+                    <p className="mb-2 text-xs font-semibold text-slate-700">Delai de fabrication</p>
+                    <div className="grid gap-1.5">
+                      {buildOptions.map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => {
+                            onProductionSpeedChange(option.speed);
+                            onBuildTimeOptionSelect(option);
+                          }}
+                          className={`flex items-center justify-between border px-2.5 py-2 text-left text-xs ${
+                            activeBuildOption.id === option.id ? 'border-[#0f8f6b] bg-[#eefbf6] text-[#0f6f54]' : 'border-slate-200 bg-white text-slate-700'
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          <span>{option.buildDays}j / ${option.price.toFixed(2)}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
+                ) : null}
+                <div className="space-y-2 border-b border-slate-200 pb-2 text-xs">
+                  {hasPreviewPrice ? (
+                    <>
+                      <FeeLine label="Cout PCB :" value={pcbClientPrice} />
+                      <FeeLine label="Livraison :" value={pricing.franceToAfricaDelivery} />
+                      <div className="flex items-center justify-between font-semibold">
+                        <span>Total :</span>
+                        <span>${pricing.finalTotal.toFixed(2)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-xs font-medium text-slate-600">{pricingPreview.message}</p>
+                  )}
                 </div>
 
                 <button type="button" onClick={() => setShippingDialogOpen(true)} className="mt-3 flex w-full items-center justify-between border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium">
@@ -463,13 +507,19 @@ export function PricingSummary({
               </button>
             </div>
             <div className="space-y-2 text-sm">
-              <FeeLine label="Cout PCB :" value={pcbClientPrice} />
-              <FeeLine label="Livraison :" value={pricing.franceToAfricaDelivery} />
-              <FeeLine label="Service:" value={pricing.kendronicsServiceFee} />
-              <div className="flex items-center justify-between border-t border-slate-200 pt-2 font-semibold">
-                <span>Total :</span>
-                <span>${pricing.finalTotal.toFixed(2)}</span>
-              </div>
+              {hasPreviewPrice ? (
+                <>
+                  <FeeLine label="Cout PCB :" value={pcbClientPrice} />
+                  <FeeLine label="Livraison :" value={pricing.franceToAfricaDelivery} />
+                  <FeeLine label="Service:" value={pricing.kendronicsServiceFee} />
+                  <div className="flex items-center justify-between border-t border-slate-200 pt-2 font-semibold">
+                    <span>Total :</span>
+                    <span>${pricing.finalTotal.toFixed(2)}</span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm font-medium text-slate-600">{pricingPreview.message}</p>
+              )}
             </div>
             <p className="mt-3 text-xs leading-5 text-slate-500">{pricingPreview.message}</p>
           </div>
