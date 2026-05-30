@@ -10,6 +10,7 @@ import { officialContactEmail } from '../lib/official-contact';
 const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
 const heroControllerBoardImage = '/images/hero-controller-board-transparent.png';
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
+const smartOrderingMapImage = '/images/home-schematic-preview.png';
 const kendronicsChoiceBannerImage = '/images/hero-pcb-color-variants.png';
 const oneStopSolutionVideoMp4 = '/videos/one-stop-solution.mp4';
 const oneStopPaymentMethodCount = 4;
@@ -185,6 +186,7 @@ export default async function HomePage() {
       <ProductCatalog />
       <HomeCapabilityMatrix />
       <WhyBuyPcbSection recentProductionActivity={recentProductionActivity} />
+      <SmartOrdering />
       <Footer />
     </main>
   );
@@ -299,7 +301,7 @@ function HomeCapabilityMatrix() {
 
   return (
     <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
-      <div className="mx-auto grid max-w-none items-start gap-5 xl:grid-cols-[minmax(34rem,0.95fr)_minmax(26rem,0.72fr)_minmax(20rem,0.58fr)]">
+      <div className="mx-auto grid max-w-none items-start gap-5 xl:grid-cols-[minmax(40rem,1.18fr)_minmax(28rem,0.82fr)]">
         <div className="overflow-hidden border border-slate-300 bg-white lg:h-[24rem]">
           <div className="grid border-b border-slate-300 lg:h-[19rem] lg:grid-cols-[minmax(12rem,15.5rem)_minmax(0,1fr)]">
             <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
@@ -383,70 +385,8 @@ function HomeCapabilityMatrix() {
             </tbody>
           </table>
         </div>
-
-        <AfricaDeliveryCoverage />
       </div>
     </section>
-  );
-}
-
-function AfricaDeliveryCoverage() {
-  const points = [
-    [108, 150], [134, 142], [160, 137], [190, 135], [218, 140], [248, 151], [275, 168], [302, 192],
-    [116, 178], [142, 170], [172, 166], [204, 166], [236, 173], [268, 188], [296, 210], [318, 238],
-    [124, 206], [152, 198], [184, 196], [216, 200], [248, 211], [278, 230], [304, 256],
-    [132, 236], [162, 228], [194, 230], [226, 240], [254, 260], [280, 286], [300, 318],
-    [142, 266], [172, 260], [204, 268], [232, 286], [256, 315], [274, 348], [290, 382],
-    [152, 296], [184, 294], [212, 308], [236, 336], [252, 370], [264, 406], [276, 442],
-    [166, 328], [196, 334], [218, 356], [234, 390], [246, 428], [256, 464],
-    [178, 362], [202, 374], [220, 404], [232, 440], [242, 476], [252, 510],
-    [198, 430], [218, 462], [236, 492], [256, 524], [282, 538], [312, 530],
-    [320, 360], [340, 392], [356, 426], [366, 464], [362, 504], [346, 536],
-    [330, 214], [354, 236], [374, 266], [386, 300], [394, 336], [398, 374],
-    [360, 180], [386, 205], [406, 236], [420, 274], [424, 314], [418, 354],
-    [214, 112], [244, 116], [276, 126], [308, 144], [338, 168], [366, 198],
-  ];
-
-  return (
-    <article className="relative min-h-[24rem] overflow-hidden border border-slate-300 bg-white p-5">
-      <div className="relative z-10 max-w-[19rem]">
-        <p className="label-caps text-deepblue">Zone de livraison</p>
-        <h2 className="mt-2 text-2xl font-normal leading-tight text-ink">Livraison PCB coordonnee sur le continent africain</h2>
-        <p className="mt-3 text-sm leading-6 text-slate-600">
-          Kendronics relie devis, production, suivi et livraison vers les pays couverts en Afrique, avec des delais et options ajustes selon la destination.
-        </p>
-      </div>
-
-      <svg className="absolute inset-x-0 bottom-0 h-[88%] w-full" viewBox="0 0 460 560" role="img" aria-label="Carte stylisee de la couverture de livraison en Afrique">
-        <defs>
-          <linearGradient id="africaDeliveryGradient" x1="92" y1="486" x2="395" y2="118" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#0f8f6b" />
-            <stop offset="0.58" stopColor="#12a87c" />
-            <stop offset="1" stopColor="#ff7a00" />
-          </linearGradient>
-          <radialGradient id="africaDeliveryGlow" cx="50%" cy="58%" r="62%">
-            <stop stopColor="#0f8f6b" stopOpacity="0.18" />
-            <stop offset="0.58" stopColor="#12a87c" stopOpacity="0.08" />
-            <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
-          </radialGradient>
-          <clipPath id="africaDeliveryClip">
-            <path d="M116 169c30-45 84-69 145-64 55 5 105 34 139 78 24 31 38 68 35 103-2 28-17 54-42 73-17 13-28 31-31 53-5 40-21 80-51 103-24 19-56 22-83 4-23-15-35-43-42-72-6-27-14-52-34-74-24-27-42-59-54-92-14-39-9-78 18-112Z" />
-          </clipPath>
-        </defs>
-        <rect width="460" height="560" fill="url(#africaDeliveryGlow)" />
-        <g clipPath="url(#africaDeliveryClip)">
-          <path d="M104 154c34-52 96-80 166-74 62 5 119 39 157 89 27 35 43 78 39 118-2 31-19 61-47 82-19 15-32 36-35 62-6 46-24 91-59 118-28 22-65 25-96 5-26-17-40-50-48-83-7-31-16-60-39-85-28-31-49-68-62-106-16-45-10-89 24-126Z" fill="url(#africaDeliveryGradient)" opacity="0.08" />
-          {points.map(([cx, cy], index) => (
-            <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={index % 5 === 0 ? 2.1 : index % 3 === 0 ? 1.7 : 1.35} fill="url(#africaDeliveryGradient)" opacity={index % 4 === 0 ? 0.92 : 0.72} />
-          ))}
-          {points.map(([cx, cy], index) => (
-            <circle key={`small-${cx}-${cy}`} cx={cx + (index % 2 === 0 ? 11 : -9)} cy={cy + (index % 3 === 0 ? 8 : -7)} r="1.1" fill="url(#africaDeliveryGradient)" opacity="0.46" />
-          ))}
-        </g>
-        <path d="M62 188c96-82 252-92 352 18" fill="none" stroke="#0f8f6b" strokeLinecap="round" strokeWidth="2" opacity="0.42" />
-        <path d="M48 214c104-102 282-114 382 6" fill="none" stroke="#ff7a00" strokeLinecap="round" strokeWidth="1.5" opacity="0.28" />
-      </svg>
-    </article>
   );
 }
 
@@ -702,6 +642,29 @@ function MobileQuickAccess() {
             <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
           </a>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function SmartOrdering() {
+  return (
+    <section className="bg-[#eef2f6] px-0 py-4 sm:px-4 lg:px-8">
+      <div className="mx-auto max-w-none">
+        <div className="relative min-h-[13rem] overflow-hidden bg-white lg:min-h-[16rem]">
+          <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="relative p-4 sm:p-6">
+            <div className="max-w-[25rem]">
+              <p className="label-caps text-ink">Commande intelligente</p>
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+                <Button href="/quote" className="min-w-[7.5rem] sm:h-10">Commencer</Button>
+                <Button href="/how-it-works" variant="secondary" className="min-w-[10rem] whitespace-nowrap sm:h-10">
+                  Comment ca marche
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
