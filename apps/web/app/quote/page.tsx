@@ -800,7 +800,7 @@ export default function QuotePage() {
                 className="h-auto w-full max-w-[48rem] object-contain mix-blend-multiply"
               />
             </div>
-            <a href="/how-it-works" className="text-xs font-medium text-[#0f8f6b] hover:text-[#096b51] sm:text-sm lg:justify-self-end">
+            <a href="/how-it-works" className="hidden text-xs font-medium text-[#0f8f6b] hover:text-[#096b51] sm:inline sm:text-sm lg:justify-self-end">
               Instructions de commande &gt;
             </a>
           </div>
@@ -876,7 +876,7 @@ export default function QuotePage() {
               <MobileSheetRow label="Couches" help="Les nombres impairs sont souvent ajustes au nombre pair superieur par les fabricants." summary={`${config.layers} couches`} sheetId="layers" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
                 <Pills value={config.layers} onChange={(value) => update('layers', Number(value))} options={[1, 2, 4, 6, 8, 10, 12, 14, 16]} />
               </MobileSheetRow>
-              <QuoteRow label="Dimensions" help="Dimensions du PCB seul ou du panneau televerse." mobileWide>
+              <QuoteRow label="Dimensions" help="Dimensions du PCB seul ou du panneau televerse." className="border-b-0 sm:border-b" mobileWide>
                 <div className="quote-field-surface grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_4.25rem] items-end gap-1.5 sm:grid-cols-[1fr_1fr_82px] sm:gap-3">
                   <NumberBox label="Longueur" value={config.length} onChange={(value) => update('length', value)} />
                   <NumberBox label="Largeur" value={config.width} onChange={(value) => update('width', value)} />
@@ -1323,7 +1323,7 @@ function MobileSheetRow({
 
   return (
     <>
-      <div className={`quote-param-row border-b border-slate-100 bg-white sm:hidden ${mobileWide ? 'col-span-2' : ''}`}>
+      <div className={`quote-param-row bg-white sm:hidden ${sheetId === 'usage' ? 'border-b border-slate-100' : ''} ${mobileWide ? 'col-span-2' : ''}`}>
         <button type="button" className="flex min-h-14 w-full items-center justify-between gap-3 px-1 py-2.5 text-left" onClick={() => onOpenSheet(sheetId)}>
           <span className="min-w-0">
             <span className="block text-sm font-semibold text-slate-900">{label}</span>

@@ -1211,7 +1211,7 @@ function OrderTableSearchPanel({
 
       <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(3.9rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur' : 'hidden'} text-black sm:static sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5 sm:backdrop-blur-0`}>
         {cartSummaryOpen ? (
-          <div className="mx-auto mb-2 max-w-md border-b border-slate-200 pb-2 text-xs sm:hidden">
+          <div className="sheet-panel-in mx-auto mb-2 max-w-md border-b border-slate-200 pb-2 text-xs sm:hidden">
             <div className="mb-2 flex items-center justify-between">
               <span className="font-semibold text-slate-900">Details du resume</span>
               <button type="button" onClick={() => setCartSummaryOpen(false)} className="text-slate-500">x</button>
@@ -1222,6 +1222,11 @@ function OrderTableSearchPanel({
               <SummaryRow label="Droits de douane et taxes" value={selectedOrders.length ? formatMoney(taxesTotal) : '--'} />
               <SummaryRow label="Poids" value={selectedOrders.length ? `${formatWeight(totalWeightKg)}kg` : '--'} />
             </div>
+            {selectedOrders.length > 0 ? (
+              <div className="mt-3">
+                <PaymentAuthorizationSummary checked={cartTermsAccepted} onChange={setCartTermsAccepted} />
+              </div>
+            ) : null}
           </div>
         ) : null}
         <div className="mx-auto flex max-w-md items-center gap-3 sm:hidden">
@@ -1512,7 +1517,7 @@ function ProductDetailModal({ order, onClose }: { order: ProfileOrder; onClose: 
 
   return (
     <div className="fixed inset-0 z-[90] bg-black/55 px-0 py-0 sm:px-4 sm:py-10">
-      <div className="absolute inset-x-0 bottom-0 max-h-[72vh] overflow-hidden rounded-t-2xl bg-white text-black shadow-xl sm:relative sm:mx-auto sm:max-h-[86vh] sm:max-w-[1100px] sm:rounded-none">
+      <div className="sheet-panel-in absolute inset-x-0 bottom-0 max-h-[72vh] overflow-hidden rounded-t-2xl bg-white text-black shadow-xl sm:relative sm:mx-auto sm:max-h-[86vh] sm:max-w-[1100px] sm:rounded-none">
         <div className="sticky top-0 z-10 mb-3 flex items-center justify-between gap-4 border-b border-[#dfe5ec] bg-white px-4 py-3 sm:static sm:mb-4 sm:border-b-0 sm:px-7 sm:py-5">
           <h2 className="text-lg font-semibold">Detail du produit</h2>
           <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center bg-[#f1f5f9] text-2xl text-[#6b7280] hover:text-black sm:bg-transparent" aria-label="Fermer">
@@ -3377,7 +3382,7 @@ function SignedOutMobileAccount() {
   return (
     <div className="grid gap-3 bg-white py-4 text-[#102033] lg:hidden">
       {mode === 'choice' ? (
-      <section className="border border-slate-200 bg-white px-3.5 py-4 text-ink">
+      <section className="bg-white px-0 py-2 text-ink">
         <h1 className="text-lg font-bold tracking-normal text-ink">Bienvenue sur Kendronics</h1>
         <p className="mt-2 text-xs leading-5 text-slate-600">
           Pour utiliser les fonctionnalites du site, creez d'abord votre compte ou connectez-vous si vous en avez deja un.
@@ -3407,14 +3412,14 @@ function SignedOutMobileAccount() {
       ) : null}
 
       {mode === 'register' ? (
-      <section className="border border-slate-200 bg-white text-ink">
-        <div className="border-b border-slate-200 px-3.5 py-2.5">
+      <section className="bg-white text-ink">
+        <div className="px-0 py-2.5">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-lg font-bold tracking-normal text-ink">Rejoindre ou se connecter</h1>
             <button type="button" onClick={() => setMode('choice')} className="shrink-0 text-xs font-medium text-slate-400">Retour</button>
           </div>
         </div>
-        <div className="space-y-2 px-3.5 py-3">
+        <div className="space-y-2 px-0 py-3">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-base font-bold text-ink">Creer un compte</h2>
             <button type="button" onClick={() => setMode('login')} className="text-xs font-semibold text-[#0f8f6b]">Se connecter</button>
@@ -3428,14 +3433,14 @@ function SignedOutMobileAccount() {
       ) : null}
 
       {mode === 'login' ? (
-      <section className="border border-slate-200 bg-white text-ink">
-        <div className="border-b border-slate-200 px-3.5 py-2.5">
+      <section className="bg-white text-ink">
+        <div className="px-0 py-2.5">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-lg font-bold tracking-normal text-ink">Rejoindre ou se connecter</h1>
             <button type="button" onClick={() => setMode('choice')} className="shrink-0 text-xs font-medium text-slate-400">Retour</button>
           </div>
         </div>
-        <div className="space-y-2 px-3.5 py-3">
+        <div className="space-y-2 px-0 py-3">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-base font-bold text-ink">Se connecter</h2>
             <button type="button" onClick={() => setMode('register')} className="text-xs font-semibold text-[#0f8f6b]">Creer un compte</button>
