@@ -30,6 +30,16 @@ export function validateProductionConfig() {
     throw new Error('STRIPE_WEBHOOK_SECRET must be a Stripe webhook signing secret.');
   }
 
+  if (process.env.STRIPE_IDENTITY_ENABLED === 'true') {
+    const missingStripeIdentity = ['STRIPE_SECRET_KEY', 'STRIPE_IDENTITY_WEBHOOK_SECRET'].filter((key) => !process.env[key]);
+    if (missingStripeIdentity.length > 0) {
+      throw new Error(`Missing Stripe Identity production environment variables: ${missingStripeIdentity.join(', ')}`);
+    }
+    if (process.env.STRIPE_IDENTITY_WEBHOOK_SECRET && !process.env.STRIPE_IDENTITY_WEBHOOK_SECRET.startsWith('whsec_')) {
+      throw new Error('STRIPE_IDENTITY_WEBHOOK_SECRET must be a Stripe webhook signing secret.');
+    }
+  }
+
   if (process.env.ONESIGNAL_REQUIRED === 'true') {
     const missingOneSignal = ['ONESIGNAL_APP_ID', 'ONESIGNAL_REST_API_KEY'].filter((key) => !process.env[key]);
     if (missingOneSignal.length > 0) {

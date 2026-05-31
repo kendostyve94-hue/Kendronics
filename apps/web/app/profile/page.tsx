@@ -28,6 +28,8 @@ type ProfileForm = {
   billingAddress?: AccountAddress;
   emailVerifiedAt?: string;
   phoneVerifiedAt?: string;
+  verificationLevel?: number;
+  verificationStatus?: string;
 };
 
 type ProfileDetails = {
@@ -198,6 +200,8 @@ type ProfileUser = {
   billingAddress?: AccountAddress;
   emailVerifiedAt?: string;
   phoneVerifiedAt?: string;
+  verificationLevel?: number;
+  verificationStatus?: string;
   createdAt: string;
 };
 
@@ -349,6 +353,8 @@ export default function ProfilePage() {
           billingAddress: normalizeAddress(userResponse.billingAddress ?? current.billingAddress),
           emailVerifiedAt: userResponse.emailVerifiedAt || '',
           phoneVerifiedAt: userResponse.phoneVerifiedAt || '',
+          verificationLevel: userResponse.verificationLevel ?? current.verificationLevel ?? 0,
+          verificationStatus: userResponse.verificationStatus ?? current.verificationStatus ?? 'unverified',
         }));
         if (userResponse.avatarDataUrl) {
           setAvatarDataUrl(userResponse.avatarDataUrl);
@@ -2138,6 +2144,28 @@ function SettingsSection({
   const [savingDeleteFeedback, setSavingDeleteFeedback] = useState(false);
   const [selectedAlternative, setSelectedAlternative] = useState<DeleteAlternative | null>(null);
   const [deleteFeedback, setDeleteFeedback] = useState<DeleteFeedback>(createEmptyDeleteFeedback());
+  const [identityStatus, setIdentityStatus] = useState<'idle' | 'starting' | 'error'>('idle');
+  const [identityMessage, setIdentityMessage] = useState('');
+
+  async function startIdentityVerification() {
+    setIdentityStatus('starting');
+    setIdentityMessage('');
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) throw new Error('Connectez-vous pour lancer la certification.');
+      const response = await fetch(`${getApiBaseUrl()}/api/verification/identity/start`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { Authorization: `Bearer ${session.accessToken}` },
+      });
+      const payload = (await response.json().catch(() => null)) as { url?: string; message?: string } | null;
+      if (!response.ok || !payload?.url) throw new Error(payload?.message ?? 'Verification identite indisponible.');
+      window.location.href = payload.url;
+    } catch (error) {
+      setIdentityStatus('error');
+      setIdentityMessage(error instanceof Error ? error.message : 'Verification identite indisponible.');
+    }
+  }
 
   function closeDeleteModal() {
     if (requestingDeleteCode || deletingAccount || savingDeleteFeedback) return;
@@ -2200,13 +2228,31 @@ function SettingsSection({
       <div className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
         <h2 className="min-w-0 break-words text-lg">Statut compte</h2>
         <p className={`min-w-0 break-words ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
-          {isAccountLevelOne(profile)
+          {(profile.verificationLevel ?? 0) >= 2
+            ? 'Votre identite est certifiee. Votre compte peut acceder aux commandes de niveau superieur.'
+            : isAccountLevelOne(profile)
             ? 'Votre compte est verifie et peut soumettre des commandes.'
             : 'Votre compte doit etre complete avant de soumettre une commande.'}
         </p>
         <a href={isAccountLevelOne(profile) ? '/terms' : '/profile?view=settings'} className={`col-start-2 min-w-0 justify-self-start break-words text-left sm:col-start-auto sm:justify-self-auto sm:text-right ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
           {isAccountLevelOne(profile) ? 'Verifie' : 'A completer'}
         </a>
+      </div>
+      <div className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
+        <h2 className="min-w-0 break-words text-lg">Certification identite</h2>
+        <p className={`min-w-0 break-words ${(profile.verificationLevel ?? 0) >= 2 ? 'text-[#0f8f6b]' : 'text-[#4b5563]'}`}>
+          {(profile.verificationLevel ?? 0) >= 2
+            ? 'Identite certifiee via controle securise.'
+            : 'Certifiez votre identite pour passer au badge Professionnel certifie.'}
+          {identityStatus === 'error' && identityMessage ? <span className="mt-1 block text-xs font-semibold text-red-500">{identityMessage}</span> : null}
+        </p>
+        {(profile.verificationLevel ?? 0) >= 2 ? (
+          <span className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">Certifie</span>
+        ) : (
+          <button type="button" disabled={identityStatus === 'starting'} onClick={() => void startIdentityVerification()} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] disabled:text-slate-300 sm:col-start-auto sm:justify-self-auto sm:text-right">
+            {identityStatus === 'starting' ? 'Ouverture...' : 'Certifier'}
+          </button>
+        )}
       </div>
       {[
         ['E-mail', profile.email ? `${maskEmail(profile.email)} ${profile.emailVerifiedAt ? '✓' : ''}` : 'Enregistrer un mail', 'Modifier', '/profile?view=settings'],
@@ -3287,8 +3333,10 @@ function isAccountLevelOne(profile: ProfileForm): boolean {
 }
 
 function accountBadge(profile: ProfileForm): { label: string; color: string } {
+  if ((profile.verificationLevel ?? 0) >= 3) return { label: 'Industriel certifie', color: '#0f8f6b' };
+  if ((profile.verificationLevel ?? 0) >= 2) return { label: 'Professionnel certifie', color: '#0877ff' };
+  if ((profile.verificationLevel ?? 0) >= 1) return { label: 'Individuel verifie', color: '#f59e0b' };
   if (!isAccountLevelOne(profile)) return { label: 'Individuel', color: '#94a3b8' };
-  if (profile.profileDetails?.accountType === 'company' || profile.company) return { label: 'Industriel certifie', color: '#0f8f6b' };
   return { label: 'Individuel verifie', color: '#f59e0b' };
 }
 

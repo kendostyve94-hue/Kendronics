@@ -99,6 +99,7 @@ Commandes utiles:
 - `JWT_SECRET` est une valeur longue et unique, pas la valeur exemple.
 - `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` sont en mode live quand tu acceptes de vrais paiements.
 - Le webhook Stripe pointe vers `https://url-publique-de-ton-api/api/payments/webhooks/stripe`.
+- Stripe Identity est active avec `STRIPE_IDENTITY_ENABLED=true`, `STRIPE_IDENTITY_WEBHOOK_SECRET` et un webhook Stripe Identity vers `https://url-publique-de-ton-api/api/webhooks/stripe-identity`.
 - SMTP est configure avec un mot de passe d'application ou un fournisseur email transactionnel.
 - Twilio Verify est configure avec `PHONE_VERIFY_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID` et `TWILIO_VERIFY_CHANNEL=sms`.
 - Le bucket prive S3/R2 est cree et les variables `S3_*` sont renseignees.
