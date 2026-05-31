@@ -6,12 +6,15 @@ import { InternationalPhoneInput } from '../../components/account/InternationalP
 import { Navbar } from '../../components/layout/Navbar';
 import { africanCountries } from '../../lib/african-countries';
 import { getApiBaseUrl } from '../../lib/api-base-url';
-import { clearAuthSession, readAuthSession, readFreshAuthSession, revokeAuthSession } from '../../lib/auth-session';
+import type { AuthTokens } from '../../lib/auth-contract';
+import { clearAuthSession, persistAuthSession, readAuthSession, readFreshAuthSession, revokeAuthSession } from '../../lib/auth-session';
 import { purgeLegacySensitiveStorage, readScopedLocalStorage, removeScopedLocalStorage, writeScopedLocalStorage } from '../../lib/user-scoped-storage';
 
 const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
 const siteGreen = '#0f8f6b';
+const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
+const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
 
 type ProfileForm = {
   name: string;
@@ -1216,6 +1219,10 @@ function OrderTableSearchPanel({
               <span className="font-semibold text-slate-900">Details du resume</span>
               <button type="button" onClick={() => setCartSummaryOpen(false)} className="text-slate-500">x</button>
             </div>
+            <button type="button" onClick={() => setCartSummaryOpen(false)} className="mb-3 w-full text-left">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total</p>
+              <p className="mt-0.5 text-lg font-semibold text-[#ff7a00]">{formatMoney(payableTotal)}</p>
+            </button>
             <div className="grid gap-2">
               <SummaryRow label="Total marchandises" value={formatMoney(merchandiseTotal)} />
               <SummaryRow label="Estimation des frais de port" value={selectedOrders.length ? formatMoney(shippingTotal) : '--'} />
@@ -3378,6 +3385,86 @@ function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firs
 
 function SignedOutMobileAccount() {
   const [mode, setMode] = useState<'choice' | 'register' | 'login'>('choice');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [registerName, setRegisterName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+  const [registerCountry, setRegisterCountry] = useState('');
+  const [registerAccountType, setRegisterAccountType] = useState<'individual' | 'company'>('individual');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [authStatus, setAuthStatus] = useState<'idle' | 'submitting' | 'error'>('idle');
+  const [authMessage, setAuthMessage] = useState('');
+
+  async function submitLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAuthStatus('submitting');
+    setAuthMessage('');
+
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
+
+      if (!response.ok) throw new Error('Connexion impossible. Verifiez vos identifiants.');
+      const tokens = (await response.json()) as AuthTokens;
+      persistAuthSession(tokens, { remember: true });
+      window.dispatchEvent(new Event('kendronics:auth-updated'));
+      window.location.reload();
+    } catch (error) {
+      setAuthStatus('error');
+      setAuthMessage(error instanceof Error ? error.message : 'Connexion impossible.');
+    }
+  }
+
+  async function submitRegister(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAuthStatus('submitting');
+    setAuthMessage('');
+
+    if (registerPassword !== registerConfirmPassword) {
+      setAuthStatus('error');
+      setAuthMessage('Les mots de passe ne correspondent pas.');
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setAuthStatus('error');
+      setAuthMessage("Veuillez accepter les conditions d'utilisation.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: registerName,
+          email: registerEmail,
+          password: registerPassword,
+          country: registerCountry,
+          accountType: registerAccountType,
+          acceptedTerms,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Creation du compte impossible.');
+      }
+
+      const tokens = (await response.json()) as AuthTokens;
+      persistAuthSession(tokens, { remember: true });
+      window.dispatchEvent(new Event('kendronics:auth-updated'));
+      window.location.reload();
+    } catch (error) {
+      setAuthStatus('error');
+      setAuthMessage(error instanceof Error ? error.message : 'Creation du compte impossible.');
+    }
+  }
 
   return (
     <div className="grid gap-3 bg-white py-4 text-[#102033] lg:hidden">
@@ -3401,8 +3488,8 @@ function SignedOutMobileAccount() {
           <span className="h-px flex-1 bg-slate-200" />
         </div>
         <div className="grid gap-2">
-          <button type="button" onClick={() => openAuthRequiredFromProfile('login')} className="flex h-9 items-center justify-center border border-slate-200 bg-white px-4 text-xs font-semibold text-ink">Continuer avec Google</button>
-          <button type="button" onClick={() => openAuthRequiredFromProfile('login')} className="flex h-9 items-center justify-center border border-slate-200 bg-white px-4 text-xs font-semibold text-ink">Continuer avec Apple</button>
+          <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} />
+          <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} />
         </div>
         <p className="mt-3 text-[11px] leading-5 text-slate-500">
           En creant un compte, vous acceptez nos <a href="/terms" className="font-semibold text-[#0f8f6b] underline">conditions d'utilisation</a> et notre{' '}
@@ -3424,10 +3511,39 @@ function SignedOutMobileAccount() {
             <h2 className="text-base font-bold text-ink">Creer un compte</h2>
             <button type="button" onClick={() => setMode('login')} className="text-xs font-semibold text-[#0f8f6b]">Se connecter</button>
           </div>
-          <p className="text-xs leading-5 text-slate-600">Utilisez votre e-mail ou votre telephone pour recevoir un code de verification.</p>
-          <button type="button" onClick={() => openAuthRequiredFromProfile('register')} className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white">
-            Creer mon compte
-          </button>
+          <p className="text-xs leading-5 text-slate-600">Utilisez votre e-mail pour recevoir un code de verification et completer votre espace client.</p>
+          <form onSubmit={submitRegister} className="grid gap-2">
+            <ProfileAuthInput label="Nom d'utilisateur" value={registerName} onChange={setRegisterName} required />
+            <ProfileAuthInput label="E-mail" type="email" value={registerEmail} onChange={setRegisterEmail} required />
+            <ProfileAuthInput label="Mot de passe" type="password" value={registerPassword} onChange={setRegisterPassword} required />
+            <ProfileAuthInput label="Confirmer le mot de passe" type="password" value={registerConfirmPassword} onChange={setRegisterConfirmPassword} required />
+            <label className="grid gap-1 text-xs font-semibold text-slate-600">
+              Pays
+              <select value={registerCountry} onChange={(event) => setRegisterCountry(event.target.value)} className="h-9 border border-slate-300 bg-white px-3 text-sm text-ink" required>
+                <option value="">Selectionner un pays</option>
+                {africanCountries.map((country) => (
+                  <option key={country.iso2} value={country.iso2}>{country.name}</option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-1 text-xs font-semibold text-slate-600">
+              Type de compte
+              <select value={registerAccountType} onChange={(event) => setRegisterAccountType(event.target.value as 'individual' | 'company')} className="h-9 border border-slate-300 bg-white px-3 text-sm text-ink">
+                <option value="individual">Compte individuel</option>
+                <option value="company">Societe / professionnel</option>
+              </select>
+            </label>
+            <label className="flex gap-2 text-xs leading-5 text-slate-600">
+              <input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>J'accepte les <a href="/terms" className="font-semibold text-[#0f8f6b] underline">conditions</a> et la <a href="/privacy" className="font-semibold text-[#0f8f6b] underline">politique de confidentialite</a>.</span>
+            </label>
+            {authStatus === 'error' && authMessage ? <p className="text-xs font-semibold text-red-600">{authMessage}</p> : null}
+            <button type="submit" disabled={authStatus === 'submitting'} className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white disabled:opacity-60">
+              {authStatus === 'submitting' ? 'Creation...' : 'Creer mon compte'}
+            </button>
+            <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} />
+            <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} />
+          </form>
         </div>
       </section>
       ) : null}
@@ -3446,9 +3562,21 @@ function SignedOutMobileAccount() {
             <button type="button" onClick={() => setMode('register')} className="text-xs font-semibold text-[#0f8f6b]">Creer un compte</button>
           </div>
           <p className="text-xs leading-5 text-slate-600">Connectez-vous pour afficher vos commandes, notifications et adresses.</p>
-          <button type="button" onClick={() => openAuthRequiredFromProfile('login')} className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white">
-            Se connecter
-          </button>
+          <form onSubmit={submitLogin} className="grid gap-2">
+            <ProfileAuthInput label="E-mail" type="email" value={loginEmail} onChange={setLoginEmail} required />
+            <ProfileAuthInput label="Mot de passe" type="password" value={loginPassword} onChange={setLoginPassword} required />
+            {authStatus === 'error' && authMessage ? <p className="text-xs font-semibold text-red-600">{authMessage}</p> : null}
+            <button type="submit" disabled={authStatus === 'submitting'} className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white disabled:opacity-60">
+              {authStatus === 'submitting' ? 'Connexion...' : 'Se connecter'}
+            </button>
+            <div className="flex items-center gap-2 text-[11px] font-medium text-slate-400">
+              <span className="h-px flex-1 bg-slate-200" />
+              <span>ou continuer avec</span>
+              <span className="h-px flex-1 bg-slate-200" />
+            </div>
+            <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} />
+            <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} />
+          </form>
         </div>
       </section>
       ) : null}
@@ -3456,8 +3584,47 @@ function SignedOutMobileAccount() {
   );
 }
 
-function openAuthRequiredFromProfile(panel: 'register' | 'login') {
-  window.dispatchEvent(new CustomEvent('kendronics:open-auth-required', { detail: { panel, step: 'form' } }));
+function ProfileAuthInput({
+  label,
+  value,
+  onChange,
+  type = 'text',
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="grid gap-1 text-xs font-semibold text-slate-600">
+      {label}
+      <input
+        type={type}
+        value={value}
+        required={required}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-9 border border-slate-300 bg-white px-3 text-sm text-ink outline-none focus:border-[#0f8f6b]"
+      />
+    </label>
+  );
+}
+
+function SocialAuthLink({ label, href }: { label: string; href?: string }) {
+  if (!href) {
+    return (
+      <span className="flex h-9 items-center justify-center border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-400">
+        {label}
+      </span>
+    );
+  }
+
+  return (
+    <a href={href} className="flex h-9 items-center justify-center border border-slate-200 bg-white px-4 text-xs font-semibold text-ink">
+      {label}
+    </a>
+  );
 }
 
 function SmallInfo({ label, value, action, danger }: { label: string; value: string; action?: string; danger?: boolean }) {
