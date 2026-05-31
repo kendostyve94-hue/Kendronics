@@ -994,6 +994,7 @@ function OrderTableSearchPanel({
   const [quantityUpdatingOrderId, setQuantityUpdatingOrderId] = useState('');
   const [detailOrder, setDetailOrder] = useState<ProfileOrder | null>(null);
   const [cartTermsAccepted, setCartTermsAccepted] = useState(false);
+  const [cartSummaryOpen, setCartSummaryOpen] = useState(false);
   const filteredOrders = orders.filter((order) => serviceFilter === 'all' || orderProductFilterKey(order) === serviceFilter);
   const visibleOrders = filteredOrders;
   const selectedOrders = orders.filter((order) => selectedOrderIds.includes(order.id) && isSelectableCartOrder(order));
@@ -1209,12 +1210,29 @@ function OrderTableSearchPanel({
       </div>
 
       <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(3.9rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur' : 'hidden'} text-black sm:static sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5 sm:backdrop-blur-0`}>
-        <div className="mx-auto flex max-w-md items-center gap-3 sm:hidden">
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Cout PCB</p>
-            <p className="mt-0.5 text-lg font-semibold text-[#ff7a00]">{formatMoney(merchandiseTotal)}</p>
-            <p className="text-[10px] text-[#0877ff]">{selectedOrders.length} Article&gt;</p>
+        {cartSummaryOpen ? (
+          <div className="mx-auto mb-2 max-w-md border-b border-slate-200 pb-2 text-xs sm:hidden">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="font-semibold text-slate-900">Details du resume</span>
+              <button type="button" onClick={() => setCartSummaryOpen(false)} className="text-slate-500">x</button>
+            </div>
+            <div className="grid gap-2">
+              <SummaryRow label="Total marchandises" value={formatMoney(merchandiseTotal)} />
+              <SummaryRow label="Estimation des frais de port" value={selectedOrders.length ? formatMoney(shippingTotal) : '--'} />
+              <SummaryRow label="Droits de douane et taxes" value={selectedOrders.length ? formatMoney(taxesTotal) : '--'} />
+              <SummaryRow label="Poids" value={selectedOrders.length ? `${formatWeight(totalWeightKg)}kg` : '--'} />
+            </div>
           </div>
+        ) : null}
+        <div className="mx-auto flex max-w-md items-center gap-3 sm:hidden">
+          <button type="button" onClick={() => setCartSummaryOpen((open) => !open)} className="min-w-0 flex-1 text-left" aria-expanded={cartSummaryOpen} aria-label="Afficher le detail du resume">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total</p>
+            <p className="mt-0.5 flex items-baseline gap-1.5 text-lg font-semibold text-[#ff7a00]">
+              <span>{formatMoney(payableTotal)}</span>
+              <span className="text-[10px] font-medium text-[#c45100]">details</span>
+            </p>
+            <p className="text-[10px] text-[#0877ff]">{selectedOrders.length} Article&gt;</p>
+          </button>
           {selectedOrders.length > 0 ? (
             <label className="flex max-w-[4.8rem] items-center gap-1 text-[10px] leading-3 text-[#0f4f3f]">
               <input type="checkbox" checked={cartTermsAccepted} onChange={(event) => setCartTermsAccepted(event.target.checked)} className="h-3.5 w-3.5 shrink-0 accent-[#0f8f6b]" />
@@ -1223,11 +1241,11 @@ function OrderTableSearchPanel({
           ) : null}
           {canProceedToPayment ? (
             <a href={`/orders/${selectedOrders[0].id}`} className="inline-flex h-11 min-w-[7.4rem] items-center justify-center bg-[#0f8f6b] px-4 text-xs font-semibold uppercase text-white">
-              Paiement
+              Continuer
             </a>
           ) : (
             <span className="inline-flex h-11 min-w-[7.4rem] items-center justify-center bg-[#0f8f6b]/25 px-4 text-xs font-semibold uppercase text-white">
-              Soumettre
+              Continuer
             </span>
           )}
         </div>
@@ -1295,6 +1313,15 @@ function PaymentAuthorizationSummary({ checked, onChange }: { checked: boolean; 
         </span>
       </div>
     </label>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-slate-600">{label}</span>
+      <span className="font-semibold text-slate-950">{value}</span>
+    </div>
   );
 }
 
@@ -3287,16 +3314,21 @@ function DashboardPanel({
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0f8f6b]">Espace client</p>
             <h2 className="mt-1 text-xl font-semibold text-[#102033]">Vue d'ensemble</h2>
           </div>
-          <a href="/quote" className="inline-flex min-h-10 items-center justify-center border border-[#0f8f6b] px-4 py-2 text-xs font-semibold text-[#0f8f6b] transition hover:bg-[#0f8f6b] hover:text-white">Nouveau devis</a>
+          <div className="grid gap-2">
+            <a href="/quote" className="inline-flex min-h-10 items-center justify-center border border-[#0f8f6b] px-4 py-2 text-xs font-semibold text-[#0f8f6b] transition hover:bg-[#0f8f6b] hover:text-white">Nouveau devis</a>
+            <div className="lg:hidden">
+              <SmallInfo label="Coupons actifs" value="0" />
+            </div>
+          </div>
         </div>
         <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_180px]">
-          <div className="grid sm:grid-cols-2 sm:border sm:border-[#e4ebf2]">
+          <div className="grid grid-cols-2 border border-[#b8c9d9]">
             <MetricCell label="Total payé (EUR)" value={formatMoney(paidTotal)} detail={`En attente : ${formatMoney(pendingTotal)}`} />
             <MetricCell label="Commandes" value={String(orders.length)} valueClass="text-[#102033]" />
             <MetricCell label="En production" value={String(counts.production)} />
             <MetricCell label="À traiter" value={String(counts.paymentPending + counts.verification)} detail="Dossier à corriger" />
           </div>
-          <div className="grid gap-2">
+          <div className="hidden gap-2 lg:grid">
             <SmallInfo label="Coupons actifs" value="0" />
           </div>
         </div>
@@ -3307,7 +3339,7 @@ function DashboardPanel({
 
 function MetricCell({ label, value, detail, valueClass = 'text-[#1f2937]' }: { label: string; value: string; detail?: string; valueClass?: string }) {
   return (
-    <div className="min-h-[84px] border-b border-slate-200 p-4 sm:border-r sm:last:border-r-0">
+    <div className="min-h-[84px] border-b border-r border-slate-200 p-4 even:border-r-0 odd:border-r sm:even:border-r sm:[&:nth-child(2n)]:border-r-0">
       <p className="text-xs text-[#64748b]">{label}</p>
       <p className={`mt-2 text-2xl font-black ${valueClass}`}>{value}</p>
       {detail ? <p className="mt-1 text-xs text-[#475569]">{detail}</p> : null}
@@ -3340,66 +3372,87 @@ function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firs
 }
 
 function SignedOutMobileAccount() {
+  const [mode, setMode] = useState<'choice' | 'register' | 'login'>('choice');
+
   return (
     <div className="grid gap-3 bg-white py-4 text-[#102033] lg:hidden">
+      {mode === 'choice' ? (
       <section className="border border-slate-200 bg-white px-3.5 py-4 text-ink">
         <h1 className="text-lg font-bold tracking-normal text-ink">Bienvenue sur Kendronics</h1>
         <p className="mt-2 text-xs leading-5 text-slate-600">
           Pour utiliser les fonctionnalites du site, creez d'abord votre compte ou connectez-vous si vous en avez deja un.
         </p>
         <div className="mt-3 grid gap-2">
-          <a href="/register" className="flex h-9 items-center justify-center border border-[#0f8f6b] bg-[#0f8f6b] px-4 text-xs font-semibold text-white">
+          <button type="button" onClick={() => setMode('register')} className="flex h-9 items-center justify-center border border-[#0f8f6b] bg-[#0f8f6b] px-4 text-xs font-semibold text-white">
             Creer un nouveau compte
-          </a>
-          <a href="/login" className="flex h-9 items-center justify-center border border-slate-300 bg-white px-4 text-xs font-semibold text-ink">
+          </button>
+          <button type="button" onClick={() => setMode('login')} className="flex h-9 items-center justify-center border border-slate-300 bg-white px-4 text-xs font-semibold text-ink">
             Se connecter
-          </a>
+          </button>
+        </div>
+        <div className="my-3 flex items-center gap-2 text-[11px] font-medium text-slate-400">
+          <span className="h-px flex-1 bg-slate-200" />
+          <span>ou continuer avec</span>
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+        <div className="grid gap-2">
+          <button type="button" onClick={() => openAuthRequiredFromProfile('login')} className="flex h-9 items-center justify-center border border-slate-200 bg-white px-4 text-xs font-semibold text-ink">Continuer avec Google</button>
+          <button type="button" onClick={() => openAuthRequiredFromProfile('login')} className="flex h-9 items-center justify-center border border-slate-200 bg-white px-4 text-xs font-semibold text-ink">Continuer avec Apple</button>
         </div>
         <p className="mt-3 text-[11px] leading-5 text-slate-500">
           En creant un compte, vous acceptez nos <a href="/terms" className="font-semibold text-[#0f8f6b] underline">conditions d'utilisation</a> et notre{' '}
           <a href="/privacy" className="font-semibold text-[#0f8f6b] underline">politique de confidentialite</a>.
         </p>
       </section>
+      ) : null}
 
+      {mode === 'register' ? (
       <section className="border border-slate-200 bg-white text-ink">
         <div className="border-b border-slate-200 px-3.5 py-2.5">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-lg font-bold tracking-normal text-ink">Rejoindre ou se connecter</h1>
-            <span className="shrink-0 text-xs font-medium text-slate-400">Retour</span>
+            <button type="button" onClick={() => setMode('choice')} className="shrink-0 text-xs font-medium text-slate-400">Retour</button>
           </div>
         </div>
         <div className="space-y-2 px-3.5 py-3">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-base font-bold text-ink">Creer un compte</h2>
-            <a href="/login" className="text-xs font-semibold text-[#0f8f6b]">Se connecter</a>
+            <button type="button" onClick={() => setMode('login')} className="text-xs font-semibold text-[#0f8f6b]">Se connecter</button>
           </div>
           <p className="text-xs leading-5 text-slate-600">Utilisez votre e-mail ou votre telephone pour recevoir un code de verification.</p>
-          <a href="/register" className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white">
+          <button type="button" onClick={() => openAuthRequiredFromProfile('register')} className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white">
             Creer mon compte
-          </a>
+          </button>
         </div>
       </section>
+      ) : null}
 
+      {mode === 'login' ? (
       <section className="border border-slate-200 bg-white text-ink">
         <div className="border-b border-slate-200 px-3.5 py-2.5">
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-lg font-bold tracking-normal text-ink">Rejoindre ou se connecter</h1>
-            <span className="shrink-0 text-xs font-medium text-slate-400">Retour</span>
+            <button type="button" onClick={() => setMode('choice')} className="shrink-0 text-xs font-medium text-slate-400">Retour</button>
           </div>
         </div>
         <div className="space-y-2 px-3.5 py-3">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-base font-bold text-ink">Se connecter</h2>
-            <a href="/register" className="text-xs font-semibold text-[#0f8f6b]">Creer un compte</a>
+            <button type="button" onClick={() => setMode('register')} className="text-xs font-semibold text-[#0f8f6b]">Creer un compte</button>
           </div>
           <p className="text-xs leading-5 text-slate-600">Connectez-vous pour afficher vos commandes, notifications et adresses.</p>
-          <a href="/login" className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white">
+          <button type="button" onClick={() => openAuthRequiredFromProfile('login')} className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white">
             Se connecter
-          </a>
+          </button>
         </div>
       </section>
+      ) : null}
     </div>
   );
+}
+
+function openAuthRequiredFromProfile(panel: 'register' | 'login') {
+  window.dispatchEvent(new CustomEvent('kendronics:open-auth-required', { detail: { panel, step: 'form' } }));
 }
 
 function SmallInfo({ label, value, action, danger }: { label: string; value: string; action?: string; danger?: boolean }) {

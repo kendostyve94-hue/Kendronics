@@ -363,7 +363,7 @@ export function PricingSummary({
               canSave ? 'bg-[#29ad62] hover:bg-[#198c4b]' : 'cursor-not-allowed bg-[#29ad62]/35 text-white/80'
             }`}
           >
-            <span>{saveState === 'saving' ? 'Soumission...' : saveState === 'saved' ? 'Soumise' : 'Soumettre ma commande'}</span>
+            <span>{saveState === 'saving' ? 'Enregistrement...' : saveState === 'saved' ? 'Enregistre' : 'Enregistrer ma commande'}</span>
           </button>
         </div>
       </div>
@@ -409,7 +409,7 @@ export function PricingSummary({
                 canSave ? 'bg-[#0f8f6b] hover:bg-[#0b7558]' : 'cursor-not-allowed bg-[#0f8f6b]/25 text-white/80 blur-[0.35px]'
               }`}
             >
-              {saveState === 'saving' ? 'Soumission...' : 'Soumettre'}
+              {saveState === 'saving' ? 'Enregistrement...' : 'Enregistrer'}
             </button>
           </div>
 
