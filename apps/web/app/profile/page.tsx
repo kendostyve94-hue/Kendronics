@@ -3487,6 +3487,7 @@ function SignedOutMobileAccount() {
     try {
       const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(loginMethod === 'email' ? { email: loginEmail, password: loginPassword } : { contact: loginPhone, password: loginPassword }),
       });
@@ -3528,6 +3529,7 @@ function SignedOutMobileAccount() {
     try {
       const response = await fetch(`${getApiBaseUrl()}/api/auth/register`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: registerName,

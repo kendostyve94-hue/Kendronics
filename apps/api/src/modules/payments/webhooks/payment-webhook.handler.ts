@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { SupplierOrderService } from '../../pricing/suppliers/supplier-order.service';
 import { OrdersService } from '../../orders/orders.service';
 import { EmailNotificationService } from '../../support/email-notification.service';
 import { TrackingService } from '../../tracking/tracking.service';
@@ -17,6 +18,7 @@ export class PaymentWebhookHandler {
     private readonly notificationsService: NotificationsService,
     private readonly emailNotificationService: EmailNotificationService,
     private readonly prisma: PrismaService,
+    private readonly supplierOrderService: SupplierOrderService,
   ) {}
 
   async handleStripeEvent(event: VerifiedStripePaymentEvent) {
@@ -68,6 +70,12 @@ export class PaymentWebhookHandler {
         payment.orderId,
         'payment_authorized',
         'Paiement autorise par Stripe. La verification des fichiers peut demarrer avant la capture.',
+      );
+      const supplierReview = await this.supplierOrderService.sendTechnicalReviewPackage(payment.orderId);
+      await this.trackingService.addAdminStatusEvent(
+        payment.orderId,
+        'supplier_review_pending',
+        `Paquet technique transmis au reseau de fabrication (${supplierReview.status}).`,
       );
     }
 

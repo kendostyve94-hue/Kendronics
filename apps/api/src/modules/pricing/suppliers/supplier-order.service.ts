@@ -69,7 +69,6 @@ export class SupplierOrderService {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        user: { select: { email: true, fullName: true, companyName: true } },
         quote: { include: { pricingSnapshot: true } },
       },
     });
@@ -107,10 +106,9 @@ export class SupplierOrderService {
       quoteId: order.quoteId,
       supplier,
       createdAt: new Date().toISOString(),
-      customer: {
-        email: order.user.email,
-        fullName: order.user.fullName,
-        companyName: order.user.companyName,
+      privacy: {
+        customerPersonalDataIncluded: false,
+        customerFieldsRemoved: ['email', 'fullName', 'phone', 'shippingAddress', 'billingAddress', 'clientPrice', 'margin'],
       },
       gerber: gerberUpload
         ? {
@@ -176,6 +174,122 @@ export class SupplierOrderService {
     };
   }
 
+  async sendTechnicalReviewPackage(orderId: string, supplierOverride?: string) {
+    const packageData = await this.buildPackage(orderId, supplierOverride);
+    if (!['payment_authorized', 'supplier_review_pending'].includes(packageData.orderStatus)) {
+      throw new BadRequestException('Technical review package requires an authorized payment.');
+    }
+
+    const supplier = packageData.supplier;
+    const externalReviewId = `review-${packageData.orderId}-${Date.now()}`;
+    const fileVersion = await this.nextTechnicalPackageVersion(packageData.orderId);
+    const endpoint = this.configValue(`${supplier.toUpperCase()}_REVIEW_ENDPOINT`);
+    const apiKey = this.configValue(`${supplier.toUpperCase()}_API_KEY`);
+    const sanitizedPackage = this.supplierReviewPayload(packageData, fileVersion);
+
+    let status = endpoint && apiKey ? 'sent' : 'queued';
+    let responsePayload: Record<string, unknown> | undefined;
+    let error: string | undefined;
+
+    if (endpoint && apiKey) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: this.supplierOrderHeaders(supplier, apiKey),
+          body: JSON.stringify(sanitizedPackage),
+        });
+        responsePayload = (await response.json().catch(() => ({ httpStatus: response.status }))) as Record<string, unknown>;
+        if (!response.ok || this.isErrorResponse(responsePayload)) {
+          status = 'send_failed';
+          error = `${supplier} review endpoint rejected the technical package.`;
+        }
+      } catch (caught) {
+        status = 'send_failed';
+        error = caught instanceof Error ? caught.message : 'Technical review package send failed.';
+      }
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.orderFile.upsert({
+        where: { orderId_fileType_fileVersion: { orderId: packageData.orderId, fileType: 'gerber', fileVersion } },
+        create: {
+          orderId: packageData.orderId,
+          fileType: 'gerber',
+          uploadId: this.objectRecord(packageData.gerber).uploadId ? String(this.objectRecord(packageData.gerber).uploadId) : undefined,
+          fileVersion,
+          isCurrentVersion: true,
+        },
+        update: {
+          uploadId: this.objectRecord(packageData.gerber).uploadId ? String(this.objectRecord(packageData.gerber).uploadId) : undefined,
+          isCurrentVersion: true,
+        },
+      }),
+      this.prisma.technicalSpecFile.upsert({
+        where: { orderId_fileVersion: { orderId: packageData.orderId, fileVersion } },
+        create: {
+          orderId: packageData.orderId,
+          fileVersion,
+          isCurrentVersion: true,
+          payload: sanitizedPackage as Prisma.InputJsonValue,
+        },
+        update: {
+          isCurrentVersion: true,
+          payload: sanitizedPackage as Prisma.InputJsonValue,
+        },
+      }),
+      this.prisma.supplierReview.upsert({
+        where: {
+          orderId_attemptNumber_supplier_externalReviewId: {
+            orderId: packageData.orderId,
+            attemptNumber: 1,
+            supplier,
+            externalReviewId,
+          },
+        },
+        create: {
+          orderId: packageData.orderId,
+          attemptNumber: 1,
+          supplier,
+          supplierStatus: status,
+          supplierFeedback: error,
+          externalReviewId,
+          technicalPackageVersion: fileVersion,
+        },
+        update: {
+          supplierStatus: status,
+          supplierFeedback: error,
+        },
+      }),
+      this.prisma.order.update({
+        where: { id: packageData.orderId },
+        data: {
+          status: 'supplier_review_pending',
+          supplierReviewStatus: status,
+          currentFileVersion: fileVersion,
+        },
+      }),
+      this.prisma.mondaySyncLog.create({
+        data: {
+          orderId: packageData.orderId,
+          board: 'COMMANDES',
+          operation: 'supplier_review_package',
+          sourceEventId: externalReviewId,
+          status: 'pending',
+          payload: {
+            orderNumber: packageData.orderNumber,
+            supplier,
+            technicalPackageVersion: fileVersion,
+            supplierStatus: status,
+            error,
+            response: responsePayload,
+          } as Prisma.InputJsonValue,
+        },
+      }),
+    ]);
+
+    return { ok: status !== 'send_failed', status, supplier, externalReviewId, technicalPackageVersion: fileVersion };
+  }
+
   private async createLiveSupplierOrder(supplier: string, packageData: Record<string, unknown>): Promise<SupplierOrderCreateResponse> {
     const endpoint = this.configValue(`${supplier.toUpperCase()}_ORDER_ENDPOINT`);
     const apiKey = this.configValue(`${supplier.toUpperCase()}_API_KEY`);
@@ -217,11 +331,13 @@ export class SupplierOrderService {
 
   private supplierOrderPayload(supplier: string, packageData: Record<string, unknown>): Record<string, unknown> {
     if (supplier.toLowerCase() !== 'pcbway') {
-      return packageData;
+      return {
+        ...this.supplierReviewPayload(packageData, this.numberValue(packageData.currentFileVersion, 1)),
+        orderCreateMode: true,
+      };
     }
 
     const pcb = this.objectRecord(packageData.pcb);
-    const customer = this.objectRecord(packageData.customer);
     const gerber = this.objectRecord(packageData.gerber);
     const quoteDto = {
       productType: String(pcb.productType ?? 'standard_pcb'),
@@ -241,11 +357,49 @@ export class SupplierOrderService {
       PcbFileName: String(gerber.originalFilename ?? ''),
       PcbFileUrl: String(gerber.storageKey ?? ''),
       BuildDays: this.buildDays(pcb.configSnapshot),
-      BuyerEmail: String(customer.email ?? ''),
+      BuyerEmail: process.env.SUPPLIER_BUYER_EMAIL ?? process.env.OFFICIAL_CONTACT_EMAIL ?? 'operations@kendronics.com',
       OrderRemark: `Kendronics order ${String(packageData.orderNumber ?? '')}`.trim(),
       KendronicsOrderId: String(packageData.orderId ?? ''),
       KendronicsQuoteId: String(packageData.quoteId ?? ''),
     };
+  }
+
+  private supplierReviewPayload(packageData: Record<string, unknown>, fileVersion: number): Record<string, unknown> {
+    const gerber = this.objectRecord(packageData.gerber);
+    const pcb = this.objectRecord(packageData.pcb);
+    return {
+      internalOrderReference: packageData.orderNumber,
+      kendronicsOrderId: packageData.orderId,
+      technicalPackageVersion: fileVersion,
+      supplier: packageData.supplier,
+      gerber: {
+        uploadId: gerber.uploadId,
+        originalFilename: gerber.originalFilename,
+        storageKey: gerber.storageKey,
+        fileSizeBytes: gerber.fileSizeBytes,
+        analysis: gerber.analysis,
+      },
+      pcb: {
+        productType: pcb.productType,
+        gerberFileId: pcb.gerberFileId,
+        layers: pcb.layers,
+        lengthMm: pcb.lengthMm,
+        widthMm: pcb.widthMm,
+        quantity: pcb.quantity,
+        configSnapshot: pcb.configSnapshot,
+        supplierPayload: pcb.supplierPayload,
+      },
+      privacy: {
+        customerPersonalDataIncluded: false,
+        clientPriceIncluded: false,
+        marginIncluded: false,
+      },
+    };
+  }
+
+  private async nextTechnicalPackageVersion(orderId: string): Promise<number> {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId }, select: { currentFileVersion: true } });
+    return Math.max(1, order?.currentFileVersion ?? 1);
   }
 
   private buildDays(configSnapshot: unknown): number {

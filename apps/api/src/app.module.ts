@@ -6,6 +6,7 @@ import { CountriesModule } from './modules/countries/countries.module';
 import { HomeModule } from './modules/home/home.module';
 import { LogisticsModule } from './modules/logistics/logistics.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { MondayModule } from './modules/monday/monday.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PricingModule } from './modules/pricing/pricing.module';
@@ -31,6 +32,7 @@ import { PrismaModule } from './prisma/prisma.module';
     LogisticsModule,
     SupportModule,
     NotificationsModule,
+    MondayModule,
   ],
   controllers: [HealthController],
 })

@@ -36,4 +36,32 @@ export function validateProductionConfig() {
       throw new Error(`Missing OneSignal production environment variables: ${missingOneSignal.join(', ')}`);
     }
   }
+
+  if (process.env.MONDAY_REQUIRED === 'true') {
+    const missingMonday = [
+      'MONDAY_API_KEY',
+      'MONDAY_BOARD_COMMANDES_ID',
+      'MONDAY_BOARD_CHIFFRE_AFFAIRE_LIVE_ID',
+      'MONDAY_BOARD_EN_PRODUCTION_ID',
+    ].filter((key) => !process.env[key]);
+    if (missingMonday.length > 0) {
+      throw new Error(`Missing Monday production environment variables: ${missingMonday.join(', ')}`);
+    }
+  }
+
+  if (process.env.PHONE_VERIFY_PROVIDER === 'dev') {
+    throw new Error('PHONE_VERIFY_PROVIDER=dev is not allowed in production.');
+  }
+
+  if (process.env.MOBILE_MONEY_PROVIDER === 'simulated') {
+    throw new Error('MOBILE_MONEY_PROVIDER=simulated is not allowed in production.');
+  }
+
+  if (process.env.REQUIRE_SUPPLIER_REVIEW_ENDPOINT === 'true') {
+    const preferredSupplier = (process.env.PREFERRED_PCB_SUPPLIER ?? 'jlcpcb').toUpperCase().replace(/[^A-Z0-9]/g, '_');
+    const missingSupplier = [`${preferredSupplier}_API_KEY`, `${preferredSupplier}_REVIEW_ENDPOINT`].filter((key) => !process.env[key]);
+    if (missingSupplier.length > 0) {
+      throw new Error(`Missing supplier review production environment variables: ${missingSupplier.join(', ')}`);
+    }
+  }
 }

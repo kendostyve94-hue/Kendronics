@@ -169,6 +169,7 @@ export function AuthRequiredModal() {
     try {
       const response = await fetch(`${apiBaseUrl}${authApiContract.login.path}`, {
         method: authApiContract.login.method,
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contact: loginValues.email.trim(),
@@ -215,6 +216,7 @@ export function AuthRequiredModal() {
     try {
       const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: registerValues.email.trim().toLowerCase(),

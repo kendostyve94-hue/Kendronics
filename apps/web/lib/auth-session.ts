@@ -60,6 +60,7 @@ export async function revokeAuthSession() {
       await fetch(`${getApiBaseUrl()}/api/auth/logout`, {
         method: 'POST',
         keepalive: true,
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken: session.refreshToken }),
       });
@@ -95,6 +96,7 @@ async function refreshAuthSession(session: StoredAuthSession): Promise<StoredAut
   try {
     const response = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken: session.refreshToken }),
     });

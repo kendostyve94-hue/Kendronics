@@ -204,6 +204,9 @@ export class AuthService {
   }
 
   async refresh(dto: RefreshTokenDto): Promise<AuthTokens> {
+    if (!dto.refreshToken) {
+      throw new UnauthorizedException('Invalid refresh token.');
+    }
     const session = await this.sessionRepository.findValidSession(dto.refreshToken);
     if (!session) {
       throw new UnauthorizedException('Invalid refresh token.');
@@ -214,7 +217,9 @@ export class AuthService {
   }
 
   async logout(dto: RefreshTokenDto): Promise<{ ok: true }> {
-    await this.sessionRepository.revokeByRefreshToken(dto.refreshToken);
+    if (dto.refreshToken) {
+      await this.sessionRepository.revokeByRefreshToken(dto.refreshToken);
+    }
     return { ok: true };
   }
 
