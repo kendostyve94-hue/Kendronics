@@ -1213,29 +1213,6 @@ function OrderTableSearchPanel({
       </div>
 
       <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(3.9rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur' : 'hidden'} text-black sm:static sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5 sm:backdrop-blur-0`}>
-        {cartSummaryOpen ? (
-          <div className="sheet-panel-in mx-auto mb-2 max-w-md border-b border-slate-200 pb-2 text-xs sm:hidden">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-semibold text-slate-900">Details du resume</span>
-              <button type="button" onClick={() => setCartSummaryOpen(false)} className="text-slate-500">x</button>
-            </div>
-            <button type="button" onClick={() => setCartSummaryOpen(false)} className="mb-3 w-full text-left">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total</p>
-              <p className="mt-0.5 text-lg font-semibold text-[#ff7a00]">{formatMoney(payableTotal)}</p>
-            </button>
-            <div className="grid gap-2">
-              <SummaryRow label="Total marchandises" value={formatMoney(merchandiseTotal)} />
-              <SummaryRow label="Estimation des frais de port" value={selectedOrders.length ? formatMoney(shippingTotal) : '--'} />
-              <SummaryRow label="Droits de douane et taxes" value={selectedOrders.length ? formatMoney(taxesTotal) : '--'} />
-              <SummaryRow label="Poids" value={selectedOrders.length ? `${formatWeight(totalWeightKg)}kg` : '--'} />
-            </div>
-            {selectedOrders.length > 0 ? (
-              <div className="mt-3">
-                <PaymentAuthorizationSummary checked={cartTermsAccepted} onChange={setCartTermsAccepted} />
-              </div>
-            ) : null}
-          </div>
-        ) : null}
         <div className="mx-auto flex max-w-md items-center gap-3 sm:hidden">
           <button type="button" onClick={() => setCartSummaryOpen((open) => !open)} className="min-w-0 flex-1 text-left" aria-expanded={cartSummaryOpen} aria-label="Afficher le detail du resume">
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total</p>
@@ -1261,6 +1238,25 @@ function OrderTableSearchPanel({
             </span>
           )}
         </div>
+        {cartSummaryOpen ? (
+          <div className="sheet-panel-in mx-auto mt-2 max-w-md border-t border-slate-200 pt-2 text-xs sm:hidden">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="font-semibold text-slate-900">Details du resume</span>
+              <button type="button" onClick={() => setCartSummaryOpen(false)} className="text-slate-500">x</button>
+            </div>
+            <div className="grid gap-2">
+              <SummaryRow label="Total marchandises" value={formatMoney(merchandiseTotal)} />
+              <SummaryRow label="Estimation des frais de port" value={selectedOrders.length ? formatMoney(shippingTotal) : '--'} />
+              <SummaryRow label="Droits de douane et taxes" value={selectedOrders.length ? formatMoney(taxesTotal) : '--'} />
+              <SummaryRow label="Poids" value={selectedOrders.length ? `${formatWeight(totalWeightKg)}kg` : '--'} />
+            </div>
+            {selectedOrders.length > 0 ? (
+              <div className="mt-3">
+                <PaymentAuthorizationSummary checked={cartTermsAccepted} onChange={setCartTermsAccepted} />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="hidden sm:block">
         <div className="flex items-center justify-between">
@@ -3385,10 +3381,14 @@ function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firs
 
 function SignedOutMobileAccount() {
   const [mode, setMode] = useState<'choice' | 'register' | 'login'>('choice');
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [loginEmail, setLoginEmail] = useState('');
+  const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [registerMethod, setRegisterMethod] = useState<'email' | 'phone'>('email');
   const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPhone, setRegisterPhone] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
   const [registerCountry, setRegisterCountry] = useState('');
@@ -3402,11 +3402,17 @@ function SignedOutMobileAccount() {
     setAuthStatus('submitting');
     setAuthMessage('');
 
+    if (loginMethod === 'phone' && !loginPhone.trim()) {
+      setAuthStatus('error');
+      setAuthMessage('Veuillez entrer votre numero de telephone.');
+      return;
+    }
+
     try {
       const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+        body: JSON.stringify(loginMethod === 'email' ? { email: loginEmail, password: loginPassword } : { contact: loginPhone, password: loginPassword }),
       });
 
       if (!response.ok) throw new Error('Connexion impossible. Verifiez vos identifiants.');
@@ -3437,17 +3443,28 @@ function SignedOutMobileAccount() {
       return;
     }
 
+    if (registerMethod === 'phone' && !registerPhone.trim()) {
+      setAuthStatus('error');
+      setAuthMessage('Veuillez entrer votre numero de telephone.');
+      return;
+    }
+
     try {
       const response = await fetch(`${getApiBaseUrl()}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: registerName,
-          email: registerEmail,
+          email: registerMethod === 'email' ? registerEmail : undefined,
+          phone: registerMethod === 'phone' ? registerPhone : undefined,
+          contactMethod: registerMethod,
           password: registerPassword,
-          country: registerCountry,
-          accountType: registerAccountType,
-          acceptedTerms,
+          fullName: registerName,
+          profile: {
+            username: registerName,
+            country: registerCountry,
+            accountType: registerAccountType,
+          },
         }),
       });
 
@@ -3488,8 +3505,8 @@ function SignedOutMobileAccount() {
           <span className="h-px flex-1 bg-slate-200" />
         </div>
         <div className="grid gap-2">
-          <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} />
-          <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} />
+          <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} provider="google" />
+          <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} provider="apple" />
         </div>
         <p className="mt-3 text-[11px] leading-5 text-slate-500">
           En creant un compte, vous acceptez nos <a href="/terms" className="font-semibold text-[#0f8f6b] underline">conditions d'utilisation</a> et notre{' '}
@@ -3511,10 +3528,15 @@ function SignedOutMobileAccount() {
             <h2 className="text-base font-bold text-ink">Creer un compte</h2>
             <button type="button" onClick={() => setMode('login')} className="text-xs font-semibold text-[#0f8f6b]">Se connecter</button>
           </div>
-          <p className="text-xs leading-5 text-slate-600">Utilisez votre e-mail pour recevoir un code de verification et completer votre espace client.</p>
+          <p className="text-xs leading-5 text-slate-600">Utilisez votre e-mail ou votre telephone pour recevoir un code de verification et completer votre espace client.</p>
           <form onSubmit={submitRegister} className="grid gap-2">
             <ProfileAuthInput label="Nom d'utilisateur" value={registerName} onChange={setRegisterName} required />
-            <ProfileAuthInput label="E-mail" type="email" value={registerEmail} onChange={setRegisterEmail} required />
+            <ProfileAuthMethodTabs active={registerMethod} onChange={setRegisterMethod} />
+            {registerMethod === 'email' ? (
+              <ProfileAuthInput label="E-mail" type="email" value={registerEmail} onChange={setRegisterEmail} required />
+            ) : (
+              <InternationalPhoneInput label="Telephone" value={registerPhone} onChange={(value) => setRegisterPhone(value)} />
+            )}
             <ProfileAuthInput label="Mot de passe" type="password" value={registerPassword} onChange={setRegisterPassword} required />
             <ProfileAuthInput label="Confirmer le mot de passe" type="password" value={registerConfirmPassword} onChange={setRegisterConfirmPassword} required />
             <label className="grid gap-1 text-xs font-semibold text-slate-600">
@@ -3541,8 +3563,8 @@ function SignedOutMobileAccount() {
             <button type="submit" disabled={authStatus === 'submitting'} className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white disabled:opacity-60">
               {authStatus === 'submitting' ? 'Creation...' : 'Creer mon compte'}
             </button>
-            <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} />
-            <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} />
+            <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} provider="google" />
+            <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} provider="apple" />
           </form>
         </div>
       </section>
@@ -3563,7 +3585,12 @@ function SignedOutMobileAccount() {
           </div>
           <p className="text-xs leading-5 text-slate-600">Connectez-vous pour afficher vos commandes, notifications et adresses.</p>
           <form onSubmit={submitLogin} className="grid gap-2">
-            <ProfileAuthInput label="E-mail" type="email" value={loginEmail} onChange={setLoginEmail} required />
+            <ProfileAuthMethodTabs active={loginMethod} onChange={setLoginMethod} />
+            {loginMethod === 'email' ? (
+              <ProfileAuthInput label="E-mail" type="email" value={loginEmail} onChange={setLoginEmail} required />
+            ) : (
+              <InternationalPhoneInput label="Telephone" value={loginPhone} onChange={(value) => setLoginPhone(value)} />
+            )}
             <ProfileAuthInput label="Mot de passe" type="password" value={loginPassword} onChange={setLoginPassword} required />
             {authStatus === 'error' && authMessage ? <p className="text-xs font-semibold text-red-600">{authMessage}</p> : null}
             <button type="submit" disabled={authStatus === 'submitting'} className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white disabled:opacity-60">
@@ -3574,8 +3601,8 @@ function SignedOutMobileAccount() {
               <span>ou continuer avec</span>
               <span className="h-px flex-1 bg-slate-200" />
             </div>
-            <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} />
-            <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} />
+            <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} provider="google" />
+            <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} provider="apple" />
           </form>
         </div>
       </section>
@@ -3611,19 +3638,55 @@ function ProfileAuthInput({
   );
 }
 
-function SocialAuthLink({ label, href }: { label: string; href?: string }) {
+function ProfileAuthMethodTabs({ active, onChange }: { active: 'email' | 'phone'; onChange: (method: 'email' | 'phone') => void }) {
+  return (
+    <div className="flex items-center gap-4 text-xs font-semibold">
+      <button type="button" onClick={() => onChange('email')} className={active === 'email' ? 'text-[#0f8f6b] underline underline-offset-4' : 'text-slate-500'}>
+        E-mail
+      </button>
+      <button type="button" onClick={() => onChange('phone')} className={active === 'phone' ? 'text-[#0f8f6b] underline underline-offset-4' : 'text-slate-500'}>
+        Telephone
+      </button>
+    </div>
+  );
+}
+
+function SocialAuthLink({ label, href, provider = 'google' }: { label: string; href?: string; provider?: 'google' | 'apple' }) {
+  const icon = provider === 'apple' ? <AppleMark /> : <GoogleMark />;
+
   if (!href) {
     return (
-      <span className="flex h-9 items-center justify-center border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-400">
+      <span className="flex h-9 items-center justify-center gap-2 border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-400">
+        {icon}
         {label}
       </span>
     );
   }
 
   return (
-    <a href={href} className="flex h-9 items-center justify-center border border-slate-200 bg-white px-4 text-xs font-semibold text-ink">
+    <a href={href} className="flex h-9 items-center justify-center gap-2 border border-slate-200 bg-white px-4 text-xs font-semibold text-ink">
+      {icon}
       {label}
     </a>
+  );
+}
+
+function GoogleMark() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+      <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z" />
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.31 9.14 5.38 12 5.38z" />
+    </svg>
+  );
+}
+
+function AppleMark() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-current text-slate-900">
+      <path d="M16.37 1.43c0 1.16-.43 2.24-1.18 3.07-.8.9-2.12 1.6-3.2 1.5-.14-1.12.45-2.32 1.17-3.1.8-.86 2.2-1.52 3.21-1.47zM20.5 17.38c-.58 1.31-.86 1.9-1.61 3.06-1.05 1.6-2.53 3.59-4.36 3.61-1.63.02-2.05-1.05-4.27-1.04-2.21.01-2.67 1.07-4.3 1.05-1.83-.02-3.23-1.81-4.28-3.42C-1.25 16.14.29 9.52 3.75 8.39c1.7-.56 3.11.93 4.68.93 1.52 0 2.45-.94 4.65-.8.84.03 3.18.34 4.68 2.54-4.12 2.26-3.45 8.06.74 9.32z" />
+    </svg>
   );
 }
 
