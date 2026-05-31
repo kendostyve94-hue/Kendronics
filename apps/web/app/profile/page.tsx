@@ -605,7 +605,7 @@ function ProfileViewContent({
   if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Verification des fichiers" mode="review" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Paiements effectues" mode="payment" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'production') return <OrderReviewSection activeKey="production" title="Progres de la fabrication" mode="production" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
-  if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
+  if (view === 'delivery') return <OrderReviewSection activeKey="delivery" title="Livraison / Suivi de votre envoi" mode="delivery" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'completed') return <OrderReviewSection activeKey="completed" title="Commande completee" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'comments') return <CommentsManagementSection orders={orders} dataStatus={dataStatus} />;
   if (view === 'services') return <ServicesHubSection />;
@@ -651,7 +651,7 @@ function OrderReviewSection({
 }: {
   activeKey: OrderStatusKey;
   title: string;
-  mode: 'review' | 'payment' | 'production' | 'table';
+  mode: 'review' | 'payment' | 'production' | 'delivery' | 'table';
   orders?: ProfileOrder[];
   dataStatus?: 'loading' | 'ready' | 'signed-out' | 'error';
   onOrdersChange: (orders: ProfileOrder[] | ((current: ProfileOrder[]) => ProfileOrder[])) => void;
@@ -673,6 +673,8 @@ function OrderReviewSection({
           <PaymentReviewPanel orders={visibleOrders} dataStatus={dataStatus} />
         ) : mode === 'production' ? (
           <ProductionReviewPanel orders={visibleOrders} dataStatus={dataStatus} />
+        ) : mode === 'delivery' ? (
+          <DeliveryReviewPanel orders={visibleOrders} dataStatus={dataStatus} />
         ) : (
           <OrderTableSearchPanel orders={visibleOrders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />
         )}
@@ -831,6 +833,50 @@ function ProductionReviewPanel({ orders, dataStatus }: { orders: ProfileOrder[];
                   <span className="pt-2 text-black">{productionReference(order)}</span>
                   <span className="pt-2 text-black">{qualityStatusLabel(order)}</span>
                   <a href={`/orders/${order.id}`} className="pt-2 text-[#0877ff] hover:text-[#0068e8]">Voir</a>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      {detailOrder ? <ProductDetailModal order={detailOrder} onClose={() => setDetailOrder(null)} /> : null}
+    </>
+  );
+}
+
+function DeliveryReviewPanel({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+  const [detailOrder, setDetailOrder] = useState<ProfileOrder | null>(null);
+
+  return (
+    <>
+      <div className="mt-4 border border-[#e5e7eb] bg-white">
+        <div className="overflow-x-auto">
+          <div className="grid min-w-[1160px] grid-cols-[minmax(330px,1fr)_150px_150px_150px_160px_150px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
+            <span>Article</span>
+            <span>Etat livraison</span>
+            <span>Transporteur</span>
+            <span>Destination</span>
+            <span>Reference suivi</span>
+            <span>Estimation</span>
+          </div>
+          {dataStatus === 'loading' ? (
+            <p className="min-w-[1160px] px-5 py-14 text-center text-base font-black text-[#92979d]">Chargement de la livraison...</p>
+          ) : dataStatus === 'signed-out' ? (
+            <p className="min-w-[1160px] px-5 py-14 text-center text-base font-black text-[#92979d]">Connectez-vous pour afficher vos livraisons.</p>
+          ) : dataStatus === 'error' ? (
+            <p className="min-w-[1160px] px-5 py-14 text-center text-base font-black text-red-600">Impossible de charger les livraisons.</p>
+          ) : orders.length === 0 ? (
+            <p className="min-w-[1160px] px-5 py-14 text-center text-base text-[#92979d]">Aucun envoi en cours pour le moment.</p>
+          ) : (
+            <div className="min-w-[1160px] divide-y divide-[#e5e7eb]">
+              {orders.map((order) => (
+                <div key={order.id} className="grid grid-cols-[minmax(330px,1fr)_150px_150px_150px_160px_150px] items-start px-5 py-5 text-sm text-[#1f2f43]">
+                  <VerificationArticleCell order={order} onDetail={() => setDetailOrder(order)} />
+                  <span className="pt-2 text-black">{deliveryStatusLabel(order)}</span>
+                  <span className="pt-2 text-black">{order.carrierName || shippingModeLabel(order)}</span>
+                  <span className="pt-2 text-black">{deliveryDestinationLabel(order)}</span>
+                  <span className="pt-2 text-black">{order.trackingNumber || 'En attente'}</span>
+                  <span className="pt-2 text-black">{deliveryEstimateLabel(order)}</span>
                 </div>
               ))}
             </div>
@@ -1293,15 +1339,15 @@ function OrderTableSearchPanel({
           {selectedOrders.length > 0 ? <PaymentAuthorizationSummary checked={cartTermsAccepted} onChange={setCartTermsAccepted} /> : null}
         </div>
         {canProceedToPayment ? (
-          <a href={`/orders/${selectedOrders[0].id}`} className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-full bg-[#0877ff] px-5 text-base font-semibold text-white hover:bg-[#0068e8]">
+          <a href={`/orders/${selectedOrders[0].id}`} className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-sm bg-[#0877ff] px-5 text-base font-semibold text-white hover:bg-[#0068e8]">
             Paiement securise
           </a>
         ) : (
-          <span className="mt-5 inline-flex h-12 w-full cursor-not-allowed items-center justify-center rounded-full bg-[#cbd5e1] px-5 text-base font-semibold text-white">
+          <span className="mt-5 inline-flex h-12 w-full cursor-not-allowed items-center justify-center rounded-sm bg-[#cbd5e1] px-5 text-base font-semibold text-white">
             {selectedOrders.length === 1 ? 'Acceptez la regle' : 'Selectionnez un article'}
           </span>
         )}
-        <a href="/quote" className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-full border border-[#0877ff] px-5 text-base text-[#0877ff] hover:bg-[#eef6ff]">
+        <a href="/quote" className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-sm border border-[#0877ff] px-5 text-base text-[#0877ff] hover:bg-[#eef6ff]">
           +Ajouter un nouvel article
         </a>
         </div>
@@ -1481,6 +1527,36 @@ function orderWeightKg(order: ProfileOrder) {
   const materialKg = pcbVolumeCm3 * 1.85 / 1000 * quantity;
   const layerFactor = Math.max(1, layers / 2);
   return Math.max(0.08, materialKg * layerFactor + 0.06);
+}
+
+function deliveryStatusLabel(order: ProfileOrder) {
+  if (order.status === 'shipped_to_africa') return 'Expedie';
+  if (order.status === 'customs_processing') return 'Douane';
+  if (order.status === 'out_for_delivery') return 'Dernier kilometre';
+  if (order.status === 'delivered') return 'Livre';
+  return 'Preparation logistique';
+}
+
+function deliveryDestinationLabel(order: ProfileOrder) {
+  const config = order.quoteSnapshot?.configSnapshot ?? {};
+  const country = stringConfig(config.destinationCountry) || stringConfig(config.shippingCountry) || stringConfig(config.country);
+  return country ? countryDisplayName(country) : 'A confirmer';
+}
+
+function deliveryEstimateLabel(order: ProfileOrder) {
+  if (order.status === 'delivered') return 'Terminee';
+  const config = order.quoteSnapshot?.configSnapshot ?? {};
+  const deliveryDate = stringConfig(config.deliveryDate) || stringConfig(config.estimatedDeliveryDate) || stringConfig(config.deliveryEta);
+  if (deliveryDate) return deliveryDate;
+  return orderLeadTime(order);
+}
+
+function shippingModeLabel(order: ProfileOrder) {
+  const mode = order.quoteSnapshot?.shippingMode || stringConfig(order.quoteSnapshot?.configSnapshot?.shippingMode);
+  if (mode === 'express') return 'Livraison express';
+  if (mode === 'economy') return 'Livraison economique';
+  if (mode === 'standard') return 'Livraison standard';
+  return 'Transporteur a confirmer';
 }
 
 function defaultMaterialType(order: ProfileOrder) {

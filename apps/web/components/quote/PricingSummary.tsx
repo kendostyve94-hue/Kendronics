@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import type { AfricanCountry } from '../../lib/african-countries';
 import type { PricingBreakdown, QuoteConfig } from '../../lib/quote-types';
+import { CountryFlag } from '../ui/CountryFlag';
 
 type ShippingRate = {
   id: string;
@@ -729,7 +730,7 @@ function CountryDropdown({
         className="flex h-7 w-full items-center justify-between border border-slate-300 bg-white px-2 text-left text-xs font-medium text-slate-700"
       >
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className="text-sm leading-none">{countryFlag(selectedCountry.iso2)}</span>
+          <CountryFlag iso2={selectedCountry.iso2} name={selectedCountry.name} />
           <span className="truncate">{selectedCountry.name}</span>
         </span>
         <span className="text-xs text-slate-500">v</span>
@@ -761,7 +762,7 @@ function CountryDropdown({
                   country.iso2 === selectedCountry.iso2 ? 'bg-[#eaf2fb] font-semibold text-slate-950' : 'text-slate-800 hover:bg-slate-100'
                 }`}
               >
-                <span className="text-sm leading-none">{countryFlag(country.iso2)}</span>
+                <CountryFlag iso2={country.iso2} name={country.name} />
                 <span className="min-w-0 flex-1 truncate">{country.name}</span>
               </button>
             ))}
@@ -836,10 +837,4 @@ function formatBusinessDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}/${month}/${day}`;
-}
-
-function countryFlag(iso2: string): string {
-  return iso2
-    .toUpperCase()
-    .replace(/./g, (character) => String.fromCodePoint(127397 + character.charCodeAt(0)));
 }

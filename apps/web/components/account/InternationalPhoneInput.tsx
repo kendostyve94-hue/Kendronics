@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { getCountryCallingCode, parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js/min';
 import { africanCountries } from '../../lib/african-countries';
+import { CountryFlag } from '../ui/CountryFlag';
 
 type PhoneValue = {
   phoneE164: string;
@@ -94,7 +95,7 @@ export function InternationalPhoneInput({ label, value, error, placeholder = 'Nu
       {label ? <div className="mb-1 block text-[11px] font-semibold text-slate-600">{label}</div> : null}
       <div className={`flex h-11 items-center border bg-white ${error ? 'border-red-300' : 'border-slate-300'}`}>
         <button type="button" onClick={() => setOpen((current) => !current)} className="flex h-full shrink-0 items-center gap-2 border-r border-slate-200 px-3 text-sm text-slate-900">
-          <span>{flagEmoji(country.iso2)}</span>
+          <CountryFlag iso2={country.iso2} name={country.name} />
           <span>{country.callingCode}</span>
           <span className="text-[10px]">v</span>
         </button>
@@ -126,7 +127,7 @@ export function InternationalPhoneInput({ label, value, error, placeholder = 'Nu
                 onClick={() => selectCountry(item)}
                 className={`flex h-9 w-full items-center gap-2 px-3 text-left text-sm hover:bg-slate-100 ${item.iso2 === country.iso2 ? 'bg-slate-100' : ''}`}
               >
-                <span>{flagEmoji(item.iso2)}</span>
+                <CountryFlag iso2={item.iso2} name={item.name} />
                 <span className="min-w-0 flex-1 truncate text-slate-900">{item.name}</span>
                 <span className="text-slate-500">{item.callingCode}</span>
               </button>
@@ -149,10 +150,4 @@ function localPhoneValue(value: string, country: CountryCode) {
   if (!parsed) return value;
   if (parsed.country === country) return parsed.nationalNumber;
   return value;
-}
-
-function flagEmoji(countryCode: string) {
-  return countryCode
-    .toUpperCase()
-    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
 }
