@@ -349,9 +349,19 @@ export class PaymentsService {
   }
 
   private async createPostCaptureRecords(orderId: string, userId: string) {
-    const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: { quote: true } });
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        quote: { include: { pricingSnapshot: true } },
+        user: true,
+        payments: { orderBy: { createdAt: 'desc' }, take: 1 },
+      },
+    });
     if (!order?.quote) return;
     const amount = order.quote.finalTotal;
+    const payment = order.payments[0];
+    const customerName = order.user.fullName || order.user.companyName || order.user.email;
+    const pcbSpecs = `${order.quote.productType}, ${order.quote.layers} couches, ${order.quote.lengthMm.toNumber()} x ${order.quote.widthMm.toNumber()} mm, ${order.quote.quantity} pcs`;
     const internalReference = `KPR-${order.orderNumber.replace(/[^a-zA-Z0-9]/g, '').slice(-8) || order.id.slice(0, 8)}`;
 
     await this.prisma.$transaction([
@@ -376,7 +386,19 @@ export class PaymentsService {
             operation: 'payment_captured',
             sourceEventId: `capture-${orderId}`,
             status: 'pending',
-            payload: { orderNumber: order.orderNumber, userId } as Prisma.InputJsonValue,
+            payload: {
+              orderNumber: order.orderNumber,
+              customerName,
+              customerEmail: order.user.email,
+              destinationCountry: order.destinationCountryIso2,
+              quoteId: order.quoteId,
+              paymentStatus: 'Capture',
+              orderStatus: 'Paiement capture',
+              supplierReviewStatus: order.supplierReviewStatus,
+              supplierOrderId: order.externalSupplierOrderId,
+              supplier: order.externalManufacturingPartner,
+              pcbSpecs,
+            } as Prisma.InputJsonValue,
           },
           {
             orderId,
@@ -384,7 +406,20 @@ export class PaymentsService {
             operation: 'production_job_created',
             sourceEventId: `production-${orderId}`,
             status: 'pending',
-            payload: { internalReference } as Prisma.InputJsonValue,
+            payload: {
+              internalReference,
+              orderNumber: order.orderNumber,
+              customerName,
+              supplier: order.externalManufacturingPartner,
+              fabricationType: order.quote.productType,
+              destinationCountry: order.destinationCountryIso2,
+              productionStatus: 'A demarrer',
+              pcbFabricationStatus: 'En attente',
+              pcbQcStatus: 'En attente',
+              smtStatus: 'Non requis',
+              assemblyRequired: false,
+              supplierOrderId: order.externalSupplierOrderId,
+            } as Prisma.InputJsonValue,
           },
           {
             orderId,
@@ -392,7 +427,24 @@ export class PaymentsService {
             operation: 'finance_capture_recorded',
             sourceEventId: `finance-${orderId}`,
             status: 'pending',
-            payload: { amount: amount.toNumber(), currency: order.quote.currency } as Prisma.InputJsonValue,
+            payload: {
+              orderNumber: order.orderNumber,
+              quoteId: order.quoteId,
+              customerName,
+              customerCompany: order.user.companyName,
+              destinationCountry: order.destinationCountryIso2,
+              currency: order.quote.currency,
+              paymentStatus: 'Capture',
+              quoteStatus: 'Commande payee',
+              totalEstimatedPrice: amount.toNumber(),
+              customerPaidAmount: amount.toNumber(),
+              supplierEstimatedCost: order.quote.pricingSnapshot?.supplierEstimatedPrice.toNumber(),
+              logisticsEstimatedCost: order.quote.pricingSnapshot?.shippingPrice.toNumber(),
+              stripePaymentIntentId: payment?.providerIntentId,
+              paymentMethod: payment?.provider,
+              paymentDate: new Date().toISOString(),
+              invoiceNumber: `INV-${order.orderNumber}`,
+            } as Prisma.InputJsonValue,
           },
         ],
         skipDuplicates: true,

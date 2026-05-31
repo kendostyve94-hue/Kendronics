@@ -43,6 +43,9 @@ export function validateProductionConfig() {
       'MONDAY_BOARD_COMMANDES_ID',
       'MONDAY_BOARD_CHIFFRE_AFFAIRE_LIVE_ID',
       'MONDAY_BOARD_EN_PRODUCTION_ID',
+      'MONDAY_BOARD_LOGISTICS_INTERNATIONAL_ID',
+      'MONDAY_BOARD_LOGISTIQUE_LOCALE_ID',
+      'MONDAY_BOARD_SUPPORT_CLIENTS_ID',
     ].filter((key) => !process.env[key]);
     if (missingMonday.length > 0) {
       throw new Error(`Missing Monday production environment variables: ${missingMonday.join(', ')}`);

@@ -277,9 +277,14 @@ export class SupplierOrderService {
           status: 'pending',
           payload: {
             orderNumber: packageData.orderNumber,
+            quoteId: packageData.quoteId,
             supplier,
             technicalPackageVersion: fileVersion,
             supplierStatus: status,
+            supplierReviewStatus: status,
+            supplierOrderId: externalReviewId,
+            gerberLink: String(this.objectRecord(packageData.gerber).storageKey ?? ''),
+            specificationSummary: this.specificationSummary(packageData),
             error,
             response: responsePayload,
           } as Prisma.InputJsonValue,
@@ -480,5 +485,15 @@ export class SupplierOrderService {
   private configValue(key: string): string | undefined {
     const value = process.env[key]?.trim();
     return value && value !== 'not-configured' ? value : undefined;
+  }
+
+  private specificationSummary(packageData: Record<string, unknown>): string {
+    const pcb = this.objectRecord(packageData.pcb);
+    return [
+      pcb.productType,
+      pcb.layers ? `${pcb.layers} couches` : undefined,
+      pcb.lengthMm && pcb.widthMm ? `${pcb.lengthMm} x ${pcb.widthMm} mm` : undefined,
+      pcb.quantity ? `${pcb.quantity} pcs` : undefined,
+    ].filter(Boolean).join(', ');
   }
 }

@@ -60,9 +60,15 @@ Variables utiles pour l'API:
 - `MONDAY_BOARD_COMMANDES_ID`
 - `MONDAY_BOARD_CHIFFRE_AFFAIRE_LIVE_ID`
 - `MONDAY_BOARD_EN_PRODUCTION_ID`
-- `MONDAY_COLUMN_MAP_COMMANDES` optionnel, mais recommande pour remplir les colonnes automatiquement
-- `MONDAY_COLUMN_MAP_CHIFFRE_AFFAIRE_LIVE` optionnel, mais recommande pour remplir les colonnes automatiquement
-- `MONDAY_COLUMN_MAP_EN_PRODUCTION` optionnel, mais recommande pour remplir les colonnes automatiquement
+- `MONDAY_BOARD_LOGISTICS_INTERNATIONAL_ID`
+- `MONDAY_BOARD_LOGISTIQUE_LOCALE_ID`
+- `MONDAY_BOARD_SUPPORT_CLIENTS_ID`
+- `MONDAY_COLUMN_TITLE_MAP_COMMANDES` recommande pour remplir les colonnes automatiquement par titre visible
+- `MONDAY_COLUMN_TITLE_MAP_CHIFFRE_AFFAIRE_LIVE` recommande pour remplir les colonnes automatiquement par titre visible
+- `MONDAY_COLUMN_TITLE_MAP_EN_PRODUCTION` recommande pour remplir les colonnes automatiquement par titre visible
+- `MONDAY_COLUMN_TITLE_MAP_LOGISTICS_INTERNATIONAL` recommande pour remplir les colonnes automatiquement par titre visible
+- `MONDAY_COLUMN_TITLE_MAP_LOGISTIQUE_LOCALE` recommande pour remplir les colonnes automatiquement par titre visible
+- `MONDAY_COLUMN_TITLE_MAP_SUPPORT_CLIENTS` recommande pour remplir les colonnes automatiquement par titre visible
 
 Commandes utiles:
 
@@ -127,12 +133,15 @@ Commandes utiles:
    - `MONDAY_BOARD_COMMANDES_ID=...`
    - `MONDAY_BOARD_CHIFFRE_AFFAIRE_LIVE_ID=...`
    - `MONDAY_BOARD_EN_PRODUCTION_ID=...`
-   - `MONDAY_COLUMN_MAP_COMMANDES={"orderNumber":"id_colonne_monday","supplierStatus":"id_colonne_monday"}`
-   - `MONDAY_COLUMN_MAP_CHIFFRE_AFFAIRE_LIVE={"orderNumber":"id_colonne_monday","paymentStatus":"id_colonne_monday"}`
-   - `MONDAY_COLUMN_MAP_EN_PRODUCTION={"orderNumber":"id_colonne_monday","status":"id_colonne_monday"}`
+   - `MONDAY_BOARD_LOGISTICS_INTERNATIONAL_ID=...`
+   - `MONDAY_BOARD_LOGISTIQUE_LOCALE_ID=...`
+   - `MONDAY_BOARD_SUPPORT_CLIENTS_ID=...`
+   - `MONDAY_COLUMN_TITLE_MAP_COMMANDES={"orderNumber":"Id commande","customerName":"Nom Client"}`
+   - `MONDAY_COLUMN_TITLE_MAP_CHIFFRE_AFFAIRE_LIVE={"orderNumber":"ID Commande","paymentStatus":"PaymentStatus"}`
+   - `MONDAY_COLUMN_TITLE_MAP_EN_PRODUCTION={"internalReference":"Élément","productionStatus":"Statut Production"}`
 5. Laisse `MONDAY_SYNC_DISABLED` absent ou a `false`.
 6. Apres une commande ou un paiement, verifie que les lignes `MondaySyncLog` passent de `pending`/`retry` a `processed`.
-7. Les valeurs de `MONDAY_COLUMN_MAP_*` doivent utiliser les IDs techniques des colonnes Monday, pas les titres visibles.
+7. Les valeurs de `MONDAY_COLUMN_TITLE_MAP_*` utilisent les titres visibles des colonnes Monday. Si tu preferes les IDs techniques, utilise `MONDAY_COLUMN_MAP_*`.
 
 ## Developpement local avec PostgreSQL
 

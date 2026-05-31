@@ -3,6 +3,14 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 const intervalMs = 60_000;
 const batchSize = 10;
+const mondayBoardAliases: Record<string, string> = {
+  COMMANDES: 'COMMANDES',
+  EN_PRODUCTION: 'EN_PRODUCTION',
+  CHIFFRE_AFFAIRE_LIVE: 'CHIFFRE_AFFAIRE_LIVE',
+  LOGISTICS_INTERNATIONAL: 'LOGISTICS_INTERNATIONAL',
+  LOGISTIQUE_LOCALE: 'LOGISTIQUE_LOCALE',
+  SUPPORT_CLIENTS: 'SUPPORT_CLIENTS',
+};
 
 @Injectable()
 export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
@@ -65,7 +73,7 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
     }
 
     const itemName = itemNameFor(operation, payload);
-    const columnValues = JSON.stringify(columnValuesFor(board, payload));
+    const columnValues = JSON.stringify(await this.columnValuesFor(board, payload, apiKey, boardId));
     const query = `
       mutation CreateKendronicsItem($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
         create_item(board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
@@ -88,10 +96,67 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
 
     return data?.data?.create_item?.id;
   }
+
+  private async columnValuesFor(board: string, payload: unknown, apiKey: string, boardId: string): Promise<Record<string, unknown>> {
+    const value = objectValue(payload);
+    const idMap = columnMapFor(board, 'MAP');
+    const titleMap = columnMapFor(board, 'TITLE_MAP');
+    const resolvedTitleMap = Object.keys(titleMap).length > 0 ? await this.resolveColumnTitles(apiKey, boardId, titleMap) : {};
+    const columnMap: Record<string, MondayColumnTarget> = {
+      ...Object.fromEntries(Object.entries(idMap).map(([source, id]) => [source, { id }])),
+      ...resolvedTitleMap,
+    };
+
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key, entry]) => columnMap[key] && (entry == null || ['string', 'number', 'boolean'].includes(typeof entry)))
+        .map(([key, entry]) => [columnMap[key].id, mondayColumnValue(entry as string | number | boolean | null, columnMap[key].type)]),
+    );
+  }
+
+  private async resolveColumnTitles(apiKey: string, boardId: string, sourceToTitle: Record<string, string>): Promise<Record<string, MondayColumnTarget>> {
+    const query = `
+      query KendronicsBoardColumns($boardId: ID!) {
+        boards(ids: [$boardId]) {
+          columns {
+            id
+            title
+            type
+          }
+        }
+      }
+    `;
+    const response = await fetch(process.env.MONDAY_API_URL ?? 'https://api.monday.com/v2', {
+      method: 'POST',
+      headers: {
+        Authorization: apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query, variables: { boardId } }),
+    });
+    const data = await response.json().catch(() => null) as { data?: { boards?: Array<{ columns?: Array<{ id?: string; title?: string; type?: string }> }> }; errors?: Array<{ message?: string }> } | null;
+    if (!response.ok || data?.errors?.length) {
+      throw new Error(data?.errors?.map((item) => item.message).filter(Boolean).join(' ') || `Monday column discovery failed (${response.status}).`);
+    }
+
+    const titleToId = new Map(
+      (data?.data?.boards?.[0]?.columns ?? [])
+        .filter((column) => column.id && column.title)
+        .map((column) => [normalizeTitle(column.title), { id: column.id as string, type: column.type }]),
+    );
+
+    const resolved: Record<string, MondayColumnTarget> = {};
+    for (const [source, title] of Object.entries(sourceToTitle)) {
+      const target = titleToId.get(normalizeTitle(title));
+      if (target) resolved[source] = target;
+    }
+    return resolved;
+  }
 }
 
 function boardIdFor(board: string): string | undefined {
-  const key = `MONDAY_BOARD_${board.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}_ID`;
+  const canonical = canonicalBoard(board);
+  const key = `MONDAY_BOARD_${canonical}_ID`;
   return process.env[key]?.trim();
 }
 
@@ -100,22 +165,12 @@ function itemNameFor(operation: string, payload: unknown): string {
   return String(value.orderNumber ?? value.internalReference ?? value.paymentId ?? operation).slice(0, 255);
 }
 
-function columnValuesFor(board: string, payload: unknown): Record<string, string | number | boolean | null> {
-  const value = objectValue(payload);
-  const columnMap = columnMapFor(board);
-  return Object.fromEntries(
-    Object.entries(value)
-      .filter(([key, entry]) => columnMap[key] && (entry == null || ['string', 'number', 'boolean'].includes(typeof entry)))
-      .map(([key, entry]) => [columnMap[key], entry as string | number | boolean | null]),
-  );
-}
-
 function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
-function columnMapFor(board: string): Record<string, string> {
-  const key = `MONDAY_COLUMN_MAP_${board.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`;
+function columnMapFor(board: string, suffix: 'MAP' | 'TITLE_MAP'): Record<string, string> {
+  const key = `MONDAY_COLUMN_${suffix}_${canonicalBoard(board)}`;
   const raw = process.env[key]?.trim();
   if (!raw) return {};
   try {
@@ -129,4 +184,29 @@ function columnMapFor(board: string): Record<string, string> {
   } catch {
     return {};
   }
+}
+
+function canonicalBoard(board: string): string {
+  const normalized = board.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+  return mondayBoardAliases[normalized] ?? normalized;
+}
+
+function normalizeTitle(value: string | undefined): string {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+type MondayColumnTarget = { id: string; type?: string };
+
+function mondayColumnValue(value: string | number | boolean | null, type?: string): unknown {
+  if (value == null) return null;
+  if (type === 'status') return { label: String(value) };
+  if (type === 'date') return { date: String(value).slice(0, 10) };
+  if (type === 'numbers') return typeof value === 'number' ? value : Number(value) || 0;
+  if (type === 'link') return { url: String(value), text: String(value).slice(0, 120) };
+  return value;
 }
