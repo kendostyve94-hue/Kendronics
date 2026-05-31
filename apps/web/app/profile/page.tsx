@@ -1082,7 +1082,7 @@ function OrderTableSearchPanel({
   }
 
   return (
-    <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_290px]">
+    <div className="mt-4 grid gap-5 pb-24 sm:pb-0 xl:grid-cols-[minmax(0,1fr)_290px]">
       <div className="min-w-0">
         <div className="bg-white">
           <div className="border-b border-[#e5e7eb] py-3 text-sm text-black sm:flex sm:flex-wrap sm:items-center sm:gap-5 sm:py-4">
@@ -1208,7 +1208,31 @@ function OrderTableSearchPanel({
         </div>
       </div>
 
-      <aside className="bg-white p-3 text-black sm:border sm:border-[#e5e7eb] sm:p-5">
+      <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(3.9rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur' : 'hidden'} text-black sm:static sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5 sm:backdrop-blur-0`}>
+        <div className="mx-auto flex max-w-md items-center gap-3 sm:hidden">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Cout PCB</p>
+            <p className="mt-0.5 text-lg font-semibold text-[#ff7a00]">{formatMoney(merchandiseTotal)}</p>
+            <p className="text-[10px] text-[#0877ff]">{selectedOrders.length} Article&gt;</p>
+          </div>
+          {selectedOrders.length > 0 ? (
+            <label className="flex max-w-[4.8rem] items-center gap-1 text-[10px] leading-3 text-[#0f4f3f]">
+              <input type="checkbox" checked={cartTermsAccepted} onChange={(event) => setCartTermsAccepted(event.target.checked)} className="h-3.5 w-3.5 shrink-0 accent-[#0f8f6b]" />
+              Regle
+            </label>
+          ) : null}
+          {canProceedToPayment ? (
+            <a href={`/orders/${selectedOrders[0].id}`} className="inline-flex h-11 min-w-[7.4rem] items-center justify-center bg-[#0f8f6b] px-4 text-xs font-semibold uppercase text-white">
+              Paiement
+            </a>
+          ) : (
+            <span className="inline-flex h-11 min-w-[7.4rem] items-center justify-center bg-[#0f8f6b]/25 px-4 text-xs font-semibold uppercase text-white">
+              Soumettre
+            </span>
+          )}
+        </div>
+
+        <div className="hidden sm:block">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Cout PCB</p>
@@ -1254,6 +1278,7 @@ function OrderTableSearchPanel({
         <a href="/quote" className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-full border border-[#0877ff] px-5 text-base text-[#0877ff] hover:bg-[#eef6ff]">
           +Ajouter un nouvel article
         </a>
+        </div>
       </aside>
       {detailOrder ? <ProductDetailModal order={detailOrder} onClose={() => setDetailOrder(null)} /> : null}
     </div>
@@ -3316,34 +3341,62 @@ function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firs
 
 function SignedOutMobileAccount() {
   return (
-    <div className="grid gap-5 bg-white py-4 text-[#102033] lg:hidden">
-      <section className="grid gap-3">
-        <h1 className="text-2xl leading-tight">Bienvenue sur Kendronics</h1>
-        <p className="text-sm leading-6 text-[#53657a]">
-          Connectez-vous ou creez un compte pour retrouver vos devis, commandes, notifications et informations de livraison.
+    <div className="grid gap-3 bg-white py-4 text-[#102033] lg:hidden">
+      <section className="border border-slate-200 bg-white px-3.5 py-4 text-ink">
+        <h1 className="text-lg font-bold tracking-normal text-ink">Bienvenue sur Kendronics</h1>
+        <p className="mt-2 text-xs leading-5 text-slate-600">
+          Pour utiliser les fonctionnalites du site, creez d'abord votre compte ou connectez-vous si vous en avez deja un.
+        </p>
+        <div className="mt-3 grid gap-2">
+          <a href="/register" className="flex h-9 items-center justify-center border border-[#0f8f6b] bg-[#0f8f6b] px-4 text-xs font-semibold text-white">
+            Creer un nouveau compte
+          </a>
+          <a href="/login" className="flex h-9 items-center justify-center border border-slate-300 bg-white px-4 text-xs font-semibold text-ink">
+            Se connecter
+          </a>
+        </div>
+        <p className="mt-3 text-[11px] leading-5 text-slate-500">
+          En creant un compte, vous acceptez nos <a href="/terms" className="font-semibold text-[#0f8f6b] underline">conditions d'utilisation</a> et notre{' '}
+          <a href="/privacy" className="font-semibold text-[#0f8f6b] underline">politique de confidentialite</a>.
         </p>
       </section>
 
-      <section className="grid gap-3">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.14em] text-[#0f8f6b]">Nouveau client</p>
-          <h2 className="mt-1 text-xl">Creer un compte</h2>
-          <p className="mt-2 text-sm leading-6 text-[#53657a]">Enregistrez votre e-mail ou telephone, puis completez votre profil avant de commander.</p>
+      <section className="border border-slate-200 bg-white text-ink">
+        <div className="border-b border-slate-200 px-3.5 py-2.5">
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-lg font-bold tracking-normal text-ink">Rejoindre ou se connecter</h1>
+            <span className="shrink-0 text-xs font-medium text-slate-400">Retour</span>
+          </div>
         </div>
-        <a href="/register" className="inline-flex min-h-11 items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white">
-          Creer un nouveau compte
-        </a>
+        <div className="space-y-2 px-3.5 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-base font-bold text-ink">Creer un compte</h2>
+            <a href="/login" className="text-xs font-semibold text-[#0f8f6b]">Se connecter</a>
+          </div>
+          <p className="text-xs leading-5 text-slate-600">Utilisez votre e-mail ou votre telephone pour recevoir un code de verification.</p>
+          <a href="/register" className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white">
+            Creer mon compte
+          </a>
+        </div>
       </section>
 
-      <section className="grid gap-3">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.14em] text-[#0f8f6b]">Deja client</p>
-          <h2 className="mt-1 text-xl">Se connecter</h2>
-          <p className="mt-2 text-sm leading-6 text-[#53657a]">Accedez directement a votre espace client, au panier et au suivi des commandes.</p>
+      <section className="border border-slate-200 bg-white text-ink">
+        <div className="border-b border-slate-200 px-3.5 py-2.5">
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-lg font-bold tracking-normal text-ink">Rejoindre ou se connecter</h1>
+            <span className="shrink-0 text-xs font-medium text-slate-400">Retour</span>
+          </div>
         </div>
-        <a href="/login" className="inline-flex min-h-11 items-center justify-center border border-[#0f8f6b] px-4 text-sm font-semibold text-[#0f8f6b]">
-          Se connecter
-        </a>
+        <div className="space-y-2 px-3.5 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-base font-bold text-ink">Se connecter</h2>
+            <a href="/register" className="text-xs font-semibold text-[#0f8f6b]">Creer un compte</a>
+          </div>
+          <p className="text-xs leading-5 text-slate-600">Connectez-vous pour afficher vos commandes, notifications et adresses.</p>
+          <a href="/login" className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white">
+            Se connecter
+          </a>
+        </div>
       </section>
     </div>
   );

@@ -369,11 +369,11 @@ export function PricingSummary({
       </div>
 
       {priceDetailsOpen ? (
-        <div className="sheet-backdrop-in fixed inset-x-0 bottom-[4.9rem] top-0 z-[45] bg-slate-950/25 lg:hidden" onClick={() => setPriceDetailsOpen(false)} />
+        <div className="sheet-backdrop-in fixed inset-x-0 bottom-[calc(3.9rem+env(safe-area-inset-bottom))] top-0 z-[45] bg-slate-950/25 lg:hidden" onClick={() => setPriceDetailsOpen(false)} />
       ) : null}
 
       <div
-        className={`fixed inset-x-0 bottom-[4.9rem] z-[60] border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur lg:hidden ${
+        className={`fixed inset-x-0 bottom-[calc(3.9rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur lg:hidden ${
           priceDetailsOpen ? 'sheet-panel-in rounded-t-2xl' : ''
         }`}
         role={priceDetailsOpen ? 'dialog' : undefined}
@@ -394,7 +394,7 @@ export function PricingSummary({
                 <span className="text-[10px] font-medium text-[#c45100]">voir total</span>
               </p>
             </button>
-            <button type="button" className="h-11 w-[6.35rem] shrink-0 border border-slate-200 bg-white px-2 py-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Changer le delai de fabrication">
+            <button type="button" className="h-11 w-[4.85rem] shrink-0 border border-slate-200 bg-white px-2 py-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Changer le delai de fabrication">
               <span className="block text-[9px] font-semibold uppercase tracking-[0.08em] text-slate-500">Delai</span>
               <span className="mt-0.5 flex items-baseline gap-1.5">
                 <span className="text-xs font-semibold text-slate-900">{activeBuildOption.buildDays}j</span>

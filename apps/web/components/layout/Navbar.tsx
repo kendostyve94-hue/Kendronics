@@ -248,7 +248,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
     return () => document.removeEventListener('pointerdown', closeMobilePanels);
   }, [isMenuOpen, isSearchOpen]);
 
-  const cartHref = useMemo(() => (orders.length > 0 ? '/profile?view=orders' : '/quote'), [orders.length]);
+  const cartHref = '/profile?view=orders';
 
   const visibleProfileNavItems = useMemo(() => {
     return profileNavItems.filter((item) => item.href !== '/admin' || isAdmin);
@@ -294,7 +294,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             {isSignedIn ? (
               <>
                 <NotificationBell count={unreadNotifications} compact />
-                <a href="/profile" className="grid h-9 w-9 place-items-center overflow-hidden rounded-sm border border-[#d1d5db] bg-[#0b1724] text-xs font-black text-white" aria-label={t('nav.openAccount')}>
+                <a href="/profile" className="grid h-8 w-8 place-items-center overflow-hidden rounded-sm border border-[#d1d5db] bg-[#0b1724] text-xs font-black text-white" aria-label={t('nav.openAccount')}>
                   <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
                 </a>
               </>
@@ -436,7 +436,7 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
             item.href === '/'
               ? pathname === '/'
               : item.labelKey === 'nav.cart'
-                ? pathname.startsWith('/orders') || (pathname === '/profile' && profileView === 'orders') || (orderCount === 0 && pathname.startsWith('/quote'))
+                ? pathname.startsWith('/orders') || (pathname === '/profile' && profileView === 'orders')
                 : item.labelKey === 'nav.account'
                   ? pathname === '/profile' && profileView !== 'orders'
                   : pathname.startsWith(item.href);
