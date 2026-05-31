@@ -2071,29 +2071,29 @@ function SettingsSection({
   return (
     <section className="min-h-[690px] bg-white p-6 text-black shadow-sm ring-1 ring-slate-200">
       <h1 className="border-b border-[#e5e7eb] pb-4 text-xl font-normal">Paramètres du compte</h1>
-      <div className="grid grid-cols-[140px_1fr_160px] gap-6 border-b border-[#e5e7eb] py-6">
+      <div className="grid grid-cols-[108px_minmax(0,1fr)] gap-4 border-b border-[#e5e7eb] py-6 sm:grid-cols-[140px_1fr_160px] sm:gap-6">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
-        <div className="grid gap-3 text-sm">
-          <p className="text-base">
+        <div className="grid min-w-0 gap-3 text-sm">
+          <p className="break-words text-base">
             {profile.name || 'Client Kendronics'} <AccountTypeBadge profile={profile} />
           </p>
           <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
-          <p className="text-[#6b7280]">Pays/region <span className="ml-20 text-black">{profile.country ? countryDisplayName(profile.country) : 'Non renseigne'}</span></p>
-          <p className="text-[#6b7280]">Telephone <span className="ml-20 text-black">{profile.phone || 'Non renseigne'}</span></p>
-          {profile.profileDetails?.accountType === 'company' ? <p className="text-[#6b7280]">Societe <span className="ml-24 text-black">{profile.company || 'Non renseignee'}</span></p> : null}
+          <p className="grid gap-1 text-[#6b7280] sm:block">Pays/region <span className="text-black sm:ml-20">{profile.country ? countryDisplayName(profile.country) : 'Non renseigne'}</span></p>
+          <p className="grid gap-1 text-[#6b7280] sm:block">Telephone <span className="text-black sm:ml-20">{profile.phone || 'Non renseigne'}</span></p>
+          {profile.profileDetails?.accountType === 'company' ? <p className="grid gap-1 text-[#6b7280] sm:block">Societe <span className="text-black sm:ml-24">{profile.company || 'Non renseignee'}</span></p> : null}
         </div>
-        <button type="button" onClick={() => setEditingProfile(true)} className="self-start pt-12 text-right text-sm text-[#0f8f6b]">
+        <button type="button" onClick={() => setEditingProfile(true)} className="col-span-2 justify-self-start text-sm text-[#0f8f6b] sm:col-span-1 sm:self-start sm:justify-self-auto sm:pt-12 sm:text-right">
           {isAccountLevelOne(profile) ? 'Modifier le profil' : 'Completer le profil'}
         </button>
       </div>
-      <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
-        <h2 className="text-lg">Statut compte</h2>
-        <p className={isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}>
+      <div className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
+        <h2 className="min-w-0 break-words text-lg">Statut compte</h2>
+        <p className={`min-w-0 break-words ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
           {isAccountLevelOne(profile)
             ? 'Votre compte est verifie et peut soumettre des commandes.'
             : 'Votre compte doit etre complete avant de soumettre une commande.'}
         </p>
-        <a href={isAccountLevelOne(profile) ? '/terms' : '/profile?view=settings'} className={`text-right ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
+        <a href={isAccountLevelOne(profile) ? '/terms' : '/profile?view=settings'} className={`col-start-2 min-w-0 justify-self-start break-words text-left sm:col-start-auto sm:justify-self-auto sm:text-right ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
           {isAccountLevelOne(profile) ? 'Verifie' : 'A completer'}
         </a>
       </div>
@@ -2106,32 +2106,32 @@ function SettingsSection({
         ['A propos', 'Comprendre Kendronics et le fonctionnement de la plateforme.', 'Decouvrir', '/how-it-works'],
         ["Besoin d'aide", 'Ouvrir un ticket support pour une question de compte ou commande.', 'Ticket support', '/contact'],
       ].map(([label, value, action, href]) => (
-        <div key={label} className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
-          <h2 className="text-lg">{label}</h2>
-          <p className={!profile.email && label === 'E-mail' || label === 'Téléphone' && !profile.phoneVerifiedAt || label === 'Adresse de livraison' && !isCompleteProfileAddress(profile.shippingAddress) ? 'text-[#d97706]' : 'text-[#4b5563]'}>{value}</p>
+        <div key={label} className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
+          <h2 className="min-w-0 break-words text-lg">{label}</h2>
+          <p className={`min-w-0 break-words ${!profile.email && label === 'E-mail' || label === 'Téléphone' && !profile.phoneVerifiedAt || label === 'Adresse de livraison' && !isCompleteProfileAddress(profile.shippingAddress) ? 'text-[#d97706]' : 'text-[#4b5563]'}`}>{value}</p>
           {label === 'E-mail' ? (
-            <button type="button" onClick={() => setEmailModalOpen(true)} className="text-right text-[#0f8f6b]">{action}</button>
+            <button type="button" onClick={() => setEmailModalOpen(true)} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">{action}</button>
           ) : label === 'Téléphone' ? (
-            <button type="button" onClick={() => setPhoneModalOpen(true)} className="text-right text-[#0f8f6b]">{action}</button>
+            <button type="button" onClick={() => setPhoneModalOpen(true)} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">{action}</button>
           ) : label === 'Mot de passe' ? (
-            <button type="button" onClick={() => setPasswordModalOpen(true)} className="text-right text-[#0f8f6b]">{action}</button>
+            <button type="button" onClick={() => setPasswordModalOpen(true)} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">{action}</button>
           ) : (
-            <a href={href} className="text-right text-[#0f8f6b]">{action}</a>
+            <a href={href} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">{action}</a>
           )}
         </div>
       ))}
-      <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
-        <h2 className="text-lg">Déconnexion</h2>
-        <p className="text-[#4b5563]">Fermer la session sur cet appareil.</p>
-        <button type="button" onClick={logout} className="text-right text-[#0f8f6b]">Se déconnecter</button>
+      <div className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
+        <h2 className="min-w-0 break-words text-lg">Déconnexion</h2>
+        <p className="min-w-0 break-words text-[#4b5563]">Fermer la session sur cet appareil.</p>
+        <button type="button" onClick={logout} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">Se déconnecter</button>
       </div>
-      <div className="grid grid-cols-[160px_1fr_160px] border-b border-[#e5e7eb] py-5 text-sm">
-        <h2 className="text-lg">Supprimer le compte</h2>
-        <p className="text-[#4b5563]">Suppression definitive du compte et des donnees client associees, apres verification par e-mail.</p>
+      <div className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
+        <h2 className="min-w-0 break-words text-lg">Supprimer le compte</h2>
+        <p className="min-w-0 break-words text-[#4b5563]">Suppression definitive du compte et des donnees client associees, apres verification par e-mail.</p>
         <button
           type="button"
           onClick={() => setDeleteModalOpen(true)}
-          className="text-right text-red-400 transition hover:text-red-600 active:text-red-700 disabled:cursor-not-allowed disabled:text-red-200"
+          className="col-start-2 min-w-0 justify-self-start break-words text-left text-red-400 transition hover:text-red-600 active:text-red-700 disabled:cursor-not-allowed disabled:text-red-200 sm:col-start-auto sm:justify-self-auto sm:text-right"
         >
           Supprimer
         </button>
@@ -2328,7 +2328,7 @@ function AccountProfileEditForm({
   }
 
   return (
-    <section className="min-h-[690px] bg-white p-6 text-black shadow-sm ring-1 ring-slate-200">
+    <section className="min-h-[690px] overflow-hidden bg-white p-4 text-black shadow-sm ring-1 ring-slate-200 sm:p-6">
       <form onSubmit={saveProfile} className="grid gap-7">
         <div>
           <h1 className="border-l-4 border-[#0f8f6b] pl-3 text-lg font-semibold">Informations de base</h1>
