@@ -65,7 +65,7 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
     }
 
     const itemName = itemNameFor(operation, payload);
-    const columnValues = JSON.stringify(columnValuesFor(payload));
+    const columnValues = JSON.stringify(columnValuesFor(board, payload));
     const query = `
       mutation CreateKendronicsItem($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
         create_item(board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
@@ -100,15 +100,33 @@ function itemNameFor(operation: string, payload: unknown): string {
   return String(value.orderNumber ?? value.internalReference ?? value.paymentId ?? operation).slice(0, 255);
 }
 
-function columnValuesFor(payload: unknown): Record<string, string | number | boolean | null> {
+function columnValuesFor(board: string, payload: unknown): Record<string, string | number | boolean | null> {
   const value = objectValue(payload);
+  const columnMap = columnMapFor(board);
   return Object.fromEntries(
     Object.entries(value)
-      .filter(([, entry]) => entry == null || ['string', 'number', 'boolean'].includes(typeof entry))
-      .map(([key, entry]) => [key, entry as string | number | boolean | null]),
+      .filter(([key, entry]) => columnMap[key] && (entry == null || ['string', 'number', 'boolean'].includes(typeof entry)))
+      .map(([key, entry]) => [columnMap[key], entry as string | number | boolean | null]),
   );
 }
 
 function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function columnMapFor(board: string): Record<string, string> {
+  const key = `MONDAY_COLUMN_MAP_${board.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`;
+  const raw = process.env[key]?.trim();
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    return Object.fromEntries(
+      Object.entries(parsed)
+        .filter(([, value]) => typeof value === 'string' && value.trim())
+        .map(([source, target]) => [source, String(target).trim()]),
+    );
+  } catch {
+    return {};
+  }
 }

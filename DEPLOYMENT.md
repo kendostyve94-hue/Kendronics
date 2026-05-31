@@ -39,6 +39,11 @@ Variables utiles pour l'API:
 - `SMTP_USER`
 - `SMTP_PASS`
 - `SMTP_FROM`
+- `PHONE_VERIFY_PROVIDER=twilio`
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_VERIFY_SERVICE_SID`
+- `TWILIO_VERIFY_CHANNEL=sms`
 - `S3_BUCKET`
 - `S3_REGION`
 - `S3_ACCESS_KEY_ID`
@@ -50,6 +55,14 @@ Variables utiles pour l'API:
 - `PCBWAY_QUOTE_ENDPOINT=https://api-partner.pcbway.com/api/Pcb/PcbQuotation`
 - `PCBWAY_ORDER_ENDPOINT=https://api-partner.pcbway.com/api/Pcb/PlaceOrder`
 - `REQUIRE_LIVE_SUPPLIER_PRICING=true`
+- `MONDAY_REQUIRED=true`
+- `MONDAY_API_KEY`
+- `MONDAY_BOARD_COMMANDES_ID`
+- `MONDAY_BOARD_CHIFFRE_AFFAIRE_LIVE_ID`
+- `MONDAY_BOARD_EN_PRODUCTION_ID`
+- `MONDAY_COLUMN_MAP_COMMANDES` optionnel, mais recommande pour remplir les colonnes automatiquement
+- `MONDAY_COLUMN_MAP_CHIFFRE_AFFAIRE_LIVE` optionnel, mais recommande pour remplir les colonnes automatiquement
+- `MONDAY_COLUMN_MAP_EN_PRODUCTION` optionnel, mais recommande pour remplir les colonnes automatiquement
 
 Commandes utiles:
 
@@ -81,9 +94,45 @@ Commandes utiles:
 - `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` sont en mode live quand tu acceptes de vrais paiements.
 - Le webhook Stripe pointe vers `https://url-publique-de-ton-api/api/payments/webhooks/stripe`.
 - SMTP est configure avec un mot de passe d'application ou un fournisseur email transactionnel.
+- Twilio Verify est configure avec `PHONE_VERIFY_PROVIDER=twilio`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID` et `TWILIO_VERIFY_CHANNEL=sms`.
 - Le bucket prive S3/R2 est cree et les variables `S3_*` sont renseignees.
 - Le fournisseur partenaire est configure dans Render avec `PREFERRED_PCB_SUPPLIER=pcbway`, `PCBWAY_API_KEY`, `PCBWAY_BALANCE_ENDPOINT`, `PCBWAY_QUOTE_ENDPOINT`, `PCBWAY_ORDER_ENDPOINT` et `REQUIRE_LIVE_SUPPLIER_PRICING=true`.
+- Monday est configure avec un token API et les IDs des boards `COMMANDES`, `CHIFFRE D'AFFAIRE LIVE` et `EN PRODUCTION`; `MONDAY_REQUIRED=true` doit rester actif en production pour bloquer un faux mode.
 - Le parcours complet est teste: inscription, connexion, upload Gerber, devis, commande, paiement, suivi, ticket support.
+
+### Configuration Twilio Verify
+
+1. Dans Twilio Console, cree ou ouvre ton compte Twilio.
+2. Active un sender compatible SMS pour les pays cibles.
+3. Dans Verify, cree un service Kendronics.
+4. Copie:
+   - Account SID vers `TWILIO_ACCOUNT_SID`
+   - Auth Token vers `TWILIO_AUTH_TOKEN`
+   - Verify Service SID vers `TWILIO_VERIFY_SERVICE_SID`
+5. Mets `PHONE_VERIFY_PROVIDER=twilio` et `TWILIO_VERIFY_CHANNEL=sms`.
+6. En production, ne jamais mettre `PHONE_VERIFY_PROVIDER=dev`; l'API bloque deja ce mode.
+7. Teste avec un vrai numero au format international, par exemple `+237...`.
+
+### Configuration Monday.com
+
+1. Dans Monday, cree les boards operationnels:
+   - `COMMANDES`
+   - `CHIFFRE D'AFFAIRE LIVE`
+   - `EN PRODUCTION`
+2. Cree un token API Monday avec acces aux boards.
+3. Recupere l'ID de chaque board depuis l'URL Monday ou via l'API.
+4. Configure dans l'hebergeur API:
+   - `MONDAY_REQUIRED=true`
+   - `MONDAY_API_KEY=...`
+   - `MONDAY_BOARD_COMMANDES_ID=...`
+   - `MONDAY_BOARD_CHIFFRE_AFFAIRE_LIVE_ID=...`
+   - `MONDAY_BOARD_EN_PRODUCTION_ID=...`
+   - `MONDAY_COLUMN_MAP_COMMANDES={"orderNumber":"id_colonne_monday","supplierStatus":"id_colonne_monday"}`
+   - `MONDAY_COLUMN_MAP_CHIFFRE_AFFAIRE_LIVE={"orderNumber":"id_colonne_monday","paymentStatus":"id_colonne_monday"}`
+   - `MONDAY_COLUMN_MAP_EN_PRODUCTION={"orderNumber":"id_colonne_monday","status":"id_colonne_monday"}`
+5. Laisse `MONDAY_SYNC_DISABLED` absent ou a `false`.
+6. Apres une commande ou un paiement, verifie que les lignes `MondaySyncLog` passent de `pending`/`retry` a `processed`.
+7. Les valeurs de `MONDAY_COLUMN_MAP_*` doivent utiliser les IDs techniques des colonnes Monday, pas les titres visibles.
 
 ## Developpement local avec PostgreSQL
 
