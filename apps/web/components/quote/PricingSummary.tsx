@@ -450,6 +450,31 @@ export function PricingSummary({
                     </div>
                   </div>
                 ) : null}
+                <div className="mb-3 border-b border-slate-200 pb-2">
+                  <p className="mb-2 text-xs font-semibold text-slate-700">Pays et livraison</p>
+                  <div className="grid gap-2">
+                    <CountryDropdown
+                      countries={countries}
+                      filteredCountries={filteredCountries}
+                      selectedCountry={selectedCountry}
+                      query={countryQuery}
+                      open={countryOpen}
+                      menuRef={countryMenuRef}
+                      compact
+                      onOpenChange={setCountryOpen}
+                      onQueryChange={setCountryQuery}
+                      onSelect={(country) => {
+                        onDestinationCountryChange(country.iso2);
+                        setCountryQuery('');
+                        setCountryOpen(false);
+                      }}
+                    />
+                    <button type="button" onClick={() => setShippingDialogOpen(true)} className="flex w-full items-center justify-between border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium">
+                      <span>{activeShippingMethod.carrier} / {activeShippingMethod.transitTime}</span>
+                      <span>${pricing.franceToAfricaDelivery.toFixed(2)}</span>
+                    </button>
+                  </div>
+                </div>
                 <div className="space-y-2 border-b border-slate-200 pb-2 text-xs">
                   {hasPreviewPrice ? (
                     <>
@@ -465,10 +490,6 @@ export function PricingSummary({
                   )}
                 </div>
 
-                <button type="button" onClick={() => setShippingDialogOpen(true)} className="mt-3 flex w-full items-center justify-between border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-medium">
-                  <span>{activeShippingMethod.carrier} / {activeShippingMethod.transitTime}</span>
-                  <span>${pricing.franceToAfricaDelivery.toFixed(2)}</span>
-                </button>
               </div>
 
               {errors.length > 0 ? (

@@ -3533,9 +3533,9 @@ function SignedOutMobileAccount() {
             <ProfileAuthInput label="Nom d'utilisateur" value={registerName} onChange={setRegisterName} required />
             <ProfileAuthMethodTabs active={registerMethod} onChange={setRegisterMethod} />
             {registerMethod === 'email' ? (
-              <ProfileAuthInput label="E-mail" type="email" value={registerEmail} onChange={setRegisterEmail} required />
+              <ProfileAuthInput label="E-mail" type="email" value={registerEmail} onChange={setRegisterEmail} required hideLabel />
             ) : (
-              <InternationalPhoneInput label="Telephone" value={registerPhone} onChange={(value) => setRegisterPhone(value)} />
+              <InternationalPhoneInput value={registerPhone} onChange={(value) => setRegisterPhone(value)} />
             )}
             <ProfileAuthInput label="Mot de passe" type="password" value={registerPassword} onChange={setRegisterPassword} required />
             <ProfileAuthInput label="Confirmer le mot de passe" type="password" value={registerConfirmPassword} onChange={setRegisterConfirmPassword} required />
@@ -3587,9 +3587,9 @@ function SignedOutMobileAccount() {
           <form onSubmit={submitLogin} className="grid gap-2">
             <ProfileAuthMethodTabs active={loginMethod} onChange={setLoginMethod} />
             {loginMethod === 'email' ? (
-              <ProfileAuthInput label="E-mail" type="email" value={loginEmail} onChange={setLoginEmail} required />
+              <ProfileAuthInput label="E-mail" type="email" value={loginEmail} onChange={setLoginEmail} required hideLabel />
             ) : (
-              <InternationalPhoneInput label="Telephone" value={loginPhone} onChange={(value) => setLoginPhone(value)} />
+              <InternationalPhoneInput value={loginPhone} onChange={(value) => setLoginPhone(value)} />
             )}
             <ProfileAuthInput label="Mot de passe" type="password" value={loginPassword} onChange={setLoginPassword} required />
             {authStatus === 'error' && authMessage ? <p className="text-xs font-semibold text-red-600">{authMessage}</p> : null}
@@ -3617,19 +3617,22 @@ function ProfileAuthInput({
   onChange,
   type = 'text',
   required = false,
+  hideLabel = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   type?: string;
   required?: boolean;
+  hideLabel?: boolean;
 }) {
   return (
     <label className="grid gap-1 text-xs font-semibold text-slate-600">
-      {label}
+      {hideLabel ? <span className="sr-only">{label}</span> : label}
       <input
         type={type}
         value={value}
+        placeholder={hideLabel ? label : undefined}
         required={required}
         onChange={(event) => onChange(event.target.value)}
         className="h-9 border border-slate-300 bg-white px-3 text-sm text-ink outline-none focus:border-[#0f8f6b]"
