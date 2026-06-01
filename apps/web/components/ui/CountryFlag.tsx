@@ -9,16 +9,13 @@ export function CountryFlag({ iso2, name, className = '' }: { iso2: string; name
 
   if (!code || failed) {
     return (
-      <span className={`inline-flex h-[14px] w-5 shrink-0 items-center justify-center border border-slate-300 bg-white text-[7px] font-semibold text-slate-600 ${className}`}>
-        {iso2.slice(0, 2).toUpperCase()}
-      </span>
+      <span className={`inline-block h-[14px] w-5 shrink-0 border border-slate-300 bg-white ${className}`} aria-label={label} />
     );
   }
 
   return (
     <img
-      src={`https://flagcdn.com/w40/${code}.png`}
-      srcSet={`https://flagcdn.com/w40/${code}.png 1x, https://flagcdn.com/w80/${code}.png 2x`}
+      src={`https://flagcdn.com/${code}.svg`}
       width={20}
       height={14}
       alt={label}

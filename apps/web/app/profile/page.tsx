@@ -208,6 +208,7 @@ type ProfileUser = {
 type ProfileView =
   | 'quotes'
   | 'all-orders'
+  | 'order-history'
   | 'verification'
   | 'payment-pending'
   | 'production'
@@ -381,7 +382,7 @@ export default function ProfilePage() {
   const userId = formatUserId(accountId);
 
   return (
-    <main className="mobile-free-page min-h-screen overflow-x-hidden bg-[#f3f6fa] text-[#1f2f43]">
+    <main className="mobile-free-page min-h-screen overflow-x-hidden bg-white text-[#1f2f43]">
       <Navbar />
       <div className="w-full pt-[70px]">
         <div className="mx-auto grid w-full max-w-none gap-4 px-4 py-3 sm:max-w-[40rem] lg:min-w-[1328px] lg:max-w-[1368px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
@@ -549,7 +550,7 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
       title: 'Profil',
       items: [
         { label: 'Adresse livraison', view: 'shipping-address' },
-        { label: 'Historique des commandes', view: 'all-orders' },
+        { label: 'Historique des commandes', view: 'order-history' },
         { label: "Centre d'aide", view: 'support' },
         { label: 'Paramètres', view: 'settings' },
       ],
@@ -562,6 +563,7 @@ function viewFromSearchParam(value: string | null): ProfileView {
   const supported: Exclude<ProfileView, null>[] = [
     'quotes',
     'all-orders',
+    'order-history',
     'verification',
     'payment-pending',
     'production',
@@ -608,6 +610,7 @@ function ProfileViewContent({
 }) {
   if (view === 'quotes') return <QuotesHubSection orders={orders} dataStatus={dataStatus} />;
   if (view === 'all-orders') return <OrderReviewSection activeKey="all" title="Toutes commandes" mode="table" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
+  if (view === 'order-history') return <OrderHistorySection orders={orders} dataStatus={dataStatus} />;
   if (view === 'verification') return <OrderReviewSection activeKey="verification" title="Verification des fichiers" mode="review" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'payment-pending') return <OrderReviewSection activeKey="payment-pending" title="Paiements effectues" mode="payment" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
   if (view === 'production') return <OrderReviewSection activeKey="production" title="Progres de la fabrication" mode="production" orders={orders} dataStatus={dataStatus} onOrdersChange={onOrdersChange} />;
@@ -646,6 +649,57 @@ const orderServiceFilters: Array<{ key: OrderServiceFilter; label: string }> = [
   { key: 'pcb_assembly', label: 'Assemblage' },
   { key: 'smt_stencil', label: 'Pochoir CMS' },
 ];
+
+function OrderHistorySection({ orders, dataStatus }: { orders: ProfileOrder[]; dataStatus: 'loading' | 'ready' | 'signed-out' | 'error' }) {
+  const sortedOrders = [...orders].sort((a, b) => new Date(b.createdAt ?? '').getTime() - new Date(a.createdAt ?? '').getTime());
+
+  return (
+    <section className="mt-4 min-h-[560px] bg-white text-black sm:p-5">
+      <div className="border-b border-[#e5e7eb] pb-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#0f8f6b]">Profil</p>
+        <h1 className="mt-2 text-2xl font-semibold">Historique des commandes</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">Chronologie des commandes soumises, avec leur etat operationnel, leur paiement et leur derniere activite.</p>
+      </div>
+
+      {dataStatus === 'loading' ? (
+        <p className="py-12 text-center text-sm font-semibold text-[#92979d]">Chargement de l'historique...</p>
+      ) : dataStatus === 'signed-out' ? (
+        <p className="py-12 text-center text-sm font-semibold text-[#92979d]">Connectez-vous pour afficher l'historique.</p>
+      ) : dataStatus === 'error' ? (
+        <p className="py-12 text-center text-sm font-semibold text-red-600">Impossible de charger l'historique.</p>
+      ) : sortedOrders.length === 0 ? (
+        <div className="py-12 text-center">
+          <p className="text-sm font-semibold text-[#92979d]">Aucune commande dans l'historique.</p>
+          <a href="/quote" className="mt-4 inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-semibold text-white hover:bg-[#0b7558]">Demarrer un devis</a>
+        </div>
+      ) : (
+        <div className="mt-5 divide-y divide-[#e5e7eb] border border-[#e5e7eb]">
+          {sortedOrders.map((order) => (
+            <article key={order.id} className="grid gap-3 p-4 text-sm sm:grid-cols-[minmax(0,1fr)_150px_150px_120px] sm:items-center">
+              <div className="min-w-0">
+                <p className="truncate text-base font-semibold text-black">{order.orderNumber}</p>
+                <p className="mt-1 text-[#475569]">{orderProductOrderLine(order)}</p>
+                <p className="mt-1 text-xs text-[#64748b]">{orderGerberLabel(order)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.12em] text-[#94a3b8]">Date</p>
+                <p className="mt-1 text-[#1f2937]">{formatDate(order.createdAt)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.12em] text-[#94a3b8]">Etat</p>
+                <p className="mt-1 text-[#0f8f6b]">{orderStatusLabel(order.status)}</p>
+                <p className="text-xs text-[#64748b]">{orderPaymentStatusLabel(order)}</p>
+              </div>
+              <a href={`/orders/${order.id}`} className="inline-flex h-9 items-center justify-center border border-[#0f8f6b] px-4 text-sm text-[#0f8f6b] hover:bg-[#eefbf6]">
+                Ouvrir
+              </a>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 
 function OrderReviewSection({
   activeKey,
@@ -1138,7 +1192,7 @@ function OrderTableSearchPanel({
   }
 
   return (
-    <div className="mt-4 grid gap-5 pb-24 sm:pb-0 xl:grid-cols-[minmax(0,1fr)_290px]">
+    <div className="mt-4 grid gap-5 pb-24 sm:pb-0 xl:grid-cols-[minmax(0,1fr)_290px] xl:items-start">
       <div className="min-w-0">
         <div className="bg-white">
           <div className="border-b border-[#e5e7eb] py-3 text-sm text-black sm:flex sm:flex-wrap sm:items-center sm:gap-5 sm:py-4">
@@ -1264,7 +1318,7 @@ function OrderTableSearchPanel({
         </div>
       </div>
 
-      <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(3.9rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-[#f4f7fa]/96 px-3 py-2.5 backdrop-blur' : 'hidden'} text-black sm:static sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5 sm:backdrop-blur-0`}>
+      <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(3.9rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-white px-3 py-2.5' : 'hidden'} text-black sm:sticky sm:top-24 sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5`}>
         <div className="mx-auto flex max-w-md items-center gap-3 sm:hidden">
           <button type="button" onClick={() => setCartSummaryOpen((open) => !open)} className="min-w-0 flex-1 text-left" aria-expanded={cartSummaryOpen} aria-label="Afficher le detail du resume">
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total</p>
@@ -2959,6 +3013,8 @@ function EmailChangeModal({ currentEmail, onClose, onChanged }: { currentEmail: 
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'saving' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const canRequestCode = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim()) && status !== 'sending' && status !== 'saving';
+  const canConfirm = code.trim().length === 6 && status !== 'saving';
 
   async function requestCode() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
@@ -3018,7 +3074,7 @@ function EmailChangeModal({ currentEmail, onClose, onChanged }: { currentEmail: 
 
   return (
     <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950/45 px-4">
-      <div className="w-full max-w-lg border border-slate-300 bg-white p-6 text-black">
+      <div className={profileModalPanelClassName}>
         <h2 className="text-xl font-black">Modifier l'e-mail</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">Adresse actuelle: {currentEmail ? maskEmail(currentEmail) : 'aucune adresse enregistree'}</p>
         <div className="mt-5 grid gap-3">
@@ -3030,8 +3086,10 @@ function EmailChangeModal({ currentEmail, onClose, onChanged }: { currentEmail: 
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button type="button" onClick={onClose} disabled={status === 'saving' || status === 'sending'} className={profileModalSecondaryButtonClassName}>Annuler</button>
-          <button type="button" onClick={() => void requestCode()} disabled={status === 'sending' || status === 'saving'} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : 'Envoyer le code'}</button>
-          <button type="button" onClick={() => void confirmChange()} disabled={status === 'saving'} className={profileModalPrimaryButtonClassName}>{status === 'saving' ? 'Validation...' : 'Valider'}</button>
+          <button type="button" onClick={() => void requestCode()} disabled={!canRequestCode} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : status === 'sent' || code ? 'Renvoyer le code' : 'Envoyer le code'}</button>
+          {status === 'sent' || status === 'saving' || code ? (
+            <button type="button" onClick={() => void confirmChange()} disabled={!canConfirm} className={profileModalPrimaryButtonClassName}>{status === 'saving' ? 'Validation...' : 'Valider'}</button>
+          ) : null}
         </div>
       </div>
     </div>
@@ -3039,11 +3097,13 @@ function EmailChangeModal({ currentEmail, onClose, onChanged }: { currentEmail: 
 }
 
 function PhoneChangeModal({ currentPhone, onClose, onChanged }: { currentPhone: string; onClose: () => void; onChanged: (phone: string) => void }) {
-  const [phone, setPhone] = useState(currentPhone);
-  const [phoneValid, setPhoneValid] = useState(Boolean(currentPhone));
+  const [phone, setPhone] = useState('');
+  const [phoneValid, setPhoneValid] = useState(false);
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'saving' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const canRequestCode = Boolean(phone.trim() && phoneValid && status !== 'sending' && status !== 'saving');
+  const canConfirm = code.trim().length === 6 && status !== 'saving';
 
   async function requestCode() {
     if (!phone.trim() || !phoneValid) {
@@ -3102,7 +3162,7 @@ function PhoneChangeModal({ currentPhone, onClose, onChanged }: { currentPhone: 
 
   return (
     <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950/45 px-4">
-      <div className="w-full max-w-lg border border-slate-300 bg-white p-6 text-black">
+      <div className={profileModalPanelClassName}>
         <h2 className="text-xl font-black">Modifier le telephone</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">Numero actuel: {currentPhone ? maskPhone(currentPhone) : 'aucun numero enregistre'}</p>
         <div className="mt-5 grid gap-3">
@@ -3122,8 +3182,10 @@ function PhoneChangeModal({ currentPhone, onClose, onChanged }: { currentPhone: 
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button type="button" onClick={onClose} disabled={status === 'saving' || status === 'sending'} className={profileModalSecondaryButtonClassName}>Annuler</button>
-          <button type="button" onClick={() => void requestCode()} disabled={status === 'sending' || status === 'saving'} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : 'Envoyer le code'}</button>
-          <button type="button" onClick={() => void confirmChange()} disabled={status === 'saving'} className={profileModalPrimaryButtonClassName}>{status === 'saving' ? 'Validation...' : 'Valider'}</button>
+          <button type="button" onClick={() => void requestCode()} disabled={!canRequestCode} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : status === 'sent' || code ? 'Renvoyer le code' : 'Envoyer le code'}</button>
+          {status === 'sent' || status === 'saving' || code ? (
+            <button type="button" onClick={() => void confirmChange()} disabled={!canConfirm} className={profileModalPrimaryButtonClassName}>{status === 'saving' ? 'Validation...' : 'Valider'}</button>
+          ) : null}
         </div>
       </div>
     </div>
@@ -3136,6 +3198,8 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'saving' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const canRequestCode = password.length >= 10 && password === confirmPassword && status !== 'sending' && status !== 'saving';
+  const canConfirm = code.trim().length === 6 && status !== 'saving';
 
   async function requestCode() {
     setStatus('sending');
@@ -3194,7 +3258,7 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950/45 px-4">
-      <div className="w-full max-w-lg border border-slate-300 bg-white p-6 text-black">
+      <div className={profileModalPanelClassName}>
         <h2 className="text-xl font-black">Modifier le mot de passe</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">Un code de securite est requis avant modification.</p>
         <div className="mt-5 grid gap-3">
@@ -3207,8 +3271,10 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button type="button" onClick={onClose} disabled={status === 'saving' || status === 'sending'} className={profileModalSecondaryButtonClassName}>Fermer</button>
-          <button type="button" onClick={() => void requestCode()} disabled={status === 'sending' || status === 'saving'} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : 'Envoyer le code'}</button>
-          <button type="button" onClick={() => void confirmChange()} disabled={status === 'saving'} className={profileModalPrimaryButtonClassName}>{status === 'saving' ? 'Validation...' : 'Modifier'}</button>
+          <button type="button" onClick={() => void requestCode()} disabled={!canRequestCode} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : status === 'sent' || code ? 'Renvoyer le code' : 'Envoyer le code'}</button>
+          {status === 'sent' || status === 'saving' || code ? (
+            <button type="button" onClick={() => void confirmChange()} disabled={!canConfirm} className={profileModalPrimaryButtonClassName}>{status === 'saving' ? 'Validation...' : 'Modifier'}</button>
+          ) : null}
         </div>
       </div>
     </div>
@@ -3368,6 +3434,7 @@ function deleteAlternativeCopy(alternative: DeleteAlternative) {
 
 const profileModalFieldClassName = 'h-11 border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#009a38]';
 const profileModalTextAreaClassName = 'min-h-24 resize-y border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#009a38]';
+const profileModalPanelClassName = 'w-full max-w-lg rounded-sm border border-slate-300 bg-white p-6 text-black';
 const profileModalSecondaryButtonClassName = 'inline-flex h-10 items-center border border-slate-200 bg-white px-5 text-sm font-normal text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:text-slate-300';
 const profileModalPrimaryButtonClassName = 'h-10 bg-[#0877ff] px-6 text-sm font-normal text-white transition hover:bg-[#0068e8] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500';
 const profileModalPrimaryLinkClassName = 'inline-flex h-10 items-center bg-[#0877ff] px-6 text-sm font-normal text-white transition hover:bg-[#0068e8]';

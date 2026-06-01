@@ -9,10 +9,10 @@
   --color-signal: #0f8f6b;
   --color-electric: #12a87c;
   --color-mint: #0f8f6b;
-  --color-cloud: #f3f8fc;
+  --color-cloud: #ffffff;
   --color-line: #b8c9d9;
-  --surface: #f8fbfe;
-  --surface-muted: #eef6fb;
+  --surface: #ffffff;
+  --surface-muted: #ffffff;
   --surface-raised: #ffffff;
   --surface-tint: #e8f7f1;
   --surface-radius: 8px;
@@ -37,7 +37,7 @@ body {
   margin: 0;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-weight: 400;
-  background: #f6fbff;
+  background: #ffffff;
   color: #0b1724;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -198,16 +198,16 @@ summary:focus-visible {
 
 @media (max-width: 767px) {
   :root {
-    --surface: #f8fbfe;
-    --surface-muted: #eef6fb;
+    --surface: #ffffff;
+    --surface-muted: #ffffff;
     --surface-raised: #ffffff;
     --surface-tint: #e8f7f1;
-    --color-cloud: #f3f8fc;
+    --color-cloud: #ffffff;
     --color-line: #b8c9d9;
   }
 
   body {
-    background: #f6fbff;
+    background: #ffffff;
   }
 
   .label-caps {
@@ -372,7 +372,7 @@ section.bg-ink p {
 /* Legacy page compatibility: existing pages keep their structure while inheriting the light Kendronics system. */
 .bg-cloud,
 .bg-slate-100 {
-  background-color: var(--color-cloud) !important;
+  background-color: #ffffff !important;
 }
 
 .bg-white {
@@ -380,7 +380,7 @@ section.bg-ink p {
 }
 
 .bg-slate-50 {
-  background-color: #eef6fb !important;
+  background-color: #ffffff !important;
 }
 
 .bg-sky-50 {
@@ -479,7 +479,7 @@ textarea::placeholder {
 
 table thead.bg-slate-50,
 thead.bg-slate-50 {
-  background-color: #eef6fb !important;
+  background-color: #ffffff !important;
 }
 
 table tbody.bg-white,
@@ -508,7 +508,7 @@ tbody.bg-white {
 section[class*="bg-cloud"],
 main[class*="bg-cloud"],
 [class*="bg-[#eaf2fb]"] {
-  background-color: #eef6fb !important;
+  background-color: #ffffff !important;
 }
 
 header [class*="border-slate"],
