@@ -62,6 +62,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const [shippingConfirmed, setShippingConfirmed] = useState(false);
   const [submissionMode, setSubmissionMode] = useState<'direct' | 'review_first'>('direct');
   const [paymentTermsAccepted, setPaymentTermsAccepted] = useState(false);
+  const [accountAddress, setAccountAddress] = useState<AccountAddress | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,9 +91,18 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
           headers,
         }).catch(() => null);
         const trackingPayload = trackingResponse?.ok ? await trackingResponse.json().catch(() => []) : [];
+        const accountPayload = session
+          ? await fetch(`${apiBaseUrl}/api/users/me`, {
+              credentials: 'include',
+              headers,
+            })
+              .then((response) => (response.ok ? response.json() : null))
+              .catch(() => null)
+          : null;
 
         if (!cancelled) {
           setDetail(buildOrderDetail(orderPayload, trackingPayload));
+          setAccountAddress(buildCheckoutAddressFromAccount(accountPayload, orderPayload));
           setStatus('ready');
         }
       } catch {
@@ -112,7 +122,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
 
   const destination = detail ? countryNames[detail.order.destinationCountryIso2] ?? detail.order.destinationCountryIso2 : '';
   const canCheckout = status === 'ready' && detail?.order.paymentStatus === 'pending';
-  const checkoutAddress = useMemo(() => (detail ? readCheckoutAddress(destination) : normalizeAddress()), [detail?.order.id, destination]);
+  const checkoutAddress = useMemo(() => (detail ? accountAddress ?? readCheckoutAddress(destination) : normalizeAddress()), [accountAddress, detail?.order.id, destination]);
   const shippingLabel = detail ? shippingMethodLabel(detail.order.quoteSnapshot?.shippingMode) : 'Livraison a confirmer';
   const shippingDelay = detail?.order.quoteSnapshot?.configSnapshot?.liveShippingTransitTime
     ? String(detail.order.quoteSnapshot.configSnapshot.liveShippingTransitTime)
@@ -392,6 +402,14 @@ type AccountAddress = {
   postalCode: string;
   taxId: string;
   phone: string;
+};
+
+type AccountPayload = {
+  fullName?: string;
+  companyName?: string;
+  phone?: string;
+  country?: string;
+  shippingAddress?: Partial<AccountAddress>;
 };
 
 function CheckoutAddressCard({
@@ -972,6 +990,21 @@ function readCheckoutAddress(destination: string): AccountAddress {
   } catch {
     return normalizeAddress({ country: destination });
   }
+}
+
+function buildCheckoutAddressFromAccount(payload: unknown, order: CustomerOrderSummary): AccountAddress | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const account = payload as AccountPayload;
+  const fallbackName = splitName(account.fullName ?? '');
+  const destination = countryNames[order.destinationCountryIso2] ?? order.destinationCountryIso2;
+  return normalizeAddress({
+    ...account.shippingAddress,
+    firstName: account.shippingAddress?.firstName || fallbackName.firstName,
+    lastName: account.shippingAddress?.lastName || fallbackName.lastName,
+    company: account.shippingAddress?.company || account.companyName || '',
+    phone: account.shippingAddress?.phone || account.phone || '',
+    country: account.shippingAddress?.country || account.country || destination,
+  });
 }
 
 function writeCheckoutAddress(address: AccountAddress) {
