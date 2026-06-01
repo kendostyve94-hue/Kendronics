@@ -1350,7 +1350,7 @@ function OrderTableSearchPanel({
         </div>
       </div>
 
-      <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(4.7rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-white px-3 py-2.5' : 'hidden'} text-black sm:sticky sm:top-24 sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5`}>
+      <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-white px-3 py-2.5' : 'hidden'} text-black sm:sticky sm:top-24 sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5`}>
         <div className="mx-auto flex max-w-md items-center gap-3 sm:hidden">
           <button type="button" onClick={() => setCartSummaryOpen((open) => !open)} className="min-w-0 flex-1 text-left" aria-expanded={cartSummaryOpen} aria-label="Afficher le detail du resume">
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total</p>

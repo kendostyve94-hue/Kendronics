@@ -246,7 +246,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   }
 
   return (
-    <main className="mobile-free-page min-h-screen bg-[#eef1f5] text-[#111827]">
+    <main className="mobile-free-page min-h-screen bg-white text-[#111827]">
       <header className="border-b border-[#e5e7eb] bg-white">
         <div className="mx-auto flex min-h-[72px] max-w-[1360px] items-center gap-5 px-4 py-3 sm:gap-8 sm:px-5 sm:py-0">
           <a href="/" aria-label="Kendronics accueil" className="shrink-0">
@@ -489,7 +489,7 @@ function CheckoutAddressCard({
             <button
               type="submit"
               disabled={saveStatus === 'saving'}
-              className="inline-flex h-10 items-center justify-center rounded-full bg-[#0f8f6b] px-7 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="inline-flex h-10 items-center justify-center rounded-sm bg-[#0f8f6b] px-7 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               {saveStatus === 'saving' ? 'Enregistrement...' : 'Enregistrer l\'adresse'}
             </button>
@@ -498,7 +498,7 @@ function CheckoutAddressCard({
             type="button"
             disabled={!canContinue}
             onClick={onConfirm}
-            className="inline-flex h-10 items-center justify-center rounded-full bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="inline-flex h-10 items-center justify-center rounded-sm bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             Continuer
           </button>
@@ -509,7 +509,7 @@ function CheckoutAddressCard({
                 setEditing(true);
                 onChange();
               }}
-              className="inline-flex h-10 items-center justify-center rounded-full border border-[#cfd8e3] px-7 text-sm text-[#334155] hover:border-[#0877ff] hover:text-[#0877ff]"
+              className="inline-flex h-10 items-center justify-center rounded-sm border border-[#cfd8e3] px-7 text-sm text-[#334155] hover:border-[#0877ff] hover:text-[#0877ff]"
             >
               Modifier
             </button>
@@ -635,18 +635,7 @@ function CheckoutSubmitCard({
         <p>
           Si les fichiers sont acceptes, le paiement est capture et la production demarre. Si une anomalie bloque le lancement, vous pouvez corriger une fois ou abandonner. Apres un second refus, l'autorisation est annulee automatiquement et le montant est libere.
         </p>
-        <div className="grid gap-3 border border-[#dfe5ec] bg-[#f8fafc] p-4">
-          <label className="flex items-start gap-3 text-black">
-            <input
-              type="radio"
-              name="submission-mode"
-              checked={mode === 'direct'}
-              onChange={() => onModeChange('direct')}
-              className="mt-1 h-4 w-4 accent-[#0877ff]"
-            />
-            <span>Autoriser le paiement et lancer le controle technique.</span>
-          </label>
-        </div>
+        <input type="hidden" name="submission-mode" value={mode} onChange={() => onModeChange('direct')} />
         <label className="flex items-start gap-3 border border-[#dfe5ec] p-4 text-black">
           <input
             type="checkbox"

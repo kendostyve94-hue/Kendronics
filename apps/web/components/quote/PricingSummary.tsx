@@ -370,11 +370,11 @@ export function PricingSummary({
       </div>
 
       {priceDetailsOpen ? (
-        <div className="sheet-backdrop-in fixed inset-x-0 bottom-[calc(4.7rem+env(safe-area-inset-bottom))] top-0 z-[45] bg-slate-950/25 lg:hidden" onClick={() => setPriceDetailsOpen(false)} />
+        <div className="sheet-backdrop-in fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] top-0 z-[45] bg-slate-950/25 lg:hidden" onClick={() => setPriceDetailsOpen(false)} />
       ) : null}
 
       <div
-        className={`fixed inset-x-0 bottom-[calc(4.7rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-white px-3 py-2.5 lg:hidden ${
+        className={`fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-white px-3 py-2.5 lg:hidden ${
           priceDetailsOpen ? 'sheet-panel-in rounded-t-2xl' : ''
         }`}
         role={priceDetailsOpen ? 'dialog' : undefined}

@@ -180,13 +180,13 @@ export default async function HomePage() {
   const recentProductionActivity = await getRecentProductionActivity();
 
   return (
-    <main className="home-page overflow-hidden bg-[#eef2f6] text-ink">
+    <main className="home-page overflow-hidden bg-white text-ink">
       <Navbar />
       <Hero />
       <ProductCatalog />
-      <HomeCapabilityMatrix />
       <WhyBuyPcbSection recentProductionActivity={recentProductionActivity} />
       <SmartOrdering />
+      <HomeCapabilityMatrix />
       <Footer />
     </main>
   );
@@ -207,7 +207,7 @@ async function getRecentProductionActivity(): Promise<RecentProductionActivityIt
 
 function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivity: RecentProductionActivityItem[] }) {
   return (
-    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
+    <section className="bg-white px-0 py-5 sm:px-4 lg:px-8">
       <div className="mx-auto max-w-none border-t-2 border-[#a88c00] bg-white">
         <div className="grid border border-slate-200 lg:grid-cols-[minmax(18rem,25rem)_1fr]">
           <div className="min-w-0 border-b border-slate-200 p-5 sm:p-6 lg:border-b-0 lg:border-r">
@@ -300,7 +300,7 @@ function HomeCapabilityMatrix() {
   const finishGroup = homeCapabilityGroups[2];
 
   return (
-    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
+    <section className="bg-white px-0 py-5 sm:px-4 lg:px-8">
       <div className="mx-auto grid max-w-none items-start gap-5 xl:grid-cols-[minmax(40rem,1.18fr)_minmax(28rem,0.82fr)]">
         <div className="overflow-hidden border border-slate-300 bg-white lg:h-[24rem]">
           <div className="grid border-b border-slate-300 lg:h-[19rem] lg:grid-cols-[minmax(12rem,15.5rem)_minmax(0,1fr)]">
@@ -570,9 +570,9 @@ function OperationalProofs() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[#dcecf8] pt-20 text-ink lg:pt-20">
-      <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#dbeefa] to-[#c7dced]" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#eef7ff] via-[#eef7ff]/78 to-[#eef7ff]/16" />
+    <section className="relative overflow-hidden bg-white pt-20 text-ink lg:pt-20">
+      <div className="absolute inset-0 bg-white" />
+      <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/20" />
       <div className="absolute inset-x-0 bottom-0 top-[16rem] overflow-hidden sm:inset-y-0 sm:left-[45%] sm:right-0">
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className="home-hero-slide absolute inset-0" style={{ animationDelay: `${index * 5}s` }}>
@@ -601,21 +601,19 @@ function Hero() {
 function HeroPromoPanels() {
   return (
     <aside className="grid grid-cols-2 gap-2 lg:self-end" aria-label="Offres PCB">
-      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=5&thickness=1.6mm" className="relative min-h-[8rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2 text-center transition hover:border-[#0f8f6b] sm:min-h-[10.25rem] sm:p-3">
+      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=5&thickness=1.6mm" className="relative min-h-[6.4rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2 text-center transition hover:border-[#0f8f6b] sm:min-h-[7.6rem] sm:p-3">
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
         <p className="text-lg font-normal leading-none text-[#0f8f6b] sm:text-2xl">$ 6.75</p>
         <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:mt-2 sm:text-xs">5 pieces, 1-2 couches</p>
         <p className="text-xs leading-4 text-slate-600">Production: 24 heures</p>
         <p className="text-xs leading-4 text-slate-600">PCB prototypes</p>
-        <img src="/images/product-pcb-standard-transparent.png" alt="" className="mx-auto mt-1 h-12 w-full object-contain sm:mt-2 sm:h-16" />
       </a>
-      <a href="/quote?productType=advanced_pcb&layers=4&length=100&width=100&quantity=30&thickness=1.6mm" className="relative min-h-[8rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2 text-center transition hover:border-[#0f8f6b] sm:min-h-[10.25rem] sm:p-3">
+      <a href="/quote?productType=advanced_pcb&layers=4&length=100&width=100&quantity=30&thickness=1.6mm" className="relative min-h-[6.4rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2 text-center transition hover:border-[#0f8f6b] sm:min-h-[7.6rem] sm:p-3">
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
         <p className="text-lg font-normal leading-none text-[#0f8f6b] sm:text-2xl">$ 221.72</p>
         <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:mt-2 sm:text-xs">4 couches, 5-30 pieces</p>
         <p className="text-xs leading-4 text-slate-600">Production: 8-9 jours</p>
         <p className="text-xs leading-4 text-slate-600">PCB avance</p>
-        <img src="/images/product-pcb-advanced.png" alt="" className="mx-auto mt-1 h-12 w-full object-contain sm:mt-2 sm:h-16" />
       </a>
     </aside>
   );
@@ -630,7 +628,7 @@ function MobileQuickAccess() {
   ];
 
   return (
-    <section className="bg-[#eef2f6] px-4 py-5 sm:px-6 lg:hidden">
+    <section className="bg-white px-4 py-5 sm:px-6 lg:hidden">
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-ink">Acces rapide</h2>
         <a href="/quote" className="text-xs font-semibold text-deepblue">Devis</a>
@@ -649,7 +647,7 @@ function MobileQuickAccess() {
 
 function SmartOrdering() {
   return (
-    <section className="bg-[#eef2f6] px-0 py-4 sm:px-4 lg:px-8">
+    <section className="bg-white px-0 py-4 sm:px-4 lg:px-8">
       <div className="mx-auto max-w-none">
         <div className="relative min-h-[13rem] overflow-hidden bg-white lg:min-h-[16rem]">
           <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover" />

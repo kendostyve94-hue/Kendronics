@@ -853,6 +853,7 @@ button {
 @media (max-width: 767px) {
   main {
     overflow-x: hidden;
+    background: #ffffff !important;
   }
 
   section {
@@ -888,5 +889,21 @@ button {
     min-height: auto !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+  }
+
+  main.mobile-free-page article[class*="border"],
+  main.mobile-free-page aside[class*="border"],
+  main.mobile-free-page form[class*="border"],
+  main.mobile-free-page details[class*="border"],
+  main.mobile-free-page section[class*="ring-1"],
+  main.mobile-free-page aside[class*="ring-1"],
+  main.mobile-free-page article[class*="ring-1"],
+  main.mobile-free-page div[class*="ring-1"][class*="bg-white"] {
+    border-radius: 6px !important;
+  }
+
+  main.mobile-free-page button[class*="rounded-full"],
+  main.mobile-free-page a[class*="rounded-full"] {
+    border-radius: var(--control-radius) !important;
   }
 }
