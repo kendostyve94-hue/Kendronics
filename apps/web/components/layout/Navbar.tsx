@@ -286,7 +286,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
           <nav className="hidden shrink-0 items-center justify-end gap-3 text-[15px] font-normal text-slate-800 xl:gap-4 lg:flex">
             <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} />
             {isSignedIn ? <NotificationBell count={unreadNotifications} /> : null}
-            <CartLink href={cartHref} count={orders.length} />
+            <CartLink href={cartHref} count={orders.length} requireAuth={!isSignedIn} />
             <LoginMenu isSignedIn={isSignedIn} avatarDataUrl={avatarDataUrl} firstName={firstName} t={t} />
           </nav>
 
@@ -595,10 +595,19 @@ function LanguageToggle({
   );
 }
 
-function CartLink({ href, count }: { href: string; count: number }) {
+function CartLink({ href, count, requireAuth = false }: { href: string; count: number; requireAuth?: boolean }) {
   const { t } = useI18n();
   return (
-    <a href={href} className="relative inline-flex h-9 w-9 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-10 sm:w-10" aria-label={t('nav.cart')}>
+    <a
+      href={href}
+      onClick={(event) => {
+        if (!requireAuth) return;
+        event.preventDefault();
+        openAuthRequired('login');
+      }}
+      className="relative inline-flex h-9 w-9 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-10 sm:w-10"
+      aria-label={t('nav.cart')}
+    >
       <CartIcon />
       <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[#ec3b91] text-[10px] font-medium leading-none text-white">
         {count}
