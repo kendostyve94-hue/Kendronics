@@ -421,7 +421,7 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
     { labelKey: 'nav.home' as const, href: '/', icon: <HomeIcon /> },
     { labelKey: 'nav.cart' as const, href: cartHref, icon: <CartIcon />, count: orderCount },
     { labelKey: 'nav.quote' as const, href: '/quote', icon: <PlusIcon /> },
-    { labelKey: 'nav.tracking' as const, href: '/tracking', icon: <RouteIcon /> },
+    { labelKey: 'nav.tracking' as const, href: '/profile?view=delivery', icon: <RouteIcon /> },
     { labelKey: 'nav.account' as const, href: '/profile', icon: <UserIcon /> },
   ];
 
@@ -439,7 +439,9 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
                 ? pathname.startsWith('/orders') || (pathname === '/profile' && profileView === 'orders')
                 : item.labelKey === 'nav.account'
                   ? pathname === '/profile' && profileView !== 'orders'
-                  : pathname.startsWith(item.href);
+                  : item.labelKey === 'nav.tracking'
+                    ? pathname === '/profile' && profileView === 'delivery'
+                    : pathname.startsWith(item.href);
 
           return (
             <a

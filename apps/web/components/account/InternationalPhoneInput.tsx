@@ -18,6 +18,7 @@ type Props = {
   value: string;
   error?: string;
   placeholder?: string;
+  countryIso2?: string;
   onChange: (value: string, meta: PhoneValue) => void;
 };
 
@@ -37,8 +38,9 @@ const supportedCountries = africanCountries
 
 const defaultCountry = supportedCountries.find((country) => country.iso2 === 'CM') ?? supportedCountries[0]!;
 
-export function InternationalPhoneInput({ label, value, error, placeholder = 'Numero de telephone', onChange }: Props) {
-  const initialCountry = countryFromPhone(value) ?? defaultCountry;
+export function InternationalPhoneInput({ label, value, error, placeholder = 'Numero de telephone', countryIso2, onChange }: Props) {
+  const preferredCountry = supportedCountries.find((item) => item.iso2 === countryIso2) ?? null;
+  const initialCountry = countryFromPhone(value) ?? preferredCountry ?? defaultCountry;
   const [country, setCountry] = useState(initialCountry);
   const [localValue, setLocalValue] = useState(() => localPhoneValue(value, initialCountry.iso2));
   const [search, setSearch] = useState('');
@@ -61,6 +63,13 @@ export function InternationalPhoneInput({ label, value, error, placeholder = 'Nu
       setLocalValue(localPhoneValue(value, parsedCountry.iso2));
     }
   }, [value]);
+
+  useEffect(() => {
+    const nextCountry = supportedCountries.find((item) => item.iso2 === countryIso2);
+    if (!nextCountry || nextCountry.iso2 === country.iso2) return;
+    setCountry(nextCountry);
+    emit(localValue, nextCountry);
+  }, [countryIso2]);
 
   const countries = useMemo(() => {
     const needle = search.trim().toLowerCase();

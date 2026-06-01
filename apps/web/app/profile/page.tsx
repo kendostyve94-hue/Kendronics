@@ -2218,10 +2218,9 @@ function SettingsSection({
           </p>
           <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
           <p className="grid gap-1 text-[#6b7280] sm:block">Pays/region <span className="text-black sm:ml-20">{profile.country ? countryDisplayName(profile.country) : 'Non renseigne'}</span></p>
-          <p className="grid gap-1 text-[#6b7280] sm:block">Telephone <span className="text-black sm:ml-20">{profile.phone || 'Non renseigne'}</span></p>
           {profile.profileDetails?.accountType === 'company' ? <p className="grid gap-1 text-[#6b7280] sm:block">Societe <span className="text-black sm:ml-24">{profile.company || 'Non renseignee'}</span></p> : null}
         </div>
-        <button type="button" onClick={() => setEditingProfile(true)} className="col-span-2 justify-self-start text-sm text-[#0f8f6b] sm:col-span-1 sm:self-start sm:justify-self-auto sm:pt-12 sm:text-right">
+        <button type="button" onClick={() => setEditingProfile(true)} className={`col-span-2 justify-self-start text-sm sm:col-span-1 sm:self-start sm:justify-self-auto sm:pt-12 sm:text-right ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
           {isAccountLevelOne(profile) ? 'Modifier le profil' : 'Completer le profil'}
         </button>
       </div>
@@ -2234,29 +2233,29 @@ function SettingsSection({
             ? 'Votre compte est verifie et peut soumettre des commandes.'
             : 'Votre compte doit etre complete avant de soumettre une commande.'}
         </p>
-        <a href={isAccountLevelOne(profile) ? '/terms' : '/profile?view=settings'} className={`col-start-2 min-w-0 justify-self-start break-words text-left sm:col-start-auto sm:justify-self-auto sm:text-right ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
-          {isAccountLevelOne(profile) ? 'Verifie' : 'A completer'}
-        </a>
+        <span className={`col-start-2 min-w-0 justify-self-start break-words text-left sm:col-start-auto sm:justify-self-auto sm:text-right ${(profile.verificationLevel ?? 0) >= 1 ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
+          {(profile.verificationLevel ?? 0) >= 2 ? 'Certifie' : (profile.verificationLevel ?? 0) >= 1 ? 'Verifie' : 'A completer'}
+        </span>
       </div>
       <div className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
-        <h2 className="min-w-0 break-words text-lg">Certification identite</h2>
+        <h2 className="min-w-0 break-words text-lg">Identite</h2>
         <p className={`min-w-0 break-words ${(profile.verificationLevel ?? 0) >= 2 ? 'text-[#0f8f6b]' : 'text-[#4b5563]'}`}>
           {(profile.verificationLevel ?? 0) >= 2
             ? 'Identite certifiee via controle securise.'
-            : 'Certifiez votre identite pour passer au badge Professionnel certifie.'}
+            : 'Verifier votre identite pour passer au compte Professionnel certifie.'}
           {identityStatus === 'error' && identityMessage ? <span className="mt-1 block text-xs font-semibold text-red-500">{identityMessage}</span> : null}
         </p>
         {(profile.verificationLevel ?? 0) >= 2 ? (
-          <span className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">Certifie</span>
+          <span className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">Verifie</span>
         ) : (
-          <button type="button" disabled={identityStatus === 'starting'} onClick={() => void startIdentityVerification()} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] disabled:text-slate-300 sm:col-start-auto sm:justify-self-auto sm:text-right">
-            {identityStatus === 'starting' ? 'Ouverture...' : 'Certifier'}
+          <button type="button" disabled={identityStatus === 'starting'} onClick={() => void startIdentityVerification()} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#d97706] disabled:text-slate-300 sm:col-start-auto sm:justify-self-auto sm:text-right">
+            {identityStatus === 'starting' ? 'Ouverture...' : 'A verifier'}
           </button>
         )}
       </div>
       {[
         ['E-mail', profile.email ? `${maskEmail(profile.email)} ${profile.emailVerifiedAt ? '✓' : ''}` : 'Enregistrer un mail', 'Modifier', '/profile?view=settings'],
-        ['Téléphone', profile.phone ? `${maskPhone(profile.phone)} ${profile.phoneVerifiedAt ? '✓' : ''}` : 'Enregistrer un telephone', profile.phoneVerifiedAt ? 'Modifier' : 'Verifier', '/profile?view=settings'],
+        ['Téléphone', profile.phone ? maskPhone(profile.phone) : 'Enregistrer un telephone', profile.phoneVerifiedAt ? 'Verifie' : 'A verifier', '/profile?view=settings'],
         ['Mot de passe', '********', 'Modifier', '/reset-password'],
         ['Adresse de livraison', isCompleteProfileAddress(profile.shippingAddress) ? 'Adresse de livraison configuree.' : 'Ajouter une adresse de livraison pour vos commandes Kendronics.', 'Modifier', '/profile?view=shipping-address'],
         ['Conditions utilisation', 'Regles de compte, verification, commande et paiement.', 'Decouvrir', '/terms'],
@@ -2269,7 +2268,7 @@ function SettingsSection({
           {label === 'E-mail' ? (
             <button type="button" onClick={() => setEmailModalOpen(true)} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">{action}</button>
           ) : label === 'Téléphone' ? (
-            <button type="button" onClick={() => setPhoneModalOpen(true)} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">{action}</button>
+            <button type="button" onClick={() => setPhoneModalOpen(true)} className={`col-start-2 min-w-0 justify-self-start break-words text-left sm:col-start-auto sm:justify-self-auto sm:text-right ${profile.phoneVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>{action}</button>
           ) : label === 'Mot de passe' ? (
             <button type="button" onClick={() => setPasswordModalOpen(true)} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">{action}</button>
           ) : (
@@ -2360,6 +2359,8 @@ function AccountProfileEditForm({
   const [country, setCountry] = useState(normalizeProfileCountry(profile.country));
   const [details, setDetails] = useState<ProfileDetails>(initialDetails);
   const [picture, setPicture] = useState(profile.avatarDataUrl || avatarDataUrl);
+  const [phoneMeta, setPhoneMeta] = useState<{ countryIso2: string; isValid: boolean }>({ countryIso2: normalizeProfileCountry(profile.country), isValid: Boolean(profile.phone) });
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -2412,9 +2413,27 @@ function AccountProfileEditForm({
       return;
     }
 
+    if (!phoneMeta.isValid || phoneMeta.countryIso2 !== normalizeProfileCountry(country)) {
+      setSaving(false);
+      setMessage('Le pays du numero de telephone doit correspondre au pays selectionne.');
+      return;
+    }
+
+    if (!details.firstName.trim() || !details.lastName.trim()) {
+      setSaving(false);
+      setMessage('Renseignez obligatoirement le nom et le prenom.');
+      return;
+    }
+
     if (details.accountType === 'company' && !company.trim()) {
       setSaving(false);
       setMessage('Renseignez le nom de la societe.');
+      return;
+    }
+
+    if (details.accountType === 'company' && !details.website.trim()) {
+      setSaving(false);
+      setMessage('Renseignez le site web de la societe.');
       return;
     }
 
@@ -2471,6 +2490,8 @@ function AccountProfileEditForm({
         billingAddress: normalizeAddress(user.billingAddress ?? profile.billingAddress),
         emailVerifiedAt: user.emailVerifiedAt || profile.emailVerifiedAt || '',
         phoneVerifiedAt: user.phoneVerifiedAt || (user.phone === profile.phone ? profile.phoneVerifiedAt : ''),
+        verificationLevel: user.verificationLevel ?? profile.verificationLevel,
+        verificationStatus: user.verificationStatus ?? profile.verificationStatus,
       };
 
       writeScopedLocalStorage(profileStorageKey, JSON.stringify(nextProfile));
@@ -2486,11 +2507,18 @@ function AccountProfileEditForm({
 
   return (
     <section className="min-h-[690px] overflow-hidden bg-white p-4 text-black shadow-sm ring-1 ring-slate-200 sm:p-6">
+      <div className="mb-5 flex flex-col gap-3 border-b border-[#e5e7eb] pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <button type="button" onClick={onCancel} className="text-sm font-semibold text-[#0f8f6b]">Retour</button>
+          <h1 className="mt-2 text-xl font-semibold text-[#102033]">Completer le profil</h1>
+        </div>
+        <p className="text-sm text-[#64748b]">Les informations obligatoires securisent vos commandes et vos livraisons.</p>
+      </div>
       <form onSubmit={saveProfile} className="grid gap-7">
         <div>
           <h1 className="border-l-4 border-[#0f8f6b] pl-3 text-lg font-semibold">Informations de base</h1>
-          <div className="mt-5 grid grid-cols-[170px_1fr] items-center gap-x-8 gap-y-4 border-b border-[#e5e7eb] pb-7">
-            <div className="flex justify-end">
+          <div className="mt-5 grid grid-cols-1 items-center gap-x-8 gap-y-4 border-b border-[#e5e7eb] pb-7 md:grid-cols-[170px_1fr]">
+            <div className="flex justify-start md:justify-end">
               <Avatar avatarDataUrl={picture} size="large" />
             </div>
             <div>
@@ -2502,25 +2530,22 @@ function AccountProfileEditForm({
             </div>
 
             <ProfileReadonlyRow label="User ID" value={userId} />
-            <div className="col-span-2 grid grid-cols-[170px_minmax(0,320px)_1fr] items-center gap-4 text-sm">
-              <span className="text-right text-[#8b949e]">Email</span>
+            <div className="grid gap-2 text-sm md:col-span-2 md:grid-cols-[170px_minmax(0,320px)_1fr] md:items-center md:gap-4">
+              <span className="text-left text-[#8b949e] md:text-right">Email</span>
               <input value={email} onChange={(event) => setEmail(event.target.value)} className={profileEditInputClassName} type="email" required />
               <span className={profile.emailVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}>
                 {profile.emailVerifiedAt ? 'E-mail verifie' : 'E-mail a verifier apres enregistrement'}
               </span>
             </div>
 
-            <div className="col-span-2 grid grid-cols-[170px_1fr] items-center gap-4 text-sm">
-              <span className="text-right text-[#8b949e]"><span className="text-red-500">*</span>Type de compte</span>
-              <div className="flex gap-8">
-                {[
-                  ['individual', 'Compte individuel', '#2563eb'],
-                  ['company', 'Societe / professionnel', siteGreen],
-                ].map(([value, label]) => (
-                  <ProfileRadio key={value} checked={details.accountType === value} label={label} color={value === 'individual' ? '#2563eb' : siteGreen} onChange={() => updateDetails('accountType', value)} />
-                ))}
-              </div>
-            </div>
+            <ProfileSelectField
+              label="* Type de compte"
+              value={details.accountType}
+              options={['individual', 'company']}
+              optionLabels={{ individual: 'Compte individuel', company: 'Societe / professionnel' }}
+              placeholder="Selectionner un type"
+              onChange={(value) => updateDetails('accountType', value)}
+            />
 
             {details.accountType === 'company' ? (
               <>
@@ -2530,15 +2555,13 @@ function AccountProfileEditForm({
               </>
             ) : null}
 
-            <div className="col-span-2 grid grid-cols-[170px_1fr] items-start gap-4 text-sm">
-              <span className="pt-2 text-right text-[#8b949e]">Preference de commande</span>
-              <div className="flex flex-wrap gap-3">
-                {orderPreferenceOptions.map((option) => (
-                  <ProfileCheckbox key={option} checked={details.orderPreference.includes(option)} label={option} onChange={() => toggleListValue('orderPreference', option)} compact />
-                ))}
-                <span className="px-2 py-2 text-xs text-[#a0a7af]">Choix multiples</span>
-              </div>
-            </div>
+            <ProfileSelectField
+              label="Preference de commande"
+              value={details.orderPreference[0] ?? ''}
+              options={orderPreferenceOptions}
+              placeholder="Selectionner une preference"
+              onChange={(value) => updateDetails('orderPreference', value ? [value] : [])}
+            />
 
             <ProfileSelectField
               label="Produits interesses"
@@ -2554,33 +2577,31 @@ function AccountProfileEditForm({
 
         <div>
           <h2 className="border-l-4 border-[#0f8f6b] pl-3 text-lg font-semibold">Coordonnees</h2>
-          <div className="mt-7 grid grid-cols-[170px_minmax(0,1fr)_170px_minmax(0,1fr)] items-center gap-x-6 gap-y-4 text-sm">
-            <span className="text-right text-[#8b949e]">Prenom</span>
-            <input value={details.firstName} onChange={(event) => updateDetails('firstName', event.target.value)} className={profileEditInputClassName} />
-            <span className="text-right text-[#8b949e]">Nom</span>
-            <input value={details.lastName} onChange={(event) => updateDetails('lastName', event.target.value)} className={profileEditInputClassName} />
+          <div className="mt-7 grid grid-cols-1 items-center gap-x-6 gap-y-4 text-sm lg:grid-cols-[170px_minmax(0,1fr)_170px_minmax(0,1fr)]">
+            <span className="text-left text-[#8b949e] lg:text-right"><span className="text-red-500">*</span> Nom</span>
+            <input value={details.lastName} required onChange={(event) => updateDetails('lastName', event.target.value)} className={profileEditInputClassName} />
+            <span className="text-left text-[#8b949e] lg:text-right"><span className="text-red-500">*</span> Prenom</span>
+            <input value={details.firstName} required onChange={(event) => updateDetails('firstName', event.target.value)} className={profileEditInputClassName} />
 
-            <span className="text-right text-[#8b949e]"><span className="text-red-500">*</span> Pays/region</span>
-            <select value={country} onChange={(event) => setCountry(event.target.value)} required className={`${profileEditInputClassName} col-span-3 max-w-[420px]`}>
+            <span className="text-left text-[#8b949e] lg:text-right"><span className="text-red-500">*</span> Pays/region</span>
+            <select value={country} onChange={(event) => setCountry(event.target.value)} required className={profileEditInputClassName}>
               <option value="">Selectionner un pays</option>
               {africanCountries.map((option) => (
                 <option key={option.iso2} value={option.iso2}>{option.name}</option>
               ))}
             </select>
 
-            <span className="text-right text-[#8b949e]">Genre</span>
-            <div className="col-span-3 flex gap-8">
-              {['Homme', 'Femme', 'Non precise'].map((option) => (
-                <ProfileRadio key={option} checked={details.gender === option} label={option} onChange={() => updateDetails('gender', option)} />
-              ))}
-            </div>
+            <ProfileSelectField label="Genre" value={details.gender} options={['Homme', 'Femme', 'Non precise']} placeholder="Selectionner" onChange={(value) => updateDetails('gender', value)} compact />
 
-            <div className="col-span-2 grid grid-cols-[170px_minmax(0,320px)] items-center gap-4 text-sm">
-              <span className="text-right text-[#8b949e]">Telephone</span>
-              <InternationalPhoneInput value={phone} onChange={(value) => setPhone(value)} />
+            <div className="grid gap-2 text-sm lg:col-span-2 lg:grid-cols-[170px_minmax(0,320px)_auto] lg:items-center lg:gap-4">
+              <span className="text-left text-[#8b949e] lg:text-right">Telephone</span>
+              <InternationalPhoneInput value={phone} countryIso2={country} onChange={(value, meta) => { setPhone(value); setPhoneMeta({ countryIso2: meta.countryIso2, isValid: meta.isValid }); }} />
+              <button type="button" onClick={() => setPhoneModalOpen(true)} className={`justify-self-start text-sm ${profile.phoneVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
+                {profile.phoneVerifiedAt ? 'Verifie' : 'Verifier'}
+              </button>
             </div>
-            <ProfileTextField label="Site web" value={details.website} onChange={(value) => updateDetails('website', value)} />
             <ProfileTextField label="Date de naissance" value={details.birthday} type="date" onChange={(value) => updateDetails('birthday', value)} />
+            <ProfileTextField label={details.accountType === 'company' ? '* Site web' : 'Site web'} value={details.website} required={details.accountType === 'company'} onChange={(value) => updateDetails('website', value)} />
           </div>
         </div>
 
@@ -2594,6 +2615,16 @@ function AccountProfileEditForm({
         </div>
         {message ? <p className="text-center text-sm text-red-600">{message}</p> : null}
       </form>
+      {phoneModalOpen ? (
+        <PhoneChangeModal
+          currentPhone={phone}
+          onClose={() => setPhoneModalOpen(false)}
+          onChanged={(nextPhone) => {
+            setPhone(nextPhone);
+            setPhoneModalOpen(false);
+          }}
+        />
+      ) : null}
     </section>
   );
 }
@@ -2602,8 +2633,8 @@ const profileEditInputClassName = 'h-9 border border-[#c9c9c9] bg-white px-3 tex
 
 function ProfileReadonlyRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="col-span-2 grid grid-cols-[170px_1fr] items-center gap-4 text-sm">
-      <span className="text-right text-[#8b949e]">{label}</span>
+    <div className="grid gap-2 text-sm md:col-span-2 md:grid-cols-[170px_1fr] md:items-center md:gap-4">
+      <span className="text-left text-[#8b949e] md:text-right">{label}</span>
       <span className="text-[#4b5563]">{value}</span>
     </div>
   );
@@ -2628,8 +2659,8 @@ function ProfileTextField({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="col-span-2 grid grid-cols-[170px_minmax(0,320px)] items-center gap-4 text-sm">
-      <span className="text-right text-[#8b949e]">{label.startsWith('*') ? <><span className="text-red-500">*</span>{label.slice(1)}</> : label}</span>
+    <div className="grid gap-2 text-sm lg:col-span-2 lg:grid-cols-[170px_minmax(0,320px)] lg:items-center lg:gap-4">
+      <span className="text-left text-[#8b949e] lg:text-right">{label.startsWith('*') ? <><span className="text-red-500">*</span>{label.slice(1)}</> : label}</span>
       <input type={type} required={required} value={value} onChange={(event) => onChange(event.target.value)} className={profileEditInputClassName} />
     </div>
   );
@@ -2639,22 +2670,26 @@ function ProfileSelectField({
   label,
   value,
   options,
+  optionLabels,
   placeholder,
+  compact = false,
   onChange,
 }: {
   label: string;
   value: string;
   options: string[];
+  optionLabels?: Record<string, string>;
   placeholder?: string;
+  compact?: boolean;
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="col-span-2 grid grid-cols-[170px_minmax(0,320px)] items-center gap-4 text-sm">
-      <span className="text-right text-[#8b949e]">{label.startsWith('*') ? <><span className="text-red-500">*</span>{label.slice(1)}</> : label}</span>
+    <div className={`grid gap-2 text-sm ${compact ? '' : 'lg:col-span-2'} lg:grid-cols-[170px_minmax(0,320px)] lg:items-center lg:gap-4`}>
+      <span className="text-left text-[#8b949e] lg:text-right">{label.startsWith('*') ? <><span className="text-red-500">*</span>{label.slice(1)}</> : label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} className={profileEditInputClassName}>
         {placeholder ? <option value="">{placeholder}</option> : null}
         {options.map((option) => (
-          <option key={option} value={option}>{option}</option>
+          <option key={option} value={option}>{optionLabels?.[option] ?? option}</option>
         ))}
       </select>
     </div>
