@@ -75,17 +75,21 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
           ? { Authorization: `Bearer ${session.accessToken}` }
           : {};
 
-        const [orderResponse, trackingResponse] = await Promise.all([
-          fetch(`${apiBaseUrl}${orderDetailApiContract.order.path.replace(':orderId', orderId)}`, { headers }),
-          fetch(`${apiBaseUrl}${orderDetailApiContract.tracking.path.replace(':orderId', orderId)}`, { headers }),
-        ]);
+        const orderResponse = await fetch(`${apiBaseUrl}${orderDetailApiContract.order.path.replace(':orderId', orderId)}`, {
+          credentials: 'include',
+          headers,
+        });
 
-        if (!orderResponse.ok || !trackingResponse.ok) {
+        if (!orderResponse.ok) {
           throw new Error('Détails de commande indisponibles.');
         }
 
         const orderPayload = await orderResponse.json();
-        const trackingPayload = await trackingResponse.json();
+        const trackingResponse = await fetch(`${apiBaseUrl}${orderDetailApiContract.tracking.path.replace(':orderId', orderId)}`, {
+          credentials: 'include',
+          headers,
+        }).catch(() => null);
+        const trackingPayload = trackingResponse?.ok ? await trackingResponse.json().catch(() => []) : [];
 
         if (!cancelled) {
           setDetail(buildOrderDetail(orderPayload, trackingPayload));

@@ -30,25 +30,50 @@ export function scopedStorageKey(baseKey: string): string | null {
 export function readScopedLocalStorage(baseKey: string): string | null {
   const key = scopedStorageKey(baseKey);
   if (!key) return null;
-  return window.localStorage.getItem(key);
+  return safeLocalStorageGet(key);
 }
 
 export function writeScopedLocalStorage(baseKey: string, value: string) {
   const key = scopedStorageKey(baseKey);
   if (!key) return;
-  window.localStorage.setItem(key, value);
-  window.localStorage.removeItem(baseKey);
+  safeLocalStorageSet(key, value);
+  safeLocalStorageRemove(baseKey);
 }
 
 export function removeScopedLocalStorage(baseKey: string) {
   const key = scopedStorageKey(baseKey);
-  if (key) window.localStorage.removeItem(key);
-  window.localStorage.removeItem(baseKey);
+  if (key) safeLocalStorageRemove(key);
+  safeLocalStorageRemove(baseKey);
 }
 
 export function purgeLegacySensitiveStorage() {
   if (typeof window === 'undefined') return;
   for (const key of legacySensitiveKeys) {
+    safeLocalStorageRemove(key);
+  }
+}
+
+function safeLocalStorageGet(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeLocalStorageSet(key: string, value: string): boolean {
+  try {
+    window.localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function safeLocalStorageRemove(key: string) {
+  try {
     window.localStorage.removeItem(key);
+  } catch {
+    // Safari privacy modes can throw for Web Storage access.
   }
 }
