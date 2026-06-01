@@ -2577,31 +2577,52 @@ function AccountProfileEditForm({
 
         <div>
           <h2 className="border-l-4 border-[#0f8f6b] pl-3 text-lg font-semibold">Coordonnees</h2>
-          <div className="mt-7 grid grid-cols-1 items-center gap-x-6 gap-y-4 text-sm lg:grid-cols-[170px_minmax(0,1fr)_170px_minmax(0,1fr)]">
-            <span className="text-left text-[#8b949e] lg:text-right"><span className="text-red-500">*</span> Nom</span>
-            <input value={details.lastName} required onChange={(event) => updateDetails('lastName', event.target.value)} className={profileEditInputClassName} />
-            <span className="text-left text-[#8b949e] lg:text-right"><span className="text-red-500">*</span> Prenom</span>
-            <input value={details.firstName} required onChange={(event) => updateDetails('firstName', event.target.value)} className={profileEditInputClassName} />
-
-            <span className="text-left text-[#8b949e] lg:text-right"><span className="text-red-500">*</span> Pays/region</span>
-            <select value={country} onChange={(event) => setCountry(event.target.value)} required className={profileEditInputClassName}>
-              <option value="">Selectionner un pays</option>
-              {africanCountries.map((option) => (
-                <option key={option.iso2} value={option.iso2}>{option.name}</option>
-              ))}
-            </select>
-
-            <ProfileSelectField label="Genre" value={details.gender} options={['Homme', 'Femme', 'Non precise']} placeholder="Selectionner" onChange={(value) => updateDetails('gender', value)} compact />
-
-            <div className="grid gap-2 text-sm lg:col-span-2 lg:grid-cols-[170px_minmax(0,320px)_auto] lg:items-center lg:gap-4">
-              <span className="text-left text-[#8b949e] lg:text-right">Telephone</span>
-              <InternationalPhoneInput value={phone} countryIso2={country} onChange={(value, meta) => { setPhone(value); setPhoneMeta({ countryIso2: meta.countryIso2, isValid: meta.isValid }); }} />
-              <button type="button" onClick={() => setPhoneModalOpen(true)} className={`justify-self-start text-sm ${profile.phoneVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
-                {profile.phoneVerifiedAt ? 'Verifie' : 'Verifier'}
-              </button>
+          <div className="mt-7 grid grid-cols-1 gap-x-10 gap-y-4 text-sm xl:grid-cols-2">
+            <div className="grid gap-4">
+              <div className={profileEditRowClassName}>
+                <span className={profileEditLabelClassName}><span className="text-red-500">*</span> Nom</span>
+                <input value={details.lastName} required onChange={(event) => updateDetails('lastName', event.target.value)} className={profileEditInputClassName} />
+              </div>
+              <div className={profileEditRowClassName}>
+                <span className={profileEditLabelClassName}><span className="text-red-500">*</span> Prenom</span>
+                <input value={details.firstName} required onChange={(event) => updateDetails('firstName', event.target.value)} className={profileEditInputClassName} />
+              </div>
+              <div className={profileEditRowClassName}>
+                <span className={profileEditLabelClassName}><span className="text-red-500">*</span> Pays/region</span>
+                <select value={country} onChange={(event) => setCountry(event.target.value)} required className={profileEditInputClassName}>
+                  <option value="">Selectionner un pays</option>
+                  {africanCountries.map((option) => (
+                    <option key={option.iso2} value={option.iso2}>{option.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-2 md:grid-cols-[170px_minmax(0,320px)_auto] md:items-center md:gap-4">
+                <span className={profileEditLabelClassName}>Telephone</span>
+                <InternationalPhoneInput value={phone} countryIso2={country} onChange={(value, meta) => { setPhone(value); setPhoneMeta({ countryIso2: meta.countryIso2, isValid: meta.isValid }); }} />
+                <button type="button" onClick={() => setPhoneModalOpen(true)} className={`justify-self-start text-sm ${profile.phoneVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
+                  {profile.phoneVerifiedAt ? 'Verifie' : 'Verifier'}
+                </button>
+              </div>
             </div>
-            <ProfileTextField label="Date de naissance" value={details.birthday} type="date" onChange={(value) => updateDetails('birthday', value)} />
-            <ProfileTextField label={details.accountType === 'company' ? '* Site web' : 'Site web'} value={details.website} required={details.accountType === 'company'} onChange={(value) => updateDetails('website', value)} />
+            <div className="grid gap-4">
+              <div className={profileEditRowClassName}>
+                <span className={profileEditLabelClassName}>Genre</span>
+                <select value={details.gender} onChange={(event) => updateDetails('gender', event.target.value)} className={profileEditInputClassName}>
+                  <option value="">Selectionner</option>
+                  {['Homme', 'Femme', 'Non precise'].map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+              <div className={profileEditRowClassName}>
+                <span className={profileEditLabelClassName}>Date de naissance</span>
+                <input type="date" value={details.birthday} onChange={(event) => updateDetails('birthday', event.target.value)} className={profileEditInputClassName} />
+              </div>
+              <div className={profileEditRowClassName}>
+                <span className={profileEditLabelClassName}>{details.accountType === 'company' ? <><span className="text-red-500">*</span> Site web</> : 'Site web'}</span>
+                <input required={details.accountType === 'company'} value={details.website} onChange={(event) => updateDetails('website', event.target.value)} className={profileEditInputClassName} />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2629,7 +2650,9 @@ function AccountProfileEditForm({
   );
 }
 
-const profileEditInputClassName = 'h-9 border border-[#c9c9c9] bg-white px-3 text-sm text-black outline-none transition focus:border-[#0f8f6b]';
+const profileEditInputClassName = 'h-9 w-full border border-[#c9c9c9] bg-white px-3 text-sm text-black outline-none transition focus:border-[#0f8f6b]';
+const profileEditRowClassName = 'grid gap-2 md:grid-cols-[170px_minmax(0,320px)] md:items-center md:gap-4';
+const profileEditLabelClassName = 'text-left text-[#8b949e] md:text-right';
 
 function ProfileReadonlyRow({ label, value }: { label: string; value: string }) {
   return (
