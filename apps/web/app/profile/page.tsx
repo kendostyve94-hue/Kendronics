@@ -385,7 +385,7 @@ export default function ProfilePage() {
     <main className="mobile-free-page min-h-screen overflow-x-hidden bg-white text-[#1f2f43]">
       <Navbar />
       <div className="w-full pt-[70px]">
-        <div className="mx-auto grid w-full max-w-none gap-4 px-4 py-3 sm:max-w-[40rem] lg:min-w-[1328px] lg:max-w-[1368px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
+        <div className="mx-auto grid w-full max-w-none gap-4 px-0 py-3 sm:max-w-[40rem] sm:px-4 lg:min-w-[1328px] lg:max-w-[1368px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
           <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} counts={orderCounts(orders)} unreadNotifications={unreadNotifications(notifications)} profile={profile} />
 
           <section className="min-w-0">
@@ -750,16 +750,19 @@ function OrderStatusHeader({ activeKey, counts }: { activeKey: OrderStatusKey; c
         <span className="grid h-6 w-6 place-items-center text-xl text-[#b8b8b8]">▤</span>
         <h1 className="text-xl font-normal">Mes commandes</h1>
       </div>
-      <div className="grid h-auto grid-cols-5 items-start overflow-hidden px-0 pt-4 sm:h-[112px] sm:px-1 sm:pt-6">
+      <div className="flex snap-x gap-2 overflow-x-auto px-0 pt-4 sm:grid sm:h-[112px] sm:grid-cols-5 sm:gap-0 sm:overflow-hidden sm:px-1 sm:pt-6">
         {orderStatuses.map((status) => {
           const active = status.key === activeKey;
 
           return (
-            <div key={status.key} className="grid min-h-[64px] place-items-center border-r border-[#e5e7eb] px-1 text-center last:border-r-0 sm:min-h-[72px] sm:px-3">
+            <div key={status.key} className="grid min-h-[64px] min-w-[82px] snap-start place-items-center border border-[#e5e7eb] px-1 text-center sm:min-h-[72px] sm:min-w-0 sm:border-y-0 sm:border-l-0 sm:px-3 sm:last:border-r-0">
               <span className={`text-[22px] font-black leading-6 sm:text-[28px] sm:leading-7 ${active ? 'text-[#ff5a00]' : 'text-[#1f2937]'}`}>
                 {countForStatus(status.key, counts)}
               </span>
-              <span className={`mt-1 text-[10px] leading-3 sm:text-[14px] sm:leading-4 ${active ? 'text-[#ff5a00]' : 'text-[#8a8f98]'}`}>{status.label}</span>
+              <span className={`mt-1 text-[10px] leading-3 sm:text-[14px] sm:leading-4 ${active ? 'text-[#ff5a00]' : 'text-[#8a8f98]'}`}>
+                <span className="sm:hidden">{shortOrderStatusLabel(status.key)}</span>
+                <span className="hidden sm:inline">{status.label}</span>
+              </span>
             </div>
           );
         })}
@@ -910,7 +913,36 @@ function DeliveryReviewPanel({ orders, dataStatus }: { orders: ProfileOrder[]; d
   return (
     <>
       <div className="mt-4 border border-[#e5e7eb] bg-white">
-        <div className="overflow-x-auto">
+        <div className="sm:hidden">
+          {dataStatus === 'loading' ? (
+            <p className="px-4 py-12 text-center text-sm font-semibold text-[#92979d]">Chargement de la livraison...</p>
+          ) : dataStatus === 'signed-out' ? (
+            <p className="px-4 py-12 text-center text-sm font-semibold text-[#92979d]">Connectez-vous pour afficher vos livraisons.</p>
+          ) : dataStatus === 'error' ? (
+            <p className="px-4 py-12 text-center text-sm font-semibold text-red-600">Impossible de charger les livraisons.</p>
+          ) : orders.length === 0 ? (
+            <div className="px-4 py-12 text-center">
+              <p className="text-sm font-semibold text-[#92979d]">Aucun envoi en cours pour le moment.</p>
+              <p className="mt-2 text-xs leading-5 text-[#64748b]">Les informations de transport apparaitront ici apres le passage en livraison.</p>
+            </div>
+          ) : (
+            <div className="grid gap-3 p-3">
+              {orders.map((order) => (
+                <article key={order.id} className="border border-[#e5e7eb] bg-white p-3">
+                  <VerificationArticleCell order={order} onDetail={() => setDetailOrder(order)} />
+                  <div className="mt-3 grid gap-2 border-t border-[#e5e7eb] pt-3 text-sm">
+                    <SummaryRow label="Etat livraison" value={deliveryStatusLabel(order)} />
+                    <SummaryRow label="Transporteur" value={order.carrierName || shippingModeLabel(order)} />
+                    <SummaryRow label="Destination" value={deliveryDestinationLabel(order)} />
+                    <SummaryRow label="Reference suivi" value={order.trackingNumber || 'En attente'} />
+                    <SummaryRow label="Estimation" value={deliveryEstimateLabel(order)} />
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="hidden overflow-x-auto sm:block">
           <div className="grid min-w-[1160px] grid-cols-[minmax(330px,1fr)_150px_150px_150px_160px_150px] items-center bg-[#f4f5f7] px-5 py-3 text-sm text-black">
             <span>Article</span>
             <span>Etat livraison</span>
@@ -950,12 +982,12 @@ function DeliveryReviewPanel({ orders, dataStatus }: { orders: ProfileOrder[]; d
 
 function VerificationArticleCell({ order, onDetail }: { order: ProfileOrder; onDetail: () => void }) {
   return (
-    <div className="flex min-w-0 gap-5">
-      <div className="grid h-[84px] w-[84px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-xs text-[#cbd5e1]">Kendronics</div>
+    <div className="grid min-w-0 grid-cols-[68px_minmax(0,1fr)] gap-3 sm:flex sm:gap-5">
+      <div className="grid h-[68px] w-[68px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-[10px] text-[#cbd5e1] sm:h-[84px] sm:w-[84px] sm:text-xs">Kendronics</div>
       <div className="min-w-0 py-0.5">
         <p className="truncate text-black">{orderGerberLabel(order)}</p>
-        <p className="mt-1 text-sm text-[#44546a]">{orderProductOrderLine(order)}</p>
-        <p className="mt-1 text-sm text-[#44546a]">{orderSummaryLine(order)}</p>
+        <p className="mt-1 break-words text-sm text-[#44546a]">{orderProductOrderLine(order)}</p>
+        <p className="mt-1 break-words text-sm text-[#44546a]">{orderSummaryLine(order)}</p>
         <button type="button" onClick={onDetail} className="mt-2 text-sm text-[#44546a] hover:text-[#0877ff]">
           Details du produit
         </button>
@@ -1318,7 +1350,7 @@ function OrderTableSearchPanel({
         </div>
       </div>
 
-      <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(3.9rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-white px-3 py-2.5' : 'hidden'} text-black sm:sticky sm:top-24 sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5`}>
+      <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(4.7rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-white px-3 py-2.5' : 'hidden'} text-black sm:sticky sm:top-24 sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5`}>
         <div className="mx-auto flex max-w-md items-center gap-3 sm:hidden">
           <button type="button" onClick={() => setCartSummaryOpen((open) => !open)} className="min-w-0 flex-1 text-left" aria-expanded={cartSummaryOpen} aria-label="Afficher le detail du resume">
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total</p>
@@ -1461,10 +1493,10 @@ function MobileOrderCard({
   const selectable = isSelectableCartOrder(order);
 
   return (
-    <article className="border border-[#e5e7eb] bg-white p-3 text-sm text-[#1f2f43]">
-      <div className="flex gap-3">
+    <article className="max-w-full overflow-hidden border border-[#e5e7eb] bg-white p-3 text-sm text-[#1f2f43]">
+      <div className="grid min-w-0 grid-cols-[28px_68px_minmax(0,1fr)] gap-2">
         <input type="checkbox" checked={selected} disabled={!selectable} onChange={onToggle} className="mt-8 h-5 w-5 shrink-0 accent-[#0f8f6b]" aria-label={`Selectionner ${order.orderNumber}`} />
-        <div className="grid h-[76px] w-[76px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-[10px] text-[#94a3b8]">Kendronics</div>
+        <div className="grid h-[68px] w-[68px] shrink-0 place-items-center bg-[#f1f4f7] text-center text-[9px] text-[#94a3b8]">Kendronics</div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-black">{orderGerberLabel(order)}</p>
           <p className="mt-1 text-xs text-[#44546a]">{orderProductOrderLine(order)}</p>
@@ -1475,7 +1507,7 @@ function MobileOrderCard({
           </div>
         </div>
       </div>
-      <div className="mt-3 grid grid-cols-[1fr_1fr_auto] items-end gap-3 border-t border-[#eef0f3] pt-3">
+      <div className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_28px] items-end gap-3 border-t border-[#eef0f3] pt-3">
         <label className="grid gap-1 text-xs text-[#64748b]">
           Qte
           <select
@@ -2560,7 +2592,7 @@ function AccountProfileEditForm({
   }
 
   return (
-    <section className="min-h-[690px] overflow-hidden bg-white p-4 text-black shadow-sm ring-1 ring-slate-200 sm:p-6">
+    <section className="min-h-[690px] overflow-hidden bg-white p-4 pb-28 text-black shadow-sm ring-1 ring-slate-200 sm:p-6">
       <div className="mb-5 flex flex-col gap-3 border-b border-[#e5e7eb] pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <button type="button" onClick={onCancel} className="text-sm font-semibold text-[#0f8f6b]">Retour</button>
@@ -2680,7 +2712,7 @@ function AccountProfileEditForm({
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-4 border-t border-[#e5e7eb] pt-5">
+        <div className="grid grid-cols-2 items-center justify-center gap-3 border-t border-[#e5e7eb] pt-5 sm:flex sm:gap-4">
           <button type="button" onClick={onCancel} disabled={saving} className="h-10 border border-[#cbd5e1] bg-white px-8 text-sm text-[#475569] transition hover:border-[#94a3b8] disabled:opacity-60">
             Annuler
           </button>
@@ -3073,10 +3105,10 @@ function EmailChangeModal({ currentEmail, onClose, onChanged }: { currentEmail: 
   }
 
   return (
-    <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950/45 px-4">
+    <div className={profileModalBackdropClassName}>
       <div className={profileModalPanelClassName}>
         <h2 className="text-xl font-black">Modifier l'e-mail</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">Adresse actuelle: {currentEmail ? maskEmail(currentEmail) : 'aucune adresse enregistree'}</p>
+        <p className="mt-2 break-words text-sm leading-6 text-slate-600">Adresse actuelle: {currentEmail ? maskEmail(currentEmail) : 'aucune adresse enregistree'}</p>
         <div className="mt-5 grid gap-3">
           <input value={newEmail} onChange={(event) => setNewEmail(event.target.value)} className={profileModalFieldClassName} placeholder="Nouveau mail" type="email" />
           {status === 'sent' || status === 'saving' || code ? (
@@ -3084,7 +3116,7 @@ function EmailChangeModal({ currentEmail, onClose, onChanged }: { currentEmail: 
           ) : null}
           {message ? <p className={status === 'error' ? 'text-sm font-semibold text-red-600' : 'text-sm font-semibold text-[#0f8f6b]'}>{message}</p> : null}
         </div>
-        <div className="mt-6 flex justify-end gap-3">
+        <div className={profileModalActionsClassName}>
           <button type="button" onClick={onClose} disabled={status === 'saving' || status === 'sending'} className={profileModalSecondaryButtonClassName}>Annuler</button>
           <button type="button" onClick={() => void requestCode()} disabled={!canRequestCode} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : status === 'sent' || code ? 'Renvoyer le code' : 'Envoyer le code'}</button>
           {status === 'sent' || status === 'saving' || code ? (
@@ -3161,10 +3193,10 @@ function PhoneChangeModal({ currentPhone, onClose, onChanged }: { currentPhone: 
   }
 
   return (
-    <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950/45 px-4">
+    <div className={profileModalBackdropClassName}>
       <div className={profileModalPanelClassName}>
         <h2 className="text-xl font-black">Modifier le telephone</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">Numero actuel: {currentPhone ? maskPhone(currentPhone) : 'aucun numero enregistre'}</p>
+        <p className="mt-2 break-words text-sm leading-6 text-slate-600">Numero actuel: {currentPhone ? maskPhone(currentPhone) : 'aucun numero enregistre'}</p>
         <div className="mt-5 grid gap-3">
           <InternationalPhoneInput
             value={phone}
@@ -3180,7 +3212,7 @@ function PhoneChangeModal({ currentPhone, onClose, onChanged }: { currentPhone: 
           ) : null}
           {message && (phoneValid || status !== 'error') ? <p className={status === 'error' ? 'text-sm font-semibold text-red-600' : 'text-sm font-semibold text-[#0f8f6b]'}>{message}</p> : null}
         </div>
-        <div className="mt-6 flex justify-end gap-3">
+        <div className={profileModalActionsClassName}>
           <button type="button" onClick={onClose} disabled={status === 'saving' || status === 'sending'} className={profileModalSecondaryButtonClassName}>Annuler</button>
           <button type="button" onClick={() => void requestCode()} disabled={!canRequestCode} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : status === 'sent' || code ? 'Renvoyer le code' : 'Envoyer le code'}</button>
           {status === 'sent' || status === 'saving' || code ? (
@@ -3257,7 +3289,7 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[90] grid place-items-center bg-slate-950/45 px-4">
+    <div className={profileModalBackdropClassName}>
       <div className={profileModalPanelClassName}>
         <h2 className="text-xl font-black">Modifier le mot de passe</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">Un code de securite est requis avant modification.</p>
@@ -3269,7 +3301,7 @@ function PasswordChangeModal({ onClose }: { onClose: () => void }) {
           ) : null}
           {message ? <p className={status === 'error' ? 'text-sm font-semibold text-red-600' : 'text-sm font-semibold text-[#0f8f6b]'}>{message}</p> : null}
         </div>
-        <div className="mt-6 flex justify-end gap-3">
+        <div className={profileModalActionsClassName}>
           <button type="button" onClick={onClose} disabled={status === 'saving' || status === 'sending'} className={profileModalSecondaryButtonClassName}>Fermer</button>
           <button type="button" onClick={() => void requestCode()} disabled={!canRequestCode} className={profileModalSecondaryButtonClassName}>{status === 'sending' ? 'Envoi...' : status === 'sent' || code ? 'Renvoyer le code' : 'Envoyer le code'}</button>
           {status === 'sent' || status === 'saving' || code ? (
@@ -3434,9 +3466,11 @@ function deleteAlternativeCopy(alternative: DeleteAlternative) {
 
 const profileModalFieldClassName = 'h-11 border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#009a38]';
 const profileModalTextAreaClassName = 'min-h-24 resize-y border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#009a38]';
-const profileModalPanelClassName = 'w-full max-w-lg rounded-sm border border-slate-300 bg-white p-6 text-black';
-const profileModalSecondaryButtonClassName = 'inline-flex h-10 items-center border border-slate-200 bg-white px-5 text-sm font-normal text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:text-slate-300';
-const profileModalPrimaryButtonClassName = 'h-10 bg-[#0877ff] px-6 text-sm font-normal text-white transition hover:bg-[#0068e8] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500';
+const profileModalBackdropClassName = 'fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/45 px-0 sm:items-center sm:px-4 sm:py-4';
+const profileModalPanelClassName = 'w-full max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-sm border border-slate-300 bg-white p-5 text-black sm:max-w-lg sm:p-6';
+const profileModalActionsClassName = 'mt-6 grid grid-cols-1 gap-3 sm:flex sm:justify-end';
+const profileModalSecondaryButtonClassName = 'inline-flex h-10 items-center justify-center border border-slate-200 bg-white px-5 text-sm font-normal text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:text-slate-300';
+const profileModalPrimaryButtonClassName = 'inline-flex h-10 items-center justify-center bg-[#0877ff] px-6 text-sm font-normal text-white transition hover:bg-[#0068e8] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500';
 const profileModalPrimaryLinkClassName = 'inline-flex h-10 items-center bg-[#0877ff] px-6 text-sm font-normal text-white transition hover:bg-[#0068e8]';
 
 function maskEmail(email: string) {
