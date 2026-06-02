@@ -910,6 +910,15 @@ function PaymentMethodOption({
 }
 
 function PaymentBrandBadge({ label }: { label: string }) {
+  const asset = paymentBrandAssets[label];
+  if (asset) {
+    return (
+      <span className="inline-flex h-9 items-center border border-[#dbe4ee] bg-white px-3">
+        <img src={asset.src} alt={asset.alt} className={asset.className} loading="lazy" />
+      </span>
+    );
+  }
+
   if (label === 'Visa') {
     return <span className="inline-flex h-9 items-center border border-[#dbe4ee] bg-white px-4 text-sm font-black italic tracking-tight text-[#1434cb]">VISA</span>;
   }
@@ -951,6 +960,19 @@ function PaymentBrandBadge({ label }: { label: string }) {
   }
   return <span className="inline-flex min-h-8 items-center border border-[#dbe4ee] bg-white px-3 text-xs font-semibold text-[#0f172a]">{label}</span>;
 }
+
+const paymentBrandAssets: Record<string, { src: string; alt: string; className: string }> = {
+  Visa: {
+    src: '/payments/visa-brandmark-blue.png',
+    alt: 'Visa',
+    className: 'h-4 w-auto',
+  },
+  PayPal: {
+    src: '/payments/paypal-logo-black.png',
+    alt: 'PayPal',
+    className: 'h-5 w-auto',
+  },
+};
 
 function CheckoutAddressFields({
   address,
