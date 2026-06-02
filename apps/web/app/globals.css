@@ -887,8 +887,6 @@ button {
 
   main.mobile-free-page section[class*="min-h-[690px]"] {
     min-height: auto !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
   }
 
   main.mobile-free-page article[class*="border"],
@@ -906,4 +904,15 @@ button {
   main.mobile-free-page a[class*="rounded-full"] {
     border-radius: var(--control-radius) !important;
   }
+}
+
+main.mobile-free-page section[class*="ring-1"],
+main.mobile-free-page aside[class*="ring-1"],
+main.mobile-free-page article[class*="ring-1"],
+main.mobile-free-page div[class*="ring-1"][class*="bg-white"],
+main.mobile-free-page article[class*="border"],
+main.mobile-free-page aside[class*="border"],
+main.mobile-free-page form[class*="border"],
+main.mobile-free-page details[class*="border"] {
+  border-radius: 6px;
 }

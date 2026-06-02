@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { InternationalPhoneInput } from '../../components/account/InternationalPhoneInput';
 import { Navbar } from '../../components/layout/Navbar';
+import { CountryFlag } from '../../components/ui/CountryFlag';
 import { africanCountries } from '../../lib/african-countries';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import type { AuthTokens } from '../../lib/auth-contract';
@@ -385,7 +386,7 @@ export default function ProfilePage() {
     <main className="mobile-free-page min-h-screen overflow-x-hidden bg-white text-[#1f2f43]">
       <Navbar />
       <div className="w-full pt-[70px]">
-        <div className="mx-auto grid w-full max-w-none gap-4 px-0 py-3 sm:max-w-[40rem] sm:px-4 lg:min-w-[1328px] lg:max-w-[1368px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
+        <div className="mx-auto grid w-full max-w-none gap-4 px-4 py-3 sm:max-w-[40rem] lg:min-w-[1328px] lg:max-w-[1368px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
           <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} counts={orderCounts(orders)} unreadNotifications={unreadNotifications(notifications)} profile={profile} />
 
           <section className="min-w-0">
@@ -1350,7 +1351,7 @@ function OrderTableSearchPanel({
         </div>
       </div>
 
-      <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-white px-3 py-2.5' : 'hidden'} text-black sm:sticky sm:top-24 sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5`}>
+      <aside className={`${dataStatus === 'ready' && orders.length > 0 ? 'fixed inset-x-0 bottom-[calc(3.9rem+env(safe-area-inset-bottom))] z-[60] border-t border-slate-200 bg-white px-3 py-2.5' : 'hidden'} text-black sm:sticky sm:top-24 sm:z-auto sm:block sm:border sm:border-[#e5e7eb] sm:bg-white sm:p-5`}>
         <div className="mx-auto flex max-w-md items-center gap-3 sm:hidden">
           <button type="button" onClick={() => setCartSummaryOpen((open) => !open)} className="min-w-0 flex-1 text-left" aria-expanded={cartSummaryOpen} aria-label="Afficher le detail du resume">
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Total</p>
@@ -3578,7 +3579,8 @@ function DashboardPanel({
   const counts = orderCounts(orders);
   const displayName = profile.name || firstName || 'Client Kendronics';
   const companyOrType = profile.company || 'Compte client';
-  const location = profile.country || 'Pays non renseigné';
+  const countryCode = normalizeProfileCountry(profile.country);
+  const displayLocation = countryCode ? countryDisplayName(countryCode) : 'Pays non renseigne';
 
   return (
     <section className="grid bg-white lg:grid-cols-[190px_minmax(0,1fr)] lg:shadow-sm lg:ring-1 lg:ring-[#dbe4ee]">
@@ -3593,8 +3595,11 @@ function DashboardPanel({
           <h1 className="mt-4 text-lg font-semibold text-[#102033]">{displayName}</h1>
           <p className="mt-1 text-xs font-semibold text-[#0f8f6b]">{companyOrType}</p>
           <p className="mt-2 text-xs text-[#64748b]">ID Client: {userId}</p>
-          <p className="mt-1 truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : location}</p>
-          <p className="mt-1 text-xs text-[#64748b]">{location}</p>
+          <p className="mt-1 truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : displayLocation}</p>
+          <p className="mt-1 inline-flex items-center justify-center gap-1.5 text-xs text-[#64748b]">
+            {countryCode ? <CountryFlag iso2={countryCode} name={displayLocation} /> : null}
+            <span>{displayLocation}</span>
+          </p>
           <a href="/profile?view=settings" className="mt-4 inline-flex text-xs font-semibold text-[#0f8f6b]">Gérer mon compte</a>
         </div>
       </div>
@@ -3641,7 +3646,8 @@ function MetricCell({ label, value, detail, valueClass = 'text-[#1f2937]' }: { l
 function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firstName: string; profile: ProfileForm; userId: string; avatarDataUrl: string }) {
   const displayName = profile.name || firstName || 'Client Kendronics';
   const companyOrType = profile.company || 'Compte client';
-  const location = profile.country || 'Pays non renseigne';
+  const countryCode = normalizeProfileCountry(profile.country);
+  const displayLocation = countryCode ? countryDisplayName(countryCode) : 'Pays non renseigne';
   const badge = accountBadge(profile);
 
   return (
@@ -3654,8 +3660,11 @@ function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firs
         <p className="mt-0.5 truncate text-sm text-[#102033]">{companyOrType}</p>
         <p className="mt-1 text-xs font-semibold" style={{ color: badge.color }}>{badge.label}</p>
         <p className="mt-1 text-xs text-[#64748b]">ID Client: {userId}</p>
-        <p className="mt-1 truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : location}</p>
-        <p className="mt-1 text-xs text-[#64748b]">{location}</p>
+        <p className="mt-1 truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : displayLocation}</p>
+        <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-[#64748b]">
+          {countryCode ? <CountryFlag iso2={countryCode} name={displayLocation} /> : null}
+          <span>{displayLocation}</span>
+        </p>
         <a href="/profile?view=settings" className="mt-2 inline-flex text-xs font-semibold text-[#0f8f6b]">Gerer mon compte</a>
       </div>
     </div>

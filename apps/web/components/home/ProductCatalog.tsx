@@ -80,7 +80,7 @@ export function ProductCatalog() {
   return (
     <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-8">
       <div className="mx-auto max-w-none">
-        <div className="grid overflow-hidden border border-line bg-white lg:grid-cols-[15rem_1fr]">
+        <div className="grid items-start overflow-hidden border border-line bg-transparent lg:grid-cols-[15rem_1fr]">
           <aside className="grid border-b border-line bg-white lg:border-b-0 lg:border-r">
             <article className="bg-white p-4">
               <p className="label-caps text-deepblue">{activeCard.tag}</p>
@@ -108,7 +108,7 @@ export function ProductCatalog() {
             </article>
           </aside>
 
-          <div className="min-w-0">
+          <div className="min-w-0 bg-line">
 
             <div className="flex gap-2 overflow-x-auto bg-line p-px pb-2 md:grid md:grid-cols-3 md:gap-px md:overflow-visible md:pb-0 xl:grid-cols-6">
               {productCards.map((card, index) => {
