@@ -41,8 +41,8 @@ export async function POST(request: Request) {
   const manufacturingPrice = Number(data.priceList?.[0]?.Price ?? 0);
   const shippingPrice = Number(data.Shipping?.ShipCost ?? 0);
   const smartBufferMultiplier = calculateSmartBuffer(manufacturingPrice, payload);
-  const kendronicsServiceFee = getVisibleServiceFee(manufacturingPrice);
-  const pcbClientPrice = manufacturingPrice * smartBufferMultiplier + kendronicsServiceFee;
+  const kendronicsServiceFee = 0;
+  const pcbClientPrice = manufacturingPrice * smartBufferMultiplier;
   const finalTotal = pcbClientPrice + shippingPrice;
 
   return NextResponse.json({
@@ -97,10 +97,4 @@ function calculateSmartBuffer(manufacturingPrice: number, payload: Record<string
   if (payload.castellatedHoles === 'Yes' || payload.edgePlating === 'Yes') buffer += 0.05;
 
   return Math.min(1.7, Math.max(1.08, buffer));
-}
-
-function getVisibleServiceFee(supplierPrice: number): number {
-  if (supplierPrice < 10) return 3;
-  if (supplierPrice < 50) return 4;
-  return 5;
 }

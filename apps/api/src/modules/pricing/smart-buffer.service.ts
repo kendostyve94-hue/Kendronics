@@ -63,8 +63,8 @@ export class SmartBufferService {
     );
     const historicalCorrection = historicalBucket ? Number(historicalBucket.currentBuffer) - ruleBuffer : 0;
     const bufferUsed = clamp(ruleBuffer + historicalCorrection, MIN_BUFFER, MAX_BUFFER);
-    const serviceFee = this.serviceFee(supplierEstimatedPrice);
-    const pcbClientPrice = roundMoney(supplierEstimatedPrice * bufferUsed + serviceFee);
+    const serviceFee = 0;
+    const pcbClientPrice = roundMoney(supplierEstimatedPrice * bufferUsed);
     const totalClientPrice = roundMoney(pcbClientPrice + shippingPrice);
     const riskScore = roundRatio((bufferUsed - 1) / (MAX_BUFFER - 1));
     const confidence = this.confidence(historicalBucket?.sampleCount ?? 0);
@@ -257,12 +257,6 @@ export class SmartBufferService {
     if (dto.layers >= 6 || specialCount >= 3 || ['advanced_pcb', 'fpc_rigid_flex', 'pcb_assembly', 'cnc_3d'].includes(dto.productType)) return 'high';
     if (dto.layers >= 4 || specialCount >= 1 || dto.productType === 'smt_stencil' || this.stringConfig(config.surfaceFinish, '').toLowerCase().includes('enig')) return 'medium';
     return 'low';
-  }
-
-  private serviceFee(supplierPrice: number): number {
-    if (supplierPrice < 10) return 3;
-    if (supplierPrice < 50) return 4;
-    return 5;
   }
 
   private confidence(sampleCount: number): SmartBufferResult['confidence'] {

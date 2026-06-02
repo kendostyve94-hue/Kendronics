@@ -353,7 +353,7 @@ export default function QuotePage() {
   );
   const localPricing = useMemo(() => calculatePCBQuote(config), [config]);
   const pricing = apiPricing ?? localPricing;
-  const mobilePcbPrice = pricing.pcbClientPrice ?? pricing.supplierEstimatedPrice ?? pricing.partnerManufacturingCost + pricing.kendronicsServiceFee;
+  const mobilePcbPrice = pricing.pcbClientPrice ?? pricing.supplierEstimatedPrice ?? pricing.partnerManufacturingCost;
   const errors = useMemo(() => validateQuoteConfig(config), [config]);
   const pricingSummarySaveState = quoteSave.status === 'saved' && gerberUpload.status === 'idle' ? 'idle' : quoteSave.status;
 

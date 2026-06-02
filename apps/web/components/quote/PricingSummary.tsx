@@ -92,7 +92,7 @@ export function PricingSummary({
 
   const selectedCountry = countries.find((country) => country.iso2 === destinationCountry) ?? countries[0];
   const supplierEstimatedPrice = pricing.supplierEstimatedPrice ?? pricing.partnerManufacturingCost;
-  const pcbClientPrice = pricing.pcbClientPrice ?? supplierEstimatedPrice + pricing.kendronicsServiceFee;
+  const pcbClientPrice = pricing.pcbClientPrice ?? supplierEstimatedPrice;
   const standardBuildPrice = Math.max(5, supplierEstimatedPrice);
   const urgentBuildPrice = Math.max(standardBuildPrice + pricing.productionSpeedFee + 7.5, standardBuildPrice * 1.65);
   const buildOptions = pricing.buildOptions?.length
@@ -523,7 +523,6 @@ export function PricingSummary({
                 <>
                   <FeeLine label="Cout PCB :" value={pcbClientPrice} />
                   <FeeLine label="Livraison :" value={pricing.franceToAfricaDelivery} />
-                  <FeeLine label="Service:" value={pricing.kendronicsServiceFee} />
                   <div className="flex items-center justify-between border-t border-slate-200 pt-2 font-semibold">
                     <span>Total :</span>
                     <span>${pricing.finalTotal.toFixed(2)}</span>

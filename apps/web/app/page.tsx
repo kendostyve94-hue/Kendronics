@@ -288,8 +288,6 @@ function HomeCapabilityMatrix() {
   return (
     <section className="bg-white px-0 py-5 sm:px-4 lg:px-8">
       <div className="mx-auto grid max-w-none items-start gap-5 xl:grid-cols-[minmax(40rem,1.18fr)_minmax(28rem,0.82fr)]">
-        <SmartOrderingCard className="lg:h-[24rem]" />
-
         <div className="overflow-y-auto overflow-x-hidden border border-slate-300 bg-white lg:h-[24rem]">
           <table className="w-full table-fixed border-collapse text-left text-xs">
             <thead className="bg-[#d8edf8] text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-900">
@@ -330,6 +328,8 @@ function HomeCapabilityMatrix() {
             </tbody>
           </table>
         </div>
+
+        <SmartOrderingCard className="lg:h-[24rem]" />
       </div>
     </section>
   );

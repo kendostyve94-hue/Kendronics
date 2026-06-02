@@ -40,7 +40,7 @@ const zoneDeliveryDays: Record<string, number> = {
 };
 
 const transparencyNote =
-  'Prix PCB calcule avec le modele Kendronics: estimation fournisseur, buffer intelligent, service visible et livraison separee.';
+  'Prix PCB calcule avec le modele Kendronics: estimation fournisseur, buffer intelligent et livraison separee.';
 
 export class LocalPricingProvider implements SupplierPricingProvider {
   name = 'local_calibrated';
@@ -176,9 +176,9 @@ function calculateLocalCalibratedQuote(config: QuoteConfig): PricingBreakdown {
   const productionSpeedFee = getProductionSpeedFee(config);
   const supplierEstimatedPrice = partnerManufacturingCost + productionSpeedFee;
   const smartBufferMultiplier = calculateSmartBuffer(config, supplierEstimatedPrice);
-  const kendronicsServiceFee = getVisibleServiceFee(supplierEstimatedPrice);
+  const kendronicsServiceFee = 0;
   const paymentProcessingFee = 0;
-  const pcbClientPrice = supplierEstimatedPrice * smartBufferMultiplier + kendronicsServiceFee;
+  const pcbClientPrice = supplierEstimatedPrice * smartBufferMultiplier;
   const finalTotal = pcbClientPrice + franceToAfricaDelivery;
   const productionBuildDays = getProductionBuildDays(config);
   const leadTimeDays = getLeadTimeDays(config, country.logisticsZone);
@@ -250,12 +250,6 @@ function calculateSmartBuffer(config: QuoteConfig, supplierPrice: number): numbe
   else if (complexity === 'medium') buffer += 0.05;
 
   return clamp(buffer, 1.08, 1.7);
-}
-
-function getVisibleServiceFee(supplierPrice: number): number {
-  if (supplierPrice < 10) return 3;
-  if (supplierPrice < 50) return 4;
-  return 5;
 }
 
 function getSmartBufferBucketKey(config: QuoteConfig, supplierPrice: number): string {
