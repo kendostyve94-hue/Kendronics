@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="80" viewBox="0 0 128 80" role="img" aria-labelledby="title">
+  <title id="title">Moov Money</title>
+  <rect width="128" height="80" rx="10" fill="#fff"/>
+  <path d="M23 22h82l-8 36H15l8-36Z" fill="#FF7900"/>
+  <text x="62" y="43" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="900" font-style="italic" fill="#fff">Moov</text>
+  <text x="63" y="58" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="900" font-style="italic" fill="#fff">Money</text>
+</svg>

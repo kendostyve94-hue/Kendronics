@@ -140,7 +140,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
 
   useEffect(() => {
     if (!detail) return;
-    setSelectedShippingMethodId((current) => (shippingMethods.some((method) => method.id === current) ? current : ''));
+    setSelectedShippingMethodId((current) => (shippingMethods.some((method) => method.id === current) ? current : shippingMethods[0]?.id ?? ''));
   }, [detail?.order.id, shippingMethods]);
 
   useEffect(() => {
@@ -656,29 +656,8 @@ function CheckoutShippingCard({
           </div>
         </div>
       ) : (
-        <div className="mt-5 space-y-2">
+        <div className="mt-5">
           <p className="text-sm text-amber-700">Selectionnez une methode d'expedition pour continuer.</p>
-          <div className="grid gap-2">
-            {methods.map((method) => (
-              <label key={method.id} className="grid cursor-pointer gap-3 border border-slate-200 bg-white p-3 text-sm sm:grid-cols-[1fr_auto_auto] sm:items-center">
-                <span className="flex min-w-0 items-center gap-3">
-                  <input
-                    type="radio"
-                    name="checkout-shipping-method-inline"
-                    checked={selectedMethodId === method.id}
-                    onChange={() => onSelectedMethodChange(method.id)}
-                    className="h-4 w-4 accent-[#0f8f6b]"
-                  />
-                  <span className="min-w-0">
-                    <span className="font-semibold text-black">{method.carrier}</span>
-                    <span className="text-slate-600"> / {method.service}</span>
-                  </span>
-                </span>
-                <span className="text-slate-700">{formatMoney(method.amount, method.currency)}</span>
-                <span className="text-slate-700">{method.deliveryDate}</span>
-              </label>
-            ))}
-          </div>
         </div>
       )}
 
@@ -913,51 +892,12 @@ function PaymentBrandBadge({ label }: { label: string }) {
   const asset = paymentBrandAssets[label];
   if (asset) {
     return (
-      <span className="inline-flex h-9 items-center border border-[#dbe4ee] bg-white px-3">
+      <span className="inline-flex h-9 items-center justify-center border border-[#dbe4ee] bg-white px-3">
         <img src={asset.src} alt={asset.alt} className={asset.className} loading="lazy" />
       </span>
     );
   }
 
-  if (label === 'Visa') {
-    return <span className="inline-flex h-9 items-center border border-[#dbe4ee] bg-white px-4 text-sm font-black italic tracking-tight text-[#1434cb]">VISA</span>;
-  }
-  if (label === 'Mastercard') {
-    return (
-      <span className="inline-flex h-9 items-center gap-1 border border-[#dbe4ee] bg-white px-3">
-        <span className="h-5 w-5 rounded-full bg-[#eb001b]" />
-        <span className="-ml-3 h-5 w-5 rounded-full bg-[#f79e1b] opacity-90" />
-        <span className="sr-only">Mastercard</span>
-      </span>
-    );
-  }
-  if (label === 'American Express') {
-    return <span className="inline-flex h-9 items-center border border-[#2e77bc] bg-[#2e77bc] px-3 text-xs font-black tracking-tight text-white">AMEX</span>;
-  }
-  if (label === 'Apple Pay') {
-    return <span className="inline-flex h-9 items-center border border-[#dbe4ee] bg-white px-3 text-sm font-semibold text-black">Apple Pay</span>;
-  }
-  if (label === 'Google Pay') {
-    return <span className="inline-flex h-9 items-center border border-[#dbe4ee] bg-white px-3 text-sm font-semibold"><span className="text-[#4285f4]">G</span><span className="text-[#34a853]">o</span><span className="text-[#fbbc05]">o</span><span className="text-[#4285f4]">g</span><span className="text-[#ea4335]">l</span><span className="text-[#34a853]">e</span><span className="ml-1 text-black">Pay</span></span>;
-  }
-  if (label === 'Virement bancaire') {
-    return <span className="inline-flex h-9 items-center gap-2 border border-[#dbe4ee] bg-white px-3 text-xs font-semibold text-[#0f172a]"><span className="text-base">IBAN</span> Virement</span>;
-  }
-  if (label === 'Orange Money') {
-    return <span className="inline-flex h-10 items-center border border-[#ff7900] bg-[#ff7900] px-3 text-xs font-black text-white">Orange<br />Money</span>;
-  }
-  if (label === 'Wave') {
-    return <span className="inline-flex h-10 items-center rounded-full border border-[#2bb8ff] bg-[#2bb8ff] px-4 text-sm font-black text-white">wave</span>;
-  }
-  if (label === 'Moov Money') {
-    return <span className="inline-flex h-10 rotate-[-3deg] items-center border border-[#ff7a00] bg-[#ff7a00] px-3 text-xs font-black italic text-white">Moov Money</span>;
-  }
-  if (label === 'MTN Mobile Money') {
-    return <span className="inline-flex h-10 items-center border border-[#ffcb05] bg-[#ffcb05] px-3 text-xs font-black text-[#10326b]">MTN MoMo</span>;
-  }
-  if (label === 'PayPal') {
-    return <span className="inline-flex h-9 items-center border border-[#dbe4ee] bg-white px-4 text-sm font-black tracking-tight"><span className="text-[#003087]">Pay</span><span className="text-[#009cde]">Pal</span></span>;
-  }
   return <span className="inline-flex min-h-8 items-center border border-[#dbe4ee] bg-white px-3 text-xs font-semibold text-[#0f172a]">{label}</span>;
 }
 
@@ -971,6 +911,51 @@ const paymentBrandAssets: Record<string, { src: string; alt: string; className: 
     src: '/payments/paypal-logo-black.png',
     alt: 'PayPal',
     className: 'h-5 w-auto',
+  },
+  Mastercard: {
+    src: '/payments/mastercard-mark.svg',
+    alt: 'Mastercard',
+    className: 'h-7 w-auto',
+  },
+  'American Express': {
+    src: '/payments/amex-mark.svg',
+    alt: 'American Express',
+    className: 'h-7 w-auto',
+  },
+  'Apple Pay': {
+    src: '/payments/apple-pay-mark.svg',
+    alt: 'Apple Pay',
+    className: 'h-7 w-auto',
+  },
+  'Google Pay': {
+    src: '/payments/google-pay-mark.svg',
+    alt: 'Google Pay',
+    className: 'h-5 w-auto',
+  },
+  'Virement bancaire': {
+    src: '/payments/bank-transfer-mark.svg',
+    alt: 'Virement bancaire',
+    className: 'h-7 w-auto',
+  },
+  'Orange Money': {
+    src: '/payments/orange-money-mark.svg',
+    alt: 'Orange Money',
+    className: 'h-7 w-auto',
+  },
+  Wave: {
+    src: '/payments/wave-mark.svg',
+    alt: 'Wave',
+    className: 'h-7 w-auto',
+  },
+  'Moov Money': {
+    src: '/payments/moov-money-mark.svg',
+    alt: 'Moov Money',
+    className: 'h-7 w-auto',
+  },
+  'MTN Mobile Money': {
+    src: '/payments/mtn-momo-mark.svg',
+    alt: 'MTN Mobile Money',
+    className: 'h-7 w-auto',
   },
 };
 

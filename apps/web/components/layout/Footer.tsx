@@ -48,6 +48,20 @@ const deliveryLogos = [
   },
 ];
 
+const paymentLogos = [
+  { name: 'Visa', src: '/payments/visa-brandmark-blue.png', className: 'h-3.5 w-auto' },
+  { name: 'Mastercard', src: '/payments/mastercard-mark.svg', className: 'h-6 w-auto' },
+  { name: 'American Express', src: '/payments/amex-mark.svg', className: 'h-6 w-auto' },
+  { name: 'Apple Pay', src: '/payments/apple-pay-mark.svg', className: 'h-6 w-auto' },
+  { name: 'Google Pay', src: '/payments/google-pay-mark.svg', className: 'h-4 w-auto' },
+  { name: 'PayPal', src: '/payments/paypal-logo-black.png', className: 'h-4 w-auto' },
+  { name: 'Orange Money', src: '/payments/orange-money-mark.svg', className: 'h-6 w-auto' },
+  { name: 'Wave', src: '/payments/wave-mark.svg', className: 'h-6 w-auto' },
+  { name: 'Moov Money', src: '/payments/moov-money-mark.svg', className: 'h-6 w-auto' },
+  { name: 'MTN Mobile Money', src: '/payments/mtn-momo-mark.svg', className: 'h-6 w-auto' },
+  { name: 'Virement bancaire', src: '/payments/bank-transfer-mark.svg', className: 'h-6 w-auto' },
+];
+
 const socialLinks = [
   { name: 'Facebook', href: 'https://www.facebook.com', src: 'https://cdn.simpleicons.org/facebook/ffffff', bg: '#1877F2' },
   { name: 'X', href: 'https://x.com', src: 'https://cdn.simpleicons.org/x/ffffff', bg: '#111111' },
@@ -131,50 +145,17 @@ function PaymentLogoStrip() {
     <div>
       <h3 className="text-sm font-medium text-slate-300">Moyens de paiement</h3>
       <div className="mt-2 flex flex-wrap gap-1.5">
-        <VisaMark />
-        <MastercardMark />
-        <StripeMark />
-        <DiscoverMark />
+        {paymentLogos.map((logo) => (
+          <span
+            key={logo.name}
+            aria-label={logo.name}
+            className="inline-flex h-8 min-w-10 items-center justify-center overflow-hidden rounded-[3px] border border-[#dbe4ee] bg-white px-1.5"
+          >
+            <img src={logo.src} alt="" className={logo.className} loading="lazy" />
+          </span>
+        ))}
       </div>
     </div>
-  );
-}
-
-function VisaMark() {
-  return (
-    <span aria-label="Visa" className="relative inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-[2px] border border-[#0b4f92] bg-white">
-      <span className="absolute left-0.5 right-0.5 top-0.5 h-1 bg-[#0b5a9d]" />
-      <span className="absolute bottom-0.5 left-0.5 right-0.5 h-1 bg-[#f6a21a]" />
-      <span className="text-[10px] font-black italic leading-none text-[#0b4f92]">VISA</span>
-    </span>
-  );
-}
-
-function MastercardMark() {
-  return (
-    <span aria-label="Mastercard" className="relative inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-[2px] bg-[#111111]">
-      <span className="h-4 w-4 rounded-full bg-[#eb001b]" />
-      <span className="-ml-1.5 h-4 w-4 rounded-full bg-[#f79e1b] opacity-95" />
-    </span>
-  );
-}
-
-function StripeMark() {
-  return (
-    <span aria-label="Stripe" className="inline-flex h-8 w-8 items-center justify-center rounded-[5px] bg-[#635bff]">
-      <span className="text-2xl font-black leading-none text-white">S</span>
-    </span>
-  );
-}
-
-function DiscoverMark() {
-  return (
-    <span aria-label="Discover" className="relative inline-flex h-8 w-8 items-center overflow-hidden rounded-[2px] border border-[#f36f21] bg-white px-0.5">
-      <span className="absolute -right-2 top-0 h-full w-5 rounded-l-full bg-gradient-to-b from-[#f36f21] to-[#f9a01b]" />
-      <span className="relative text-[6.5px] font-black tracking-[-0.08em] text-[#231f20]">
-        DISC<span className="inline-block h-1.5 w-1.5 rounded-full bg-gradient-to-r from-[#e7351c] to-[#f9a01b] align-[-0.5px]" />VER
-      </span>
-    </span>
   );
 }
 

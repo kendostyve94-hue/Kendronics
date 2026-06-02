@@ -718,8 +718,8 @@ export default function QuotePage() {
 
         const order = (await orderResponse.json()) as EditableOrder;
         rememberCustomerOrder(order.id);
-        setEditOrder(order);
         setEnregistre(true);
+        resetQuoteFormForNewOrder();
         setQuoteSave({
           status: 'saved',
           orderId: order.id,

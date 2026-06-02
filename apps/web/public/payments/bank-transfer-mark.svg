@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="80" viewBox="0 0 128 80" role="img" aria-labelledby="title">
+  <title id="title">Virement bancaire</title>
+  <rect width="128" height="80" rx="10" fill="#fff"/>
+  <path d="M24 35h80L64 16 24 35Zm8 6v21h10V41H32Zm18 0v21h10V41H50Zm18 0v21h10V41H68Zm18 0v21h10V41H86ZM24 66h80v6H24v-6Z" fill="#0F172A"/>
+  <text x="64" y="32" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="800" fill="#fff">BANK</text>
+</svg>
