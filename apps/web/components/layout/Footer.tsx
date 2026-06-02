@@ -55,10 +55,10 @@ const paymentLogos = [
   { name: 'Apple Pay', src: '/payments/apple-pay-mark.svg', className: 'h-7 w-auto' },
   { name: 'Google Pay', src: '/payments/google-pay-mark.svg', className: 'h-6 w-auto' },
   { name: 'PayPal', src: '/payments/paypal-logo-black.png', className: 'h-4 w-auto' },
-  { name: 'Orange Money', src: '/payments/orange-money-badge-v2.svg', className: 'h-7 w-auto' },
-  { name: 'Wave', src: '/payments/wave-badge-v2.svg', className: 'h-7 w-auto' },
-  { name: 'Moov Money', src: '/payments/moov-money-badge-v2.svg', className: 'h-7 w-auto' },
-  { name: 'MTN Mobile Money', src: '/payments/mtn-momo-badge-v2.svg', className: 'h-7 w-auto' },
+  { name: 'Orange Money', src: '/payments/orange-money-mark.svg', className: 'h-6 w-auto' },
+  { name: 'Wave', src: '/payments/wave-source.png', className: 'h-6 w-auto rounded-full' },
+  { name: 'Moov Money', src: '/payments/moov-money-source.png', className: 'h-6 w-auto' },
+  { name: 'MTN Mobile Money', src: '/payments/mtn-mobile-money-source.png', className: 'h-6 w-auto' },
   { name: 'Virement bancaire', src: '/payments/bank-transfer-mark.svg', className: 'h-6 w-auto' },
 ];
 
