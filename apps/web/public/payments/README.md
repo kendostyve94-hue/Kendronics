@@ -17,10 +17,14 @@ Local transparent vector marks pending final brand-kit replacement:
 - `amex-mark.svg`
 - `apple-pay-mark.svg`
 - `bank-transfer-mark.svg`
-- `orange-money-mark.svg`
-- `wave-mark.svg`
-- `moov-money-mark.svg`
-- `mtn-momo-mark.svg`
+
+Mobile Money source images and production badges:
+- `orange-money-source.png`: Google Play app icon source.
+- `wave-source.png`: Google Play app icon source.
+- `moov-money-source.png`: Google Play app icon source.
+- `mtn-mobile-money-source.png`: logo image source.
+- `orange-money-badge-v2.svg`, `wave-badge-v2.svg`, `moov-money-badge-v2.svg`, `mtn-momo-badge-v2.svg`: local round acceptance badges built from the source images above.
+- Older `*-mark.svg` files are kept only as fallback references.
 
 Pending official assets:
 - Mastercard acceptance mark: use Mastercard brand center resources and follow their usage terms.

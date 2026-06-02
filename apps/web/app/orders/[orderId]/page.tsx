@@ -953,22 +953,22 @@ const paymentBrandAssets: Record<string, { src: string; alt: string; className: 
     className: 'h-7 w-auto',
   },
   'Orange Money': {
-    src: '/payments/orange-money-mark.svg',
+    src: '/payments/orange-money-badge-v2.svg',
     alt: 'Orange Money',
     className: 'h-[88px] w-auto',
   },
   Wave: {
-    src: '/payments/wave-mark.svg',
+    src: '/payments/wave-badge-v2.svg',
     alt: 'Wave',
     className: 'h-[88px] w-auto',
   },
   'Moov Money': {
-    src: '/payments/moov-money-mark.svg',
+    src: '/payments/moov-money-badge-v2.svg',
     alt: 'Moov Money',
     className: 'h-[88px] w-auto',
   },
   'MTN Mobile Money': {
-    src: '/payments/mtn-momo-mark.svg',
+    src: '/payments/mtn-momo-badge-v2.svg',
     alt: 'MTN Mobile Money',
     className: 'h-[88px] w-auto',
   },
