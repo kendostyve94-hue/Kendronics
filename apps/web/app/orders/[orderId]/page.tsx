@@ -140,9 +140,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
 
   useEffect(() => {
     if (!detail) return;
-    setSelectedShippingMethodId((current) => (
-      shippingMethods.some((method) => method.id === current) ? current : shippingMethods[0]?.id || ''
-    ));
+    setSelectedShippingMethodId((current) => (shippingMethods.some((method) => method.id === current) ? current : ''));
   }, [detail?.order.id, shippingMethods]);
 
   useEffect(() => {
@@ -368,7 +366,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
               onMobileMoneyPhoneChange={setMobileMoneyPhone}
               onMobileMoneyCountryIso2Change={setMobileMoneyCountryIso2}
               onConfirm={() => setPaymentMethodConfirmed(true)}
-              onChange={() => setPaymentMethodConfirmed(false)}
+              onChange={() => {
+                setPaymentMethod('');
+                setPaymentMethodConfirmed(false);
+              }}
             />
             <CheckoutSubmitCard
               mode={submissionMode}
@@ -511,17 +512,14 @@ function CheckoutAddressCard({
   onChange: () => void;
 }) {
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>(() => readCheckoutSavedAddresses(address));
-  const [selectedAddressId, setSelectedAddressId] = useState(() => {
-    const addresses = readCheckoutSavedAddresses(address);
-    return (addresses.find((item) => item.isDefault) ?? addresses[0])?.id ?? '';
-  });
+  const [selectedAddressId, setSelectedAddressId] = useState('');
   const selectedAddress = savedAddresses.find((item) => item.id === selectedAddressId) ?? null;
   const canContinue = Boolean(selectedAddress && isCompleteShippingAddress(selectedAddress));
 
   useEffect(() => {
     const nextAddresses = readCheckoutSavedAddresses(address);
     setSavedAddresses(nextAddresses);
-    setSelectedAddressId((current) => current || (nextAddresses.find((item) => item.isDefault) ?? nextAddresses[0])?.id || '');
+    setSelectedAddressId((current) => (nextAddresses.some((item) => item.id === current) ? current : ''));
   }, [address]);
 
   function selectAddress(addressId: string) {
@@ -538,6 +536,18 @@ function CheckoutAddressCard({
     <section className="bg-white p-0 sm:p-5 sm:shadow-sm sm:ring-1 sm:ring-[#e3e7ec]">
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-2xl text-black">1. Adresse de livraison</h2>
+        {confirmed ? (
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedAddressId('');
+              onChange();
+            }}
+            className="text-sm text-[#0f8f6b] hover:text-[#0877ff]"
+          >
+            Modifier
+          </button>
+        ) : null}
       </div>
 
       <div className="mt-6">
@@ -566,23 +576,25 @@ function CheckoutAddressCard({
             Aucune adresse de livraison enregistree. Ajoutez une adresse dans votre profil avant de finaliser la commande.
           </div>
         )}
-        <div className="mt-6 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            disabled={!canContinue}
-            onClick={() => {
-              if (selectedAddress) writeCheckoutAddress(selectedAddress);
-              onConfirm();
-            }}
-            className="inline-flex h-10 items-center justify-center rounded-sm bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-          >
-            Continuer
-          </button>
-          <a href="/profile?view=shipping-address" className="inline-flex h-10 items-center justify-center rounded-sm border border-[#cfd8e3] px-7 text-sm text-[#334155] hover:border-[#0877ff] hover:text-[#0877ff]">
-            Modifier une adresse
-          </a>
-        </div>
-        {!canContinue ? (
+        {!confirmed ? (
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              disabled={!canContinue}
+              onClick={() => {
+                if (selectedAddress) writeCheckoutAddress(selectedAddress);
+                onConfirm();
+              }}
+              className="inline-flex h-10 items-center justify-center rounded-sm bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+            >
+              Continuer
+            </button>
+            <a href="/profile?view=shipping-address" className="inline-flex h-10 items-center justify-center rounded-sm border border-[#cfd8e3] px-7 text-sm text-[#334155] hover:border-[#0877ff] hover:text-[#0877ff]">
+              Modifier une adresse
+            </a>
+          </div>
+        ) : null}
+        {!confirmed && !canContinue ? (
           <p className="mt-3 text-xs leading-5 text-red-600">Enregistrez une adresse de livraison complete dans votre profil avant de continuer.</p>
         ) : null}
       </div>
@@ -613,16 +625,19 @@ function CheckoutShippingCard({
     <section className="bg-white p-0 sm:p-5 sm:shadow-sm sm:ring-1 sm:ring-[#e3e7ec]">
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-2xl text-black">2. M&eacute;thode d'exp&eacute;dition</h2>
-        <button
-          type="button"
-          onClick={() => {
-            onChange();
-            setDialogOpen(true);
-          }}
-          className="text-sm text-[#0f8f6b] hover:text-[#0877ff]"
-        >
-          Modifier
-        </button>
+        {confirmed ? (
+          <button
+            type="button"
+            onClick={() => {
+              onSelectedMethodChange('');
+              onChange();
+              setDialogOpen(true);
+            }}
+            className="text-sm text-[#0f8f6b] hover:text-[#0877ff]"
+          >
+            Modifier
+          </button>
+        ) : null}
       </div>
 
       {selectedMethod ? (
@@ -644,14 +659,25 @@ function CheckoutShippingCard({
         <p className="mt-5 text-sm text-amber-700">Selectionnez une methode d'expedition pour continuer.</p>
       )}
 
-      <button
-        type="button"
-        disabled={!canContinue}
-        onClick={onConfirm}
-        className="mt-6 inline-flex h-10 items-center justify-center rounded-full bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-      >
-        Continuer
-      </button>
+      {!confirmed ? (
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            disabled={!canContinue}
+            onClick={onConfirm}
+            className="inline-flex h-10 items-center justify-center rounded-sm bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+          >
+            Continuer
+          </button>
+          <button
+            type="button"
+            onClick={() => setDialogOpen(true)}
+            className="inline-flex h-10 items-center justify-center rounded-sm border border-[#cfd8e3] px-7 text-sm text-[#334155] hover:border-[#0877ff] hover:text-[#0877ff]"
+          >
+            Modifier
+          </button>
+        </div>
+      ) : null}
 
       {dialogOpen ? (
         <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/45 px-3 py-12 sm:py-16">
@@ -802,14 +828,16 @@ function CheckoutPaymentMethodCard({
         />
       </div>
 
-      <button
-        type="button"
-        disabled={!canContinue}
-        onClick={onConfirm}
-        className="mt-6 inline-flex h-10 items-center justify-center rounded-full bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-      >
-        Continuer
-      </button>
+      {!confirmed ? (
+        <button
+          type="button"
+          disabled={!canContinue}
+          onClick={onConfirm}
+          className="mt-6 inline-flex h-10 items-center justify-center rounded-sm bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+        >
+          Continuer
+        </button>
+      ) : null}
       {mobileMoneyStatus === 'error' && mobileMoneyError ? <p className="mt-3 text-sm font-semibold text-red-700">{mobileMoneyError}</p> : null}
       {method === 'paypal' ? <p className="mt-3 text-xs leading-5 text-amber-700">PayPal doit etre branche cote backend avant activation production.</p> : null}
     </section>
@@ -848,9 +876,7 @@ function PaymentMethodOption({
           <p className="mt-1 text-sm leading-5 text-[#64748b]">{description}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {badges.map((badge) => (
-              <span key={badge} className="inline-flex min-h-8 items-center border border-[#dbe4ee] bg-white px-3 text-xs font-semibold text-[#0f172a]">
-                {badge}
-              </span>
+              <PaymentBrandBadge key={badge} label={badge} />
             ))}
           </div>
           {children}
@@ -858,6 +884,49 @@ function PaymentMethodOption({
       </div>
     </label>
   );
+}
+
+function PaymentBrandBadge({ label }: { label: string }) {
+  if (label === 'Visa') {
+    return <span className="inline-flex h-9 items-center border border-[#dbe4ee] bg-white px-4 text-sm font-black italic tracking-tight text-[#1434cb]">VISA</span>;
+  }
+  if (label === 'Mastercard') {
+    return (
+      <span className="inline-flex h-9 items-center gap-1 border border-[#dbe4ee] bg-white px-3">
+        <span className="h-5 w-5 rounded-full bg-[#eb001b]" />
+        <span className="-ml-3 h-5 w-5 rounded-full bg-[#f79e1b] opacity-90" />
+        <span className="sr-only">Mastercard</span>
+      </span>
+    );
+  }
+  if (label === 'American Express') {
+    return <span className="inline-flex h-9 items-center border border-[#2e77bc] bg-[#2e77bc] px-3 text-xs font-black tracking-tight text-white">AMEX</span>;
+  }
+  if (label === 'Apple Pay') {
+    return <span className="inline-flex h-9 items-center border border-[#dbe4ee] bg-white px-3 text-sm font-semibold text-black">Apple Pay</span>;
+  }
+  if (label === 'Google Pay') {
+    return <span className="inline-flex h-9 items-center border border-[#dbe4ee] bg-white px-3 text-sm font-semibold"><span className="text-[#4285f4]">G</span><span className="text-[#34a853]">o</span><span className="text-[#fbbc05]">o</span><span className="text-[#4285f4]">g</span><span className="text-[#ea4335]">l</span><span className="text-[#34a853]">e</span><span className="ml-1 text-black">Pay</span></span>;
+  }
+  if (label === 'Virement bancaire') {
+    return <span className="inline-flex h-9 items-center gap-2 border border-[#dbe4ee] bg-white px-3 text-xs font-semibold text-[#0f172a]"><span className="text-base">IBAN</span> Virement</span>;
+  }
+  if (label === 'Orange Money') {
+    return <span className="inline-flex h-10 items-center border border-[#ff7900] bg-[#ff7900] px-3 text-xs font-black text-white">Orange<br />Money</span>;
+  }
+  if (label === 'Wave') {
+    return <span className="inline-flex h-10 items-center rounded-full border border-[#2bb8ff] bg-[#2bb8ff] px-4 text-sm font-black text-white">wave</span>;
+  }
+  if (label === 'Moov Money') {
+    return <span className="inline-flex h-10 rotate-[-3deg] items-center border border-[#ff7a00] bg-[#ff7a00] px-3 text-xs font-black italic text-white">Moov Money</span>;
+  }
+  if (label === 'MTN Mobile Money') {
+    return <span className="inline-flex h-10 items-center border border-[#ffcb05] bg-[#ffcb05] px-3 text-xs font-black text-[#10326b]">MTN MoMo</span>;
+  }
+  if (label === 'PayPal') {
+    return <span className="inline-flex h-9 items-center border border-[#dbe4ee] bg-white px-4 text-sm font-black tracking-tight"><span className="text-[#003087]">Pay</span><span className="text-[#009cde]">Pal</span></span>;
+  }
+  return <span className="inline-flex min-h-8 items-center border border-[#dbe4ee] bg-white px-3 text-xs font-semibold text-[#0f172a]">{label}</span>;
 }
 
 function CheckoutAddressFields({
