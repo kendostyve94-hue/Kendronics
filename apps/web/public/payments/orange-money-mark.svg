@@ -1,6 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="80" viewBox="0 0 128 80" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title">
   <title id="title">Orange Money</title>
-  <rect width="128" height="80" rx="10" fill="#FF7900"/>
-  <text x="64" y="35" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="900" fill="#fff">Orange</text>
-  <text x="64" y="57" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="900" fill="#fff">Money</text>
+  <circle cx="64" cy="64" r="48" fill="#F5FBFF" stroke="#0B8FEA" stroke-width="2"/>
+  <path d="M38 39h20v11H47v9h10v10H47v20H38V39Z" fill="#111"/>
+  <path d="M63 39h10v50H63V39Z" fill="#111"/>
+  <path d="M75 50l23-21 7 8-24 21 23 2-1 10-41-5 13-39 10 3-10 21Z" fill="#FF7900"/>
+  <text x="64" y="84" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="900" fill="#111">Orange</text>
+  <text x="64" y="99" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="900" fill="#111">Money</text>
 </svg>

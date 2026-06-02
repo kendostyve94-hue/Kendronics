@@ -782,52 +782,61 @@ function CheckoutPaymentMethodCard({
       </div>
 
       <div className="mt-6 grid gap-3">
-        <PaymentMethodOption
-          value="mobile_money"
-          selected={method === 'mobile_money'}
-          title="Mobile Money"
-          description="Paiement mobile compatible avec les operateurs actifs par pays."
-          badges={['Orange Money', 'Wave', 'Moov Money', 'MTN Mobile Money']}
-          onSelect={onMethodChange}
-        >
-          {method === 'mobile_money' ? (
-            <div className="mt-4 grid gap-3 sm:grid-cols-[160px_1fr]">
-              <select
-                value={mobileMoneyCountryIso2 || destinationCountryIso2}
-                onChange={(event) => onMobileMoneyCountryIso2Change(event.target.value)}
-                className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm outline-none focus:border-[#0f8f6b]"
-              >
-                {africanCountries.map((country) => (
-                  <option key={country.iso2} value={country.iso2}>{country.name}</option>
-                ))}
-              </select>
-              <input
-                value={mobileMoneyPhone}
-                onChange={(event) => onMobileMoneyPhoneChange(event.target.value)}
-                placeholder="Numero Mobile Money"
-                className="h-11 border border-[#cfd8e3] bg-white px-4 text-sm outline-none focus:border-[#0f8f6b]"
-              />
-            </div>
-          ) : null}
-        </PaymentMethodOption>
+        {(!confirmed || method === 'mobile_money') ? (
+          <PaymentMethodOption
+            value="mobile_money"
+            selected={method === 'mobile_money'}
+            locked={confirmed}
+            title="Mobile Money"
+            description="Paiement mobile compatible avec les operateurs actifs par pays."
+            badges={['Orange Money', 'Wave', 'Moov Money', 'MTN Mobile Money']}
+            onSelect={onMethodChange}
+          >
+            {method === 'mobile_money' && !confirmed ? (
+              <div className="mt-4 grid gap-3 sm:grid-cols-[160px_1fr]">
+                <select
+                  value={mobileMoneyCountryIso2 || destinationCountryIso2}
+                  onChange={(event) => onMobileMoneyCountryIso2Change(event.target.value)}
+                  className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm outline-none focus:border-[#0f8f6b]"
+                >
+                  {africanCountries.map((country) => (
+                    <option key={country.iso2} value={country.iso2}>{country.name}</option>
+                  ))}
+                </select>
+                <input
+                  value={mobileMoneyPhone}
+                  onChange={(event) => onMobileMoneyPhoneChange(event.target.value)}
+                  placeholder="Numero Mobile Money"
+                  className="h-11 border border-[#cfd8e3] bg-white px-4 text-sm outline-none focus:border-[#0f8f6b]"
+                />
+              </div>
+            ) : null}
+          </PaymentMethodOption>
+        ) : null}
 
-        <PaymentMethodOption
-          value="stripe"
-          selected={method === 'stripe'}
-          title="Carte et virement securise"
-          description="Paiement via Stripe avec carte bancaire et moyens compatibles configures."
-          badges={['Visa', 'Mastercard', 'American Express', 'Apple Pay', 'Google Pay', 'Virement bancaire']}
-          onSelect={onMethodChange}
-        />
+        {(!confirmed || method === 'stripe') ? (
+          <PaymentMethodOption
+            value="stripe"
+            selected={method === 'stripe'}
+            locked={confirmed}
+            title="Carte et virement securise"
+            description="Paiement via Stripe avec carte bancaire et moyens compatibles configures."
+            badges={['Visa', 'Mastercard', 'American Express', 'Apple Pay', 'Google Pay', 'Virement bancaire']}
+            onSelect={onMethodChange}
+          />
+        ) : null}
 
-        <PaymentMethodOption
-          value="paypal"
-          selected={method === 'paypal'}
-          title="PayPal"
-          description="Paiement PayPal lorsque le module marchand est active."
-          badges={['PayPal']}
-          onSelect={onMethodChange}
-        />
+        {(!confirmed || method === 'paypal') ? (
+          <PaymentMethodOption
+            value="paypal"
+            selected={method === 'paypal'}
+            locked={confirmed}
+            title="PayPal"
+            description="Paiement PayPal lorsque le module marchand est active."
+            badges={['PayPal']}
+            onSelect={onMethodChange}
+          />
+        ) : null}
       </div>
 
       {!confirmed ? (
@@ -853,6 +862,7 @@ function PaymentMethodOption({
   description,
   badges,
   onSelect,
+  locked = false,
   children,
 }: {
   value: PaymentMethod;
@@ -861,16 +871,20 @@ function PaymentMethodOption({
   description: string;
   badges: string[];
   onSelect: (method: PaymentMethod) => void;
+  locked?: boolean;
   children?: ReactNode;
 }) {
   return (
-    <label className={`block cursor-pointer border p-4 transition ${selected ? 'border-[#0f8f6b] bg-[#eefbf4]' : 'border-[#dbe4ee] bg-white hover:border-[#0f8f6b]'}`}>
+    <label className={`block border p-4 transition ${locked ? 'cursor-default' : 'cursor-pointer'} ${selected ? 'border-[#0f8f6b] bg-[#eefbf4]' : 'border-[#dbe4ee] bg-white hover:border-[#0f8f6b]'}`}>
       <div className="flex items-start gap-3">
         <input
           type="radio"
           name="checkout-payment-method"
           checked={selected}
-          onChange={() => onSelect(value)}
+          disabled={locked}
+          onChange={() => {
+            if (!locked) onSelect(value);
+          }}
           className="mt-1 h-4 w-4 accent-[#0f8f6b]"
         />
         <div className="min-w-0 flex-1">
@@ -892,7 +906,7 @@ function PaymentBrandBadge({ label }: { label: string }) {
   const asset = paymentBrandAssets[label];
   if (asset) {
     return (
-      <span className="inline-flex h-9 items-center justify-center border border-[#dbe4ee] bg-white px-3">
+      <span className="inline-flex min-h-12 items-center justify-center border border-[#dbe4ee] bg-white px-3 py-1">
         <img src={asset.src} alt={asset.alt} className={asset.className} loading="lazy" />
       </span>
     );
@@ -925,12 +939,12 @@ const paymentBrandAssets: Record<string, { src: string; alt: string; className: 
   'Apple Pay': {
     src: '/payments/apple-pay-mark.svg',
     alt: 'Apple Pay',
-    className: 'h-7 w-auto',
+    className: 'h-8 w-auto',
   },
   'Google Pay': {
     src: '/payments/google-pay-mark.svg',
     alt: 'Google Pay',
-    className: 'h-5 w-auto',
+    className: 'h-7 w-auto',
   },
   'Virement bancaire': {
     src: '/payments/bank-transfer-mark.svg',
@@ -940,22 +954,22 @@ const paymentBrandAssets: Record<string, { src: string; alt: string; className: 
   'Orange Money': {
     src: '/payments/orange-money-mark.svg',
     alt: 'Orange Money',
-    className: 'h-7 w-auto',
+    className: 'h-12 w-auto',
   },
   Wave: {
     src: '/payments/wave-mark.svg',
     alt: 'Wave',
-    className: 'h-7 w-auto',
+    className: 'h-12 w-auto',
   },
   'Moov Money': {
     src: '/payments/moov-money-mark.svg',
     alt: 'Moov Money',
-    className: 'h-7 w-auto',
+    className: 'h-12 w-auto',
   },
   'MTN Mobile Money': {
     src: '/payments/mtn-momo-mark.svg',
     alt: 'MTN Mobile Money',
-    className: 'h-7 w-auto',
+    className: 'h-12 w-auto',
   },
 };
 
