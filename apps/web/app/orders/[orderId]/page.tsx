@@ -656,7 +656,30 @@ function CheckoutShippingCard({
           </div>
         </div>
       ) : (
-        <p className="mt-5 text-sm text-amber-700">Selectionnez une methode d'expedition pour continuer.</p>
+        <div className="mt-5 space-y-2">
+          <p className="text-sm text-amber-700">Selectionnez une methode d'expedition pour continuer.</p>
+          <div className="grid gap-2">
+            {methods.map((method) => (
+              <label key={method.id} className="grid cursor-pointer gap-3 border border-slate-200 bg-white p-3 text-sm sm:grid-cols-[1fr_auto_auto] sm:items-center">
+                <span className="flex min-w-0 items-center gap-3">
+                  <input
+                    type="radio"
+                    name="checkout-shipping-method-inline"
+                    checked={selectedMethodId === method.id}
+                    onChange={() => onSelectedMethodChange(method.id)}
+                    className="h-4 w-4 accent-[#0f8f6b]"
+                  />
+                  <span className="min-w-0">
+                    <span className="font-semibold text-black">{method.carrier}</span>
+                    <span className="text-slate-600"> / {method.service}</span>
+                  </span>
+                </span>
+                <span className="text-slate-700">{formatMoney(method.amount, method.currency)}</span>
+                <span className="text-slate-700">{method.deliveryDate}</span>
+              </label>
+            ))}
+          </div>
+        </div>
       )}
 
       {!confirmed ? (
@@ -674,7 +697,7 @@ function CheckoutShippingCard({
             onClick={() => setDialogOpen(true)}
             className="inline-flex h-10 items-center justify-center rounded-sm border border-[#cfd8e3] px-7 text-sm text-[#334155] hover:border-[#0877ff] hover:text-[#0877ff]"
           >
-            Modifier
+            Voir les options
           </button>
         </div>
       ) : null}
