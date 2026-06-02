@@ -21,8 +21,7 @@ import type {
 
 type SubmitState = 'idle' | 'submitting' | 'submitted' | 'error';
 
-const heroImage =
-  'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2400&q=85';
+const heroImage = '/images/contact-support-hero.jpg';
 
 const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : '');
@@ -214,7 +213,7 @@ export default function ContactPage() {
 function ContactHero() {
   return (
     <section className="relative min-h-[68vh] overflow-hidden bg-ink text-white">
-      <img src={heroImage} alt="Macro close-up of a printed circuit board" className="absolute inset-0 h-full w-full object-cover" />
+      <img src={heroImage} alt="Conseillere support Kendronics avec casque" className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.84] to-deepblue/[0.56]" />
       <div className="relative mx-auto flex min-h-[68vh] max-w-7xl items-end px-4 pb-20 pt-36 sm:px-6 lg:px-8">
         <div>
