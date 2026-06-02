@@ -13,6 +13,8 @@ import { purgeLegacySensitiveStorage, readScopedLocalStorage, removeScopedLocalS
 
 const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
+const savedShippingAddressesKey = 'kendronics.customer.shipping-addresses';
+const savedBillingAddressesKey = 'kendronics.customer.billing-addresses';
 const siteGreen = '#0f8f6b';
 const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
 const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
@@ -60,6 +62,11 @@ type AccountAddress = {
   postalCode: string;
   taxId: string;
   phone: string;
+};
+
+type SavedAddress = AccountAddress & {
+  id: string;
+  isDefault: boolean;
 };
 
 type DeleteReason =
@@ -2043,16 +2050,42 @@ function AddressFormSection({
   initialAddress?: AccountAddress;
   onSaved: (address: AccountAddress) => void;
 }) {
-  const [address, setAddress] = useState<AccountAddress>(() => normalizeAddress(initialAddress));
+  const storageKey = kind === 'shippingAddress' ? savedShippingAddressesKey : savedBillingAddressesKey;
+  const [address, setAddress] = useState<AccountAddress>(() => emptyAddress(initialAddress));
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>(() => readSavedAddresses(storageKey, initialAddress));
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const isCompany = address.accountType === 'company';
+  const canSave = isCompleteProfileAddress(address);
+
+  useEffect(() => {
+    setSavedAddresses(readSavedAddresses(storageKey, initialAddress));
+  }, [storageKey, initialAddress]);
 
   function update<K extends keyof AccountAddress>(key: K, value: AccountAddress[K]) {
     setAddress((current) => ({ ...current, [key]: value }));
     setStatus('idle');
   }
 
+  function resetForm() {
+    setAddress(emptyAddress({ accountType: address.accountType }));
+    setEditingId(null);
+    setStatus('idle');
+  }
+
+  function editAddress(savedAddress: SavedAddress) {
+    setAddress(normalizeAddress(savedAddress));
+    setEditingId(savedAddress.id);
+    setStatus('idle');
+  }
+
   async function submitAddress(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!canSave) {
+      setStatus('error');
+      return;
+    }
+
     setStatus('saving');
     try {
       const session = await readFreshAuthSession();
@@ -2061,20 +2094,35 @@ function AddressFormSection({
         return;
       }
 
+      const addressToSave = normalizeAddress(address);
       const response = await fetch(`${getApiBaseUrl()}/api/users/me/${kind === 'shippingAddress' ? 'shipping-address' : 'billing-address'}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${session.accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ address }),
+        body: JSON.stringify({ address: addressToSave }),
       });
 
       if (!response.ok) throw new Error(`Address update failed: ${response.status}`);
       const user = (await response.json()) as ProfileUser;
-      const savedAddress = normalizeAddress(kind === 'shippingAddress' ? user.shippingAddress : user.billingAddress);
-      setAddress(savedAddress);
+      const responseAddress = normalizeAddress(kind === 'shippingAddress' ? user.shippingAddress : user.billingAddress);
+      const savedAddress = isCompleteProfileAddress(responseAddress) ? responseAddress : addressToSave;
+      const nextSavedAddress: SavedAddress = {
+        ...savedAddress,
+        id: editingId ?? createAddressId(),
+        isDefault: true,
+      };
+      const nextAddresses = [
+        nextSavedAddress,
+        ...savedAddresses.filter((item) => item.id !== nextSavedAddress.id).map((item) => ({ ...item, isDefault: false })),
+      ];
+      setSavedAddresses(nextAddresses);
+      persistSavedAddresses(storageKey, nextAddresses);
+      persistDefaultAddress(kind, savedAddress);
       onSaved(savedAddress);
+      setAddress(emptyAddress({ accountType: address.accountType }));
+      setEditingId(null);
       setStatus('saved');
     } catch {
       setStatus('error');
@@ -2101,10 +2149,48 @@ function AddressFormSection({
           : "Si l'adresse de livraison ne peut pas etre enregistree, contactez le support Kendronics."}
       </p>
       {status === 'saved' ? <p className="mt-3 text-sm font-semibold text-[#0f8f6b]">Adresse enregistree.</p> : null}
-      {status === 'error' ? <p className="mt-3 text-sm font-semibold text-red-600">Impossible d'enregistrer cette adresse.</p> : null}
-      <button form={`${kind}-form`} type="submit" disabled={status === 'saving'} className="mt-5 bg-[#0f8f6b] px-6 py-2 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-300">
-        {status === 'saving' ? 'Enregistrement...' : 'Soumettre'}
-      </button>
+      {status === 'error' ? <p className="mt-3 text-sm font-semibold text-red-600">Completez tous les champs obligatoires avant d'enregistrer.</p> : null}
+      <div className="mt-5 flex flex-wrap gap-3">
+        <button form={`${kind}-form`} type="submit" disabled={!canSave || status === 'saving'} className="bg-[#0f8f6b] px-6 py-2 text-sm font-black text-white disabled:cursor-not-allowed disabled:bg-slate-300">
+          {status === 'saving' ? 'Enregistrement...' : editingId ? 'Enregistrer les modifications' : 'Enregistrer'}
+        </button>
+        {editingId ? (
+          <button type="button" onClick={resetForm} className="border border-slate-300 bg-white px-6 py-2 text-sm font-black text-slate-700">
+            Annuler
+          </button>
+        ) : null}
+      </div>
+      {savedAddresses.length > 0 ? (
+        <div className="mt-8 max-w-[920px]">
+          <h2 className="text-base font-black text-[#102033]">Adresses enregistrees</h2>
+          <div className="mt-3 space-y-2">
+            {savedAddresses.map((savedAddress) => (
+              <div key={savedAddress.id} className="grid gap-3 border border-slate-200 bg-white p-3 text-sm sm:grid-cols-[1fr_auto_auto] sm:items-center">
+                <label className="flex min-w-0 items-start gap-2">
+                  <input
+                    type="radio"
+                    checked={savedAddress.isDefault}
+                    onChange={() => {
+                      const nextAddresses = savedAddresses.map((item) => ({ ...item, isDefault: item.id === savedAddress.id }));
+                      setSavedAddresses(nextAddresses);
+                      persistSavedAddresses(storageKey, nextAddresses);
+                      persistDefaultAddress(kind, savedAddress);
+                      onSaved(normalizeAddress(savedAddress));
+                    }}
+                    className="mt-1 h-4 w-4 accent-[#0877ff]"
+                  />
+                  <span className="min-w-0 text-slate-700">
+                    <span className="font-semibold text-slate-900">{addressDisplayName(savedAddress)}</span>
+                    <span> / {formatAddressLine(savedAddress)}</span>
+                  </span>
+                </label>
+                {savedAddress.isDefault ? <span className="text-xs font-semibold text-[#0f8f6b]">Defaut</span> : <span className="hidden sm:block" />}
+                <button type="button" onClick={() => editAddress(savedAddress)} className="text-left text-sm font-semibold text-[#0f8f6b] sm:text-right">Modifier</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -2120,15 +2206,17 @@ function AddressFields({
   onUpdate: <K extends keyof AccountAddress>(key: K, value: AccountAddress[K]) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
+  const isCompany = address.accountType === 'company';
   const fields: Array<[keyof AccountAddress, string, boolean?]> = [
     ['firstName', 'Prenom *', true],
-    ['lastName', 'Nom de famille *', true],
-    ['street', 'Adresse de la rue *', true],
+    ['lastName', 'Nom *', true],
+    ['company', isCompany ? "Nom de l'entreprise *" : "Nom de l'entreprise"],
+    ['street', isCompany ? 'Adresse complete de l’entreprise *' : 'Adresse ou quartier *', true],
     ['apartment', 'Appartement, chambre, batiment, etage, etc. (facultatif)'],
     ['country', 'Pays/Region *', true],
     ['region', 'Etat/Province/Region'],
     ['city', 'Ville *', true],
-    ['postalCode', 'Zip/Code postal'],
+    ['postalCode', isCompany ? 'Code postal *' : 'Code postal'],
     ['taxId', 'Numero TVA/identification fiscale'],
     ['phone', 'Telephone mobile *', true],
   ];
@@ -2140,7 +2228,7 @@ function AddressFields({
       {fields.map(([key, placeholder, required]) => (
         <input
           key={key}
-          required={required}
+          required={required || (isCompany && (key === 'company' || key === 'postalCode'))}
           value={address[key]}
           onChange={(event) => onUpdate(key, event.target.value)}
           placeholder={placeholder}
@@ -3485,7 +3573,19 @@ function isInternalAccountEmail(email: string | undefined): boolean {
 }
 
 function isCompleteProfileAddress(address?: AccountAddress): boolean {
-  return Boolean(address?.street?.trim() && address.city?.trim() && address.country?.trim() && address.phone?.trim());
+  if (!address) return false;
+  const baseComplete = Boolean(
+    address.firstName?.trim() &&
+    address.lastName?.trim() &&
+    address.street?.trim() &&
+    address.country?.trim() &&
+    address.city?.trim() &&
+    address.phone?.trim(),
+  );
+  if (address.accountType === 'company') {
+    return Boolean(baseComplete && address.company?.trim() && address.postalCode?.trim());
+  }
+  return baseComplete;
 }
 
 function isAccountLevelOne(profile: ProfileForm): boolean {
@@ -4771,6 +4871,63 @@ function normalizeAddress(value: unknown): AccountAddress {
     taxId: stringValue(source.taxId),
     phone: stringValue(source.phone),
   };
+}
+
+function emptyAddress(seed?: Partial<AccountAddress>): AccountAddress {
+  return normalizeAddress({ accountType: seed?.accountType || 'individual' });
+}
+
+function createAddressId(): string {
+  return `addr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function readSavedAddresses(storageKey: string, initialAddress?: AccountAddress): SavedAddress[] {
+  const stored = readScopedLocalStorage(storageKey);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored) as Array<Partial<SavedAddress>>;
+      const addresses = parsed
+        .map((item, index) => ({
+          ...normalizeAddress(item),
+          id: stringValue(item.id) || createAddressId(),
+          isDefault: Boolean(item.isDefault) || index === 0,
+        }))
+        .filter((item) => isCompleteProfileAddress(item));
+      if (addresses.length > 0) {
+        return addresses.map((item, index) => ({ ...item, isDefault: item.isDefault || index === 0 }));
+      }
+    } catch {
+      // Ignore corrupted local address cache.
+    }
+  }
+
+  const normalized = normalizeAddress(initialAddress);
+  if (!isCompleteProfileAddress(normalized)) return [];
+  return [{ ...normalized, id: createAddressId(), isDefault: true }];
+}
+
+function persistSavedAddresses(storageKey: string, addresses: SavedAddress[]) {
+  writeScopedLocalStorage(storageKey, JSON.stringify(addresses));
+}
+
+function persistDefaultAddress(kind: 'shippingAddress' | 'billingAddress', address: AccountAddress) {
+  try {
+    const stored = JSON.parse(readScopedLocalStorage(profileStorageKey) ?? '{}') as Record<string, unknown>;
+    writeScopedLocalStorage(profileStorageKey, JSON.stringify({ ...stored, [kind]: address }));
+  } catch {
+    writeScopedLocalStorage(profileStorageKey, JSON.stringify({ [kind]: address }));
+  }
+}
+
+function addressDisplayName(address: AccountAddress): string {
+  const fullName = `${address.firstName} ${address.lastName}`.trim();
+  return address.accountType === 'company' && address.company ? `${address.company} - ${fullName}` : fullName;
+}
+
+function formatAddressLine(address: AccountAddress): string {
+  return [address.street, address.apartment, address.city, address.postalCode, countryDisplayName(normalizeProfileCountry(address.country) || address.country), address.phone]
+    .filter(Boolean)
+    .join(', ');
 }
 
 function stringValue(value: unknown): string {

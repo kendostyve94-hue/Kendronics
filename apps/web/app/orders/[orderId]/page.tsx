@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/layout/Navbar';
 import { Card } from '../../../components/ui/Card';
@@ -32,6 +32,7 @@ type PaymentMethod = 'stripe' | 'mobile_money';
 const apiBaseUrl = getApiBaseUrl();
 const customerOrdersStorageKey = 'kendronics.customer.orders';
 const profileStorageKey = 'kendronics.customer.profile';
+const savedShippingAddressesKey = 'kendronics.customer.shipping-addresses';
 
 const countryNames: Record<string, string> = {
   SN: 'Senegal',
@@ -404,6 +405,11 @@ type AccountAddress = {
   phone: string;
 };
 
+type SavedAddress = AccountAddress & {
+  id: string;
+  isDefault: boolean;
+};
+
 type AccountPayload = {
   fullName?: string;
   companyName?: string;
@@ -423,57 +429,21 @@ function CheckoutAddressCard({
   onConfirm: () => void;
   onChange: () => void;
 }) {
-  const [formAddress, setFormAddress] = useState<AccountAddress>(() => normalizeAddress(address));
-  const [editing, setEditing] = useState(!isCompleteShippingAddress(address));
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const canContinue = isCompleteShippingAddress(formAddress);
-  const fieldsDisabled = !editing && canContinue;
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>(() => readCheckoutSavedAddresses(address));
+  const selectedAddress = savedAddresses.find((item) => item.isDefault) ?? savedAddresses[0];
+  const canContinue = Boolean(selectedAddress && isCompleteShippingAddress(selectedAddress));
 
   useEffect(() => {
-    setFormAddress(normalizeAddress(address));
-    setEditing(!isCompleteShippingAddress(address));
+    setSavedAddresses(readCheckoutSavedAddresses(address));
   }, [address]);
 
-  function updateAddress<K extends keyof AccountAddress>(key: K, value: AccountAddress[K]) {
-    setFormAddress((current) => ({ ...current, [key]: value }));
-    setSaveStatus('idle');
+  function selectAddress(addressId: string) {
+    const nextAddresses = savedAddresses.map((item) => ({ ...item, isDefault: item.id === addressId }));
+    const nextSelected = nextAddresses.find((item) => item.id === addressId);
+    setSavedAddresses(nextAddresses);
+    writeScopedLocalStorage(savedShippingAddressesKey, JSON.stringify(nextAddresses));
+    if (nextSelected) writeCheckoutAddress(nextSelected);
     if (confirmed) onChange();
-  }
-
-  async function submitAddress(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!isCompleteShippingAddress(formAddress)) {
-      setSaveStatus('error');
-      return;
-    }
-
-    setSaveStatus('saving');
-    try {
-      const session = await readFreshAuthSession();
-      if (!session) {
-        throw new Error('Session manquante');
-      }
-
-      const response = await fetch(`${apiBaseUrl}/api/users/me/shipping-address`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ address: formAddress }),
-      });
-
-      if (!response.ok) throw new Error(`Address update failed: ${response.status}`);
-      const user = (await response.json()) as { shippingAddress?: AccountAddress };
-      const savedAddress = normalizeAddress(user.shippingAddress ?? formAddress);
-      setFormAddress(savedAddress);
-      writeCheckoutAddress(savedAddress);
-      setEditing(false);
-      setSaveStatus('saved');
-      onConfirm();
-    } catch {
-      setSaveStatus('error');
-    }
   }
 
   return (
@@ -482,46 +452,52 @@ function CheckoutAddressCard({
         <h2 className="text-2xl text-black">1. Adresse de livraison</h2>
       </div>
 
-      <form onSubmit={submitAddress} className="mt-6">
-        <CheckoutAddressFields address={formAddress} disabled={fieldsDisabled} onUpdate={updateAddress} />
+      <div className="mt-6">
+        {savedAddresses.length > 0 ? (
+          <div className="space-y-2">
+            {savedAddresses.map((savedAddress) => (
+              <label key={savedAddress.id} className="grid cursor-pointer gap-3 border border-slate-200 bg-white p-3 text-sm sm:grid-cols-[1fr_auto] sm:items-center">
+                <span className="flex min-w-0 items-start gap-2">
+                  <input
+                    type="radio"
+                    checked={savedAddress.isDefault}
+                    onChange={() => selectAddress(savedAddress.id)}
+                    className="mt-1 h-4 w-4 accent-[#0877ff]"
+                  />
+                  <span className="min-w-0 text-slate-700">
+                    <span className="font-semibold text-slate-900">{addressDisplayName(savedAddress)}</span>
+                    <span> / {formatAddressLine(savedAddress)}</span>
+                  </span>
+                </span>
+                {savedAddress.isDefault ? <span className="text-xs font-semibold text-[#0f8f6b]">Defaut</span> : null}
+              </label>
+            ))}
+          </div>
+        ) : (
+          <div className="border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800">
+            Aucune adresse de livraison enregistree. Ajoutez une adresse dans votre profil avant de finaliser la commande.
+          </div>
+        )}
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          {editing ? (
-            <button
-              type="submit"
-              disabled={saveStatus === 'saving'}
-            className="inline-flex h-10 items-center justify-center rounded-sm bg-[#0f8f6b] px-7 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-            >
-              {saveStatus === 'saving' ? 'Enregistrement...' : 'Enregistrer l\'adresse'}
-            </button>
-          ) : null}
           <button
             type="button"
             disabled={!canContinue}
-            onClick={onConfirm}
+            onClick={() => {
+              if (selectedAddress) writeCheckoutAddress(selectedAddress);
+              onConfirm();
+            }}
             className="inline-flex h-10 items-center justify-center rounded-sm bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             Continuer
           </button>
-          {canContinue && !editing ? (
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(true);
-                onChange();
-              }}
-              className="inline-flex h-10 items-center justify-center rounded-sm border border-[#cfd8e3] px-7 text-sm text-[#334155] hover:border-[#0877ff] hover:text-[#0877ff]"
-            >
-              Modifier
-            </button>
-          ) : null}
-          <a href="/profile?view=shipping-address" className="text-sm text-[#0877ff]">Gerer mes adresses dans le profil</a>
+          <a href="/profile?view=shipping-address" className="inline-flex h-10 items-center justify-center rounded-sm border border-[#cfd8e3] px-7 text-sm text-[#334155] hover:border-[#0877ff] hover:text-[#0877ff]">
+            Modifier une adresse
+          </a>
         </div>
         {!canContinue ? (
-          <p className="mt-3 text-xs leading-5 text-red-600">Enregistrez une adresse de livraison complete avant de continuer.</p>
+          <p className="mt-3 text-xs leading-5 text-red-600">Enregistrez une adresse de livraison complete dans votre profil avant de continuer.</p>
         ) : null}
-        {saveStatus === 'saved' ? <p className="mt-3 text-xs leading-5 text-[#0f8f6b]">Adresse de livraison enregistree.</p> : null}
-        {saveStatus === 'error' ? <p className="mt-3 text-xs leading-5 text-red-600">Impossible d'enregistrer cette adresse. Verifiez les champs obligatoires.</p> : null}
-      </form>
+      </div>
     </section>
   );
 }
@@ -1007,6 +983,28 @@ function writeCheckoutAddress(address: AccountAddress) {
   }
 }
 
+function readCheckoutSavedAddresses(fallbackAddress: AccountAddress): SavedAddress[] {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const parsed = JSON.parse(readScopedLocalStorage(savedShippingAddressesKey) ?? '[]') as Array<Partial<SavedAddress>>;
+    const addresses = parsed
+      .map((item, index) => ({
+        ...normalizeAddress(item),
+        id: typeof item.id === 'string' ? item.id : `addr-${index}`,
+        isDefault: Boolean(item.isDefault) || index === 0,
+      }))
+      .filter((item) => isCompleteShippingAddress(item));
+    if (addresses.length > 0) return addresses.map((item, index) => ({ ...item, isDefault: item.isDefault || index === 0 }));
+  } catch {
+    // Ignore corrupted local address cache.
+  }
+
+  const normalizedFallback = normalizeAddress(fallbackAddress);
+  if (!isCompleteShippingAddress(normalizedFallback)) return [];
+  return [{ ...normalizedFallback, id: 'default-shipping-address', isDefault: true }];
+}
+
 function normalizeAddress(address?: Partial<AccountAddress>): AccountAddress {
   return {
     accountType: address?.accountType === 'company' ? 'company' : 'individual',
@@ -1026,7 +1024,7 @@ function normalizeAddress(address?: Partial<AccountAddress>): AccountAddress {
 
 function isCompleteShippingAddress(address?: AccountAddress): boolean {
   if (!address) return false;
-  return Boolean(
+  const baseComplete = Boolean(
     address.firstName.trim() &&
     address.lastName.trim() &&
     address.street.trim() &&
@@ -1034,6 +1032,17 @@ function isCompleteShippingAddress(address?: AccountAddress): boolean {
     address.city.trim() &&
     address.phone.trim(),
   );
+  if (address.accountType === 'company') return Boolean(baseComplete && address.company.trim() && address.postalCode.trim());
+  return baseComplete;
+}
+
+function addressDisplayName(address: AccountAddress): string {
+  const fullName = `${address.firstName} ${address.lastName}`.trim();
+  return address.accountType === 'company' && address.company ? `${address.company} - ${fullName}` : fullName;
+}
+
+function formatAddressLine(address: AccountAddress): string {
+  return [address.street, address.apartment, address.city, address.postalCode, address.country, address.phone].filter(Boolean).join(', ');
 }
 
 function splitName(name: string): { firstName: string; lastName: string } {
