@@ -170,7 +170,9 @@ export default async function HomePage() {
     <main className="home-page overflow-hidden bg-white text-ink">
       <Navbar />
       <Hero />
+      <MobileQuickAccess />
       <ProductCatalog />
+      <SmartOrdering />
       <WhyBuyPcbSection recentProductionActivity={recentProductionActivity} />
       <HomeCapabilityMatrix />
       <Footer />
@@ -287,7 +289,7 @@ function HomeCapabilityMatrix() {
 
   return (
     <section className="bg-white px-0 py-5 sm:px-4 lg:px-8">
-      <div className="mx-auto grid max-w-none items-start gap-5 xl:grid-cols-[minmax(40rem,1.18fr)_minmax(28rem,0.82fr)]">
+      <div className="mx-auto max-w-none">
         <div className="overflow-y-auto overflow-x-hidden border border-slate-300 bg-white lg:h-[24rem]">
           <table className="w-full table-fixed border-collapse text-left text-xs">
             <thead className="bg-[#d8edf8] text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-900">
@@ -328,8 +330,6 @@ function HomeCapabilityMatrix() {
             </tbody>
           </table>
         </div>
-
-        <SmartOrderingCard className="lg:h-[24rem]" />
       </div>
     </section>
   );
@@ -540,6 +540,16 @@ function MobileQuickAccess() {
             <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
           </a>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function SmartOrdering() {
+  return (
+    <section className="bg-[#eef2f6] px-0 py-4 sm:px-4 lg:px-8">
+      <div className="mx-auto max-w-none">
+        <SmartOrderingCard />
       </div>
     </section>
   );
