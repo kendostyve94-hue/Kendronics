@@ -388,6 +388,7 @@ export default function ProfilePage() {
 
   const firstName = firstNameOf(profile.name || emailName(profile.email) || 'Rafale');
   const userId = formatUserId(accountId);
+  const showViewRightRail = shouldShowProfileRightRail(activeProfileView);
 
   return (
     <main className="mobile-free-page min-h-screen overflow-x-hidden bg-white text-[#1f2f43]">
@@ -398,7 +399,14 @@ export default function ProfilePage() {
 
           <section className="min-w-0">
             {activeProfileView ? (
-              <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onProfileChange={setProfile} onAvatarChange={setAvatarDataUrl} onOrdersChange={setOrders} onNotificationsChange={setNotifications} />
+              showViewRightRail ? (
+                <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+                  <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onProfileChange={setProfile} onAvatarChange={setAvatarDataUrl} onOrdersChange={setOrders} onNotificationsChange={setNotifications} />
+                  <ProfileRightRail />
+                </div>
+              ) : (
+                <ProfileViewContent view={activeProfileView} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} orders={orders} notifications={notifications} dataStatus={dataStatus} onProfileChange={setProfile} onAvatarChange={setAvatarDataUrl} onOrdersChange={setOrders} onNotificationsChange={setNotifications} />
+              )
             ) : (
               <>
                 <div className="grid min-w-0 gap-4">
@@ -3639,6 +3647,37 @@ function ProductQuickGrid() {
     </div>
   );
 }
+
+function shouldShowProfileRightRail(view: ProfileView): boolean {
+  if (!view) return false;
+  if (view === 'all-orders' || view === 'settings' || view === 'invite') return false;
+
+  return [
+    'notifications',
+    'verification',
+    'payment-pending',
+    'production',
+    'delivery',
+    'completed',
+    'comments',
+    'services',
+    'support',
+    'benefits',
+    'shipping-address',
+    'order-history',
+    'billing',
+  ].includes(view);
+}
+
+function ProfileRightRail() {
+  return (
+    <div className="hidden min-w-0 space-y-4 lg:block">
+      <LivePromoFlash />
+      <DiscoverNewsRail />
+    </div>
+  );
+}
+
 function LivePromoFlash() {
   return (
     <aside className="grid min-h-[154px] overflow-hidden bg-white shadow-sm ring-1 ring-[#dbe4ee]" aria-label="Promotions Kendronics">
