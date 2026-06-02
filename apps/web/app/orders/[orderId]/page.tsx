@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../../components/layout/Navbar';
 import { Card } from '../../../components/ui/Card';
@@ -28,7 +29,16 @@ type PageStatus = 'loading' | 'ready' | 'error';
 type CheckoutStatus = 'idle' | 'loading' | 'error';
 type MobileMoneyStatus = 'idle' | 'loading' | 'pending' | 'error';
 type DeleteStatus = 'idle' | 'deleting' | 'error';
-type PaymentMethod = 'stripe' | 'mobile_money';
+type PaymentMethod = 'stripe' | 'mobile_money' | 'paypal';
+type CheckoutShippingMethod = {
+  id: string;
+  carrier: string;
+  service: string;
+  amount: number;
+  currency: CustomerOrderSummary['currency'];
+  transitTime: string;
+  deliveryDate: string;
+};
 const apiBaseUrl = getApiBaseUrl();
 const customerOrdersStorageKey = 'kendronics.customer.orders';
 const profileStorageKey = 'kendronics.customer.profile';
@@ -52,7 +62,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const [status, setStatus] = useState<PageStatus>('loading');
   const [checkoutStatus, setCheckoutStatus] = useState<CheckoutStatus>('idle');
   const [checkoutError, setCheckoutError] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stripe');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | ''>('');
   const [mobileMoneyStatus, setMobileMoneyStatus] = useState<MobileMoneyStatus>('idle');
   const [mobileMoneyError, setMobileMoneyError] = useState('');
   const [mobileMoneyPhone, setMobileMoneyPhone] = useState('');
@@ -61,6 +71,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const [deleteError, setDeleteError] = useState('');
   const [addressConfirmed, setAddressConfirmed] = useState(false);
   const [shippingConfirmed, setShippingConfirmed] = useState(false);
+  const [selectedShippingMethodId, setSelectedShippingMethodId] = useState('');
+  const [paymentMethodConfirmed, setPaymentMethodConfirmed] = useState(false);
   const [submissionMode, setSubmissionMode] = useState<'direct' | 'review_first'>('direct');
   const [paymentTermsAccepted, setPaymentTermsAccepted] = useState(false);
   const [accountAddress, setAccountAddress] = useState<AccountAddress | null>(null);
@@ -124,14 +136,20 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const destination = detail ? countryNames[detail.order.destinationCountryIso2] ?? detail.order.destinationCountryIso2 : '';
   const canCheckout = status === 'ready' && detail?.order.paymentStatus === 'pending';
   const checkoutAddress = useMemo(() => (detail ? accountAddress ?? readCheckoutAddress(destination) : normalizeAddress()), [accountAddress, detail?.order.id, destination]);
-  const shippingLabel = detail ? shippingMethodLabel(detail.order.quoteSnapshot?.shippingMode) : 'Livraison a confirmer';
-  const shippingDelay = detail?.order.quoteSnapshot?.configSnapshot?.liveShippingTransitTime
-    ? String(detail.order.quoteSnapshot.configSnapshot.liveShippingTransitTime)
-    : detail?.order.quoteSnapshot?.configSnapshot?.estimatedShippingTime
-      ? String(detail.order.quoteSnapshot.configSnapshot.estimatedShippingTime)
-      : detail?.order.estimatedDeliveryAt
-        ? formatDate(detail.order.estimatedDeliveryAt)
-        : 'Delai a confirmer';
+  const shippingMethods = useMemo(() => (detail ? buildCheckoutShippingMethods(detail.order) : []), [detail?.order.id]);
+
+  useEffect(() => {
+    if (!detail) return;
+    setSelectedShippingMethodId((current) => (
+      shippingMethods.some((method) => method.id === current) ? current : shippingMethods[0]?.id || ''
+    ));
+  }, [detail?.order.id, shippingMethods]);
+
+  useEffect(() => {
+    if (!detail) return;
+    setMobileMoneyPhone((current) => current || checkoutAddress.phone);
+    setMobileMoneyCountryIso2((current) => current || detail.order.destinationCountryIso2 || 'SN');
+  }, [checkoutAddress.phone, detail?.order.destinationCountryIso2]);
 
   async function startStripeCheckout() {
     if (!detail) return;
@@ -173,6 +191,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
 
   async function startMobileMoneyPayment() {
     if (!detail) return;
+    if (!mobileMoneyPhone.trim()) {
+      setMobileMoneyStatus('error');
+      setMobileMoneyError('Renseignez un numero Mobile Money avant de continuer.');
+      setCheckoutStatus('error');
+      setCheckoutError('Renseignez un numero Mobile Money avant de continuer.');
+      return;
+    }
+    setCheckoutStatus('loading');
+    setCheckoutError('');
     setMobileMoneyStatus('loading');
     setMobileMoneyError('');
 
@@ -207,10 +234,33 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
       }
 
       setMobileMoneyStatus('pending');
+      setCheckoutStatus('idle');
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Impossible de lancer le paiement Mobile Money.';
+      setCheckoutStatus('error');
+      setCheckoutError(message);
       setMobileMoneyStatus('error');
-      setMobileMoneyError(error instanceof Error ? error.message : 'Impossible de lancer le paiement Mobile Money.');
+      setMobileMoneyError(message);
     }
+  }
+
+  async function startPaypalPayment() {
+    setCheckoutStatus('error');
+    setCheckoutError('PayPal n est pas encore branche a une route de paiement production. Activez une API PayPal avant de proposer ce mode au client.');
+  }
+
+  function startSelectedPayment() {
+    if (paymentMethod === 'mobile_money') {
+      void startMobileMoneyPayment();
+      return;
+    }
+
+    if (paymentMethod === 'paypal') {
+      void startPaypalPayment();
+      return;
+    }
+
+    void startStripeCheckout();
   }
 
   async function deleteOrder() {
@@ -290,10 +340,35 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
             />
             <CheckoutShippingCard
               confirmed={shippingConfirmed}
-              shippingLabel={shippingLabel}
-              shippingDelay={shippingDelay}
+              methods={shippingMethods}
+              selectedMethodId={selectedShippingMethodId}
+              onSelectedMethodChange={(methodId) => {
+                setSelectedShippingMethodId(methodId);
+                if (shippingConfirmed) setShippingConfirmed(false);
+              }}
               onConfirm={() => setShippingConfirmed(true)}
               onChange={() => setShippingConfirmed(false)}
+            />
+            <CheckoutPaymentMethodCard
+              method={paymentMethod}
+              confirmed={paymentMethodConfirmed}
+              mobileMoneyPhone={mobileMoneyPhone}
+              mobileMoneyCountryIso2={mobileMoneyCountryIso2}
+              mobileMoneyStatus={mobileMoneyStatus}
+              mobileMoneyError={mobileMoneyError}
+              destinationCountryIso2={detail.order.destinationCountryIso2}
+              onMethodChange={(nextMethod) => {
+                setPaymentMethod(nextMethod);
+                setPaymentMethodConfirmed(false);
+                setCheckoutStatus('idle');
+                setCheckoutError('');
+                setMobileMoneyStatus('idle');
+                setMobileMoneyError('');
+              }}
+              onMobileMoneyPhoneChange={setMobileMoneyPhone}
+              onMobileMoneyCountryIso2Change={setMobileMoneyCountryIso2}
+              onConfirm={() => setPaymentMethodConfirmed(true)}
+              onChange={() => setPaymentMethodConfirmed(false)}
             />
             <CheckoutSubmitCard
               mode={submissionMode}
@@ -312,8 +387,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
               submissionMode={submissionMode}
               addressConfirmed={addressConfirmed}
               shippingConfirmed={shippingConfirmed}
+              paymentMethodConfirmed={paymentMethodConfirmed}
+              paymentMethod={paymentMethod}
               termsAccepted={paymentTermsAccepted}
-              onCheckout={submissionMode === 'direct' ? startStripeCheckout : () => router.push(`/contact?orderId=${encodeURIComponent(detail.order.id)}&topic=review-before-payment`)}
+              onCheckout={submissionMode === 'direct' ? startSelectedPayment : () => router.push(`/contact?orderId=${encodeURIComponent(detail.order.id)}&topic=review-before-payment`)}
             />
           </div>
           <div className="fixed bottom-16 right-8 hidden h-[62px] w-[62px] place-items-center rounded-full bg-white text-xs text-[#0f8f6b] shadow-sm ring-1 ring-[#dbe4ee] xl:grid">
@@ -334,6 +411,8 @@ function SummaryCard({
   submissionMode,
   addressConfirmed,
   shippingConfirmed,
+  paymentMethodConfirmed,
+  paymentMethod,
   termsAccepted,
   onCheckout,
 }: {
@@ -344,6 +423,8 @@ function SummaryCard({
   submissionMode: 'direct' | 'review_first';
   addressConfirmed: boolean;
   shippingConfirmed: boolean;
+  paymentMethodConfirmed: boolean;
+  paymentMethod: PaymentMethod | '';
   termsAccepted: boolean;
   onCheckout: () => void;
 }) {
@@ -351,7 +432,7 @@ function SummaryCard({
   const shipping = quote ? lineAmount(quote.breakdown, ['FranceToAfricaDelivery', 'franceToAfricaDelivery']) : 0;
   const taxes = quote ? lineAmount(quote.breakdown, ['taxesIfApplicable', 'customsRiskBuffer']) : 0;
   const merchandise = Math.max(0, order.totalPrice - shipping - taxes);
-  const canSubmit = canCheckout && addressConfirmed && shippingConfirmed && termsAccepted && checkoutStatus !== 'loading';
+  const canSubmit = canCheckout && addressConfirmed && shippingConfirmed && paymentMethodConfirmed && termsAccepted && checkoutStatus !== 'loading';
 
   return (
     <aside className="bg-white p-0 sm:p-8 sm:shadow-sm sm:ring-1 sm:ring-[#e3e7ec]">
@@ -378,12 +459,12 @@ function SummaryCard({
           canSubmit ? 'bg-[#0877ff] hover:bg-[#0068e8]' : 'cursor-not-allowed bg-slate-300'
         }`}
       >
-        {submissionMode === 'direct' ? stripeButtonLabel(order.paymentStatus, checkoutStatus) : 'Soumettre la commande'}
+        {submissionMode === 'direct' ? paymentButtonLabel(paymentMethod, order.paymentStatus, checkoutStatus) : 'Soumettre la commande'}
       </button>
 
       {checkoutStatus === 'error' ? <p className="mt-3 text-sm font-bold text-red-700">{checkoutError}</p> : null}
-      {!addressConfirmed || !shippingConfirmed || !termsAccepted ? (
-        <p className="mt-3 text-xs leading-5 text-[#8b929b]">Enregistrez l'adresse, confirmez la livraison et acceptez les conditions de paiement pour continuer.</p>
+      {!addressConfirmed || !shippingConfirmed || !paymentMethodConfirmed || !termsAccepted ? (
+        <p className="mt-3 text-xs leading-5 text-[#8b929b]">Confirmez l'adresse, la livraison, le moyen de paiement et les conditions pour continuer.</p>
       ) : null}
     </aside>
   );
@@ -430,16 +511,23 @@ function CheckoutAddressCard({
   onChange: () => void;
 }) {
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>(() => readCheckoutSavedAddresses(address));
-  const selectedAddress = savedAddresses.find((item) => item.isDefault) ?? savedAddresses[0];
+  const [selectedAddressId, setSelectedAddressId] = useState(() => {
+    const addresses = readCheckoutSavedAddresses(address);
+    return (addresses.find((item) => item.isDefault) ?? addresses[0])?.id ?? '';
+  });
+  const selectedAddress = savedAddresses.find((item) => item.id === selectedAddressId) ?? null;
   const canContinue = Boolean(selectedAddress && isCompleteShippingAddress(selectedAddress));
 
   useEffect(() => {
-    setSavedAddresses(readCheckoutSavedAddresses(address));
+    const nextAddresses = readCheckoutSavedAddresses(address);
+    setSavedAddresses(nextAddresses);
+    setSelectedAddressId((current) => current || (nextAddresses.find((item) => item.isDefault) ?? nextAddresses[0])?.id || '');
   }, [address]);
 
   function selectAddress(addressId: string) {
     const nextAddresses = savedAddresses.map((item) => ({ ...item, isDefault: item.id === addressId }));
     const nextSelected = nextAddresses.find((item) => item.id === addressId);
+    setSelectedAddressId(addressId);
     setSavedAddresses(nextAddresses);
     writeScopedLocalStorage(savedShippingAddressesKey, JSON.stringify(nextAddresses));
     if (nextSelected) writeCheckoutAddress(nextSelected);
@@ -460,7 +548,7 @@ function CheckoutAddressCard({
                 <span className="flex min-w-0 items-start gap-2">
                   <input
                     type="radio"
-                    checked={savedAddress.isDefault}
+                    checked={selectedAddressId === savedAddress.id}
                     onChange={() => selectAddress(savedAddress.id)}
                     className="mt-1 h-4 w-4 accent-[#0877ff]"
                   />
@@ -504,41 +592,271 @@ function CheckoutAddressCard({
 
 function CheckoutShippingCard({
   confirmed,
-  shippingLabel,
-  shippingDelay,
+  methods,
+  selectedMethodId,
+  onSelectedMethodChange,
   onConfirm,
   onChange,
 }: {
   confirmed: boolean;
-  shippingLabel: string;
-  shippingDelay: string;
+  methods: CheckoutShippingMethod[];
+  selectedMethodId: string;
+  onSelectedMethodChange: (methodId: string) => void;
   onConfirm: () => void;
   onChange: () => void;
 }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const selectedMethod = methods.find((method) => method.id === selectedMethodId) ?? null;
+  const canContinue = Boolean(selectedMethod);
+
   return (
     <section className="bg-white p-0 sm:p-5 sm:shadow-sm sm:ring-1 sm:ring-[#e3e7ec]">
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-2xl text-black">2. M&eacute;thode d'exp&eacute;dition</h2>
-        {confirmed ? <button type="button" onClick={onChange} className="text-sm text-[#8b929b] hover:text-[#0877ff]">Changer</button> : null}
+        <button
+          type="button"
+          onClick={() => {
+            onChange();
+            setDialogOpen(true);
+          }}
+          className="text-sm text-[#0f8f6b] hover:text-[#0877ff]"
+        >
+          Modifier
+        </button>
       </div>
-      {confirmed ? (
-        <div className="mt-6 flex gap-12 text-sm text-black">
-          <span>{shippingLabel}</span>
-          <span>{shippingDelay}</span>
+
+      {selectedMethod ? (
+        <div className="mt-6 grid gap-3 text-sm text-black sm:grid-cols-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.14em] text-[#64748b]">Agence</p>
+            <p className="mt-1 font-semibold">{selectedMethod.carrier}</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.14em] text-[#64748b]">Mode</p>
+            <p className="mt-1 font-semibold">{selectedMethod.service}</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.14em] text-[#64748b]">Livraison estimee</p>
+            <p className="mt-1 font-semibold">{selectedMethod.deliveryDate}</p>
+          </div>
         </div>
       ) : (
-        <div className="mt-5">
-          <label className="flex items-center gap-4 text-sm text-black">
-            <input type="radio" name="shipping-method" defaultChecked className="h-4 w-4 accent-[#0877ff]" />
-            <span>{shippingLabel}</span>
-            <span>{shippingDelay}</span>
-          </label>
-          <button type="button" onClick={onConfirm} className="mt-6 inline-flex h-10 items-center justify-center rounded-full bg-[#0877ff] px-8 text-sm text-white">
-            Continuer
-          </button>
-        </div>
+        <p className="mt-5 text-sm text-amber-700">Selectionnez une methode d'expedition pour continuer.</p>
       )}
+
+      <button
+        type="button"
+        disabled={!canContinue}
+        onClick={onConfirm}
+        className="mt-6 inline-flex h-10 items-center justify-center rounded-full bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+      >
+        Continuer
+      </button>
+
+      {dialogOpen ? (
+        <div className="fixed inset-0 z-[80] overflow-y-auto bg-black/45 px-3 py-12 sm:py-16">
+          <div className="mx-auto mt-14 max-w-[760px] bg-white p-5 shadow-xl sm:mt-10 sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.14em] text-[#0f8f6b]">Livraison</p>
+                <h3 className="mt-1 text-2xl text-black">Choisir le mode de livraison</h3>
+              </div>
+              <button type="button" onClick={() => setDialogOpen(false)} className="text-3xl leading-none text-[#0f172a]">&times;</button>
+            </div>
+
+            <div className="mt-6 overflow-x-auto">
+              <table className="min-w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-[#dfe5ec] text-left text-xs uppercase tracking-[0.12em] text-[#64748b]">
+                    <th className="w-10 py-3" />
+                    <th className="py-3">Mode de livraison</th>
+                    <th className="py-3">Couts</th>
+                    <th className="py-3">Date de livraison</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {methods.map((method) => (
+                    <tr key={method.id} className="border-b border-[#eef2f7]">
+                      <td className="py-3">
+                        <input
+                          type="radio"
+                          name="checkout-shipping-method"
+                          checked={selectedMethodId === method.id}
+                          onChange={() => onSelectedMethodChange(method.id)}
+                          className="h-4 w-4 accent-[#0f8f6b]"
+                        />
+                      </td>
+                      <td className="py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex min-w-[64px] justify-center border border-[#f0c200] bg-[#ffd73a] px-3 py-1 text-xs italic text-red-600">{method.carrier}</span>
+                          <span>{method.service}</span>
+                        </div>
+                      </td>
+                      <td className="py-3">{formatMoney(method.amount, method.currency)}</td>
+                      <td className="py-3">{method.deliveryDate}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-7 flex justify-center">
+              <button
+                type="button"
+                disabled={!selectedMethodId}
+                onClick={() => setDialogOpen(false)}
+                className="inline-flex h-11 items-center justify-center rounded-sm bg-[#0f8f6b] px-10 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                Appliquer
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+function CheckoutPaymentMethodCard({
+  method,
+  confirmed,
+  mobileMoneyPhone,
+  mobileMoneyCountryIso2,
+  mobileMoneyStatus,
+  mobileMoneyError,
+  destinationCountryIso2,
+  onMethodChange,
+  onMobileMoneyPhoneChange,
+  onMobileMoneyCountryIso2Change,
+  onConfirm,
+  onChange,
+}: {
+  method: PaymentMethod | '';
+  confirmed: boolean;
+  mobileMoneyPhone: string;
+  mobileMoneyCountryIso2: string;
+  mobileMoneyStatus: MobileMoneyStatus;
+  mobileMoneyError: string;
+  destinationCountryIso2: string;
+  onMethodChange: (method: PaymentMethod) => void;
+  onMobileMoneyPhoneChange: (phone: string) => void;
+  onMobileMoneyCountryIso2Change: (countryIso2: string) => void;
+  onConfirm: () => void;
+  onChange: () => void;
+}) {
+  const canContinue = Boolean(method) && (method !== 'mobile_money' || Boolean(mobileMoneyPhone.trim()));
+
+  return (
+    <section className="bg-white p-0 sm:p-5 sm:shadow-sm sm:ring-1 sm:ring-[#e3e7ec]">
+      <div className="flex items-start justify-between gap-4">
+        <h2 className="text-2xl text-black">3. Mode de paiement</h2>
+        {confirmed ? <button type="button" onClick={onChange} className="text-sm text-[#0f8f6b] hover:text-[#0877ff]">Modifier</button> : null}
+      </div>
+
+      <div className="mt-6 grid gap-3">
+        <PaymentMethodOption
+          value="mobile_money"
+          selected={method === 'mobile_money'}
+          title="Mobile Money"
+          description="Paiement mobile compatible avec les operateurs actifs par pays."
+          badges={['Orange Money', 'Wave', 'Moov Money', 'MTN Mobile Money']}
+          onSelect={onMethodChange}
+        >
+          {method === 'mobile_money' ? (
+            <div className="mt-4 grid gap-3 sm:grid-cols-[160px_1fr]">
+              <select
+                value={mobileMoneyCountryIso2 || destinationCountryIso2}
+                onChange={(event) => onMobileMoneyCountryIso2Change(event.target.value)}
+                className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm outline-none focus:border-[#0f8f6b]"
+              >
+                {africanCountries.map((country) => (
+                  <option key={country.iso2} value={country.iso2}>{country.name}</option>
+                ))}
+              </select>
+              <input
+                value={mobileMoneyPhone}
+                onChange={(event) => onMobileMoneyPhoneChange(event.target.value)}
+                placeholder="Numero Mobile Money"
+                className="h-11 border border-[#cfd8e3] bg-white px-4 text-sm outline-none focus:border-[#0f8f6b]"
+              />
+            </div>
+          ) : null}
+        </PaymentMethodOption>
+
+        <PaymentMethodOption
+          value="stripe"
+          selected={method === 'stripe'}
+          title="Carte et virement securise"
+          description="Paiement via Stripe avec carte bancaire et moyens compatibles configures."
+          badges={['Visa', 'Mastercard', 'American Express', 'Apple Pay', 'Google Pay', 'Virement bancaire']}
+          onSelect={onMethodChange}
+        />
+
+        <PaymentMethodOption
+          value="paypal"
+          selected={method === 'paypal'}
+          title="PayPal"
+          description="Paiement PayPal lorsque le module marchand est active."
+          badges={['PayPal']}
+          onSelect={onMethodChange}
+        />
+      </div>
+
+      <button
+        type="button"
+        disabled={!canContinue}
+        onClick={onConfirm}
+        className="mt-6 inline-flex h-10 items-center justify-center rounded-full bg-[#0877ff] px-8 text-sm text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+      >
+        Continuer
+      </button>
+      {mobileMoneyStatus === 'error' && mobileMoneyError ? <p className="mt-3 text-sm font-semibold text-red-700">{mobileMoneyError}</p> : null}
+      {method === 'paypal' ? <p className="mt-3 text-xs leading-5 text-amber-700">PayPal doit etre branche cote backend avant activation production.</p> : null}
+    </section>
+  );
+}
+
+function PaymentMethodOption({
+  value,
+  selected,
+  title,
+  description,
+  badges,
+  onSelect,
+  children,
+}: {
+  value: PaymentMethod;
+  selected: boolean;
+  title: string;
+  description: string;
+  badges: string[];
+  onSelect: (method: PaymentMethod) => void;
+  children?: ReactNode;
+}) {
+  return (
+    <label className={`block cursor-pointer border p-4 transition ${selected ? 'border-[#0f8f6b] bg-[#eefbf4]' : 'border-[#dbe4ee] bg-white hover:border-[#0f8f6b]'}`}>
+      <div className="flex items-start gap-3">
+        <input
+          type="radio"
+          name="checkout-payment-method"
+          checked={selected}
+          onChange={() => onSelect(value)}
+          className="mt-1 h-4 w-4 accent-[#0f8f6b]"
+        />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-black">{title}</p>
+          <p className="mt-1 text-sm leading-5 text-[#64748b]">{description}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {badges.map((badge) => (
+              <span key={badge} className="inline-flex min-h-8 items-center border border-[#dbe4ee] bg-white px-3 text-xs font-semibold text-[#0f172a]">
+                {badge}
+              </span>
+            ))}
+          </div>
+          {children}
+        </div>
+      </div>
+    </label>
   );
 }
 
@@ -603,10 +921,10 @@ function CheckoutSubmitCard({
 }) {
   return (
     <section className="bg-white p-0 sm:p-5 sm:shadow-sm sm:ring-1 sm:ring-[#e3e7ec]">
-      <h2 className="text-2xl text-black">3. Soumettre la commande</h2>
+      <h2 className="text-2xl text-black">4. Soumettre ma commande</h2>
       <div className="mt-6 space-y-5 text-sm leading-6 text-[#334155]">
         <p>
-          En continuant, votre commande passe au paiement securise par carte. Le montant est d'abord autorise, sans capture immediate. Les fichiers et les parametres techniques sont controles avant le lancement de la production.
+          En continuant, votre commande passe vers le moyen de paiement selectionne. Le montant est d'abord autorise, sans capture immediate. Les fichiers et les parametres techniques sont controles avant le lancement de la production.
         </p>
         <p>
           Si les fichiers sont acceptes, le paiement est capture et la production demarre. Si une anomalie bloque le lancement, vous pouvez corriger une fois ou abandonner. Apres un second refus, l'autorisation est annulee automatiquement et le montant est libere.
@@ -1059,6 +1377,87 @@ function shippingMethodLabel(mode?: string): string {
   return 'Livraison a confirmer';
 }
 
+function buildCheckoutShippingMethods(order: CustomerOrderSummary): CheckoutShippingMethod[] {
+  const quote = order.quoteSnapshot;
+  const config = quote?.configSnapshot ?? {};
+  const currency = order.currency;
+  const baseShipping = quote ? lineAmount(quote.breakdown, ['FranceToAfricaDelivery', 'franceToAfricaDelivery']) : 0;
+  const liveAmount = numberValue(config.liveShippingAmount) ?? baseShipping;
+  const liveCarrier = stringValue(config.liveShippingCarrier) ?? shippingCarrierFromMode(quote?.shippingMode);
+  const liveService = stringValue(config.liveShippingService) ?? shippingMethodLabel(quote?.shippingMode);
+  const liveTransit = stringValue(config.liveShippingTransitTime) ?? stringValue(config.estimatedShippingTime) ?? '2-4 jours ouvres';
+  const selectedMethod: CheckoutShippingMethod = {
+    id: 'quote-selected',
+    carrier: liveCarrier,
+    service: liveService,
+    amount: liveAmount,
+    currency,
+    transitTime: liveTransit,
+    deliveryDate: deliveryDateLabel(order, liveTransit),
+  };
+
+  const candidates: CheckoutShippingMethod[] = [
+    selectedMethod,
+    {
+      id: 'dhl-express',
+      carrier: 'DHL',
+      service: 'DHL Express',
+      amount: liveAmount || baseShipping,
+      currency,
+      transitTime: '2-4 jours ouvres',
+      deliveryDate: deliveryDateLabel(order, '2-4 jours ouvres'),
+    },
+    {
+      id: 'dhl-dtp',
+      carrier: 'DHL',
+      service: 'DHL(DTP)',
+      amount: liveAmount || baseShipping,
+      currency,
+      transitTime: '2-4 jours ouvres',
+      deliveryDate: deliveryDateLabel(order, '2-4 jours ouvres'),
+    },
+    {
+      id: 'global-standard',
+      carrier: 'Global',
+      service: 'Livraison standard internationale',
+      amount: Math.max(0, Math.round((liveAmount || baseShipping) * 0.72 * 100) / 100),
+      currency,
+      transitTime: '7-12 jours ouvres',
+      deliveryDate: deliveryDateLabel(undefined, '7-12 jours ouvres'),
+    },
+  ];
+
+  const seen = new Set<string>();
+  return candidates.filter((method) => {
+    const key = `${method.carrier}-${method.service}-${method.transitTime}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function shippingCarrierFromMode(mode?: string): string {
+  if (mode === 'express') return 'DHL';
+  if (mode === 'standard') return 'Global';
+  if (mode === 'economy') return 'Global';
+  return 'Transporteur';
+}
+
+function deliveryDateLabel(order: CustomerOrderSummary | undefined, transitTime: string): string {
+  if (order?.estimatedDeliveryAt) return `${formatDate(order.estimatedDeliveryAt)} (${transitTime})`;
+  const days = maxTransitDays(transitTime);
+  if (!days) return transitTime;
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return `${formatDate(date.toISOString())} (${transitTime})`;
+}
+
+function maxTransitDays(transitTime: string): number | null {
+  const numbers = transitTime.match(/\d+/g)?.map(Number).filter(Number.isFinite) ?? [];
+  if (numbers.length === 0) return null;
+  return Math.max(...numbers);
+}
+
 function lineAmount(breakdown: Record<string, number>, keys: string[]): number {
   return keys.reduce((total, key) => total + Number(breakdown[key] ?? 0), 0);
 }
@@ -1075,6 +1474,12 @@ function stripeButtonLabel(paymentStatus: PaymentStatus, checkoutStatus: Checkou
 function mobileMoneyButtonLabel(paymentStatus: PaymentStatus, mobileMoneyStatus: MobileMoneyStatus): string {
   if (mobileMoneyStatus === 'loading') return 'Demande en cours...';
   return paymentActionLabel(paymentStatus, 'Payer par Mobile Money');
+}
+
+function paymentButtonLabel(method: PaymentMethod | '', paymentStatus: PaymentStatus, checkoutStatus: CheckoutStatus): string {
+  if (method === 'mobile_money') return paymentActionLabel(paymentStatus, 'Autoriser par Mobile Money');
+  if (method === 'paypal') return paymentActionLabel(paymentStatus, 'Autoriser avec PayPal');
+  return stripeButtonLabel(paymentStatus, checkoutStatus);
 }
 
 function paymentActionLabel(paymentStatus: PaymentStatus, defaultLabel: string): string {
