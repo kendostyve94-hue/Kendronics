@@ -905,8 +905,9 @@ function PaymentMethodOption({
 function PaymentBrandBadge({ label }: { label: string }) {
   const asset = paymentBrandAssets[label];
   if (asset) {
+    const isMobileMoney = ['Orange Money', 'Wave', 'Moov Money', 'MTN Mobile Money'].includes(label);
     return (
-      <span className="inline-flex min-h-12 items-center justify-center border border-[#dbe4ee] bg-white px-3 py-1">
+      <span className={`inline-flex items-center justify-center border border-[#dbe4ee] bg-white px-3 py-1 ${isMobileMoney ? 'h-[112px] w-[154px]' : 'min-h-12'}`}>
         <img src={asset.src} alt={asset.alt} className={asset.className} loading="lazy" />
       </span>
     );
@@ -954,22 +955,22 @@ const paymentBrandAssets: Record<string, { src: string; alt: string; className: 
   'Orange Money': {
     src: '/payments/orange-money-mark.svg',
     alt: 'Orange Money',
-    className: 'h-12 w-auto',
+    className: 'h-[88px] w-auto',
   },
   Wave: {
     src: '/payments/wave-mark.svg',
     alt: 'Wave',
-    className: 'h-12 w-auto',
+    className: 'h-[88px] w-auto',
   },
   'Moov Money': {
     src: '/payments/moov-money-mark.svg',
     alt: 'Moov Money',
-    className: 'h-12 w-auto',
+    className: 'h-[88px] w-auto',
   },
   'MTN Mobile Money': {
     src: '/payments/mtn-momo-mark.svg',
     alt: 'MTN Mobile Money',
-    className: 'h-12 w-auto',
+    className: 'h-[88px] w-auto',
   },
 };
 

@@ -1,7 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-labelledby="title">
   <title id="title">Moov Money</title>
-  <circle cx="64" cy="64" r="48" fill="#F5FBFF" stroke="#0B8FEA" stroke-width="2"/>
-  <path d="M36 42l53-6 22 29-47 31-47-31 19-23Z" fill="#FF7900"/>
-  <text x="63" y="61" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="900" font-style="italic" fill="#fff">MOOV</text>
-  <text x="63" y="78" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="900" font-style="italic" fill="#fff">Money</text>
+  <defs>
+    <linearGradient id="moov-ring" x1="26" y1="22" x2="136" y2="136" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FCFF"/>
+      <stop offset="1" stop-color="#E6F4FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="80" cy="80" r="60" fill="url(#moov-ring)" stroke="#0788E8" stroke-width="2"/>
+  <path d="M48 49 94 43l31 34-45 40-45-40 13-28Z" fill="#FF7900"/>
+  <path d="M53 50 93 46l27 31-40 35-40-35 13-27Z" fill="#FF861A"/>
+  <text x="80" y="78" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="900" font-style="italic" fill="#fff">MOOV</text>
+  <text x="80" y="96" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="900" font-style="italic" fill="#fff">Money</text>
+  <path d="M38 76h12M110 76h12" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
 </svg>

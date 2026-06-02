@@ -1,11 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-labelledby="title">
   <title id="title">Wave</title>
-  <circle cx="64" cy="64" r="48" fill="#F5FBFF" stroke="#0B8FEA" stroke-width="2"/>
-  <circle cx="64" cy="64" r="34" fill="#18B8F5"/>
-  <ellipse cx="64" cy="63" rx="18" ry="23" fill="#111"/>
-  <circle cx="57" cy="55" r="3" fill="#fff"/>
-  <circle cx="70" cy="55" r="3" fill="#fff"/>
-  <path d="M50 70c8 7 20 7 28 0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
-  <path d="M80 44l9-7 3 11" fill="none" stroke="#FF7900" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="64" y="98" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="900" fill="#fff">wave</text>
+  <defs>
+    <linearGradient id="wave-ring" x1="26" y1="22" x2="136" y2="136" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FCFF"/>
+      <stop offset="1" stop-color="#E6F4FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="80" cy="80" r="60" fill="url(#wave-ring)" stroke="#0788E8" stroke-width="2"/>
+  <circle cx="80" cy="80" r="49" fill="#18B8F5"/>
+  <g transform="translate(0 -2)">
+    <ellipse cx="80" cy="75" rx="22" ry="30" fill="#111"/>
+    <circle cx="71" cy="65" r="3.6" fill="#fff"/>
+    <circle cx="88" cy="65" r="3.6" fill="#fff"/>
+    <path d="M63 84c10 9 25 9 35 0" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+    <path d="M99 49l11-8 4 13" fill="none" stroke="#FF7900" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="80" y="121" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="900" fill="#fff">wave</text>
 </svg>
