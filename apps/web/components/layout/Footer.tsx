@@ -36,15 +36,15 @@ const footerGroups = [
 const deliveryLogos = [
   {
     name: 'DHL Express',
-    label: 'DHL',
-    className: 'bg-[#ffcc00]',
-    textClassName: 'text-[#d40511]',
+    src: 'https://cdn.simpleicons.org/dhl/D40511',
+    className: 'h-4 w-auto',
+    tileClassName: 'bg-[#ffcc00]',
   },
   {
     name: 'FedEx Express',
-    label: 'FedEx',
-    className: 'bg-[#4d148c]',
-    textClassName: 'text-white',
+    src: 'https://cdn.simpleicons.org/fedex/4D148C',
+    className: 'h-4 w-auto',
+    tileClassName: 'bg-white',
   },
 ];
 
@@ -165,8 +165,12 @@ function DeliveryLogoStrip() {
       <h3 className="text-sm font-medium text-slate-300">Services de livraison</h3>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {deliveryLogos.map((logo) => (
-          <span key={logo.name} aria-label={logo.name} className={`inline-flex h-8 min-w-8 items-center justify-center overflow-hidden rounded-sm border border-[#5d6670] px-1.5 ${logo.className}`}>
-            <span className={`font-sans text-[10px] font-bold leading-none ${logo.textClassName}`}>{logo.label}</span>
+          <span
+            key={logo.name}
+            aria-label={logo.name}
+            className={`inline-flex h-8 min-w-12 items-center justify-center overflow-hidden rounded-[3px] border border-[#dbe4ee] px-2 ${logo.tileClassName}`}
+          >
+            <img src={logo.src} alt="" className={logo.className} loading="lazy" />
           </span>
         ))}
       </div>
