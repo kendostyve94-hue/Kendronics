@@ -2,7 +2,7 @@
 
 import { use, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Navbar } from '../../../components/layout/Navbar';
 import { Card } from '../../../components/ui/Card';
 import { getApiBaseUrl } from '../../../lib/api-base-url';
@@ -58,6 +58,7 @@ const countryNames: Record<string, string> = {
 export default function OrderDetailPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [detail, setDetail] = useState<OrderDetailResponse | null>(null);
   const [status, setStatus] = useState<PageStatus>('loading');
   const [checkoutStatus, setCheckoutStatus] = useState<CheckoutStatus>('idle');
@@ -76,6 +77,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   const [submissionMode, setSubmissionMode] = useState<'direct' | 'review_first'>('direct');
   const [paymentTermsAccepted, setPaymentTermsAccepted] = useState(false);
   const [accountAddress, setAccountAddress] = useState<AccountAddress | null>(null);
+  const [handledPaypalOrderId, setHandledPaypalOrderId] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -148,6 +150,66 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
     setMobileMoneyPhone((current) => current || checkoutAddress.phone);
     setMobileMoneyCountryIso2((current) => current || detail.order.destinationCountryIso2 || 'SN');
   }, [checkoutAddress.phone, detail?.order.destinationCountryIso2]);
+
+  useEffect(() => {
+    if (!detail) return;
+    const paypalOrderId = searchParams.get('token') || searchParams.get('paypalOrderId') || '';
+    if (searchParams.get('payment') !== 'paypal-approved' || !paypalOrderId || handledPaypalOrderId === paypalOrderId) return;
+
+    let cancelled = false;
+    const currentOrderId = detail.order.id;
+    setHandledPaypalOrderId(paypalOrderId);
+    setCheckoutStatus('loading');
+    setCheckoutError('');
+
+    async function authorizePaypalReturn() {
+      try {
+        const session = await readFreshAuthSession();
+        if (!session) {
+          throw new Error('Connectez-vous avant de finaliser l autorisation PayPal.');
+        }
+
+        const response = await fetch(`${apiBaseUrl}/api/payments/paypal/authorize`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ paypalOrderId }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => null);
+          throw new Error(paymentErrorMessage(error, 'Impossible de finaliser l autorisation PayPal.'));
+        }
+
+        if (!cancelled) {
+          setDetail((current) => current ? {
+            ...current,
+            order: {
+              ...current.order,
+              paymentStatus: 'authorized',
+              status: 'payment_authorized',
+            },
+          } : current);
+          setCheckoutStatus('idle');
+          router.replace(`/orders/${currentOrderId}`);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setCheckoutStatus('error');
+          setCheckoutError(error instanceof Error ? error.message : 'Impossible de finaliser l autorisation PayPal.');
+        }
+      }
+    }
+
+    void authorizePaypalReturn();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [detail?.order.id, handledPaypalOrderId, router, searchParams]);
 
   async function startStripeCheckout() {
     if (!detail) return;
@@ -243,8 +305,42 @@ export default function OrderDetailPage({ params }: { params: Promise<{ orderId:
   }
 
   async function startPaypalPayment() {
-    setCheckoutStatus('error');
-    setCheckoutError('PayPal n est pas encore branche a une route de paiement production. Activez une API PayPal avant de proposer ce mode au client.');
+    if (!detail) return;
+    setCheckoutStatus('loading');
+    setCheckoutError('');
+
+    try {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        throw new Error('Connectez-vous avant de payer cette commande.');
+      }
+
+      const origin = window.location.origin;
+      const response = await fetch(`${apiBaseUrl}/api/payments/paypal/order`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: detail.order.id,
+          returnUrl: `${origin}/orders/${detail.order.id}?payment=paypal-approved`,
+          cancelUrl: `${origin}/orders/${detail.order.id}?payment=paypal-cancelled`,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(paymentErrorMessage(error, 'Impossible de lancer PayPal.'));
+      }
+
+      const checkout = (await response.json()) as { checkoutUrl: string };
+      window.location.assign(checkout.checkoutUrl);
+    } catch (error) {
+      setCheckoutStatus('error');
+      setCheckoutError(error instanceof Error ? error.message : 'Impossible de lancer PayPal.');
+    }
   }
 
   function startSelectedPayment() {
@@ -850,7 +946,6 @@ function CheckoutPaymentMethodCard({
         </button>
       ) : null}
       {mobileMoneyStatus === 'error' && mobileMoneyError ? <p className="mt-3 text-sm font-semibold text-red-700">{mobileMoneyError}</p> : null}
-      {method === 'paypal' ? <p className="mt-3 text-xs leading-5 text-amber-700">PayPal doit etre branche cote backend avant activation production.</p> : null}
     </section>
   );
 }
@@ -1591,7 +1686,10 @@ function mobileMoneyButtonLabel(paymentStatus: PaymentStatus, mobileMoneyStatus:
 
 function paymentButtonLabel(method: PaymentMethod | '', paymentStatus: PaymentStatus, checkoutStatus: CheckoutStatus): string {
   if (method === 'mobile_money') return paymentActionLabel(paymentStatus, 'Autoriser par Mobile Money');
-  if (method === 'paypal') return paymentActionLabel(paymentStatus, 'Autoriser avec PayPal');
+  if (method === 'paypal') {
+    if (checkoutStatus === 'loading') return 'Ouverture de PayPal...';
+    return paymentActionLabel(paymentStatus, 'Autoriser avec PayPal');
+  }
   return stripeButtonLabel(paymentStatus, checkoutStatus);
 }
 

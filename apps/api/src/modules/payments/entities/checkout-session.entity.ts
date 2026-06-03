@@ -1,6 +1,6 @@
 export interface CheckoutSession {
   paymentId: string;
-  provider: 'stripe';
+  provider: 'stripe' | 'paypal';
   providerSessionId: string;
   checkoutUrl: string;
   status: 'pending';

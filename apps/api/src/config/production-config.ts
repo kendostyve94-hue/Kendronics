@@ -70,6 +70,13 @@ export function validateProductionConfig() {
     throw new Error('MOBILE_MONEY_PROVIDER=simulated is not allowed in production.');
   }
 
+  if (process.env.PAYPAL_REQUIRED === 'true') {
+    const missingPaypal = ['PAYPAL_CLIENT_ID', 'PAYPAL_CLIENT_SECRET'].filter((key) => !process.env[key]);
+    if (missingPaypal.length > 0) {
+      throw new Error(`Missing PayPal production environment variables: ${missingPaypal.join(', ')}`);
+    }
+  }
+
   if (process.env.REQUIRE_SUPPLIER_REVIEW_ENDPOINT === 'true') {
     const preferredSupplier = (process.env.PREFERRED_PCB_SUPPLIER ?? 'jlcpcb').toUpperCase().replace(/[^A-Z0-9]/g, '_');
     const missingSupplier = [`${preferredSupplier}_API_KEY`, `${preferredSupplier}_REVIEW_ENDPOINT`].filter((key) => !process.env[key]);

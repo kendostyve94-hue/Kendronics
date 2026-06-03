@@ -1,4 +1,4 @@
-export type PaymentProvider = 'stripe' | 'mobile_money';
+export type PaymentProvider = 'stripe' | 'mobile_money' | 'paypal';
 export type PaymentStatus = 'pending' | 'processing' | 'authorized' | 'succeeded' | 'failed' | 'canceled' | 'expired' | 'refunded';
 
 export interface Payment {

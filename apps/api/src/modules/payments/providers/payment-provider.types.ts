@@ -8,6 +8,22 @@ export interface CreateProviderCheckoutInput {
   cancelUrl: string;
 }
 
+export interface CreatePaypalOrderInput {
+  paymentId: string;
+  orderId: string;
+  amount: number;
+  currency: 'EUR';
+  returnUrl: string;
+  cancelUrl: string;
+}
+
+export interface PaypalAuthorizationResult {
+  paypalOrderId: string;
+  authorizationId: string;
+  captureBefore?: Date;
+  raw: unknown;
+}
+
 export interface MobileMoneyInitiationInput {
   paymentId: string;
   orderId: string;

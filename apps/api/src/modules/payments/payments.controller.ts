@@ -4,6 +4,8 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { CreateMobileMoneyPaymentDto } from './dto/create-mobile-money-payment.dto';
+import { AuthorizePaypalOrderDto } from './dto/authorize-paypal-order.dto';
+import { CreatePaypalOrderDto } from './dto/create-paypal-order.dto';
 import { MobileMoneyCallbackDto } from './dto/mobile-money-callback.dto';
 import { ReuploadCorrectedFilesDto } from './dto/order-workflow.dto';
 import { PaymentsService } from './payments.service';
@@ -22,6 +24,18 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard)
   mobileMoney(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateMobileMoneyPaymentDto) {
     return this.paymentsService.initiateMobileMoneyPayment(user.id, dto);
+  }
+
+  @Post('paypal/order')
+  @UseGuards(JwtAuthGuard)
+  paypalOrder(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreatePaypalOrderDto) {
+    return this.paymentsService.createPaypalOrder(user.id, dto);
+  }
+
+  @Post('paypal/authorize')
+  @UseGuards(JwtAuthGuard)
+  paypalAuthorize(@CurrentUser() user: AuthenticatedUser, @Body() dto: AuthorizePaypalOrderDto) {
+    return this.paymentsService.authorizePaypalOrder(user.id, dto);
   }
 
   @Post('orders/:orderId/cancel-after-rejection')

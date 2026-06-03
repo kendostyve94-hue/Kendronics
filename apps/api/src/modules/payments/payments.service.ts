@@ -3,10 +3,14 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { OrdersService } from '../orders/orders.service';
+import { SupplierOrderService } from '../pricing/suppliers/supplier-order.service';
 import { EmailNotificationService } from '../support/email-notification.service';
+import { TrackingService } from '../tracking/tracking.service';
 import { VerificationLevelService } from '../users/verification-level.service';
+import { AuthorizePaypalOrderDto } from './dto/authorize-paypal-order.dto';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { CreateMobileMoneyPaymentDto } from './dto/create-mobile-money-payment.dto';
+import { CreatePaypalOrderDto } from './dto/create-paypal-order.dto';
 import { MobileMoneyCallbackDto } from './dto/mobile-money-callback.dto';
 import { ReuploadCorrectedFilesDto, SupplierReviewResultDto } from './dto/order-workflow.dto';
 import { CheckoutSession } from './entities/checkout-session.entity';
@@ -14,6 +18,7 @@ import { Payment } from './entities/payment.entity';
 import { CinetPayMobileMoneyProvider } from './providers/cinetpay-mobile-money.provider';
 import { MobileMoneyProvider } from './providers/mobile-money.provider';
 import { PayDunyaMobileMoneyProvider } from './providers/paydunya-mobile-money.provider';
+import { PaypalPaymentProvider } from './providers/paypal-payment.provider';
 import { StripePaymentProvider } from './providers/stripe-payment.provider';
 import { PaymentsRepository } from './repositories/payments.repository';
 import { PaymentWebhookHandler } from './webhooks/payment-webhook.handler';
@@ -27,11 +32,14 @@ export class PaymentsService {
     private readonly mobileMoneyProvider: MobileMoneyProvider,
     private readonly cinetPayProvider: CinetPayMobileMoneyProvider,
     private readonly payDunyaProvider: PayDunyaMobileMoneyProvider,
+    private readonly paypalProvider: PaypalPaymentProvider,
     private readonly webhookHandler: PaymentWebhookHandler,
     private readonly notificationsService: NotificationsService,
     private readonly emailNotificationService: EmailNotificationService,
     private readonly prisma: PrismaService,
     private readonly verificationLevelService: VerificationLevelService,
+    private readonly trackingService: TrackingService,
+    private readonly supplierOrderService: SupplierOrderService,
   ) {}
 
   async createCheckout(userId: string, customerEmail: string, dto: CreateCheckoutDto): Promise<CheckoutSession> {
@@ -112,6 +120,83 @@ export class PaymentsService {
     };
   }
 
+  async createPaypalOrder(userId: string, dto: CreatePaypalOrderDto): Promise<CheckoutSession> {
+    const order = await this.ordersService.findOwnedOrder(userId, dto.orderId);
+    if (!order.totalPrice || order.totalPrice < 0.5) {
+      throw new BadRequestException('Order quote amount is unavailable for PayPal payment.');
+    }
+    const verification = await this.verificationLevelService.evaluateOrder(userId, order.totalPrice);
+    if (!verification.allowed) {
+      throw new BadRequestException({
+        message: 'Verification required before payment authorization.',
+        allowed: false,
+        required_verification_level: verification.requiredVerificationLevel,
+        missing_steps: verification.missingSteps,
+        risk_score: verification.riskScore,
+      });
+    }
+
+    const payment = await this.paymentsRepository.createPayment({
+      userId,
+      orderId: order.id,
+      provider: 'paypal',
+      amount: order.totalPrice,
+      currency: 'EUR',
+    });
+
+    const checkout = await this.paypalProvider.createOrder({
+      paymentId: payment.id,
+      orderId: order.id,
+      amount: payment.amount,
+      currency: payment.currency,
+      returnUrl: dto.returnUrl,
+      cancelUrl: dto.cancelUrl,
+    });
+
+    await this.paymentsRepository.attachProviderReference(payment.id, checkout.providerSessionId);
+    return checkout;
+  }
+
+  async authorizePaypalOrder(userId: string, dto: AuthorizePaypalOrderDto): Promise<Payment> {
+    const payment = await this.paymentsRepository.findByProviderReference('paypal', dto.paypalOrderId);
+    if (!payment || payment.userId !== userId) {
+      throw new BadRequestException('PayPal order is not attached to this account.');
+    }
+    if (payment.status === 'authorized') {
+      return payment;
+    }
+    if (payment.status !== 'pending') {
+      throw new BadRequestException(`PayPal payment status ${payment.status} cannot be authorized.`);
+    }
+
+    const authorization = await this.paypalProvider.authorizeOrder(dto.paypalOrderId);
+    const authorizedPayment = await this.paymentsRepository.updateStatus(payment.id, 'authorized', {
+      providerIntentId: authorization.authorizationId,
+      captureBefore: authorization.captureBefore,
+    });
+    await this.ordersService.markPaymentAuthorizedFromVerifiedPayment(payment.orderId);
+    await this.notificationsService.create({
+      userId: payment.userId,
+      type: 'payment.authorized',
+      title: 'Paiement autorise',
+      body: `Votre paiement PayPal de ${payment.amount.toFixed(2)} ${payment.currency} est autorise. Les fichiers passent en controle technique avant encaissement.`,
+    });
+    const order = await this.ordersService.findByIdForInternal(payment.orderId);
+    await this.sendWorkflowEmail(payment.userId, order.orderNumber, 'order_authorized_received');
+    await this.trackingService.addAdminStatusEvent(
+      payment.orderId,
+      'payment_authorized',
+      'Paiement autorise par PayPal. La verification des fichiers peut demarrer avant la capture.',
+    );
+    const supplierReview = await this.supplierOrderService.sendTechnicalReviewPackage(payment.orderId);
+    await this.trackingService.addAdminStatusEvent(
+      payment.orderId,
+      'supplier_review_pending',
+      `Paquet technique transmis au reseau de fabrication (${supplierReview.status}).`,
+    );
+    return authorizedPayment;
+  }
+
   async handleStripeWebhook(signature: string | undefined, rawBody: Buffer | undefined, parsedBody: unknown) {
     if (!signature) {
       throw new BadRequestException('Missing Stripe signature.');
@@ -136,7 +221,11 @@ export class PaymentsService {
       throw new BadRequestException('Stripe authorization expired before capture.');
     }
 
-    await this.stripeProvider.capturePaymentIntent(payment.providerIntentId);
+    if (payment.provider === 'paypal') {
+      await this.paypalProvider.captureAuthorization(payment.providerIntentId);
+    } else {
+      await this.stripeProvider.capturePaymentIntent(payment.providerIntentId);
+    }
     await this.paymentsRepository.updateStatus(payment.id, 'succeeded');
     return { ok: true, paymentId: payment.id, providerIntentId: payment.providerIntentId };
   }
@@ -152,7 +241,11 @@ export class PaymentsService {
       return { ok: true, skipped: true };
     }
 
-    await this.stripeProvider.cancelPaymentIntent(payment.providerIntentId);
+    if (payment.provider === 'paypal') {
+      await this.paypalProvider.cancelAuthorization(payment.providerIntentId);
+    } else {
+      await this.stripeProvider.cancelPaymentIntent(payment.providerIntentId);
+    }
     await this.paymentsRepository.updateStatus(payment.id, 'canceled');
     return { ok: true, paymentId: payment.id, providerIntentId: payment.providerIntentId };
   }

@@ -65,7 +65,7 @@ export class PaymentsRepository {
 
   async findLatestAuthorizedByOrderId(orderId: string): Promise<Payment | null> {
     const payment = await this.prisma.payment.findFirst({
-      where: { orderId, provider: 'stripe', status: 'authorized', providerIntentId: { not: null } },
+      where: { orderId, provider: { in: ['stripe', 'paypal'] }, status: 'authorized', providerIntentId: { not: null } },
       orderBy: { authorizedAt: 'desc' },
     });
     return payment ? this.toPayment(payment) : null;
@@ -74,7 +74,7 @@ export class PaymentsRepository {
   async findAuthorizedCaptureBefore(cutoff: Date): Promise<Payment[]> {
     const payments = await this.prisma.payment.findMany({
       where: {
-        provider: 'stripe',
+        provider: { in: ['stripe', 'paypal'] },
         status: 'authorized',
         providerIntentId: { not: null },
         captureBefore: { lte: cutoff },
