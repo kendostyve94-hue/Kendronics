@@ -37,13 +37,13 @@ const deliveryLogos = [
   {
     name: 'DHL Express',
     src: 'https://cdn.simpleicons.org/dhl/D40511',
-    className: 'h-8 w-auto',
+    className: 'h-7 w-auto',
     tileClassName: 'bg-[#ffcc00]',
   },
   {
     name: 'FedEx Express',
     src: 'https://cdn.simpleicons.org/fedex/4D148C',
-    className: 'h-7 w-auto',
+    className: 'h-6 w-auto',
     tileClassName: 'bg-white',
   },
 ];
@@ -55,10 +55,10 @@ const paymentLogos = [
   { name: 'Apple Pay', src: '/payments/apple-pay-mark.svg', className: 'h-7 w-auto' },
   { name: 'Google Pay', src: '/payments/google-pay-mark.svg', className: 'h-6 w-auto' },
   { name: 'PayPal', src: '/payments/paypal-logo-black.png', className: 'h-4 w-auto' },
-  { name: 'Orange Money', src: '/payments/orange-money-mark.svg', className: 'h-6 w-auto' },
-  { name: 'Wave', src: '/payments/wave-source.png', className: 'h-6 w-auto rounded-full' },
-  { name: 'Moov Money', src: '/payments/moov-money-source.png', className: 'h-6 w-auto' },
-  { name: 'MTN Mobile Money', src: '/payments/mtn-mobile-money-source.png', className: 'h-6 w-auto' },
+  { name: 'Orange Money', src: '/payments/orange-money-mark.svg', className: 'h-7 w-auto' },
+  { name: 'Wave', src: '/payments/wave-source.png', className: 'h-7 w-auto rounded-full' },
+  { name: 'Moov Money', src: '/payments/moov-money-source.png', className: 'h-7 w-auto' },
+  { name: 'MTN Mobile Money', src: '/payments/mtn-mobile-money-source.png', className: 'h-7 w-auto' },
   { name: 'Virement bancaire', src: '/payments/bank-transfer-mark.svg', className: 'h-6 w-auto' },
 ];
 
@@ -168,7 +168,7 @@ function DeliveryLogoStrip() {
           <span
             key={logo.name}
             aria-label={logo.name}
-            className={`inline-flex h-10 min-w-16 items-center justify-center overflow-hidden rounded-[3px] border border-[#dbe4ee] px-2.5 ${logo.tileClassName}`}
+            className={`inline-flex h-8 min-w-12 items-center justify-center overflow-hidden rounded-[3px] border border-[#dbe4ee] px-1.5 ${logo.tileClassName}`}
           >
             <img src={logo.src} alt="" className={logo.className} loading="lazy" />
           </span>
