@@ -37,13 +37,13 @@ const deliveryLogos = [
   {
     name: 'DHL Express',
     src: 'https://cdn.simpleicons.org/dhl/D40511',
-    className: 'h-4 w-auto',
+    className: 'h-8 w-auto',
     tileClassName: 'bg-[#ffcc00]',
   },
   {
     name: 'FedEx Express',
     src: 'https://cdn.simpleicons.org/fedex/4D148C',
-    className: 'h-4 w-auto',
+    className: 'h-7 w-auto',
     tileClassName: 'bg-white',
   },
 ];
@@ -168,7 +168,7 @@ function DeliveryLogoStrip() {
           <span
             key={logo.name}
             aria-label={logo.name}
-            className={`inline-flex h-8 min-w-12 items-center justify-center overflow-hidden rounded-[3px] border border-[#dbe4ee] px-2 ${logo.tileClassName}`}
+            className={`inline-flex h-10 min-w-16 items-center justify-center overflow-hidden rounded-[3px] border border-[#dbe4ee] px-2.5 ${logo.tileClassName}`}
           >
             <img src={logo.src} alt="" className={logo.className} loading="lazy" />
           </span>
