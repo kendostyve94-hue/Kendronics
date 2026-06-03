@@ -25,6 +25,11 @@ const heroImage = '/images/contact-support-hero.jpg';
 
 const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : '');
+const whatsAppPhoneDisplay = '+33 07 970 427';
+const whatsAppPhoneDigits = '3307970427';
+const whatsAppHref = `https://wa.me/${whatsAppPhoneDigits}`;
+const whatsAppChannelHref = process.env.NEXT_PUBLIC_WHATSAPP_CHANNEL_URL ?? whatsAppHref;
+const youtubeChannelHref = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_URL ?? 'https://www.youtube.com';
 
 const initialValues: ContactFormState = {
   name: '',
@@ -40,6 +45,7 @@ export default function ContactPage() {
   const [errors, setErrors] = useState<ContactFormErrors>({});
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [ticketNumber, setTicketNumber] = useState('');
+  const canSubmit = isContactFormReady(values);
 
   async function submitContact(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -107,13 +113,13 @@ export default function ContactPage() {
 
           <form onSubmit={submitContact} className="mt-6 grid gap-4">
             <div className="grid gap-4 md:grid-cols-2">
-              <TextField label="Nom" value={values.name} error={errors.name} onChange={(value) => update('name', value)} />
-              <TextField label="E-mail" type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
+              <TextField label="Nom complet" required value={values.name} error={errors.name} onChange={(value) => update('name', value)} />
+              <TextField label="E-mail" required type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">Categorie</span>
+                <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">Categorie <span className="text-red-500">*</span></span>
                 <select
                   value={values.category}
                   onChange={(event) => update('category', event.target.value as ContactFormState['category'])}
@@ -131,7 +137,7 @@ export default function ContactPage() {
             </div>
 
             <label className="block">
-              <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">Message</span>
+              <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">Message <span className="text-red-500">*</span></span>
               <textarea
                 value={values.message}
                 onChange={(event) => update('message', event.target.value)}
@@ -163,7 +169,7 @@ export default function ContactPage() {
 
             <button
               type="submit"
-              disabled={submitState === 'submitting'}
+              disabled={submitState === 'submitting' || !canSubmit}
               className="h-12 rounded-xl bg-signal px-5 text-sm font-black text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               {submitState === 'submitting' ? 'Envoi du ticket...' : 'Envoyer le ticket support'}
@@ -172,9 +178,46 @@ export default function ContactPage() {
         </Card>
 
         <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
-          <InfoPanel title="E-mail support" body={officialContactEmail} detail="Utilisez l’e-mail pour le suivi professionnel. Les tickets restent le meilleur format pour les sujets liés à une commande." />
-          <InfoPanel title="Délai de réponse" body="Objectif de réponse pendant les horaires ouvrables" detail="Les questions de devis, upload, paiement et livraison sont triées par catégorie et contexte de commande." />
-          <InfoPanel title="Base opérationnelle" body="Plateforme basée en France" detail="Kendronics coordonne commande PCB, paiement, logistique France, livraison Afrique, suivi et support." />
+          <ContactActionPanel
+            tone="neutral"
+            icon="@"
+            title="E-mail"
+            body={officialContactEmail}
+            detail="Reponse professionnelle par ticket"
+            href={`mailto:${officialContactEmail}`}
+          />
+          <ContactActionPanel
+            tone="success"
+            icon="WA"
+            title="WhatsApp"
+            body={whatsAppPhoneDisplay}
+            detail="Message direct selon disponibilite"
+            href={whatsAppHref}
+          />
+          <ContactActionPanel
+            tone="success"
+            icon="WA"
+            title="Chaine WhatsApp"
+            body="Suivre Kendronics"
+            detail="Actus et nouveautes"
+            href={whatsAppChannelHref}
+          />
+          <ContactActionPanel
+            tone="danger"
+            icon="YT"
+            title="Chaine YouTube"
+            body="Kendronics"
+            detail="Guides, fabrication et suivi"
+            href={youtubeChannelHref}
+          />
+          <ContactActionPanel
+            tone="neutral"
+            icon="?"
+            title="Centre d'aide"
+            body="Documentation Kendronics"
+            detail="Bases PCB, paiement, livraison et compte"
+            href="/centre-aide"
+          />
           <Card glass className="p-5">
             <h3 className="text-lg font-black text-ink">Consulter la FAQ avant de nous ecrire ?</h3>
             <p className="mt-3 text-sm leading-6 text-slate-600">
@@ -220,16 +263,20 @@ function TextField({
   onChange,
   error,
   type = 'text',
+  required = false,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   error?: string;
   type?: string;
+  required?: boolean;
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">{label}</span>
+      <span className="mb-2 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+        {label} {required ? <span className="text-red-500">*</span> : null}
+      </span>
       <input
         type={type}
         value={value}
@@ -243,12 +290,55 @@ function TextField({
   );
 }
 
-function InfoPanel({ title, body, detail }: { title: string; body: string; detail: string }) {
+function ContactActionPanel({
+  tone,
+  icon,
+  title,
+  body,
+  detail,
+  href,
+}: {
+  tone: 'neutral' | 'success' | 'danger';
+  icon: string;
+  title: string;
+  body: string;
+  detail: string;
+  href: string;
+}) {
+  const isExternal = href.startsWith('http');
+  const toneClasses = {
+    neutral: 'border-slate-200 bg-white text-[#0f8f6b]',
+    success: 'border-emerald-200 bg-emerald-50 text-[#0f8f6b]',
+    danger: 'border-red-100 bg-white text-red-600',
+  }[tone];
+  const iconClasses = {
+    neutral: 'bg-emerald-50 text-[#0f8f6b]',
+    success: 'bg-[#0f8f6b] text-white',
+    danger: 'bg-red-600 text-white',
+  }[tone];
+
   return (
-    <Card className="p-5">
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-signal">{title}</p>
-      <h3 className="mt-2 break-words text-xl font-black text-ink">{body}</h3>
-      <p className="mt-3 text-sm leading-6 text-slate-600">{detail}</p>
-    </Card>
+    <a
+      href={href}
+      target={isExternal ? '_blank' : undefined}
+      rel={isExternal ? 'noreferrer' : undefined}
+      className={`flex items-center gap-4 rounded-2xl border p-5 transition hover:-translate-y-0.5 hover:border-[#0f8f6b] ${toneClasses}`}
+    >
+      <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl text-sm font-black ${iconClasses}`}>{icon}</span>
+      <span className="min-w-0">
+        <span className="block text-xs font-black uppercase tracking-[0.16em]">{title}</span>
+        <span className="mt-1 block break-words text-base font-black text-ink">{body}</span>
+        <span className="mt-1 block text-sm leading-5 text-slate-600">{detail}</span>
+      </span>
+    </a>
+  );
+}
+
+function isContactFormReady(values: ContactFormState): boolean {
+  return Boolean(
+    values.name.trim().length >= 2 &&
+    /^\S+@\S+\.\S+$/.test(values.email.trim()) &&
+    contactCategories.includes(values.category) &&
+    values.message.trim().length >= 10,
   );
 }
