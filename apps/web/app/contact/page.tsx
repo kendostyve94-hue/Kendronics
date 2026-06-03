@@ -35,13 +35,6 @@ const initialValues: ContactFormState = {
   attachmentName: '',
 };
 
-const supportChannels = [
-  ['Support e-mail professionnel', `Utilisez ${officialContactEmail} pour les questions non urgentes, les partenariats et le suivi opérationnel.`],
-  ['Tickets support', 'Les tickets gardent la catégorie, l’ID commande, le message et le contexte fichier au même endroit.'],
-  ['Notifications tableau de bord', 'Les utilisateurs connectés pourront recevoir les mises à jour de commande et de support dans leur espace.'],
-  ['WhatsApp non prioritaire', 'WhatsApp n’est pas le canal principal. Les e-mails et tickets rendent les demandes plus traçables.'],
-];
-
 export default function ContactPage() {
   const [values, setValues] = useState<ContactFormState>(initialValues);
   const [errors, setErrors] = useState<ContactFormErrors>({});
@@ -192,17 +185,6 @@ export default function ContactPage() {
             </Button>
           </Card>
         </aside>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          {supportChannels.map(([title, body]) => (
-            <Card key={title} glass className="p-5">
-              <h3 className="text-lg font-black text-ink">{title}</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
-            </Card>
-          ))}
-        </div>
       </section>
 
       <Footer />
