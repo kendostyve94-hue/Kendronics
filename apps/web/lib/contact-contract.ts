@@ -12,6 +12,9 @@ export type ContactCategory = (typeof contactCategories)[number];
 export interface ContactFormState {
   name: string;
   email: string;
+  requesterType: 'individual' | 'business';
+  companyName: string;
+  phone: string;
   category: ContactCategory;
   orderId: string;
   message: string;
@@ -70,6 +73,14 @@ export function validateContactForm(values: ContactFormState): ContactFormErrors
 
   if (!/^\S+@\S+\.\S+$/.test(values.email.trim())) {
     errors.email = 'Entrez une adresse e-mail valide.';
+  }
+
+  if (values.requesterType === 'business' && values.companyName.trim().length < 2) {
+    errors.companyName = "Entrez le nom de l'entreprise.";
+  }
+
+  if (values.requesterType === 'business' && values.phone.trim().length < 6) {
+    errors.phone = 'Entrez un numero de telephone.';
   }
 
   if (!contactCategories.includes(values.category)) {

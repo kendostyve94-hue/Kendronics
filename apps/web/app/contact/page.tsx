@@ -34,6 +34,9 @@ const youtubeChannelHref = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_URL ?? 'https
 const initialValues: ContactFormState = {
   name: '',
   email: '',
+  requesterType: 'individual',
+  companyName: '',
+  phone: '',
   category: 'quote_issue',
   orderId: '',
   message: '',
@@ -61,7 +64,7 @@ export default function ContactPage() {
       email: values.email.trim(),
       category: values.category,
       orderId: values.orderId.trim() || undefined,
-      message: values.message.trim(),
+      message: buildSupportMessage(values),
       attachmentName: values.attachmentName || undefined,
     };
 
@@ -112,10 +115,44 @@ export default function ContactPage() {
           </p>
 
           <form onSubmit={submitContact} className="mt-6 grid gap-4">
+            <fieldset className="grid gap-3 sm:grid-cols-2">
+              <legend className="sr-only">Type de demandeur</legend>
+              <ChoiceButton
+                label="Particulier"
+                selected={values.requesterType === 'individual'}
+                onClick={() => update('requesterType', 'individual')}
+              />
+              <ChoiceButton
+                label="Entreprise"
+                selected={values.requesterType === 'business'}
+                onClick={() => update('requesterType', 'business')}
+              />
+            </fieldset>
+
             <div className="grid gap-4 md:grid-cols-2">
               <TextField label="Nom complet" required value={values.name} error={errors.name} onChange={(value) => update('name', value)} />
               <TextField label="E-mail" required type="email" value={values.email} error={errors.email} onChange={(value) => update('email', value)} />
             </div>
+
+            {values.requesterType === 'business' && (
+              <div className="grid gap-4 md:grid-cols-2">
+                <TextField
+                  label="Nom de l'entreprise"
+                  required
+                  value={values.companyName}
+                  error={errors.companyName}
+                  onChange={(value) => update('companyName', value)}
+                />
+                <TextField
+                  label="Numero de telephone"
+                  required
+                  type="tel"
+                  value={values.phone}
+                  error={errors.phone}
+                  onChange={(value) => update('phone', value)}
+                />
+              </div>
+            )}
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block">
@@ -123,7 +160,7 @@ export default function ContactPage() {
                 <select
                   value={values.category}
                   onChange={(event) => update('category', event.target.value as ContactFormState['category'])}
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+                  className="h-12 w-full rounded-sm border border-slate-200 bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
                 >
                   {contactCategories.map((category) => (
                     <option key={category} value={category}>
@@ -142,7 +179,7 @@ export default function ContactPage() {
                 value={values.message}
                 onChange={(event) => update('message', event.target.value)}
                 rows={6}
-                className={`w-full rounded-xl border bg-white px-3 py-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100 ${
+                className={`w-full rounded-sm border bg-white px-3 py-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100 ${
                   errors.message ? 'border-red-300' : 'border-slate-200'
                 }`}
                 placeholder="Expliquez votre demande et ajoutez le contexte utile : devis, upload, paiement, livraison ou question technique."
@@ -155,14 +192,14 @@ export default function ContactPage() {
               <input
                 type="file"
                 onChange={updateAttachment}
-                className="block w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-deepblue file:px-4 file:py-2 file:text-sm file:font-black file:text-white"
+                className="block w-full rounded-sm border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-slate-600 file:mr-4 file:rounded-sm file:border-0 file:bg-deepblue file:px-4 file:py-2 file:text-sm file:font-black file:text-white"
               />
               {values.attachmentName && <p className="mt-2 text-xs font-bold text-slate-500">Sélection : {values.attachmentName}</p>}
             </label>
 
-            {errors.form && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{errors.form}</div>}
+            {errors.form && <div className="rounded-sm border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">{errors.form}</div>}
             {submitState === 'submitted' && (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
+              <div className="rounded-sm border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold text-emerald-700">
                 Ticket support créé{ticketNumber ? ` : ${ticketNumber}` : ''}. Nous répondrons par e-mail.
               </div>
             )}
@@ -170,7 +207,12 @@ export default function ContactPage() {
             <button
               type="submit"
               disabled={submitState === 'submitting' || !canSubmit}
-              className="h-12 rounded-xl bg-signal px-5 text-sm font-black text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:bg-slate-300"
+              aria-disabled={submitState === 'submitting' || !canSubmit}
+              className={`h-12 rounded-sm px-5 text-sm font-black transition ${
+                canSubmit && submitState !== 'submitting'
+                  ? 'bg-signal text-white hover:bg-sky-500'
+                  : 'cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400'
+              }`}
             >
               {submitState === 'submitting' ? 'Envoi du ticket...' : 'Envoyer le ticket support'}
             </button>
@@ -180,7 +222,7 @@ export default function ContactPage() {
         <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
           <ContactActionPanel
             tone="neutral"
-            icon="@"
+            icon="mail"
             title="E-mail"
             body={officialContactEmail}
             detail="Reponse professionnelle par ticket"
@@ -188,7 +230,7 @@ export default function ContactPage() {
           />
           <ContactActionPanel
             tone="success"
-            icon="WA"
+            icon="whatsapp"
             title="WhatsApp"
             body={whatsAppPhoneDisplay}
             detail="Message direct selon disponibilite"
@@ -196,7 +238,7 @@ export default function ContactPage() {
           />
           <ContactActionPanel
             tone="success"
-            icon="WA"
+            icon="whatsapp"
             title="Chaine WhatsApp"
             body="Suivre Kendronics"
             detail="Actus et nouveautes"
@@ -204,7 +246,7 @@ export default function ContactPage() {
           />
           <ContactActionPanel
             tone="danger"
-            icon="YT"
+            icon="youtube"
             title="Chaine YouTube"
             body="Kendronics"
             detail="Guides, fabrication et suivi"
@@ -212,7 +254,7 @@ export default function ContactPage() {
           />
           <ContactActionPanel
             tone="neutral"
-            icon="?"
+            icon="help"
             title="Centre d'aide"
             body="Documentation Kendronics"
             detail="Bases PCB, paiement, livraison et compte"
@@ -220,9 +262,6 @@ export default function ContactPage() {
           />
           <Card glass className="p-5">
             <h3 className="text-lg font-black text-ink">Consulter la FAQ avant de nous ecrire ?</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Des réponses rapides sur le rôle de Kendronics, les fichiers Gerber, les prix, le paiement, la livraison et le suivi.
-            </p>
             <Button href="/faq" className="mt-5 w-full">
               Voir la FAQ
             </Button>
@@ -238,18 +277,22 @@ export default function ContactPage() {
 function ContactHero() {
   return (
     <section className="relative min-h-[68vh] overflow-hidden bg-ink text-white">
-      <img src={heroImage} alt="Conseillere support Kendronics avec casque" className="absolute inset-0 h-full w-full object-cover" />
+      <img
+        src={heroImage}
+        alt="Conseillere support Kendronics avec casque"
+        className="absolute inset-0 h-full w-full object-cover object-[center_28%]"
+      />
       <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.84] to-deepblue/[0.56]" />
       <div className="relative mx-auto flex min-h-[68vh] max-w-7xl items-end px-4 pb-20 pt-36 sm:px-6 lg:px-8">
         <div>
-          <p className="inline-flex rounded-xl border border-white/[0.18] bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-sky-100 backdrop-blur-xl">
+          <p className="inline-flex rounded-sm border border-white/[0.18] bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-sky-100 backdrop-blur-xl">
             Contact
           </p>
           <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-            Support professionnel pour devis, fichiers, paiements et livraison.
+            Une equipe disponible pour accompagner vos commandes PCB de bout en bout.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
-            Kendronics utilise e-mail, tickets support et notifications tableau de bord pour un support traçable. WhatsApp n’est pas le canal principal.
+            Contactez Kendronics pour une question de devis, de fichiers techniques, de paiement, de livraison ou de suivi. Chaque demande est traitee avec contexte, tracabilite et reponse professionnelle.
           </p>
         </div>
       </div>
@@ -281,12 +324,26 @@ function TextField({
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className={`h-12 w-full rounded-xl border bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100 ${
+        className={`h-12 w-full rounded-sm border bg-white px-3 text-sm font-bold text-ink outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100 ${
           error ? 'border-red-300' : 'border-slate-200'
         }`}
       />
       {error && <p className="mt-2 text-xs font-bold text-red-600">{error}</p>}
     </label>
+  );
+}
+
+function ChoiceButton({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`h-12 rounded-sm border px-4 text-left text-sm font-black transition ${
+        selected ? 'border-signal bg-emerald-50 text-signal' : 'border-slate-200 bg-white text-ink hover:border-signal'
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -322,9 +379,11 @@ function ContactActionPanel({
       href={href}
       target={isExternal ? '_blank' : undefined}
       rel={isExternal ? 'noreferrer' : undefined}
-      className={`flex items-center gap-4 rounded-2xl border p-5 transition hover:-translate-y-0.5 hover:border-[#0f8f6b] ${toneClasses}`}
+      className={`flex items-center gap-4 rounded-sm border p-5 transition hover:-translate-y-0.5 hover:border-[#0f8f6b] ${toneClasses}`}
     >
-      <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl text-sm font-black ${iconClasses}`}>{icon}</span>
+      <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-sm text-sm font-black ${iconClasses}`}>
+        <BrandIcon icon={icon} />
+      </span>
       <span className="min-w-0">
         <span className="block text-xs font-black uppercase tracking-[0.16em]">{title}</span>
         <span className="mt-1 block break-words text-base font-black text-ink">{body}</span>
@@ -338,7 +397,61 @@ function isContactFormReady(values: ContactFormState): boolean {
   return Boolean(
     values.name.trim().length >= 2 &&
     /^\S+@\S+\.\S+$/.test(values.email.trim()) &&
+    (values.requesterType === 'individual' ||
+      (values.companyName.trim().length >= 2 && values.phone.trim().length >= 6)) &&
     contactCategories.includes(values.category) &&
     values.message.trim().length >= 10,
+  );
+}
+
+function buildSupportMessage(values: ContactFormState): string {
+  const lines = [
+    `Type demandeur: ${values.requesterType === 'business' ? 'Entreprise' : 'Particulier'}`,
+    values.requesterType === 'business' ? `Entreprise: ${values.companyName.trim()}` : undefined,
+    values.requesterType === 'business' ? `Telephone: ${values.phone.trim()}` : undefined,
+    '',
+    values.message.trim(),
+  ].filter((line): line is string => line !== undefined);
+
+  return lines.join('\n');
+}
+
+function BrandIcon({ icon }: { icon: string }) {
+  if (icon === 'mail') {
+    return (
+      <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+        <path fill="none" stroke="currentColor" strokeWidth="2" d="M3 6h18v12H3z" />
+        <path fill="none" stroke="currentColor" strokeWidth="2" d="m3 7 9 6 9-6" />
+      </svg>
+    );
+  }
+
+  if (icon === 'whatsapp') {
+    return (
+      <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
+        <path
+          fill="currentColor"
+          d="M16.04 3.2A12.75 12.75 0 0 0 5.2 22.64L3.6 28.8l6.3-1.65a12.72 12.72 0 0 0 6.13 1.56h.01A12.76 12.76 0 0 0 16.04 3.2Zm0 23.34h-.01a10.58 10.58 0 0 1-5.4-1.48l-.39-.23-3.74.98 1-3.65-.25-.38a10.59 10.59 0 1 1 8.79 4.76Zm5.8-7.92c-.32-.16-1.88-.93-2.17-1.03-.29-.11-.5-.16-.71.16-.21.31-.82 1.03-1 1.24-.18.21-.37.24-.69.08-.32-.16-1.34-.49-2.55-1.57-.94-.84-1.58-1.88-1.76-2.2-.18-.32-.02-.49.14-.65.14-.14.32-.37.48-.55.16-.18.21-.32.32-.53.11-.21.05-.4-.03-.56-.08-.16-.71-1.71-.97-2.34-.26-.62-.52-.53-.71-.54h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.09-1.12 2.67 0 1.58 1.15 3.1 1.31 3.32.16.21 2.26 3.45 5.48 4.84.77.33 1.36.53 1.83.68.77.24 1.47.21 2.02.13.62-.09 1.88-.77 2.15-1.51.26-.74.26-1.38.18-1.51-.08-.13-.29-.21-.61-.37Z"
+        />
+      </svg>
+    );
+  }
+
+  if (icon === 'youtube') {
+    return (
+      <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
+        <path
+          fill="currentColor"
+          d="M29.3 9.2a3.7 3.7 0 0 0-2.6-2.6C24.4 6 16 6 16 6s-8.4 0-10.7.6a3.7 3.7 0 0 0-2.6 2.6C2.1 11.5 2.1 16 2.1 16s0 4.5.6 6.8a3.7 3.7 0 0 0 2.6 2.6C7.6 26 16 26 16 26s8.4 0 10.7-.6a3.7 3.7 0 0 0 2.6-2.6c.6-2.3.6-6.8.6-6.8s0-4.5-.6-6.8ZM13.2 20.3v-8.6l7.4 4.3-7.4 4.3Z"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+      <path fill="none" stroke="currentColor" strokeWidth="2" d="M12 18h.01M9.5 9a2.5 2.5 0 1 1 4.2 1.84c-.93.78-1.7 1.29-1.7 2.66" />
+      <path fill="none" stroke="currentColor" strokeWidth="2" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+    </svg>
   );
 }
