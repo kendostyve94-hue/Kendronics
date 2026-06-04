@@ -38,7 +38,7 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
 
     for (const log of logs) {
       try {
-        const itemId = await this.upsertMondayItem(log.board, log.operation, log.payload);
+        const itemId = await this.upsertMondayItem(log.id, log.board, log.operation, log.orderId, log.payload);
         await this.prisma.mondaySyncLog.update({
           where: { id: log.id },
           data: {
@@ -62,7 +62,7 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async upsertMondayItem(board: string, operation: string, payload: unknown): Promise<string | undefined> {
+  private async upsertMondayItem(logId: string, board: string, operation: string, orderId: string | null, payload: unknown): Promise<string | undefined> {
     const apiKey = process.env.MONDAY_API_KEY?.trim();
     const boardId = boardIdFor(board);
     if (!apiKey || !boardId) {
@@ -74,6 +74,15 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
 
     const itemName = itemNameFor(operation, payload);
     const columnValues = JSON.stringify(await this.columnValuesFor(board, payload, apiKey, boardId));
+    const existingItemId = await this.findExistingItemId(logId, board, orderId, payload, apiKey, boardId);
+    if (existingItemId) {
+      return this.updateMondayItem(apiKey, boardId, existingItemId, columnValues);
+    }
+
+    return this.createMondayItem(apiKey, boardId, itemName, columnValues);
+  }
+
+  private async createMondayItem(apiKey: string, boardId: string, itemName: string, columnValues: string): Promise<string | undefined> {
     const query = `
       mutation CreateKendronicsItem($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
         create_item(board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
@@ -95,6 +104,97 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
     }
 
     return data?.data?.create_item?.id;
+  }
+
+  private async updateMondayItem(apiKey: string, boardId: string, itemId: string, columnValues: string): Promise<string | undefined> {
+    const query = `
+      mutation UpdateKendronicsItem($boardId: ID!, $itemId: ID!, $columnValues: JSON!) {
+        change_multiple_column_values(board_id: $boardId, item_id: $itemId, column_values: $columnValues) {
+          id
+        }
+      }
+    `;
+    const response = await fetch(process.env.MONDAY_API_URL ?? 'https://api.monday.com/v2', {
+      method: 'POST',
+      headers: {
+        Authorization: apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query, variables: { boardId, itemId, columnValues } }),
+    });
+    const data = await response.json().catch(() => null) as { data?: { change_multiple_column_values?: { id?: string } }; errors?: Array<{ message?: string }> } | null;
+    if (!response.ok || data?.errors?.length) {
+      throw new Error(data?.errors?.map((item) => item.message).filter(Boolean).join(' ') || `Monday API rejected update (${response.status}).`);
+    }
+
+    return data?.data?.change_multiple_column_values?.id ?? itemId;
+  }
+
+  private async findExistingItemId(
+    logId: string,
+    board: string,
+    orderId: string | null,
+    payload: unknown,
+    apiKey: string,
+    boardId: string,
+  ): Promise<string | undefined> {
+    const existingLog = orderId
+      ? await this.prisma.mondaySyncLog.findFirst({
+          where: {
+            id: { not: logId },
+            board,
+            orderId,
+            itemId: { not: null },
+            status: 'processed',
+          },
+          orderBy: { processedAt: 'desc' },
+          select: { itemId: true },
+        })
+      : null;
+    if (existingLog?.itemId) return existingLog.itemId;
+
+    const value = objectValue(payload);
+    const identityField = identityFieldFor(board);
+    const identityValue = value[identityField];
+    if (identityValue == null || !['string', 'number'].includes(typeof identityValue)) return undefined;
+
+    const idMap = columnMapFor(board, 'MAP');
+    const titleMap = columnMapFor(board, 'TITLE_MAP');
+    const resolvedTitleMap = Object.keys(titleMap).length > 0 ? await this.resolveColumnTitles(apiKey, boardId, titleMap) : {};
+    const target = idMap[identityField] ? { id: idMap[identityField] } : resolvedTitleMap[identityField];
+    if (!target?.id) return undefined;
+
+    return this.findMondayItemByColumn(apiKey, boardId, target.id, String(identityValue));
+  }
+
+  private async findMondayItemByColumn(apiKey: string, boardId: string, columnId: string, columnValue: string): Promise<string | undefined> {
+    const query = `
+      query FindKendronicsItem($boardId: ID!, $columnId: String!, $columnValue: String!) {
+        items_page_by_column_values(
+          board_id: $boardId,
+          limit: 1,
+          columns: [{ column_id: $columnId, column_values: [$columnValue] }]
+        ) {
+          items {
+            id
+          }
+        }
+      }
+    `;
+    const response = await fetch(process.env.MONDAY_API_URL ?? 'https://api.monday.com/v2', {
+      method: 'POST',
+      headers: {
+        Authorization: apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query, variables: { boardId, columnId, columnValue } }),
+    });
+    const data = await response.json().catch(() => null) as { data?: { items_page_by_column_values?: { items?: Array<{ id?: string }> } }; errors?: Array<{ message?: string }> } | null;
+    if (!response.ok || data?.errors?.length) {
+      throw new Error(data?.errors?.map((item) => item.message).filter(Boolean).join(' ') || `Monday item lookup failed (${response.status}).`);
+    }
+
+    return data?.data?.items_page_by_column_values?.items?.[0]?.id;
   }
 
   private async columnValuesFor(board: string, payload: unknown, apiKey: string, boardId: string): Promise<Record<string, unknown>> {
@@ -163,6 +263,16 @@ function boardIdFor(board: string): string | undefined {
 function itemNameFor(operation: string, payload: unknown): string {
   const value = objectValue(payload);
   return String(value.orderNumber ?? value.internalReference ?? value.paymentId ?? operation).slice(0, 255);
+}
+
+function identityFieldFor(board: string): string {
+  const canonical = canonicalBoard(board);
+  const configured = process.env[`MONDAY_IDENTITY_FIELD_${canonical}`]?.trim();
+  if (configured) return configured;
+  if (canonical === 'EN_PRODUCTION') return 'internalReference';
+  if (canonical === 'SUPPORT_CLIENTS') return 'ticketNumber';
+  if (canonical === 'CHIFFRE_AFFAIRE_LIVE') return 'invoiceNumber';
+  return 'orderNumber';
 }
 
 function objectValue(value: unknown): Record<string, unknown> {
