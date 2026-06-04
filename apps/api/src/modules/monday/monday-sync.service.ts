@@ -1,23 +1,23 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { MondayApiService } from './monday-api.service';
+import { MondayConfigService } from './monday-config.service';
+import { MondayMapperService } from './monday-mapper.service';
 
 const intervalMs = 60_000;
 const batchSize = 10;
-const mondayBoardAliases: Record<string, string> = {
-  COMMANDES: 'COMMANDES',
-  EN_PRODUCTION: 'EN_PRODUCTION',
-  CHIFFRE_AFFAIRE_LIVE: 'CHIFFRE_AFFAIRE_LIVE',
-  LOGISTICS_INTERNATIONAL: 'LOGISTICS_INTERNATIONAL',
-  LOGISTIQUE_LOCALE: 'LOGISTIQUE_LOCALE',
-  SUPPORT_CLIENTS: 'SUPPORT_CLIENTS',
-};
 
 @Injectable()
 export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(MondaySyncService.name);
   private interval?: NodeJS.Timeout;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly api: MondayApiService,
+    private readonly config: MondayConfigService,
+    private readonly mapper: MondayMapperService,
+  ) {}
 
   onModuleInit() {
     if (process.env.MONDAY_SYNC_DISABLED === 'true') return;
@@ -63,71 +63,23 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async upsertMondayItem(logId: string, board: string, operation: string, orderId: string | null, payload: unknown): Promise<string | undefined> {
-    const apiKey = process.env.MONDAY_API_KEY?.trim();
-    const boardId = boardIdFor(board);
+    const apiKey = this.config.apiKey();
+    const boardId = this.config.boardIdFor(board);
     if (!apiKey || !boardId) {
-      if (process.env.NODE_ENV === 'production' && process.env.MONDAY_REQUIRED === 'true') {
+      if (this.config.required()) {
         throw new Error(`Monday is required but not configured for board ${board}.`);
       }
       return undefined;
     }
 
     const itemName = itemNameFor(operation, payload);
-    const columnValues = JSON.stringify(await this.columnValuesFor(board, payload, apiKey, boardId));
+    const columnValues = JSON.stringify(await this.mapper.columnValuesFor(board, payload, apiKey, boardId));
     const existingItemId = await this.findExistingItemId(logId, board, orderId, payload, apiKey, boardId);
     if (existingItemId) {
-      return this.updateMondayItem(apiKey, boardId, existingItemId, columnValues);
+      return this.api.updateItem(apiKey, boardId, existingItemId, columnValues);
     }
 
-    return this.createMondayItem(apiKey, boardId, itemName, columnValues);
-  }
-
-  private async createMondayItem(apiKey: string, boardId: string, itemName: string, columnValues: string): Promise<string | undefined> {
-    const query = `
-      mutation CreateKendronicsItem($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
-        create_item(board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
-          id
-        }
-      }
-    `;
-    const response = await fetch(process.env.MONDAY_API_URL ?? 'https://api.monday.com/v2', {
-      method: 'POST',
-      headers: {
-        Authorization: apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query, variables: { boardId, itemName, columnValues } }),
-    });
-    const data = await response.json().catch(() => null) as { data?: { create_item?: { id?: string } }; errors?: Array<{ message?: string }> } | null;
-    if (!response.ok || data?.errors?.length) {
-      throw new Error(data?.errors?.map((item) => item.message).filter(Boolean).join(' ') || `Monday API rejected request (${response.status}).`);
-    }
-
-    return data?.data?.create_item?.id;
-  }
-
-  private async updateMondayItem(apiKey: string, boardId: string, itemId: string, columnValues: string): Promise<string | undefined> {
-    const query = `
-      mutation UpdateKendronicsItem($boardId: ID!, $itemId: ID!, $columnValues: JSON!) {
-        change_multiple_column_values(board_id: $boardId, item_id: $itemId, column_values: $columnValues) {
-          id
-        }
-      }
-    `;
-    const response = await fetch(process.env.MONDAY_API_URL ?? 'https://api.monday.com/v2', {
-      method: 'POST',
-      headers: {
-        Authorization: apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query, variables: { boardId, itemId, columnValues } }),
-    });
-    const data = await response.json().catch(() => null) as { data?: { change_multiple_column_values?: { id?: string } }; errors?: Array<{ message?: string }> } | null;
-    if (!response.ok || data?.errors?.length) {
-      throw new Error(data?.errors?.map((item) => item.message).filter(Boolean).join(' ') || `Monday API rejected update (${response.status}).`);
-    }
-
-    return data?.data?.change_multiple_column_values?.id ?? itemId;
+    return this.api.createItem(apiKey, boardId, itemName, columnValues);
   }
 
   private async findExistingItemId(
@@ -154,110 +106,15 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
     if (existingLog?.itemId) return existingLog.itemId;
 
     const value = objectValue(payload);
-    const identityField = identityFieldFor(board);
+    const identityField = this.config.identityFieldFor(board);
     const identityValue = value[identityField];
     if (identityValue == null || !['string', 'number'].includes(typeof identityValue)) return undefined;
 
-    const idMap = columnMapFor(board, 'MAP');
-    const titleMap = columnMapFor(board, 'TITLE_MAP');
-    const resolvedTitleMap = Object.keys(titleMap).length > 0 ? await this.resolveColumnTitles(apiKey, boardId, titleMap) : {};
-    const target = idMap[identityField] ? { id: idMap[identityField] } : resolvedTitleMap[identityField];
+    const target = await this.mapper.targetForField(board, identityField, apiKey, boardId);
     if (!target?.id) return undefined;
 
-    return this.findMondayItemByColumn(apiKey, boardId, target.id, String(identityValue));
+    return this.api.findItemByColumn(apiKey, boardId, target.id, String(identityValue));
   }
-
-  private async findMondayItemByColumn(apiKey: string, boardId: string, columnId: string, columnValue: string): Promise<string | undefined> {
-    const query = `
-      query FindKendronicsItem($boardId: ID!, $columnId: String!, $columnValue: String!) {
-        items_page_by_column_values(
-          board_id: $boardId,
-          limit: 1,
-          columns: [{ column_id: $columnId, column_values: [$columnValue] }]
-        ) {
-          items {
-            id
-          }
-        }
-      }
-    `;
-    const response = await fetch(process.env.MONDAY_API_URL ?? 'https://api.monday.com/v2', {
-      method: 'POST',
-      headers: {
-        Authorization: apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query, variables: { boardId, columnId, columnValue } }),
-    });
-    const data = await response.json().catch(() => null) as { data?: { items_page_by_column_values?: { items?: Array<{ id?: string }> } }; errors?: Array<{ message?: string }> } | null;
-    if (!response.ok || data?.errors?.length) {
-      throw new Error(data?.errors?.map((item) => item.message).filter(Boolean).join(' ') || `Monday item lookup failed (${response.status}).`);
-    }
-
-    return data?.data?.items_page_by_column_values?.items?.[0]?.id;
-  }
-
-  private async columnValuesFor(board: string, payload: unknown, apiKey: string, boardId: string): Promise<Record<string, unknown>> {
-    const value = objectValue(payload);
-    const idMap = columnMapFor(board, 'MAP');
-    const titleMap = columnMapFor(board, 'TITLE_MAP');
-    const resolvedTitleMap = Object.keys(titleMap).length > 0 ? await this.resolveColumnTitles(apiKey, boardId, titleMap) : {};
-    const columnMap: Record<string, MondayColumnTarget> = {
-      ...Object.fromEntries(Object.entries(idMap).map(([source, id]) => [source, { id }])),
-      ...resolvedTitleMap,
-    };
-
-    return Object.fromEntries(
-      Object.entries(value)
-        .filter(([key, entry]) => columnMap[key] && (entry == null || ['string', 'number', 'boolean'].includes(typeof entry)))
-        .map(([key, entry]) => [columnMap[key].id, mondayColumnValue(entry as string | number | boolean | null, columnMap[key].type)]),
-    );
-  }
-
-  private async resolveColumnTitles(apiKey: string, boardId: string, sourceToTitle: Record<string, string>): Promise<Record<string, MondayColumnTarget>> {
-    const query = `
-      query KendronicsBoardColumns($boardId: ID!) {
-        boards(ids: [$boardId]) {
-          columns {
-            id
-            title
-            type
-          }
-        }
-      }
-    `;
-    const response = await fetch(process.env.MONDAY_API_URL ?? 'https://api.monday.com/v2', {
-      method: 'POST',
-      headers: {
-        Authorization: apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query, variables: { boardId } }),
-    });
-    const data = await response.json().catch(() => null) as { data?: { boards?: Array<{ columns?: Array<{ id?: string; title?: string; type?: string }> }> }; errors?: Array<{ message?: string }> } | null;
-    if (!response.ok || data?.errors?.length) {
-      throw new Error(data?.errors?.map((item) => item.message).filter(Boolean).join(' ') || `Monday column discovery failed (${response.status}).`);
-    }
-
-    const titleToId = new Map(
-      (data?.data?.boards?.[0]?.columns ?? [])
-        .filter((column) => column.id && column.title)
-        .map((column) => [normalizeTitle(column.title), { id: column.id as string, type: column.type }]),
-    );
-
-    const resolved: Record<string, MondayColumnTarget> = {};
-    for (const [source, title] of Object.entries(sourceToTitle)) {
-      const target = titleToId.get(normalizeTitle(title));
-      if (target) resolved[source] = target;
-    }
-    return resolved;
-  }
-}
-
-function boardIdFor(board: string): string | undefined {
-  const canonical = canonicalBoard(board);
-  const key = `MONDAY_BOARD_${canonical}_ID`;
-  return process.env[key]?.trim();
 }
 
 function itemNameFor(operation: string, payload: unknown): string {
@@ -265,58 +122,6 @@ function itemNameFor(operation: string, payload: unknown): string {
   return String(value.orderNumber ?? value.internalReference ?? value.paymentId ?? operation).slice(0, 255);
 }
 
-function identityFieldFor(board: string): string {
-  const canonical = canonicalBoard(board);
-  const configured = process.env[`MONDAY_IDENTITY_FIELD_${canonical}`]?.trim();
-  if (configured) return configured;
-  if (canonical === 'EN_PRODUCTION') return 'internalReference';
-  if (canonical === 'SUPPORT_CLIENTS') return 'ticketNumber';
-  if (canonical === 'CHIFFRE_AFFAIRE_LIVE') return 'invoiceNumber';
-  return 'orderNumber';
-}
-
 function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
-}
-
-function columnMapFor(board: string, suffix: 'MAP' | 'TITLE_MAP'): Record<string, string> {
-  const key = `MONDAY_COLUMN_${suffix}_${canonicalBoard(board)}`;
-  const raw = process.env[key]?.trim();
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
-    return Object.fromEntries(
-      Object.entries(parsed)
-        .filter(([, value]) => typeof value === 'string' && value.trim())
-        .map(([source, target]) => [source, String(target).trim()]),
-    );
-  } catch {
-    return {};
-  }
-}
-
-function canonicalBoard(board: string): string {
-  const normalized = board.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
-  return mondayBoardAliases[normalized] ?? normalized;
-}
-
-function normalizeTitle(value: string | undefined): string {
-  return (value ?? '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
-
-type MondayColumnTarget = { id: string; type?: string };
-
-function mondayColumnValue(value: string | number | boolean | null, type?: string): unknown {
-  if (value == null) return null;
-  if (type === 'status') return { label: String(value) };
-  if (type === 'date') return { date: String(value).slice(0, 10) };
-  if (type === 'numbers') return typeof value === 'number' ? value : Number(value) || 0;
-  if (type === 'link') return { url: String(value), text: String(value).slice(0, 120) };
-  return value;
 }
