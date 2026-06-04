@@ -112,6 +112,7 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
 
     const target = await this.mapper.targetForField(board, identityField, apiKey, boardId);
     if (!target?.id) return undefined;
+    if (target.id === 'name') return undefined;
 
     return this.api.findItemByColumn(apiKey, boardId, target.id, String(identityValue));
   }
@@ -119,7 +120,7 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
 
 function itemNameFor(operation: string, payload: unknown): string {
   const value = objectValue(payload);
-  return String(value.orderNumber ?? value.internalReference ?? value.paymentId ?? operation).slice(0, 255);
+  return String(value.orderNumber ?? value.ticketNumber ?? value.expenseId ?? value.treasuryMonth ?? value.internalReference ?? value.paymentId ?? operation).slice(0, 255);
 }
 
 function objectValue(value: unknown): Record<string, unknown> {

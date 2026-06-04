@@ -101,10 +101,21 @@ export class MondayApiService {
       },
       body: JSON.stringify({ query, variables }),
     });
-    const body = await response.json().catch(() => null) as (MondayErrorResponse & { data?: T }) | null;
+    const rawBody = await response.text().catch(() => '');
+    const body = parseMondayBody<T>(rawBody);
     if (!response.ok || body?.errors?.length) {
-      throw new Error(body?.errors?.map((item) => item.message).filter(Boolean).join(' ') || `Monday API request failed (${response.status}).`);
+      const mondayMessage = body?.errors?.map((item) => item.message).filter(Boolean).join(' ');
+      throw new Error(mondayMessage || `Monday API request failed (${response.status} ${response.statusText}) at ${this.config.apiUrl()}: ${rawBody.slice(0, 300)}`);
     }
     return (body?.data ?? {}) as T;
+  }
+}
+
+function parseMondayBody<T>(rawBody: string): (MondayErrorResponse & { data?: T }) | null {
+  if (!rawBody) return null;
+  try {
+    return JSON.parse(rawBody) as MondayErrorResponse & { data?: T };
+  } catch {
+    return null;
   }
 }
