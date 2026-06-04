@@ -23,7 +23,7 @@ export class MondayMapperService {
 
     return Object.fromEntries(
       Object.entries(value)
-        .filter(([key, entry]) => columnMap[key] && (entry == null || ['string', 'number', 'boolean'].includes(typeof entry)))
+        .filter(([key, entry]) => columnMap[key] && columnMap[key].id !== 'name' && (entry == null || ['string', 'number', 'boolean'].includes(typeof entry)))
         .map(([key, entry]) => [columnMap[key].id, mondayColumnValue(entry as string | number | boolean | null, columnMap[key].type)]),
     );
   }
