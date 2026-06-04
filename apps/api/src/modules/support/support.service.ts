@@ -57,8 +57,8 @@ export class SupportService {
           customerName: ticket.requesterName,
           customerEmail: ticket.requesterEmail,
           creationDate: ticket.createdAt.toISOString(),
-          category: ticket.category,
-          ticketStatus: ticket.status,
+          category: mondaySupportCategory(ticket.category),
+          ticketStatus: mondaySupportStatus(ticket.status),
           ticketPriority: 'Normal',
           firstResponseDeadline: deadlineIso(4),
           subject: ticket.subject,
@@ -71,6 +71,29 @@ export class SupportService {
 
 function deadlineIso(hours: number): string {
   return new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+}
+
+function mondaySupportCategory(category: string | null | undefined): string {
+  const categories: Record<string, string> = {
+    quote_issue: 'Défaut PCB',
+    upload_issue: 'Défaut PCB',
+    payment_issue: 'Problème Paiement',
+    delivery_issue: 'Retard Expédition',
+    technical_question: 'Problème Technique',
+    partnership: 'Autre',
+  };
+  return categories[category ?? ''] ?? 'Autre';
+}
+
+function mondaySupportStatus(status: string | null | undefined): string {
+  const statuses: Record<string, string> = {
+    open: 'Ouvert',
+    pending_customer: 'En attente client',
+    pending_admin: 'En cours',
+    resolved: 'Résolu',
+    closed: 'Fermé',
+  };
+  return statuses[status ?? ''] ?? 'Ouvert';
 }
 
 function frontendOrigin(): string {

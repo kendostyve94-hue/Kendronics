@@ -10,7 +10,7 @@ export class MondayApiService {
   async createItem(apiKey: string, boardId: string, itemName: string, columnValues: string): Promise<string | undefined> {
     const query = `
       mutation CreateKendronicsItem($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
-        create_item(board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
+        create_item(board_id: $boardId, item_name: $itemName, column_values: $columnValues, create_labels_if_missing: true) {
           id
         }
       }
@@ -26,7 +26,7 @@ export class MondayApiService {
   async updateItem(apiKey: string, boardId: string, itemId: string, columnValues: string): Promise<string | undefined> {
     const query = `
       mutation UpdateKendronicsItem($boardId: ID!, $itemId: ID!, $columnValues: JSON!) {
-        change_multiple_column_values(board_id: $boardId, item_id: $itemId, column_values: $columnValues) {
+        change_multiple_column_values(board_id: $boardId, item_id: $itemId, column_values: $columnValues, create_labels_if_missing: true) {
           id
         }
       }
