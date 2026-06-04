@@ -603,6 +603,25 @@ model MondaySyncLog {
   @@index([status])
 }
 
+model MondayWebhookEvent {
+  id              String    @id @default(uuid())
+  providerEventId String    @unique
+  board           String?
+  boardId         String?
+  itemId          String?
+  eventType       String
+  payload         Json
+  processedAt     DateTime?
+  processingError String?
+  createdAt       DateTime  @default(now())
+
+  @@index([board])
+  @@index([boardId])
+  @@index([itemId])
+  @@index([eventType])
+  @@index([processedAt])
+}
+
 model TrackingEvent {
   id          String   @id @default(uuid())
   orderId     String
