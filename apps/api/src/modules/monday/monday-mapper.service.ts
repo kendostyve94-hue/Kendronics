@@ -5,6 +5,7 @@ import { MondayColumnTarget, MondayConfigService } from './monday-config.service
 @Injectable()
 export class MondayMapperService {
   private readonly columnCache = new Map<string, Record<string, MondayColumnTarget>>();
+  private readonly columnIdCache = new Map<string, Record<string, MondayColumnTarget>>();
 
   constructor(
     private readonly api: MondayApiService,
@@ -15,10 +16,11 @@ export class MondayMapperService {
     const value = objectValue(payload);
     const idMap = this.config.columnMapFor(board, 'MAP');
     const titleMap = this.config.columnMapFor(board, 'TITLE_MAP');
+    const resolvedIdMap = Object.keys(idMap).length > 0 ? await this.resolveColumnIds(board, apiKey, boardId, idMap) : {};
     const resolvedTitleMap = Object.keys(titleMap).length > 0 ? await this.resolveColumnTitles(board, apiKey, boardId, titleMap) : {};
     const columnMap: Record<string, MondayColumnTarget> = {
-      ...Object.fromEntries(Object.entries(idMap).map(([source, id]) => [source, { id }])),
       ...resolvedTitleMap,
+      ...resolvedIdMap,
     };
 
     return Object.fromEntries(
@@ -30,10 +32,34 @@ export class MondayMapperService {
 
   async targetForField(board: string, field: string, apiKey: string, boardId: string): Promise<MondayColumnTarget | undefined> {
     const idMap = this.config.columnMapFor(board, 'MAP');
-    if (idMap[field]) return { id: idMap[field] };
+    if (idMap[field]) {
+      const resolvedIdMap = await this.resolveColumnIds(board, apiKey, boardId, idMap);
+      return resolvedIdMap[field] ?? { id: idMap[field] };
+    }
     const titleMap = this.config.columnMapFor(board, 'TITLE_MAP');
     const resolvedTitleMap = Object.keys(titleMap).length > 0 ? await this.resolveColumnTitles(board, apiKey, boardId, titleMap) : {};
     return resolvedTitleMap[field];
+  }
+
+  private async resolveColumnIds(
+    board: string,
+    apiKey: string,
+    boardId: string,
+    sourceToId: Record<string, string>,
+  ): Promise<Record<string, MondayColumnTarget>> {
+    const cacheKey = `${this.config.canonicalBoard(board)}:${boardId}`;
+    let idToTarget = this.columnIdCache.get(cacheKey);
+    if (!idToTarget) {
+      const columns = await this.api.getBoardColumns(apiKey, boardId);
+      idToTarget = Object.fromEntries(
+        columns.map((column) => [column.id, { id: column.id, type: column.type }]),
+      );
+      this.columnIdCache.set(cacheKey, idToTarget);
+    }
+
+    return Object.fromEntries(
+      Object.entries(sourceToId).map(([source, id]) => [source, idToTarget[id] ?? { id }]),
+    );
   }
 
   private async resolveColumnTitles(
