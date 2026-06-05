@@ -48,6 +48,7 @@ export default function ContactPage() {
   const [errors, setErrors] = useState<ContactFormErrors>({});
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [ticketNumber, setTicketNumber] = useState('');
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const canSubmit = isContactFormReady(values);
 
   async function submitContact(event: FormEvent<HTMLFormElement>) {
@@ -67,14 +68,16 @@ export default function ContactPage() {
       message: buildSupportMessage(values),
       attachmentName: values.attachmentName || undefined,
     };
+    const requestBody = attachmentFile ? buildContactFormData(payload, attachmentFile) : JSON.stringify(payload);
+    const requestHeaders = attachmentFile ? undefined : { 'Content-Type': 'application/json' };
 
     setSubmitState('submitting');
 
     try {
       const response = await fetch(`${apiBaseUrl}${supportTicketApiContract.publicContact.path}`, {
         method: supportTicketApiContract.publicContact.method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        headers: requestHeaders,
+        body: requestBody,
       });
 
       if (!response.ok) {
@@ -84,6 +87,7 @@ export default function ContactPage() {
       const ticket = (await response.json()) as SupportTicketResponse;
       setTicketNumber(ticket.ticketNumber);
       setValues(initialValues);
+      setAttachmentFile(null);
       setSubmitState('submitted');
     } catch {
       setErrors({ form: `Impossible d’envoyer le ticket support. Écrivez à ${officialContactEmail}.` });
@@ -98,7 +102,9 @@ export default function ContactPage() {
   }
 
   function updateAttachment(event: ChangeEvent<HTMLInputElement>) {
-    update('attachmentName', event.target.files?.[0]?.name ?? '');
+    const file = event.target.files?.[0] ?? null;
+    setAttachmentFile(file);
+    update('attachmentName', file?.name ?? '');
   }
 
   return (
@@ -414,6 +420,18 @@ function buildSupportMessage(values: ContactFormState): string {
   ].filter((line): line is string => line !== undefined);
 
   return lines.join('\n');
+}
+
+function buildContactFormData(payload: CreatePublicSupportTicketRequest, attachment: File): FormData {
+  const formData = new FormData();
+  formData.append('name', payload.name);
+  formData.append('email', payload.email);
+  formData.append('category', payload.category);
+  formData.append('message', payload.message);
+  if (payload.orderId) formData.append('orderId', payload.orderId);
+  formData.append('attachmentName', payload.attachmentName || attachment.name);
+  formData.append('attachment', attachment, attachment.name);
+  return formData;
 }
 
 function BrandIcon({ icon }: { icon: string }) {

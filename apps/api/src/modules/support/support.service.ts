@@ -7,6 +7,13 @@ import { EmailNotificationService } from './email-notification.service';
 import { SupportTicket } from './entities/support-ticket.entity';
 import { SupportTicketRepository } from './repositories/support-ticket.repository';
 
+export type SupportAttachment = {
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+};
+
 @Injectable()
 export class SupportService {
   constructor(
@@ -37,14 +44,17 @@ export class SupportService {
     return ticket;
   }
 
-  async createPublicTicket(dto: CreatePublicSupportTicketDto): Promise<SupportTicket> {
+  async createPublicTicket(dto: CreatePublicSupportTicketDto, attachment?: SupportAttachment): Promise<SupportTicket> {
+    if (attachment && !dto.attachmentName) {
+      dto.attachmentName = attachment.originalname;
+    }
     const ticket = await this.ticketRepository.createPublic(dto);
     await this.emailNotificationService.sendSupportTicketNotification(ticket);
-    await this.queueMondaySupportTicket(ticket);
+    await this.queueMondaySupportTicket(ticket, attachment);
     return ticket;
   }
 
-  private async queueMondaySupportTicket(ticket: SupportTicket): Promise<void> {
+  private async queueMondaySupportTicket(ticket: SupportTicket, attachment?: SupportAttachment): Promise<void> {
     await this.prisma.mondaySyncLog.create({
       data: {
         orderId: ticket.orderId,
@@ -64,6 +74,9 @@ export class SupportService {
           resolutionNotes: mondaySupportCustomerMessage(ticket),
           subject: ticket.subject,
           orderLink: ticket.orderId ? `${frontendOrigin()}/orders/${ticket.orderId}` : undefined,
+          attachmentFileName: attachment?.originalname,
+          attachmentFileMimeType: attachment?.mimetype,
+          attachmentFileBase64: attachment?.buffer.toString('base64'),
         } as Prisma.InputJsonValue,
       },
     });

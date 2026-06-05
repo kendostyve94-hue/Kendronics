@@ -2,6 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { MondayColumnTarget, MondayConfigService } from './monday-config.service';
 
 type MondayErrorResponse = { errors?: Array<{ message?: string }> };
+type MondayFileUpload = {
+  filename: string;
+  mimetype?: string;
+  buffer: Buffer;
+};
 
 @Injectable()
 export class MondayApiService {
@@ -92,6 +97,46 @@ export class MondayApiService {
     await this.updateItem(apiKey, boardId, itemId, columnValues);
   }
 
+  async addFileToColumn(apiKey: string, itemId: string, columnId: string, file: MondayFileUpload): Promise<string | undefined> {
+    const query = `
+      mutation AddKendronicsFile($itemId: ID!, $columnId: String!, $file: File!) {
+        add_file_to_column(item_id: $itemId, column_id: $columnId, file: $file) {
+          id
+        }
+      }
+    `;
+    const formData = new FormData();
+    formData.append('operations', JSON.stringify({
+      query,
+      variables: {
+        itemId,
+        columnId,
+        file: null,
+      },
+    }));
+    formData.append('map', JSON.stringify({ '0': ['variables.file'] }));
+    formData.append(
+      '0',
+      new Blob([new Uint8Array(file.buffer)], { type: file.mimetype || 'application/octet-stream' }),
+      file.filename,
+    );
+
+    const response = await fetch(this.fileApiUrl(), {
+      method: 'POST',
+      headers: {
+        Authorization: apiKey,
+      },
+      body: formData,
+    });
+    const rawBody = await response.text().catch(() => '');
+    const body = parseMondayBody<{ add_file_to_column?: { id?: string } }>(rawBody);
+    if (!response.ok || body?.errors?.length) {
+      const mondayMessage = body?.errors?.map((item) => item.message).filter(Boolean).join(' ');
+      throw new Error(mondayMessage || `Monday file upload failed (${response.status} ${response.statusText}): ${rawBody.slice(0, 300)}`);
+    }
+    return body?.data?.add_file_to_column?.id;
+  }
+
   async graphqlRequest<T>(apiKey: string, query: string, variables: Record<string, unknown>): Promise<T> {
     const response = await fetch(this.config.apiUrl(), {
       method: 'POST',
@@ -108,6 +153,11 @@ export class MondayApiService {
       throw new Error(mondayMessage || `Monday API request failed (${response.status} ${response.statusText}) at ${this.config.apiUrl()}: ${rawBody.slice(0, 300)}`);
     }
     return (body?.data ?? {}) as T;
+  }
+
+  private fileApiUrl(): string {
+    const apiUrl = this.config.apiUrl().replace(/\/+$/, '');
+    return apiUrl.endsWith('/v2') ? `${apiUrl}/file` : `${apiUrl}/v2/file`;
   }
 }
 

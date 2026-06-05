@@ -75,11 +75,26 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
     const itemName = itemNameFor(operation, payload);
     const columnValues = JSON.stringify(await this.mapper.columnValuesFor(board, payload, apiKey, boardId));
     const existingItemId = await this.findExistingItemId(logId, board, orderId, payload, apiKey, boardId);
-    if (existingItemId) {
-      return this.api.updateItem(apiKey, boardId, existingItemId, columnValues);
+    const itemId = existingItemId
+      ? await this.api.updateItem(apiKey, boardId, existingItemId, columnValues)
+      : await this.api.createItem(apiKey, boardId, itemName, columnValues);
+
+    if (itemId) {
+      await this.uploadSupportAttachment(board, payload, apiKey, boardId, itemId);
     }
 
-    return this.api.createItem(apiKey, boardId, itemName, columnValues);
+    return itemId;
+  }
+
+  private async uploadSupportAttachment(board: string, payload: unknown, apiKey: string, boardId: string, itemId: string): Promise<void> {
+    if (this.config.canonicalBoard(board) !== 'SUPPORT_CLIENTS') return;
+    const attachment = supportAttachmentFromPayload(payload);
+    if (!attachment) return;
+
+    const target = await this.mapper.targetForField(board, 'customerAttachments', apiKey, boardId);
+    if (!target?.id || target.type !== 'file') return;
+
+    await this.api.addFileToColumn(apiKey, itemId, target.id, attachment);
   }
 
   private async findExistingItemId(
@@ -125,4 +140,15 @@ function itemNameFor(operation: string, payload: unknown): string {
 
 function objectValue(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function supportAttachmentFromPayload(payload: unknown): { filename: string; mimetype?: string; buffer: Buffer } | undefined {
+  const value = objectValue(payload);
+  if (typeof value.attachmentFileName !== 'string' || typeof value.attachmentFileBase64 !== 'string') return undefined;
+
+  return {
+    filename: value.attachmentFileName,
+    mimetype: typeof value.attachmentFileMimeType === 'string' ? value.attachmentFileMimeType : undefined,
+    buffer: Buffer.from(value.attachmentFileBase64, 'base64'),
+  };
 }
