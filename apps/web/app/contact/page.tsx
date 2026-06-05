@@ -11,6 +11,7 @@ import {
   supportTicketApiContract,
   validateContactForm,
 } from '../../lib/contact-contract';
+import { getApiBaseUrl } from '../../lib/api-base-url';
 import { officialContactEmail } from '../../lib/official-contact';
 import type {
   ContactFormErrors,
@@ -23,8 +24,7 @@ type SubmitState = 'idle' | 'submitting' | 'submitted' | 'error';
 
 const heroImage = '/images/contact-support-hero.jpg';
 
-const apiBaseUrl =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : '');
+const apiBaseUrl = getApiBaseUrl();
 const whatsAppPhoneDisplay = '+33 07 970 427';
 const whatsAppPhoneDigits = '3307970427';
 const whatsAppHref = `https://wa.me/${whatsAppPhoneDigits}`;

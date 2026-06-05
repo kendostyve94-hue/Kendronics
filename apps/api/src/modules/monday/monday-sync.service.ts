@@ -90,7 +90,12 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
     if (this.config.canonicalBoard(board) !== 'SUPPORT_CLIENTS') return;
     const attachment = supportAttachmentFromPayload(payload);
     if (!attachment) {
-      this.logger.warn(`Monday support attachment skipped for item ${itemId}: no uploaded file was found in the sync payload.`);
+      const expectedFileName = supportAttachmentNameFromPayload(payload);
+      if (expectedFileName) {
+        this.logger.warn(
+          `Monday support attachment skipped for item ${itemId}: "${expectedFileName}" was referenced, but no file binary was found in the sync payload.`,
+        );
+      }
       return;
     }
 
@@ -184,4 +189,11 @@ function supportAttachmentFromPayload(payload: unknown): { filename: string; mim
     mimetype: typeof value.attachmentFileMimeType === 'string' ? value.attachmentFileMimeType : undefined,
     buffer: Buffer.from(value.attachmentFileBase64, 'base64'),
   };
+}
+
+function supportAttachmentNameFromPayload(payload: unknown): string | undefined {
+  const value = objectValue(payload);
+  if (typeof value.attachmentFileName === 'string') return value.attachmentFileName;
+  if (typeof value.attachmentName === 'string') return value.attachmentName;
+  return undefined;
 }

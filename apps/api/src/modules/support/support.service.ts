@@ -74,6 +74,7 @@ export class SupportService {
           resolutionNotes: mondaySupportCustomerMessage(ticket),
           subject: ticket.subject,
           orderLink: ticket.orderId ? `${frontendOrigin()}/orders/${ticket.orderId}` : undefined,
+          attachmentName: ticket.attachmentName,
           attachmentFileName: attachment?.originalname,
           attachmentFileMimeType: attachment?.mimetype,
           attachmentFileBase64: attachment?.buffer.toString('base64'),

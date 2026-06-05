@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -8,6 +8,8 @@ import { SupportService } from './support.service';
 
 @Controller('support')
 export class SupportController {
+  private readonly logger = new Logger(SupportController.name);
+
   constructor(private readonly supportService: SupportService) {}
 
   @Get('tickets')
@@ -34,6 +36,13 @@ export class SupportController {
       buffer: Buffer;
     },
   ) {
+    if (attachment?.buffer?.length) {
+      this.logger.log(`Public support ticket received attachment: ${attachment.originalname} (${attachment.size} bytes).`);
+    } else if (dto.attachmentName) {
+      this.logger.warn(`Public support ticket received attachment name "${dto.attachmentName}" but no file binary.`);
+    } else {
+      this.logger.log('Public support ticket received without attachment.');
+    }
     return this.supportService.createPublicTicket(dto, attachment);
   }
 }

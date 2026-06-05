@@ -54,7 +54,7 @@ export const supportTicketApiContract = {
     path: '/api/support/contact',
     request: 'CreatePublicSupportTicketRequest',
     response: 'SupportTicketResponse',
-    note: 'Public support ticket intake. Optional file attachment is recorded as attachmentName until file upload storage is connected.',
+    note: 'Public support ticket intake. Optional file attachment is sent as multipart/form-data with field name attachment.',
   },
   authenticatedTickets: {
     method: 'POST',
