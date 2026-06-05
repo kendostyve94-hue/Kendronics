@@ -42,6 +42,11 @@ export class MondayMapperService {
     return resolvedTitleMap[field];
   }
 
+  async targetForTitle(board: string, title: string, apiKey: string, boardId: string): Promise<MondayColumnTarget | undefined> {
+    const resolvedTitleMap = await this.resolveColumnTitles(board, apiKey, boardId, { target: title });
+    return resolvedTitleMap.target;
+  }
+
   private async resolveColumnIds(
     board: string,
     apiKey: string,

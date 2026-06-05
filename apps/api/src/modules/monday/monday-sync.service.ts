@@ -89,12 +89,45 @@ export class MondaySyncService implements OnModuleInit, OnModuleDestroy {
   private async uploadSupportAttachment(board: string, payload: unknown, apiKey: string, boardId: string, itemId: string): Promise<void> {
     if (this.config.canonicalBoard(board) !== 'SUPPORT_CLIENTS') return;
     const attachment = supportAttachmentFromPayload(payload);
-    if (!attachment) return;
+    if (!attachment) {
+      this.logger.warn(`Monday support attachment skipped for item ${itemId}: no uploaded file was found in the sync payload.`);
+      return;
+    }
 
-    const target = await this.mapper.targetForField(board, 'customerAttachments', apiKey, boardId);
-    if (!target?.id || target.type !== 'file') return;
+    const target = await this.findSupportAttachmentTarget(board, apiKey, boardId);
+    if (!target?.id) {
+      this.logger.warn(
+        `Monday support attachment skipped for item ${itemId}: column "Pièces Jointes Client" was not found. Check MONDAY_COLUMN_MAP_SUPPORT_CLIENTS.customerAttachments.`,
+      );
+      return;
+    }
+    if (target.type && target.type !== 'file') {
+      this.logger.warn(
+        `Monday support attachment skipped for item ${itemId}: column ${target.id} is type "${target.type}", expected "file".`,
+      );
+      return;
+    }
 
-    await this.api.addFileToColumn(apiKey, itemId, target.id, attachment);
+    const fileId = await this.api.addFileToColumn(apiKey, itemId, target.id, attachment);
+    this.logger.log(`Monday support attachment uploaded for item ${itemId}: ${attachment.filename} (${fileId ?? 'uploaded'}).`);
+  }
+
+  private async findSupportAttachmentTarget(board: string, apiKey: string, boardId: string) {
+    const mapped = await this.mapper.targetForField(board, 'customerAttachments', apiKey, boardId);
+    if (mapped?.id) return mapped;
+
+    const titleCandidates = [
+      'Pièces Jointes Client',
+      'Pieces Jointes Client',
+      'Pièce Jointe Client',
+      'Piece Jointe Client',
+      'Pièces jointes client',
+    ];
+    for (const title of titleCandidates) {
+      const target = await this.mapper.targetForTitle(board, title, apiKey, boardId);
+      if (target?.id) return target;
+    }
+    return undefined;
   }
 
   private async findExistingItemId(
