@@ -61,12 +61,23 @@ export class SupportService {
           ticketStatus: mondaySupportStatus(ticket.status),
           ticketPriority: 'Normal',
           firstResponseDeadline: deadlineIso(4),
+          resolutionNotes: mondaySupportCustomerMessage(ticket),
           subject: ticket.subject,
           orderLink: ticket.orderId ? `${frontendOrigin()}/orders/${ticket.orderId}` : undefined,
         } as Prisma.InputJsonValue,
       },
     });
   }
+}
+
+function mondaySupportCustomerMessage(ticket: SupportTicket): string {
+  const lines = [
+    ticket.subject ? `Sujet: ${ticket.subject}` : undefined,
+    ticket.message ? `Message client:\n${ticket.message}` : undefined,
+    ticket.attachmentName ? `Piece jointe client: ${ticket.attachmentName}` : undefined,
+  ].filter((line): line is string => Boolean(line));
+
+  return lines.join('\n\n');
 }
 
 function deadlineIso(hours: number): string {
