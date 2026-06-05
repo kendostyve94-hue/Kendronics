@@ -26,7 +26,8 @@ export class MondayMapperService {
     return Object.fromEntries(
       Object.entries(value)
         .filter(([key, entry]) => columnMap[key] && columnMap[key].id !== 'name' && (entry == null || ['string', 'number', 'boolean'].includes(typeof entry)))
-        .map(([key, entry]) => [columnMap[key].id, mondayColumnValue(entry as string | number | boolean | null, columnMap[key].type)]),
+        .map(([key, entry]) => [columnMap[key].id, mondayColumnValue(entry as string | number | boolean | null, columnMap[key].type)])
+        .filter(([, entry]) => entry !== undefined),
     );
   }
 
@@ -106,8 +107,11 @@ function normalizeTitle(value: string | undefined): string {
 function mondayColumnValue(value: string | number | boolean | null, type?: string): unknown {
   if (value == null) return null;
   if (type === 'status') return { label: String(value) };
+  if (type === 'dropdown') return { labels: [String(value)] };
   if (type === 'date') return { date: String(value).slice(0, 10) };
   if (type === 'numbers') return typeof value === 'number' ? value : Number(value) || 0;
   if (type === 'link') return { url: String(value), text: String(value).slice(0, 120) };
+  if (type === 'email') return { email: String(value), text: String(value) };
+  if (type === 'board_relation' || type === 'file' || type === 'people') return undefined;
   return value;
 }
