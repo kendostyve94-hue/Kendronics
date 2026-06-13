@@ -3,6 +3,7 @@ import { HealthController } from './health.controller';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CountriesModule } from './modules/countries/countries.module';
+import { ExplorerModule } from './modules/explorer/explorer.module';
 import { HomeModule } from './modules/home/home.module';
 import { LogisticsModule } from './modules/logistics/logistics.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -19,6 +20,7 @@ import { PrismaModule } from './prisma/prisma.module';
 @Module({
   imports: [
     PrismaModule,
+    ExplorerModule,
     HomeModule,
     AuthModule,
     UsersModule,

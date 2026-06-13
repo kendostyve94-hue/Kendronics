@@ -41,6 +41,8 @@ model User {
   adminAuditLogs AdminAuditLog[]
   adminAccesses AdminAccess[]
   notifications Notification[]
+  explorerProjects ExplorerProject[]
+  explorerComments ExplorerComment[]
   profileVerificationCodes ProfileVerificationCode[]
   passwordResetTokens PasswordResetToken[]
   accountDeletionFeedbacks AccountDeletionFeedback[]
@@ -761,6 +763,72 @@ model Notification {
 
   @@index([userId])
   @@index([userId, readAt])
+  @@index([createdAt])
+}
+
+model ExplorerProject {
+  id             String   @id @default(uuid())
+  userId         String?
+  authorName     String
+  authorAvatarUrl String?
+  title          String
+  category       String
+  summary        String
+  description    String?
+  tags           String[] @default([])
+  imageUrl       String?
+  attachmentName String?
+  attachmentType String?
+  repositoryUrl  String?
+  status         String   @default("published")
+  featured       Boolean  @default(false)
+  viewsCount     Int      @default(0)
+  likesCount     Int      @default(0)
+  commentsCount  Int      @default(0)
+  forksCount     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  likes ExplorerProjectLike[]
+  comments ExplorerComment[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([featured])
+  @@index([category])
+  @@index([createdAt])
+  @@index([likesCount])
+}
+
+model ExplorerProjectLike {
+  id        String   @id @default(uuid())
+  projectId String
+  actorKey  String
+  createdAt DateTime @default(now())
+
+  project ExplorerProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, actorKey])
+  @@index([projectId])
+}
+
+model ExplorerComment {
+  id          String   @id @default(uuid())
+  projectId   String
+  userId      String?
+  authorName  String
+  body        String
+  status      String   @default("visible")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project ExplorerProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([userId])
+  @@index([status])
   @@index([createdAt])
 }
 
