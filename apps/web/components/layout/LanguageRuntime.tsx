@@ -36,6 +36,8 @@ export type TranslationKey =
   | 'nav.item.faq'
   | 'nav.item.technicalGuide'
   | 'nav.item.contact'
+  | 'nav.item.explorer'
+  | 'nav.item.blog'
   | 'nav.item.aboutUs'
   | 'nav.item.refund'
   | 'nav.item.terms'
@@ -76,6 +78,8 @@ const messages: Record<Language, Record<TranslationKey, string>> = {
     'nav.item.faq': 'FAQ',
     'nav.item.technicalGuide': 'Guide technique',
     'nav.item.contact': 'Contact',
+    'nav.item.explorer': 'Explorer',
+    'nav.item.blog': 'Blog',
     'nav.item.aboutUs': 'Qui sommes-nous',
     'nav.item.refund': 'Remboursement',
     'nav.item.terms': 'Termes et conditions',
@@ -115,6 +119,8 @@ const messages: Record<Language, Record<TranslationKey, string>> = {
     'nav.item.faq': 'FAQ',
     'nav.item.technicalGuide': 'Guide technique',
     'nav.item.contact': 'Contact',
+    'nav.item.explorer': 'Explorer',
+    'nav.item.blog': 'Blog',
     'nav.item.aboutUs': 'A propos us',
     'nav.item.refund': 'Remboursement',
     'nav.item.terms': 'Termes et conditions',

@@ -14,8 +14,18 @@ const apiBaseUrl = getApiBaseUrl();
 type NavLabelKey = TranslationKey;
 type NavItem = { labelKey: NavLabelKey; href: string };
 type SearchItem = NavItem & { keywords: string };
+type MenuLink = { label: string; href: string; description?: string; image?: string; external?: boolean };
+type MenuGroup = { title: string; items: MenuLink[] };
+type MainNavItem =
+  | { type: 'link'; label: string; href: string }
+  | { type: 'products'; label: string; groups: MenuGroup[] }
+  | { type: 'support'; label: string; groups: MenuGroup[] };
 type MobileProfileMenuItem = { label: string; href: string; count?: number };
 type MobileProfileMenuGroup = { title: string; items: MobileProfileMenuItem[] };
+
+const whatsAppHref = 'https://wa.me/3307970427';
+const whatsAppChannelHref = process.env.NEXT_PUBLIC_WHATSAPP_CHANNEL_URL ?? whatsAppHref;
+const youtubeChannelHref = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_URL ?? 'https://www.youtube.com';
 
 const searchItems = [
   { labelKey: 'nav.home', href: '/', keywords: 'home accueil kendronics' },
@@ -25,18 +35,98 @@ const searchItems = [
   { labelKey: 'nav.item.services', href: '/services', keywords: 'services pcb pcba stencil assemblage' },
   { labelKey: 'nav.item.technicalGuide', href: '/guide-technique', keywords: 'guide technical technique gerber kicad easyeda' },
   { labelKey: 'nav.item.helpCenter', href: '/centre-aide', keywords: 'aide help support faq contact' },
+  { labelKey: 'nav.item.explorer', href: '/explorer', keywords: 'explorer projets partage community oshwlab' },
+  { labelKey: 'nav.item.blog', href: '/blog', keywords: 'blog articles guides actualites pcb' },
   { labelKey: 'nav.item.profile', href: '/profile', keywords: 'compte account profil utilisateur' },
 ] satisfies SearchItem[];
 
-const profileNavItems = [
-  { label: 'Devis immediat', href: '/quote' },
-  { label: 'PCB prototype', href: '/services#pcb-standard' },
-  { label: 'Petites series', href: '/services#pcb-petit-lot' },
-  { label: 'PCB avance', href: '/services#pcb-avance' },
-  { label: 'Assistance Gerber', href: '/services#assistance-technique' },
-  { label: 'Comment ca marche', href: '/how-it-works' },
-  { label: 'Admin', href: '/admin' },
-] satisfies Array<{ label: string; href: string }>;
+const productMenuGroups: MenuGroup[] = [
+  {
+    title: 'Service PCB',
+    items: [
+      { label: 'PCB prototype', href: '/services#pcb-standard', image: '/images/quote-product-standard-pcb.png' },
+      { label: 'Petites séries', href: '/services#pcb-petit-lot', image: '/images/product-pcb-small-batch.png' },
+      { label: 'PCB Flexible & Rigide-flex', href: '/quote?product=fpc_rigid_flex', image: '/images/quote-product-fpc-rigid-flex.png' },
+      { label: 'Assistance Technique', href: '/services#assistance-technique', image: '/images/product-pcb-advanced.png' },
+    ],
+  },
+  {
+    title: 'Service PCBA',
+    items: [
+      { label: 'PCB Assemblage', href: '/services#pcba', image: '/images/quote-product-assembly.png' },
+      { label: 'Pochoir CMS', href: '/services#stencil', image: '/images/quote-product-smd-stencil.png' },
+      { label: 'Impression 3D & CNC', href: '/quote?product=cnc_3d', image: '/images/quote-product-advanced-pcba.png' },
+    ],
+  },
+];
+
+const supportMenuGroups: MenuGroup[] = [
+  {
+    title: 'Contactez-nous',
+    items: [
+      { label: 'Contact', href: '/contact', description: 'Ticket support et demande commerciale' },
+      { label: 'Contact WhatsApp', href: whatsAppHref, description: 'Message direct selon disponibilité', external: true },
+      { label: 'Chaîne WhatsApp', href: whatsAppChannelHref, description: 'Actualités et nouveautés Kendronics', external: true },
+      { label: 'Chaîne Youtube', href: youtubeChannelHref, description: 'Guides, fabrication et suivi', external: true },
+    ],
+  },
+  {
+    title: 'Support',
+    items: [
+      { label: "Centre d'aide", href: '/centre-aide', description: 'Réponses rapides, paiement, livraison et compte' },
+      { label: 'FAQ', href: '/faq', description: 'Questions fréquentes avant commande' },
+    ],
+  },
+];
+
+const mainNavItems: MainNavItem[] = [
+  { type: 'products', label: 'Produits', groups: productMenuGroups },
+  { type: 'link', label: 'Devis Immédiat', href: '/quote' },
+  { type: 'link', label: 'Capacité', href: '/capabilities' },
+  { type: 'link', label: 'Découvrir', href: '/how-it-works' },
+  { type: 'link', label: 'Explorer', href: '/explorer' },
+  { type: 'link', label: 'Blog', href: '/blog' },
+  { type: 'support', label: 'Support', groups: supportMenuGroups },
+  { type: 'link', label: 'Apropos', href: '/terms/mentions-legales' },
+];
+
+function mobileNavGroups(unreadNotifications: number, isAdmin: boolean): MobileProfileMenuGroup[] {
+  const groups: MobileProfileMenuGroup[] = [
+    {
+      title: 'Produits',
+      items: productMenuGroups.flatMap((group) => group.items.map((item) => ({ label: item.label, href: item.href }))),
+    },
+    {
+      title: 'Navigation',
+      items: [
+        { label: 'Devis Immédiat', href: '/quote' },
+        { label: 'Capacité', href: '/capabilities' },
+        { label: 'Découvrir', href: '/how-it-works' },
+        { label: 'Explorer', href: '/explorer' },
+        { label: 'Blog', href: '/blog' },
+        { label: 'Apropos', href: '/terms/mentions-legales' },
+      ],
+    },
+    {
+      title: 'Support',
+      items: supportMenuGroups.flatMap((group) => group.items.map((item) => ({ label: item.label, href: item.href }))),
+    },
+    {
+      title: 'Espace client',
+      items: [
+        { label: 'Tableau de bord', href: '/profile' },
+        { label: 'Mes commandes', href: '/profile?view=orders' },
+        { label: 'Notifications', href: '/profile?view=notifications', count: unreadNotifications },
+      ],
+    },
+  ];
+
+  if (isAdmin) {
+    groups.push({ title: 'Administration', items: [{ label: 'Admin', href: '/admin' }] });
+  }
+
+  return groups;
+}
 
 function mobileProfileMenuGroups(unreadNotifications: number): MobileProfileMenuGroup[] {
   return [
@@ -250,10 +340,6 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
 
   const cartHref = '/profile?view=orders';
 
-  const visibleProfileNavItems = useMemo(() => {
-    return profileNavItems.filter((item) => item.href !== '/admin' || isAdmin);
-  }, [isAdmin]);
-
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const items = searchItems.map((item) => (item.labelKey === 'nav.cart' ? { ...item, href: cartHref } : item));
@@ -275,10 +361,16 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             </a>
 
             <nav className="hidden min-w-0 flex-1 snap-x items-center justify-between gap-1 text-[14px] font-normal text-[#111827] xl:gap-2 xl:text-[15px] lg:flex">
-              {visibleProfileNavItems.map((item) => (
-                <a key={`${item.href}-${item.label}`} href={item.href} className="grid min-h-[54px] min-w-[84px] snap-start place-items-center px-1 text-center leading-6 transition hover:text-[#00a651] xl:min-w-[92px] xl:px-2">
-                  {item.label}
-                </a>
+              {mainNavItems.map((item) => (
+                item.type === 'link' ? (
+                  <a key={item.label} href={item.href} className="grid min-h-[54px] min-w-[76px] snap-start place-items-center px-1 text-center leading-6 transition hover:text-[#00a651] xl:min-w-[86px] xl:px-2">
+                    {item.label}
+                  </a>
+                ) : item.type === 'products' ? (
+                  <ProductsMegaMenu key={item.label} label={item.label} groups={item.groups} />
+                ) : (
+                  <SupportMegaMenu key={item.label} label={item.label} groups={item.groups} />
+                )
               ))}
             </nav>
           </div>
@@ -306,17 +398,11 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             )}
             <button
               type="button"
-              disabled={!isSignedIn}
-              className={`inline-flex h-9 w-9 items-center justify-center transition ${
-                isSignedIn
-                  ? 'text-[#0f8f6b] hover:text-[#0b7558]'
-                  : 'cursor-not-allowed text-[#9aa6b2] opacity-60'
-              }`}
+              className="inline-flex h-9 w-9 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558]"
               aria-label={isMenuOpen ? t('nav.closeMenu') : t('nav.openMenu')}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation"
               onClick={() => {
-                if (!isSignedIn) return;
                 setIsMenuOpen((open) => !open);
                 setIsSearchOpen(false);
                 setOpenMobileSection(null);
@@ -375,7 +461,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         {isMenuOpen ? (
           <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6rem)] max-w-[21.5rem] overflow-y-auto border-t border-slate-200 bg-white px-1 pb-4 pt-2 sm:max-w-[40rem] lg:hidden">
             <div className="grid">
-              {mobileProfileMenuGroups(unreadNotifications).map((group) => (
+              {mobileNavGroups(unreadNotifications, isAdmin).map((group) => (
                 <MobileProfileSection
                   key={group.title}
                   group={group}
@@ -497,21 +583,93 @@ function MobileProfileSection({ group, isOpen, onToggle, onNavigate }: { group: 
   );
 }
 
-function Dropdown({ label, items, t }: { label: string; items: NavItem[]; t: (key: NavLabelKey) => string }) {
+function ProductsMegaMenu({ label, groups }: { label: string; groups: MenuGroup[] }) {
   return (
-    <div className="group relative">
-      <button type="button" className="inline-flex h-14 items-center gap-1 text-slate-900 transition hover:text-[#0f8f6b]" aria-haspopup="true">
+    <div className="group relative grid min-h-[54px] min-w-[76px] place-items-center xl:min-w-[86px]">
+      <button type="button" className="inline-flex h-full items-center gap-1.5 text-center leading-6 text-slate-900 transition hover:text-[#0f8f6b]" aria-haspopup="true">
         {label}
-        <span className="text-[10px]">v</span>
+        <ChevronDownIcon />
       </button>
-      <div className="invisible absolute right-0 top-full min-w-44 translate-y-2 border border-slate-200 bg-[#edf3f8] p-1.5 text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
-        {items.map((item) => (
-          <a key={item.href} href={item.href} className="block px-3 py-1.5 text-sm font-normal text-slate-800 transition hover:bg-[#f1f5f9] hover:text-[#0f8f6b]">
-            {t(item.labelKey)}
-          </a>
-        ))}
+      <div className="invisible absolute left-0 top-full w-[560px] translate-y-2 border border-[#e2e8f0] bg-white p-7 text-left text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+        <div className="grid gap-7">
+          {groups.map((group) => (
+            <section key={group.title}>
+              <h3 className="text-sm font-black text-[#111827]">{group.title}</h3>
+              <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-4">
+                {group.items.map((item) => (
+                  <MenuTile key={item.label} item={item} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
     </div>
+  );
+}
+
+function SupportMegaMenu({ label, groups }: { label: string; groups: MenuGroup[] }) {
+  return (
+    <div className="group relative grid min-h-[54px] min-w-[76px] place-items-center xl:min-w-[86px]">
+      <button type="button" className="inline-flex h-full items-center gap-1.5 text-center leading-6 text-slate-900 transition hover:text-[#0f8f6b]" aria-haspopup="true">
+        {label}
+        <ChevronDownIcon />
+      </button>
+      <div className="invisible absolute right-0 top-full w-[760px] translate-y-2 border border-[#e2e8f0] bg-white p-8 text-left text-slate-950 opacity-0 transition group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+        <div className="grid grid-cols-[1fr_1px_0.85fr] gap-8">
+          <section>
+            <h3 className="text-sm font-black text-[#111827]">{groups[0]?.title}</h3>
+            <div className="mt-4 grid gap-4">
+              {groups[0]?.items.map((item) => (
+                <SupportMenuLink key={item.label} item={item} />
+              ))}
+            </div>
+          </section>
+          <div className="bg-[#e2e8f0]" aria-hidden="true" />
+          <section>
+            <h3 className="text-sm font-black text-[#111827]">{groups[1]?.title}</h3>
+            <div className="mt-4 grid gap-5">
+              {groups[1]?.items.map((item) => (
+                <SupportMenuLink key={item.label} item={item} compact />
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MenuTile({ item }: { item: MenuLink }) {
+  return (
+    <a href={item.href} className="grid grid-cols-[52px_1fr] items-center gap-4 text-sm text-[#1f2937] transition hover:text-[#0f8f6b]">
+      <span className="grid h-12 w-12 place-items-center overflow-hidden bg-[#f6f8fa]">
+        {item.image ? <img src={item.image} alt="" className="max-h-10 max-w-10 object-contain" /> : <span className="h-6 w-6 bg-[#0f8f6b]" />}
+      </span>
+      <span className="leading-5">{item.label}</span>
+    </a>
+  );
+}
+
+function SupportMenuLink({ item, compact = false }: { item: MenuLink; compact?: boolean }) {
+  return (
+    <a
+      href={item.href}
+      target={item.external ? '_blank' : undefined}
+      rel={item.external ? 'noreferrer' : undefined}
+      className={`block text-sm text-[#1f2937] transition hover:text-[#0f8f6b] ${compact ? 'py-1' : ''}`}
+    >
+      <span className="block font-medium">{item.label}</span>
+      {item.description ? <span className="mt-1 block text-xs leading-5 text-[#8a8f98]">{item.description}</span> : null}
+    </a>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m5 7.5 5 5 5-5" />
+    </svg>
   );
 }
 

@@ -420,9 +420,6 @@ export default function ProfilePage() {
                       <div className="hidden lg:block">
                         <StatusStrip counts={orderCounts(orders)} />
                       </div>
-                      <div className="hidden lg:block">
-                        <CommunityPublishPanel firstName={firstName} avatarDataUrl={avatarDataUrl} />
-                      </div>
                     </div>
                     <div className="hidden lg:block">
                       <DiscoverNewsRail />
