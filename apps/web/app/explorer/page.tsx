@@ -243,18 +243,18 @@ export default function ExplorerPage() {
 
       <section className="relative overflow-hidden border-b border-[#d8e1ea] bg-white pt-[70px] text-[#07111f]">
         <img src={heroBackgroundImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-95" />
-        <div className="absolute inset-0 bg-white/50" aria-hidden="true" />
-        <div className="relative mx-auto max-w-[1368px] px-4 py-16 sm:px-6 lg:px-5">
+        <div className="absolute inset-0 bg-white/60" aria-hidden="true" />
+        <div className="relative mx-auto max-w-[1368px] px-4 py-8 sm:px-6 sm:py-10 lg:px-5 lg:py-12">
           <div className="max-w-2xl">
-            <h1 className="text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="text-2xl font-black tracking-tight sm:text-4xl lg:text-5xl">
               Plateforme pour creer et partager des projets hardware.
             </h1>
-            <p className="mt-4 text-sm leading-7 text-[#334155] sm:text-base">
+            <p className="mt-3 max-w-xl text-sm leading-6 text-[#334155] sm:text-base sm:leading-7">
               Publiez PCB, prototypes, fichiers, notes de fabrication et retours terrain. Les visiteurs peuvent consulter, aimer, commenter et transformer un projet en devis.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a href="#create" className="inline-flex h-11 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">Creer un projet</a>
-              <a href="#feed" className="inline-flex h-11 items-center justify-center border border-[#0f8f6b] bg-white/80 px-5 text-sm font-black text-[#0f8f6b] transition hover:bg-white">Voir les projets</a>
+            <div className="mt-5 flex flex-wrap gap-2 sm:gap-3">
+              <a href="#create" className="inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-4 text-sm font-black text-white transition hover:bg-[#0b7558] sm:h-11 sm:px-5">Creer un projet</a>
+              <a href="#feed" className="inline-flex h-10 items-center justify-center border border-[#0f8f6b] bg-white/80 px-4 text-sm font-black text-[#0f8f6b] transition hover:bg-white sm:h-11 sm:px-5">Voir les projets</a>
             </div>
           </div>
         </div>
