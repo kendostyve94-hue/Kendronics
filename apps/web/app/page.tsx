@@ -599,7 +599,7 @@ function Hero() {
         ))}
       </div>
 
-      <div className="relative mx-auto grid min-h-[20rem] max-w-[1368px] gap-4 px-4 py-6 sm:min-h-[23rem] sm:px-6 sm:py-8 lg:min-h-[31rem] lg:grid-cols-[minmax(0,36rem)_minmax(0,38rem)_18rem] lg:items-end lg:px-5 lg:py-10">
+      <div className="relative mx-auto grid max-w-[1368px] gap-4 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,36rem)_minmax(0,38rem)_18rem] lg:items-end lg:px-5 lg:py-12">
         <div className="hidden w-full lg:block">
           <HeroQuickQuote />
         </div>

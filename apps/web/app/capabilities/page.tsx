@@ -184,21 +184,21 @@ export default function CapabilitiesPage() {
 
 function CapabilitiesHero() {
   return (
-    <section className="relative min-h-[78vh] overflow-hidden bg-ink text-white">
+    <section className="relative overflow-hidden border-b border-[#d8e1ea] bg-ink pt-[70px] text-white">
       <img src={heroImage} alt="Macro close-up of a printed circuit board" className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.82] to-deepblue/[0.56]" />
-      <div className="relative mx-auto grid min-h-[78vh] max-w-7xl gap-10 px-4 pb-24 pt-36 sm:px-6 lg:grid-cols-[1fr_26rem] lg:items-center lg:px-8">
-        <div>
+      <div className="relative mx-auto max-w-[1368px] px-4 py-8 sm:px-6 sm:py-10 lg:px-5 lg:py-12">
+        <div className="max-w-3xl">
           <p className="inline-flex rounded-xl border border-white/[0.18] bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-sky-100 backdrop-blur-xl">
             Capacités techniques
           </p>
-          <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
+          <h1 className="mt-5 text-2xl font-black tracking-tight sm:text-4xl lg:text-5xl">
             Options de fabrication disponibles via nos partenaires PCB.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base sm:leading-7">
             Explorez matériaux, empilages, finitions, cuivre, vias, PCBA et stencils que Kendronics peut aider à coordonner via des partenaires externes.
           </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Button href="/quote">Demander un devis</Button>
             <Button href="#technical-capabilities" variant="secondary">
               Voir les tableaux
@@ -206,7 +206,7 @@ function CapabilitiesHero() {
           </div>
         </div>
 
-        <Card glass className="hidden p-5 text-white lg:block">
+        <Card glass className="hidden p-5 text-white">
           <div className="image-reflection relative overflow-hidden rounded-2xl">
             <img
               src="https://cdn.pixabay.com/photo/2022/02/02/10/09/printed-circuit-board-6979572_1280.jpg"

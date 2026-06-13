@@ -290,18 +290,18 @@ export default function ConditionsGeneralesDeVentePage() {
   return (
     <main className="overflow-hidden bg-cloud">
       <Navbar />
-      <section className="relative min-h-[52vh] overflow-hidden bg-ink text-white">
+      <section className="relative overflow-hidden border-b border-[#d8e1ea] bg-ink pt-[70px] text-white">
         <img src={heroImage} alt="Macro close-up of a printed circuit board" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.88] to-deepblue/[0.62]" />
-        <div className="relative mx-auto flex min-h-[52vh] max-w-[1440px] items-end px-4 pb-14 pt-32 sm:px-6 lg:px-8">
-          <div>
+        <div className="relative mx-auto max-w-[1368px] px-4 py-8 sm:px-6 sm:py-10 lg:px-5 lg:py-12">
+          <div className="max-w-3xl">
             <p className="inline-flex rounded-sm border border-white/[0.18] bg-white/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-sky-100 backdrop-blur-xl">
               Cadre legal
             </p>
-            <h1 className="mt-7 max-w-5xl text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="mt-5 text-2xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
               Conditions Generales de Vente
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base sm:leading-7">
               Conditions applicables aux commandes PCB passees sur la plateforme Kendronics.
             </p>
           </div>

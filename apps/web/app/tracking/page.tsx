@@ -80,26 +80,26 @@ export default function TrackingPage() {
     <main className="min-h-screen bg-cloud">
       <Navbar />
 
-      <section className="relative overflow-hidden bg-ink pt-32 text-white">
+      <section className="relative overflow-hidden border-b border-[#d8e1ea] bg-ink pt-[70px] text-white">
         <img
           src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=2200&q=85"
           alt="Warehouse conveyor with parcels ready for shipment"
           className="absolute inset-0 h-full w-full object-cover opacity-[0.32]"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.88] to-deepblue/[0.68]" />
-        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 pb-20 sm:px-6 lg:grid-cols-[1fr_28rem] lg:px-8">
-          <div className="self-end">
+        <div className="relative mx-auto grid max-w-[1368px] gap-6 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_28rem] lg:px-5 lg:py-12">
+          <div className="self-center">
             <p className="text-sm font-black uppercase tracking-[0.2em] text-sky-100">Public tracking</p>
-            <h1 className="mt-4 max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="mt-4 max-w-4xl text-2xl font-black tracking-tight sm:text-4xl lg:text-5xl">
               Suivez votre commande Kendronics.
             </h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-200">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base sm:leading-7">
               Enter the order ID and account email to view customer-safe shipping progress without exposing pricing,
               supplier, or admin data.
             </p>
           </div>
 
-          <Card glass className="self-end p-5 text-ink sm:p-6">
+          <Card glass className="self-center p-5 text-ink sm:p-6">
             <form onSubmit={submitLookup} className="space-y-4">
               <TrackingField
                 label="ID commande"

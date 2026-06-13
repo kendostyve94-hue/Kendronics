@@ -23,11 +23,11 @@ export default function HelpCenterPage() {
     <main className="min-h-screen bg-cloud">
       <Navbar />
 
-      <section className="border-b border-line bg-white pt-36">
-        <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+      <section className="border-b border-line bg-white pt-[70px]">
+        <div className="mx-auto max-w-[1368px] px-4 py-8 sm:px-6 sm:py-10 lg:px-5 lg:py-12">
           <p className="label-caps text-deepblue">Support Kendronics</p>
-          <h1 className="mt-4 max-w-4xl text-4xl font-black tracking-tight text-ink sm:text-5xl">Centre d'aide</h1>
-          <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600">
+          <h1 className="mt-5 max-w-3xl text-2xl font-black tracking-tight text-ink sm:text-4xl lg:text-5xl">Centre d'aide</h1>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
             Retrouvez rapidement les pages utiles pour preparer vos fichiers, comprendre le service, suivre une commande
             ou contacter l'equipe support.
           </p>

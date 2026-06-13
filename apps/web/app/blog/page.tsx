@@ -92,21 +92,21 @@ export default function BlogPage() {
 
 function BlogHero() {
   return (
-    <section className="relative min-h-[68vh] overflow-hidden bg-ink text-white">
+    <section className="relative overflow-hidden border-b border-[#d8e1ea] bg-ink pt-[70px] text-white">
       <img src={heroImage} alt="Macro close-up of a printed circuit board" className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.84] to-deepblue/[0.56]" />
-      <div className="relative mx-auto flex min-h-[68vh] max-w-7xl items-end px-4 pb-20 pt-36 sm:px-6 lg:px-8">
-        <div>
+      <div className="relative mx-auto max-w-[1368px] px-4 py-8 sm:px-6 sm:py-10 lg:px-5 lg:py-12">
+        <div className="max-w-3xl">
           <p className="inline-flex rounded-xl border border-white/[0.18] bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-sky-100 backdrop-blur-xl">
             Blog
           </p>
-          <h1 className="mt-7 max-w-5xl text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
+          <h1 className="mt-5 text-2xl font-black tracking-tight sm:text-4xl lg:text-5xl">
             Guides PCB pour les builders hardware africains.
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-200">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base sm:leading-7">
             Des ressources pratiques pour préparer les fichiers Gerber, comprendre les options de fabrication et organiser une livraison suivie.
           </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Button href="/quote">Demander un devis</Button>
             <Button href="#articles" variant="secondary">
               Voir les guides
