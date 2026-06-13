@@ -90,7 +90,7 @@ const mainNavItems: MainNavItem[] = [
   { type: 'link', label: 'Apropos', href: '/terms/mentions-legales' },
 ];
 
-function mobileNavGroups(unreadNotifications: number, isAdmin: boolean): MobileProfileMenuGroup[] {
+function mobileNavGroups(unreadNotifications: number, isAdmin: boolean, isSignedIn: boolean): MobileProfileMenuGroup[] {
   const groups: MobileProfileMenuGroup[] = [
     {
       title: 'Produits',
@@ -111,15 +111,11 @@ function mobileNavGroups(unreadNotifications: number, isAdmin: boolean): MobileP
       title: 'Support',
       items: supportMenuGroups.flatMap((group) => group.items.map((item) => ({ label: item.label, href: item.href }))),
     },
-    {
-      title: 'Espace client',
-      items: [
-        { label: 'Tableau de bord', href: '/profile' },
-        { label: 'Mes commandes', href: '/profile?view=orders' },
-        { label: 'Notifications', href: '/profile?view=notifications', count: unreadNotifications },
-      ],
-    },
   ];
+
+  if (isSignedIn) {
+    groups.push(...mobileProfileMenuGroups(unreadNotifications));
+  }
 
   if (isAdmin) {
     groups.push({ title: 'Administration', items: [{ label: 'Admin', href: '/admin' }] });
@@ -461,7 +457,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         {isMenuOpen ? (
           <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6rem)] max-w-[21.5rem] overflow-y-auto border-t border-slate-200 bg-white px-1 pb-4 pt-2 sm:max-w-[40rem] lg:hidden">
             <div className="grid">
-              {mobileNavGroups(unreadNotifications, isAdmin).map((group) => (
+              {mobileNavGroups(unreadNotifications, isAdmin, isSignedIn).map((group) => (
                 <MobileProfileSection
                   key={group.title}
                   group={group}
@@ -507,7 +503,7 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
     { labelKey: 'nav.home' as const, href: '/', icon: <HomeIcon /> },
     { labelKey: 'nav.cart' as const, href: cartHref, icon: <CartIcon />, count: orderCount },
     { labelKey: 'nav.quote' as const, href: '/quote', icon: <PlusIcon /> },
-    { labelKey: 'nav.tracking' as const, href: '/profile?view=delivery', icon: <RouteIcon /> },
+    { labelKey: 'nav.item.explorer' as const, href: '/explorer', icon: <ExplorerIcon /> },
     { labelKey: 'nav.account' as const, href: '/profile', icon: <UserIcon /> },
   ];
 
@@ -525,8 +521,8 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
                 ? pathname.startsWith('/orders') || (pathname === '/profile' && profileView === 'orders')
                 : item.labelKey === 'nav.account'
                   ? pathname === '/profile' && profileView !== 'orders'
-                  : item.labelKey === 'nav.tracking'
-                    ? pathname === '/profile' && profileView === 'delivery'
+                  : item.labelKey === 'nav.item.explorer'
+                    ? pathname === '/explorer'
                     : pathname.startsWith(item.href);
 
           return (
@@ -879,12 +875,15 @@ function PlusIcon() {
   );
 }
 
-function RouteIcon() {
+function ExplorerIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="6" cy="18" r="2" />
-      <circle cx="18" cy="6" r="2" />
-      <path d="M8 18h4a4 4 0 0 0 0-8h-1a4 4 0 0 1 0-8h5" />
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15.5 8.5-2.1 4.9-4.9 2.1 2.1-4.9 4.9-2.1Z" />
+      <path d="M12 3v2" />
+      <path d="M12 19v2" />
+      <path d="M3 12h2" />
+      <path d="M19 12h2" />
     </svg>
   );
 }
