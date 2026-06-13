@@ -346,7 +346,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
     <>
     {hideHeader ? null : <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="border-b border-[#d7d7d7] bg-white px-3 py-0 sm:px-6 lg:px-5">
-        <div className="mx-auto flex h-[70px] max-w-[21.5rem] items-center justify-between gap-3 sm:max-w-[1180px] lg:max-w-[1368px]">
+        <div className="mx-auto flex h-[70px] w-full max-w-none items-center justify-between gap-3 sm:max-w-[1180px] lg:max-w-[1368px]">
           <div className="flex min-w-0 flex-1 items-center gap-3 lg:gap-5">
             <a href="/" className="-ml-3 inline-flex shrink-0 items-center sm:ml-0 lg:mr-2" aria-label="Accueil Kendronics">
               <img
@@ -414,7 +414,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         </div>
 
         {isSearchOpen ? (
-          <div className="mx-auto max-w-[21.5rem] border-t border-slate-200 py-2 sm:max-w-[1180px] lg:max-w-[1368px]">
+          <div className="mx-auto w-full max-w-none border-t border-slate-200 py-2 sm:max-w-[1180px] lg:max-w-[1368px]">
             <form
               role="search"
               onSubmit={(event) => {
@@ -455,7 +455,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
         ) : null}
 
         {isMenuOpen ? (
-          <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6rem)] max-w-[21.5rem] overflow-y-auto border-t border-slate-200 bg-white px-1 pb-4 pt-2 sm:max-w-[40rem] lg:hidden">
+          <nav id="mobile-navigation" className="mx-auto mt-2 max-h-[calc(100vh-6rem)] w-full max-w-none overflow-y-auto border-t border-slate-200 bg-white px-1 pb-4 pt-2 sm:max-w-[40rem] lg:hidden">
             <div className="grid">
               {mobileNavGroups(unreadNotifications, isAdmin, isSignedIn).map((group) => (
                 <MobileProfileSection
@@ -509,10 +509,10 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 bg-white px-2 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-0 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 bg-white px-4 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-0 lg:hidden"
       aria-label="Navigation mobile principale"
     >
-      <div className="mx-auto grid max-w-[21.5rem] grid-cols-5 gap-1">
+      <div className="mx-auto grid w-full max-w-none grid-cols-5 gap-1 sm:max-w-[40rem]">
         {items.map((item) => {
           const isActive =
             item.href === '/'
