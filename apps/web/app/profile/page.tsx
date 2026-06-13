@@ -389,13 +389,23 @@ export default function ProfilePage() {
   const firstName = firstNameOf(profile.name || emailName(profile.email) || 'Rafale');
   const userId = formatUserId(accountId);
   const showViewRightRail = shouldShowProfileRightRail(activeProfileView);
+  const counts = orderCounts(orders);
+  const unread = unreadNotifications(notifications);
+
+  function selectProfileView(view: ProfileView) {
+    setActiveProfileView(view);
+    const nextUrl = view ? `/profile?view=${view}` : '/profile';
+    window.history.pushState(null, '', nextUrl);
+    window.dispatchEvent(new Event('popstate'));
+  }
 
   return (
     <main className="mobile-free-page min-h-screen overflow-x-hidden bg-white text-[#1f2f43]">
       <Navbar />
       <div className="w-full pt-[70px]">
+        <MobileProfileTopNav activeProfileView={activeProfileView} onSelectView={selectProfileView} counts={counts} unreadNotifications={unread} profile={profile} />
         <div className="mx-auto grid w-full max-w-none gap-4 px-4 py-3 sm:max-w-[40rem] lg:min-w-[1328px] lg:max-w-[1368px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
-          <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} counts={orderCounts(orders)} unreadNotifications={unreadNotifications(notifications)} profile={profile} />
+          <ProfileSidebar activeProfileView={activeProfileView} onSelectView={selectProfileView} counts={counts} unreadNotifications={unread} profile={profile} />
 
           <section className="min-w-0">
             {activeProfileView ? (
@@ -478,6 +488,54 @@ function ProfileNavLink({ href, label }: { href: string; label: string }) {
     <a href={href} className="grid min-h-[54px] min-w-[92px] snap-start place-items-center px-2 text-center leading-6 hover:text-[#0f8f6b]">
       {label}
     </a>
+  );
+}
+
+function MobileProfileTopNav({
+  activeProfileView,
+  onSelectView,
+  counts,
+  unreadNotifications,
+  profile,
+}: {
+  activeProfileView: ProfileView;
+  onSelectView: (view: ProfileView) => void;
+  counts: ReturnType<typeof orderCounts>;
+  unreadNotifications: number;
+  profile: ProfileForm;
+}) {
+  const items = profileSidebarGroups(counts, unreadNotifications).flatMap((group) =>
+    group.items.map((item) => ({ ...item, groupTitle: group.title })),
+  );
+
+  return (
+    <nav className="sticky top-[70px] z-40 border-b border-[#dbe4ee] bg-white lg:hidden" aria-label="Navigation compte mobile">
+      <div className="mx-auto flex w-full max-w-none gap-2 overflow-x-auto px-4 py-2 sm:max-w-[40rem]">
+        {items.map((item) => {
+          const isActive = item.view === activeProfileView;
+          const needsAttention = item.view === 'shipping-address' && !isCompleteProfileAddress(profile.shippingAddress);
+
+          return (
+            <button
+              key={`${item.groupTitle}-${item.label}`}
+              type="button"
+              onClick={() => onSelectView(item.view)}
+              className={`relative h-10 shrink-0 px-3 text-xs font-semibold transition ${
+                isActive ? 'bg-[#0f8f6b] text-white' : needsAttention ? 'bg-[#fff7ed] text-[#d97706]' : 'bg-[#eef6fb] text-[#243447] hover:bg-[#e4f7f0] hover:text-[#0f8f6b]'
+              }`}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              {item.label}
+              {item.count && item.count > 0 ? (
+                <span className={`ml-2 inline-grid min-h-5 min-w-5 place-items-center px-1 text-[10px] font-black ${isActive ? 'bg-white text-[#0f8f6b]' : 'bg-[#102033] text-white'}`}>
+                  {item.count > 99 ? '99+' : item.count}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
