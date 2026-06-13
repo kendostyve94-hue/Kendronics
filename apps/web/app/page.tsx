@@ -185,7 +185,7 @@ export default async function HomePage() {
     <main className="home-page overflow-hidden bg-white text-ink">
       <Navbar />
       <Hero />
-      <MobileQuickAccess />
+      <MobileInstantQuote />
       <ProductCatalog />
       <SmartOrdering />
       <WhyBuyPcbSection recentProductionActivity={recentProductionActivity} />
@@ -582,10 +582,10 @@ function OperationalProofs() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-white pt-20 text-ink lg:pt-20">
+    <section className="relative overflow-hidden bg-white pt-[70px] text-ink">
       <div className="absolute inset-0 bg-white" />
       <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/20" />
-      <div className="absolute inset-x-0 bottom-0 top-[16rem] overflow-hidden sm:inset-y-0 sm:left-[45%] sm:right-0">
+      <div className="absolute inset-x-0 bottom-0 top-0 overflow-hidden sm:inset-y-0 sm:left-[45%] sm:right-0">
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className="home-hero-slide absolute inset-0" style={{ animationDelay: `${index * 5}s` }}>
             {slide.type === 'video' ? (
@@ -599,8 +599,8 @@ function Hero() {
         ))}
       </div>
 
-      <div className="relative grid min-h-[25rem] gap-2 px-1 pb-4 pt-3 sm:min-h-[27rem] sm:gap-3 sm:px-4 sm:pb-6 sm:pt-4 lg:min-h-[25rem] lg:grid-cols-[minmax(0,43rem)_minmax(10rem,1fr)_26rem] lg:items-end lg:pl-3 lg:pr-8">
-        <div className="w-full">
+      <div className="relative grid min-h-[13.5rem] gap-2 px-4 pb-4 pt-4 sm:min-h-[17rem] sm:gap-3 sm:px-6 sm:pb-6 sm:pt-6 lg:min-h-[25rem] lg:grid-cols-[minmax(0,43rem)_minmax(10rem,1fr)_26rem] lg:items-end lg:px-8">
+        <div className="hidden w-full lg:block">
           <HeroQuickQuote />
         </div>
         <div className="hidden min-h-[18rem] lg:block" aria-hidden="true" />
@@ -631,27 +631,11 @@ function HeroPromoPanels() {
   );
 }
 
-function MobileQuickAccess() {
-  const links = [
-    ['PCB', 'Standard', '/quote'],
-    ['PCBA', 'Assemblage', '/quote'],
-    ['SMT', 'Stencil', '/services#stencil'],
-    ['Guide', 'Technique', '/guide-technique'],
-  ];
-
+function MobileInstantQuote() {
   return (
-    <section className="bg-white px-4 py-5 sm:px-6 lg:hidden">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-ink">Acces rapide</h2>
-        <a href="/quote" className="text-xs font-semibold text-deepblue">Devis</a>
-      </div>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {links.map(([title, subtitle, href]) => (
-          <a key={title} href={href} className="min-w-[8.5rem] border border-line bg-slate-50 p-3">
-            <p className="text-sm font-semibold text-ink">{title}</p>
-            <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
-          </a>
-        ))}
+    <section className="bg-white px-4 py-4 sm:px-6 lg:hidden">
+      <div className="mx-auto max-w-[40rem]">
+        <HeroQuickQuote />
       </div>
     </section>
   );
