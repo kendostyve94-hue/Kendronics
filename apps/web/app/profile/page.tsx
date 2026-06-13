@@ -3797,11 +3797,13 @@ function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firs
         <p className="mt-1 text-xs font-semibold" style={{ color: badge.color }}>{badge.label}</p>
         <p className="mt-1 text-xs text-[#64748b]">ID Client: {userId}</p>
         <p className="mt-1 truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : displayLocation}</p>
-        <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-[#64748b]">
-          {countryCode ? <CountryFlag iso2={countryCode} name={displayLocation} /> : null}
-          <span>{displayLocation}</span>
-        </p>
-        <a href="/profile?view=settings" className="mt-2 inline-flex text-xs font-semibold text-[#0f8f6b]">Gerer mon compte</a>
+        <div className="mt-1">
+          <p className="inline-flex items-center gap-1.5 text-xs text-[#64748b]">
+            {countryCode ? <CountryFlag iso2={countryCode} name={displayLocation} /> : null}
+            <span>{displayLocation}</span>
+          </p>
+          <a href="/profile?view=settings" className="mt-2 flex w-fit text-xs font-semibold text-[#0f8f6b]">Gérer mon compte</a>
+        </div>
       </div>
     </div>
   );
