@@ -260,7 +260,7 @@ export default function ExplorerPage() {
         </div>
       </section>
 
-      <section className="sticky top-[70px] z-40 border-b border-[#d8e1ea] bg-white lg:top-0">
+      <section className="sticky top-[70px] z-40 border-b border-[#d8e1ea] bg-white">
         <div className="mx-auto flex max-w-[1368px] gap-2 overflow-x-auto px-4 py-3 sm:px-6 lg:px-5">
           {categories.map((item) => (
             <button key={item} type="button" onClick={() => setActiveCategory(item)} className={`h-9 shrink-0 px-3 text-sm font-black transition ${activeCategory === item ? 'bg-[#0f8f6b] text-white' : 'text-[#334155] hover:bg-[#edf3f8]'}`}>
