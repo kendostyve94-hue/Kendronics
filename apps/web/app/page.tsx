@@ -582,9 +582,9 @@ function OperationalProofs() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-white pt-[70px] text-ink">
-      <div className="absolute inset-0 bg-white" />
-      <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-white/42" />
+    <section className="relative overflow-hidden bg-ink pt-[70px] text-white">
+      <div className="absolute inset-0 bg-ink" />
+      <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.84] to-deepblue/[0.56]" />
       <div className="absolute inset-x-0 bottom-0 top-0 overflow-hidden sm:inset-y-0 sm:left-[45%] sm:right-0">
         {heroSlides.map((slide, index) => (
           <div key={slide.title} className="home-hero-slide absolute inset-0" style={{ animationDelay: `${index * 5}s` }}>
@@ -599,23 +599,17 @@ function Hero() {
         ))}
       </div>
 
-      <div className="relative mx-auto grid min-h-[20rem] max-w-[1368px] gap-4 px-4 py-6 sm:min-h-[23rem] sm:px-6 sm:py-8 lg:min-h-[31rem] lg:grid-cols-[minmax(0,38rem)_minmax(0,39rem)_22rem] lg:items-end lg:px-5 lg:py-10">
-        <div className="max-w-xl self-center lg:self-end lg:pb-5">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#0f8f6b]">Journey of limitless creativity</p>
-          <h1 className="mt-4 text-3xl font-black leading-[1.05] tracking-tight text-[#07111f] sm:text-5xl lg:text-6xl">
-            PCB Manufacturing & Assembly
-          </h1>
-          <p className="mt-4 max-w-lg text-sm leading-6 text-[#475569] sm:text-base sm:leading-7">
-            Devis PCB, assemblage, fichiers Gerber, BOM/CPL et suivi de fabrication dans un parcours clair pour passer du prototype a la commande.
-          </p>
-          <div className="mt-5 grid grid-cols-2 gap-2 text-xs font-semibold text-[#334155] sm:flex sm:flex-wrap sm:text-sm">
-            {['Prototype PCB 24h', 'Assemblage PCBA', 'Suivi commande', 'Support technique'].map((item) => (
-              <span key={item} className="border border-[#d8e2ea] bg-white/85 px-3 py-2">{item}</span>
-            ))}
-          </div>
-        </div>
+      <div className="relative mx-auto grid min-h-[20rem] max-w-[1368px] gap-4 px-4 py-6 sm:min-h-[23rem] sm:px-6 sm:py-8 lg:min-h-[31rem] lg:grid-cols-[minmax(0,36rem)_minmax(0,38rem)_18rem] lg:items-end lg:px-5 lg:py-10">
         <div className="hidden w-full lg:block">
           <HeroQuickQuote />
+        </div>
+        <div className="max-w-xl self-center lg:self-end lg:pb-5">
+          <h1 className="text-3xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
+            Fabrication PCB et assemblage PCBA, pilotes de bout en bout.
+          </h1>
+          <p className="mt-4 max-w-lg text-sm leading-6 text-slate-200 sm:text-base sm:leading-7">
+            Kendronics structure vos Gerbers, BOM et CPL dans un dossier unique, verifie les points critiques avant paiement, puis coordonne production, support et livraison Afrique avec une tracabilite exploitable par vos equipes.
+          </p>
         </div>
         <HeroPromoPanels />
       </div>
@@ -626,17 +620,17 @@ function Hero() {
 function HeroPromoPanels() {
   return (
     <aside className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:self-end" aria-label="Offres PCB">
-      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=5&thickness=1.6mm" className="relative min-h-[7.6rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-3 text-center transition hover:border-[#0f8f6b] sm:min-h-[8.6rem]">
+      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=5&thickness=1.6mm" className="relative min-h-[6.2rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-3 text-center text-[#102033] transition hover:border-[#0f8f6b] sm:min-h-[7rem]">
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
-        <p className="text-2xl font-normal leading-none text-[#0f8f6b] sm:text-3xl">$ 6.75</p>
-        <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:mt-2 sm:text-xs">5 pieces, 1-2 couches</p>
+        <p className="text-xl font-normal leading-none text-[#0f8f6b] sm:text-2xl">$ 6.75</p>
+        <p className="mt-1 text-[11px] leading-4 text-slate-600">5 pieces, 1-2 couches</p>
         <p className="text-xs leading-4 text-slate-600">Production: 24 heures</p>
         <p className="text-xs leading-4 text-slate-600">PCB prototypes</p>
       </a>
-      <a href="/quote?productType=advanced_pcb&layers=4&length=100&width=100&quantity=30&thickness=1.6mm" className="relative min-h-[7.6rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-3 text-center transition hover:border-[#0f8f6b] sm:min-h-[8.6rem]">
+      <a href="/quote?productType=advanced_pcb&layers=4&length=100&width=100&quantity=30&thickness=1.6mm" className="relative min-h-[6.2rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-3 text-center text-[#102033] transition hover:border-[#0f8f6b] sm:min-h-[7rem]">
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
-        <p className="text-2xl font-normal leading-none text-[#0f8f6b] sm:text-3xl">$ 221.72</p>
-        <p className="mt-1 text-[11px] leading-4 text-slate-600 sm:mt-2 sm:text-xs">4 couches, 5-30 pieces</p>
+        <p className="text-xl font-normal leading-none text-[#0f8f6b] sm:text-2xl">$ 221.72</p>
+        <p className="mt-1 text-[11px] leading-4 text-slate-600">4 couches, 5-30 pieces</p>
         <p className="text-xs leading-4 text-slate-600">Production: 8-9 jours</p>
         <p className="text-xs leading-4 text-slate-600">PCB avance</p>
       </a>

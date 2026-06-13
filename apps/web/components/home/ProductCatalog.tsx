@@ -78,7 +78,7 @@ export function ProductCatalog() {
   const activeCard = productCards[activeIndex] ?? productCards[defaultProductIndex] ?? productCards[0];
 
   return (
-    <section className="bg-[#eef2f6] px-0 py-5 sm:px-4 lg:px-5">
+    <section className="bg-white px-0 py-5 sm:px-4 lg:px-5">
       <div className="mx-auto w-full max-w-[1368px]">
         <div className="grid items-start overflow-hidden border border-line bg-transparent lg:grid-cols-[15rem_1fr]">
           <aside className="grid border-b border-line bg-white lg:border-b-0 lg:border-r">
@@ -108,9 +108,9 @@ export function ProductCatalog() {
             </article>
           </aside>
 
-          <div className="min-w-0 bg-line">
+          <div className="min-w-0 bg-white">
 
-            <div className="flex gap-2 overflow-x-auto bg-line p-px pb-2 md:grid md:grid-cols-3 md:gap-px md:overflow-visible md:pb-0 xl:grid-cols-6">
+            <div className="flex gap-2 overflow-x-auto bg-white p-px pb-2 md:grid md:grid-cols-3 md:gap-px md:overflow-visible md:pb-0 xl:grid-cols-6">
               {productCards.map((card, index) => {
                 const isActive = index === activeIndex;
 
@@ -123,7 +123,7 @@ export function ProductCatalog() {
                       isActive ? 'outline outline-2 outline-deepblue outline-offset-[-2px]' : ''
                     }`}
                   >
-                    <div className="flex h-24 items-center justify-center bg-[#f7fafc] sm:h-28">
+                    <div className="flex h-24 items-center justify-center bg-white sm:h-28">
                       <img src={card.image} alt="" className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-[1.04]" />
                     </div>
                     <h3 className="mt-3 text-sm font-black leading-5 text-ink">{card.title}</h3>
