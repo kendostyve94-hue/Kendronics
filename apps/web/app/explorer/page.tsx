@@ -39,6 +39,7 @@ type SubmitState = 'idle' | 'submitting' | 'published' | 'error';
 
 const apiBaseUrl = getApiBaseUrl();
 const actorKeyStorageKey = 'kendronics.explorer.actor';
+const heroBackgroundImage = '/images/explorer-hero-community.webp';
 const categoryNav = ['Tous', 'Stars', 'MakerLab', 'Arduino', 'STM32', 'IoT', 'Energie', 'Robotique', 'Education', 'Prototype'];
 
 const fallbackProjects: ExplorerProject[] = [
@@ -240,22 +241,26 @@ export default function ExplorerPage() {
     <main className="min-h-screen bg-[#f4f7fb] text-[#172033]">
       <Navbar />
 
-      <section className="border-b border-[#d8e1ea] bg-[#0b1220] pt-[70px] text-white">
-        <div className="mx-auto max-w-[1368px] px-4 py-10 sm:px-6 lg:px-5">
-          <h1 className="max-w-4xl text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-            Plateforme pour creer et partager des projets hardware.
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-[#cbd5e1] sm:text-base">
-            Publiez PCB, prototypes, fichiers, notes de fabrication et retours terrain. Les visiteurs peuvent consulter, aimer, commenter et transformer un projet en devis.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <a href="#create" className="inline-flex h-11 items-center justify-center bg-[#16c784] px-5 text-sm font-black text-[#061014] transition hover:bg-[#11b374]">Creer un projet</a>
-            <a href="#feed" className="inline-flex h-11 items-center justify-center border border-white/20 px-5 text-sm font-black text-white transition hover:border-white">Voir les projets</a>
+      <section className="relative overflow-hidden border-b border-[#d8e1ea] bg-white pt-[70px] text-[#07111f]">
+        <img src={heroBackgroundImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-95" />
+        <div className="absolute inset-0 bg-white/50" aria-hidden="true" />
+        <div className="relative mx-auto max-w-[1368px] px-4 py-16 sm:px-6 lg:px-5">
+          <div className="max-w-2xl">
+            <h1 className="text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
+              Plateforme pour creer et partager des projets hardware.
+            </h1>
+            <p className="mt-4 text-sm leading-7 text-[#334155] sm:text-base">
+              Publiez PCB, prototypes, fichiers, notes de fabrication et retours terrain. Les visiteurs peuvent consulter, aimer, commenter et transformer un projet en devis.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a href="#create" className="inline-flex h-11 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">Creer un projet</a>
+              <a href="#feed" className="inline-flex h-11 items-center justify-center border border-[#0f8f6b] bg-white/80 px-5 text-sm font-black text-[#0f8f6b] transition hover:bg-white">Voir les projets</a>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="border-b border-[#d8e1ea] bg-white">
+      <section className="sticky top-0 z-40 border-b border-[#d8e1ea] bg-white">
         <div className="mx-auto flex max-w-[1368px] gap-2 overflow-x-auto px-4 py-3 sm:px-6 lg:px-5">
           {categories.map((item) => (
             <button key={item} type="button" onClick={() => setActiveCategory(item)} className={`h-9 shrink-0 px-3 text-sm font-black transition ${activeCategory === item ? 'bg-[#0f8f6b] text-white' : 'text-[#334155] hover:bg-[#edf3f8]'}`}>
@@ -265,26 +270,14 @@ export default function ExplorerPage() {
         </div>
       </section>
 
-      <section id="feed" className="mx-auto grid max-w-[1368px] gap-5 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:px-5">
+      <section id="feed" className="mx-auto grid max-w-[1368px] gap-6 px-4 py-8 sm:px-6 lg:px-5">
         <div className="min-w-0">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-x-7 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProjects.map((project) => (
               <ProjectCard key={project.id} project={project} selected={selectedProject?.id === project.id} onSelect={() => setSelectedProjectId(project.id)} onLike={() => void likeProject(project)} />
             ))}
           </div>
         </div>
-
-        <aside className="grid content-start gap-4">
-          {selectedProject ? (
-            <ProjectDetailPanel
-              project={selectedProject}
-              commentValue={commentDrafts[selectedProject.id] ?? ''}
-              onCommentChange={(value) => setCommentDrafts((current) => ({ ...current, [selectedProject.id]: value }))}
-              onComment={() => void postComment(selectedProject)}
-              onLike={() => void likeProject(selectedProject)}
-            />
-          ) : null}
-        </aside>
       </section>
 
       <section id="create" className="border-y border-[#d8e1ea] bg-white">
@@ -325,22 +318,27 @@ export default function ExplorerPage() {
 
 function ProjectCard({ project, selected, onSelect, onLike }: { project: ExplorerProject; selected: boolean; onSelect: () => void; onLike: () => void }) {
   return (
-    <article className={`overflow-hidden bg-white ring-1 transition ${selected ? 'ring-[#0f8f6b]' : 'ring-[#d8e1ea] hover:ring-[#9fb3c8]'}`}>
+    <article className={`min-w-0 bg-transparent transition ${selected ? 'opacity-100' : 'opacity-95 hover:opacity-100'}`}>
       <button type="button" onClick={onSelect} className="block w-full text-left">
-        <div className="p-4">
-          <p className="text-xs font-black uppercase tracking-[0.12em] text-[#0f8f6b]">{project.category}</p>
-          <h3 className="mt-2 line-clamp-2 min-h-[48px] text-lg font-black text-[#07111f]">{project.title}</h3>
-          <p className="mt-2 line-clamp-3 min-h-[60px] text-sm leading-5 text-[#526173]">{project.summary}</p>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {project.tags.slice(0, 3).map((tag) => <span key={tag} className="bg-[#edf3f8] px-2 py-1 text-[11px] font-bold text-[#526173]">{tag}</span>)}
-          </div>
+        <div className="aspect-[1.45] overflow-hidden bg-[#e8eef5]">
+          <img src={project.imageUrl || '/images/quote-product-standard-pcb.png'} alt="" className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]" />
+        </div>
+        <div className="mt-3 flex min-w-0 items-center gap-2">
+          <span className="shrink-0 bg-[#fff1e6] px-2 py-1 text-xs font-medium leading-none text-[#ff6a00]">PRO</span>
+          <h3 className="min-w-0 truncate text-base font-medium text-[#0b1724]">{project.title}</h3>
         </div>
       </button>
-      <div className="grid grid-cols-4 border-t border-[#edf2f7] text-center text-xs font-black text-[#64748b]">
-        <span className="py-2">{formatCompact(project.viewsCount)}</span>
-        <button type="button" onClick={onLike} className="py-2 hover:text-[#0f8f6b]">{project.likesCount}</button>
-        <span className="py-2">{project.forksCount}</span>
-        <span className="py-2">{project.commentsCount}</span>
+      <div className="mt-3 flex items-center gap-4 text-sm text-[#9aa6b2]">
+        <span className="inline-flex items-center gap-1"><EyeIcon />{formatCompact(project.viewsCount)}</span>
+        <button type="button" onClick={onLike} className="inline-flex items-center gap-1 transition hover:text-[#0f8f6b]"><ThumbIcon />{project.likesCount}</button>
+        <span className="inline-flex items-center gap-1"><StarIcon />{project.forksCount}</span>
+        <span className="inline-flex items-center gap-1"><CommentIcon />{project.commentsCount}</span>
+      </div>
+      <div className="mt-4 flex items-center gap-2 text-sm text-[#0b1724]">
+        <span className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[10px] font-black text-white">
+          {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
+        </span>
+        <span className="min-w-0 truncate">{project.authorName}</span>
       </div>
     </article>
   );
@@ -383,6 +381,43 @@ function ProjectDetailPanel({ project, commentValue, onCommentChange, onComment,
         </div>
       </div>
     </section>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+      <circle cx="12" cy="12" r="2.5" />
+    </svg>
+  );
+}
+
+function ThumbIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 10v10" />
+      <path d="M7 10 11 3a2 2 0 0 1 3 2l-1 4h5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 16.8 20H7" />
+      <path d="M3 10h4v10H3z" />
+    </svg>
+  );
+}
+
+function StarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
+    </svg>
+  );
+}
+
+function CommentIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 5h14v10H8l-3 3V5Z" />
+      <path d="M8 9h8" />
+      <path d="M8 12h5" />
+    </svg>
   );
 }
 
