@@ -147,6 +147,26 @@ export class EmailNotificationService {
       text: copy.body,
     });
   }
+
+  async sendSupportReply(input: { to: string; requesterName?: string; ticketNumber: string; message: string }): Promise<void> {
+    const greeting = input.requesterName ? `Bonjour ${input.requesterName},` : 'Bonjour,';
+    const body = [
+      greeting,
+      '',
+      input.message.trim(),
+      '',
+      `Reference ticket: ${input.ticketNumber}`,
+      '',
+      'Cordialement,',
+      'Equipe support Kendronics',
+    ].join('\n');
+
+    await sendTransactionalMail({
+      to: input.to,
+      subject: `[Kendronics] Reponse a votre ticket ${input.ticketNumber}`,
+      text: body,
+    });
+  }
 }
 
 function orderWorkflowCopy(template: OrderWorkflowTemplate, orderNumber: string, feedback?: string): { subject: string; body: string } {

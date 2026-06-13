@@ -8,6 +8,20 @@ type MondayFileUpload = {
   buffer: Buffer;
 };
 
+export type MondayItemColumnValue = {
+  id: string;
+  text?: string | null;
+  value?: string | null;
+  type?: string | null;
+  column?: { title?: string | null } | null;
+};
+
+export type MondayItemDetails = {
+  id: string;
+  name: string;
+  columnValues: MondayItemColumnValue[];
+};
+
 @Injectable()
 export class MondayApiService {
   constructor(private readonly config: MondayConfigService) {}
@@ -86,6 +100,40 @@ export class MondayApiService {
     return (data.boards?.[0]?.columns ?? [])
       .filter((column): column is { id: string; title: string; type?: string } => Boolean(column.id && column.title))
       .map((column) => ({ id: column.id, title: column.title, type: column.type }));
+  }
+
+  async getItemColumnValues(apiKey: string, itemId: string): Promise<MondayItemDetails | undefined> {
+    const query = `
+      query KendronicsItem($itemIds: [ID!]!) {
+        items(ids: $itemIds) {
+          id
+          name
+          column_values {
+            id
+            text
+            value
+            type
+            column {
+              title
+            }
+          }
+        }
+      }
+    `;
+    const data = await this.graphqlRequest<{
+      items?: Array<{
+        id?: string;
+        name?: string;
+        column_values?: MondayItemColumnValue[];
+      }>;
+    }>(apiKey, query, { itemIds: [itemId] });
+    const item = data.items?.[0];
+    if (!item?.id) return undefined;
+    return {
+      id: item.id,
+      name: item.name ?? item.id,
+      columnValues: item.column_values ?? [],
+    };
   }
 
   async linkItems(apiKey: string, boardId: string, itemId: string, relationColumnId: string, linkedItemIds: string[]): Promise<void> {
