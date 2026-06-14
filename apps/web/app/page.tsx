@@ -25,8 +25,6 @@ const oneStopCapabilities = [
   'Assistance Gerber avant paiement',
 ];
 
-const oneStopBadges = ['Tests fonctionnels', 'Programmation CI', 'BGA et QFN'];
-
 const kendronicsChoiceCards = [
   {
     eyebrow: 'HAUT DE GAMME, COMPLEXE',
@@ -306,7 +304,7 @@ function HomeCapabilityMatrix() {
     <section className="bg-white px-0 py-5 sm:px-4 lg:px-5">
       <div className="mx-auto grid w-full max-w-[1368px] items-start gap-5 xl:grid-cols-[minmax(38rem,0.95fr)_minmax(36rem,1.05fr)]">
         <div className="overflow-hidden border border-slate-300 bg-white">
-          <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(16rem,20rem)_minmax(18rem,1fr)]">
+          <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(14rem,17rem)_minmax(22rem,1fr)]">
             <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
               <span className="mb-3 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
               <h2 className="text-xl font-semibold leading-tight tracking-tight text-ink">Solution complete pour PCB et assemblage</h2>
@@ -321,13 +319,6 @@ function HomeCapabilityMatrix() {
                 ))}
               </ul>
 
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                {oneStopBadges.map((badge) => (
-                  <span key={badge} className="flex min-h-8 items-center justify-center bg-[#008b6d] px-2 py-2 text-center text-[11px] font-semibold leading-4 text-white">
-                    {badge}
-                  </span>
-                ))}
-              </div>
             </div>
 
             <div className="min-w-0">
