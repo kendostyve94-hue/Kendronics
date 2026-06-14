@@ -605,7 +605,7 @@ const africaOperationNodes = [
   { label: 'Livraison', color: '#0f8f6b', icon: 'delivery', x: 16, y: 71 },
 ];
 
-const operationMapCenter = { x: 50, y: 50, radius: 12 };
+const operationMapCenter = { x: 50, y: 52, radius: 10.5 };
 
 function AfricaOperationsCard() {
   return (
@@ -627,7 +627,16 @@ function AfricaOperationsCard() {
             className="absolute left-1/2 top-1/2 h-[86%] w-[86%] -translate-x-1/2 -translate-y-1/2 object-contain opacity-70 mix-blend-multiply"
           />
           <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden="true">
-            <circle cx={operationMapCenter.x} cy={operationMapCenter.y} r={operationMapCenter.radius} fill="#ffffff" opacity="0.58" />
+            <circle
+              cx={operationMapCenter.x}
+              cy={operationMapCenter.y}
+              r={operationMapCenter.radius}
+              fill="#ffffff"
+              fillOpacity="0.32"
+              stroke="#0f8f6b"
+              strokeWidth="0.35"
+              opacity="0.72"
+            />
             {africaOperationNodes.map((node) => {
               const dx = node.x - operationMapCenter.x;
               const dy = node.y - operationMapCenter.y;
@@ -650,8 +659,8 @@ function AfricaOperationsCard() {
             })}
           </svg>
 
-          <div className="absolute left-1/2 top-1/2 grid h-[5.8rem] w-[7.4rem] -translate-x-1/2 -translate-y-1/2 place-items-center">
-            <img src="/images/kendronics-logo.png" alt="Kendronics" className="max-h-11 w-auto object-contain" />
+          <div className="absolute grid h-[4.4rem] w-[6rem] -translate-x-1/2 -translate-y-1/2 place-items-center" style={{ left: `${operationMapCenter.x}%`, top: `${operationMapCenter.y}%` }}>
+            <img src="/images/kendronics-logo.png" alt="Kendronics" className="max-h-8 w-auto object-contain" />
           </div>
 
           <div className="absolute inset-0">
@@ -676,14 +685,12 @@ function AfricaOperationsCard() {
 
 function SmartOrderingCard({ className = '' }: { className?: string }) {
   return (
-    <div className={`relative min-h-[18rem] overflow-hidden border border-slate-300 bg-white lg:min-h-[24rem] ${className}`}>
-      <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-      <span className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/62 to-white/8" aria-hidden="true" />
-      <div className="relative p-4 sm:p-6">
-        <div className="max-w-[29rem]">
+    <article className={`overflow-hidden border border-slate-300 bg-white lg:min-h-[24rem] ${className}`}>
+      <div className="grid min-h-[24rem] lg:grid-cols-[minmax(16rem,0.46fr)_minmax(20rem,1fr)]">
+        <div className="border-b border-slate-200 p-5 sm:p-6 lg:border-b-0 lg:border-r">
           <p className="label-caps text-ink">Commande intelligente</p>
-          <h2 className="mt-3 text-2xl font-semibold leading-tight text-ink sm:text-3xl">Chaque schéma devient un dossier de fabrication lisible.</h2>
-          <p className="mt-3 max-w-[27rem] text-sm leading-6 text-slate-700">
+          <h2 className="mt-3 text-xl font-semibold leading-tight text-ink">Chaque schema devient un dossier de fabrication lisible.</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-700">
             Kendronics relie les reperes techniques, fichiers Gerber, BOM/CPL et contraintes d assemblage pour preparer une commande exploitable avant revue, paiement et lancement production.
           </p>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:gap-3">
@@ -693,8 +700,12 @@ function SmartOrderingCard({ className = '' }: { className?: string }) {
             </Button>
           </div>
         </div>
+
+        <div className="relative min-h-[18rem] overflow-hidden bg-white lg:min-h-[24rem]">
+          <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        </div>
       </div>
-    </div>
+    </article>
   );
 }
 
