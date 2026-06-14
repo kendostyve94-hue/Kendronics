@@ -462,7 +462,7 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
           <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-none bg-[#14c469] px-1 text-[11px] font-black leading-none text-white">0</span>
         </a>
         <a href="/profile" className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-[#d1d5db] bg-[#f4f4f4]">
+          <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full bg-[#f4f4f4]">
             {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full rounded-full object-cover" /> : null}
           </span>
           <span className="text-xs leading-5 text-[#64748b]">
@@ -4881,7 +4881,7 @@ function InfoList({ title, items, action, numbered }: { title: string; items: st
 }
 
 function Avatar({ avatarDataUrl, size }: { avatarDataUrl: string; size: 'small' | 'medium' | 'large' }) {
-  const className = size === 'large' ? 'h-28 w-28 border-2 border-[#0f8f6b]' : size === 'small' ? 'h-7 w-7 border border-slate-200' : 'h-24 w-24 border border-slate-200';
+  const className = size === 'large' ? 'h-28 w-28' : size === 'small' ? 'h-7 w-7' : 'h-24 w-24';
 
   return (
     <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-slate-200 ${className}`}>
