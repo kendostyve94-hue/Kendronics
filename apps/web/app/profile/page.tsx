@@ -463,7 +463,7 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
         </a>
         <a href="/profile" className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-[#d1d5db] bg-[#f4f4f4]">
-            {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : null}
+            {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full rounded-full object-cover" /> : null}
           </span>
           <span className="text-xs leading-5 text-[#64748b]">
             Bonjour, {firstName}
@@ -1998,6 +1998,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   const [promoCode, setPromoCode] = useState(fallbackCode);
   const [draftPromoCode, setDraftPromoCode] = useState(fallbackCode);
   const [promoStatus, setPromoStatus] = useState('');
+  const [isPromoEditorOpen, setIsPromoEditorOpen] = useState(false);
   const [profileDescription, setProfileDescription] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
   const [activeTab, setActiveTab] = useState<'projects' | 'favorites'>('projects');
@@ -2024,6 +2025,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   }, [fallbackCode, socialStorageKey, userId]);
 
   const renderedDescription = useMemo(() => linkifyText(profileDescription), [profileDescription]);
+  const descriptionChanged = draftDescription.trim() !== profileDescription;
 
   function savePromoCode() {
     const normalized = normalizePromoCode(draftPromoCode);
@@ -2041,6 +2043,19 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
     setDraftPromoCode(normalized);
     writeProfileSocialState(socialStorageKey, { promoCode: normalized, description: profileDescription });
     setPromoStatus('Code promo mis a jour.');
+    setIsPromoEditorOpen(false);
+  }
+
+  function openPromoEditor() {
+    setDraftPromoCode(promoCode);
+    setPromoStatus('');
+    setIsPromoEditorOpen(true);
+  }
+
+  function cancelPromoEditor() {
+    setDraftPromoCode(promoCode);
+    setPromoStatus('');
+    setIsPromoEditorOpen(false);
   }
 
   function saveDescription() {
@@ -2048,46 +2063,39 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
     setProfileDescription(draftDescription.trim());
   }
 
+  function cancelDescriptionEdit() {
+    setDraftDescription(profileDescription);
+  }
+
   return (
     <section className="min-h-[690px] bg-[#f5f7fb] text-[#102033]">
       <div className="bg-white px-5 pb-7 pt-6 sm:px-8">
-        <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-4 sm:grid-cols-[9rem_minmax(0,1fr)] lg:gap-6">
-          <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-full bg-[#eaf3f7] sm:h-32 sm:w-32">
-            <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
+        <div className="grid grid-cols-[6.25rem_minmax(0,1fr)] items-start gap-4 sm:grid-cols-[9rem_minmax(0,1fr)] lg:gap-6">
+          <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-full bg-[#eaf3f7] sm:h-32 sm:w-32">
+            <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full rounded-full object-cover" />
           </div>
 
-          <div className="min-w-0">
+          <div className="min-w-0 max-w-[42rem]">
             <h1 className="break-words text-2xl font-black leading-tight text-[#1f2f43]">{displayName}</h1>
-            <div className="mt-4 grid grid-cols-4 divide-x divide-[#dbe4ee] text-center">
+            <div className="mt-4 grid max-w-[34rem] grid-cols-2 gap-y-3 text-center sm:grid-cols-4 sm:divide-x sm:divide-[#dbe4ee]">
               <ProfilePublicMetric label="Suivi" value="0" />
               <ProfilePublicMetric label="Abonnés" value="0" />
               <ProfilePublicMetric label="Likes" value="0" />
               <ProfilePublicMetric label="Points" value="4" />
             </div>
-            <div className="mt-4 max-w-[24rem]">
-              <label className="sr-only" htmlFor="profile-promo-code">Code promo</label>
-              <div className="flex items-center gap-2">
-                <input
-                  id="profile-promo-code"
-                  value={draftPromoCode}
-                  onChange={(event) => {
-                    setDraftPromoCode(normalizePromoCode(event.target.value));
-                    setPromoStatus('');
-                  }}
-                  className="h-9 min-w-0 flex-1 border border-[#dbe4ee] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]"
-                  aria-label="Code promo"
-                />
-                <button type="button" onClick={savePromoCode} className="grid h-9 w-9 shrink-0 place-items-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Modifier le code promo">
+            <div className="mt-4">
+              <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-[#64748b]">
+                <span>Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span></span>
+                <button type="button" onClick={openPromoEditor} className="grid h-8 w-8 shrink-0 place-items-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Modifier le code promo">
                   <PencilIcon />
                 </button>
               </div>
-              <p className="mt-2 text-sm text-[#64748b]">Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span></p>
               {promoStatus ? <p className={`mt-2 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
             </div>
           </div>
         </div>
 
-        <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1fr)_11rem]">
+        <div className="mt-6 grid gap-3">
           <label className="grid gap-2 text-sm font-semibold text-[#102033]">
             Description du profil
             <textarea
@@ -2098,27 +2106,34 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
               maxLength={420}
             />
           </label>
-          <button type="button" onClick={saveDescription} className="h-11 self-end bg-[#102033] px-4 text-sm font-black text-white transition hover:bg-[#0f8f6b]">
-            Enregistrer
-          </button>
+          {descriptionChanged ? (
+            <div className="flex flex-wrap justify-end gap-2">
+              <button type="button" onClick={cancelDescriptionEdit} className="h-10 border border-[#dbe4ee] bg-white px-4 text-sm font-black text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+                Annuler
+              </button>
+              <button type="button" onClick={saveDescription} className="h-10 bg-[#102033] px-4 text-sm font-black text-white transition hover:bg-[#0f8f6b]">
+                Enregistrer
+              </button>
+            </div>
+          ) : null}
         </div>
 
         {profileDescription ? <div className="mt-4 min-h-10 text-sm leading-6 text-[#64748b]">{renderedDescription}</div> : null}
       </div>
 
       <div className="mt-4 bg-white px-5 py-5 sm:px-8">
-        <div className="flex items-center justify-between gap-3">
-          <nav className="flex gap-6 border-b border-[#dbe4ee] text-sm font-semibold text-[#64748b]" aria-label="Contenu profil">
-            <button type="button" onClick={() => setActiveTab('projects')} className={`inline-flex items-center gap-2 border-b-2 px-1 pb-3 ${activeTab === 'projects' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
+          <nav className="flex min-w-0 flex-1 gap-4 border-b border-[#dbe4ee] text-xs font-semibold text-[#64748b] sm:gap-6 sm:text-sm" aria-label="Contenu profil">
+            <button type="button" onClick={() => setActiveTab('projects')} className={`inline-flex shrink-0 items-center gap-1.5 border-b-2 px-0.5 pb-3 sm:gap-2 sm:px-1 ${activeTab === 'projects' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
               <ProjectTabIcon />
               Projets
             </button>
-            <button type="button" onClick={() => setActiveTab('favorites')} className={`inline-flex items-center gap-2 border-b-2 px-1 pb-3 ${activeTab === 'favorites' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
+            <button type="button" onClick={() => setActiveTab('favorites')} className={`inline-flex shrink-0 items-center gap-1.5 border-b-2 px-0.5 pb-3 sm:gap-2 sm:px-1 ${activeTab === 'favorites' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
               <ProfileStarIcon />
               Favoris
             </button>
           </nav>
-          <button type="button" onClick={() => { setActiveTab('projects'); setIsCreateProjectOpen((open) => !open); }} className="inline-flex h-10 shrink-0 items-center justify-center gap-2 bg-[#0f8f6b] px-3 text-sm font-black text-white transition hover:bg-[#0b7558] sm:px-5">
+          <button type="button" onClick={() => { setActiveTab('projects'); setIsCreateProjectOpen((open) => !open); }} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 bg-[#0f8f6b] px-2 text-xs font-black text-white transition hover:bg-[#0b7558] sm:gap-2 sm:px-5 sm:text-sm">
             <ProjectTabIcon />
             Créer un projet
           </button>
@@ -2157,15 +2172,45 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
           </div>
         </div>
       </div>
+      {isPromoEditorOpen ? (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-[#102033]/40 px-4">
+          <div className="w-full max-w-sm bg-white p-5 text-[#102033] ring-1 ring-[#dbe4ee]">
+            <h2 className="text-lg font-black">Modifier le code promo</h2>
+            <p className="mt-2 text-sm leading-6 text-[#64748b]">Choisissez un code unique, lisible et facile a partager.</p>
+            <label className="mt-4 grid gap-2 text-sm font-semibold" htmlFor="profile-promo-code-modal">
+              Code promo
+              <input
+                id="profile-promo-code-modal"
+                value={draftPromoCode}
+                onChange={(event) => {
+                  setDraftPromoCode(normalizePromoCode(event.target.value));
+                  setPromoStatus('');
+                }}
+                className="h-11 min-w-0 border border-[#dbe4ee] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]"
+                autoFocus
+              />
+            </label>
+            {promoStatus ? <p className={`mt-3 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button type="button" onClick={cancelPromoEditor} className="h-10 border border-[#dbe4ee] bg-white text-sm font-black text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+                Annuler
+              </button>
+              <button type="button" onClick={savePromoCode} className="h-10 bg-[#0f8f6b] text-sm font-black text-white transition hover:bg-[#0b7558]">
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
 
 function ProfilePublicMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="px-2 sm:px-3">
+    <div className="min-w-0 px-2 sm:px-3">
       <p className="text-lg font-black text-[#1f2f43] sm:text-xl">{value}</p>
-      <p className="mt-1 text-xs text-[#7c8795] sm:mt-2 sm:text-sm">{label}</p>
+      <p className="mt-1 break-words text-[11px] leading-4 text-[#7c8795] sm:mt-2 sm:text-sm">{label}</p>
     </div>
   );
 }
@@ -4840,7 +4885,7 @@ function Avatar({ avatarDataUrl, size }: { avatarDataUrl: string; size: 'small' 
 
   return (
     <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-slate-200 ${className}`}>
-      {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : <span className="h-full w-full bg-gradient-to-br from-slate-200 to-slate-400" />}
+      {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full rounded-full object-cover" /> : <span className="h-full w-full bg-gradient-to-br from-slate-200 to-slate-400" />}
     </span>
   );
 }
