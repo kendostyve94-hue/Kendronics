@@ -11,7 +11,6 @@ const heroPcbVariantsImage = '/images/hero-pcb-color-variants-transparent.png';
 const heroControllerBoardImage = '/images/hero-controller-board-transparent.png';
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
 const smartOrderingMapImage = '/images/home-schematic-preview.png';
-const kendronicsChoiceBannerImage = '/images/hero-pcb-color-variants.png';
 const oneStopPaymentMethodCount = 4;
 
 const oneStopCapabilities = [
@@ -219,16 +218,10 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
                 </li>
               ))}
             </ul>
-            <a href="/capabilities" className="group relative mt-4 block h-20 overflow-hidden border border-slate-300 bg-ink text-white">
-              <img src={kendronicsChoiceBannerImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-65" />
-              <span className="absolute inset-0 bg-gradient-to-r from-[#064626]/80 via-[#0b5134]/70 to-[#1f2937]/40" />
-              <span className="relative flex h-full items-center justify-end px-5 text-right">
-                <span>
-                  <span className="block text-sm font-semibold">Pourquoi Kendronics ?</span>
-                  <span className="mt-1 block text-xs font-semibold">Voir plus <span className="inline-block transition group-hover:translate-x-1">-&gt;</span></span>
-                </span>
-              </span>
-            </a>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <Button href="/quote" className="w-full justify-center">Devis Immédiat</Button>
+              <Button href="/capabilities" variant="secondary" className="w-full justify-center">Capacités</Button>
+            </div>
           </div>
 
           <div className="min-w-0">
@@ -693,10 +686,10 @@ function SmartOrderingCard({ className = '' }: { className?: string }) {
           <p className="mt-3 text-sm leading-6 text-slate-700">
             Kendronics relie les reperes techniques, fichiers Gerber, BOM/CPL et contraintes d assemblage pour preparer une commande exploitable avant revue, paiement et lancement production.
           </p>
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:gap-3">
-            <Button href="/quote" className="min-w-[7.5rem] sm:h-10">Commencer</Button>
-            <Button href="/how-it-works" variant="secondary" className="min-w-[10rem] whitespace-nowrap sm:h-10">
-              Comment ca marche
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <Button href="/quote" className="w-full justify-center sm:h-10">Commencer</Button>
+            <Button href="/how-it-works" variant="secondary" className="w-full justify-center sm:h-10">
+              Découvrir
             </Button>
           </div>
         </div>
