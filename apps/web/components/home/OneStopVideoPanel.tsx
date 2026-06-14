@@ -35,34 +35,32 @@ export function OneStopVideoPanel({ paymentMethodCount }: { paymentMethodCount: 
   }, [activeVideo.src]);
 
   return (
-    <>
-      <div className="min-w-0">
-        <div className="relative h-[13rem] overflow-hidden bg-slate-950 sm:h-[16rem] lg:h-full lg:min-h-[21rem]">
-          <video
-            key={activeVideo.src}
-            ref={videoRef}
-            className="h-full w-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            aria-label={activeVideo.title}
-          >
-            <source src={activeVideo.src} type={activeVideo.type} />
-          </video>
-          <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 px-4 py-2.5 text-white">
-            <p className="text-base font-normal">{activeVideo.title}</p>
-          </div>
+    <div className="min-w-0">
+      <div className="relative h-[13rem] overflow-hidden bg-slate-950 sm:h-[16rem] lg:min-h-[21rem]">
+        <video
+          key={activeVideo.src}
+          ref={videoRef}
+          className="h-full w-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-label={activeVideo.title}
+        >
+          <source src={activeVideo.src} type={activeVideo.type} />
+        </video>
+        <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 px-4 py-2.5 text-white">
+          <p className="text-base font-normal">{activeVideo.title}</p>
         </div>
       </div>
 
-      <div className="grid bg-white sm:grid-cols-3">
+      <div className="grid bg-white md:grid-cols-[minmax(11rem,1fr)_minmax(11rem,1fr)_minmax(9rem,0.82fr)]">
         <VideoPreviewTile video={oneStopVideos[1]} active={activeVideo.id === oneStopVideos[1].id} onSelect={() => setActiveVideoId(oneStopVideos[1].id)} />
         <VideoPreviewTile video={oneStopVideos[0]} active={activeVideo.id === oneStopVideos[0].id} onSelect={() => setActiveVideoId(oneStopVideos[0].id)} />
         <PaymentStat value={`${paymentMethodCount}`} label="Moyens de paiement" />
       </div>
-    </>
+    </div>
   );
 }
 
@@ -71,7 +69,7 @@ function VideoPreviewTile({ video, active, onSelect }: { video: (typeof oneStopV
     <button
       type="button"
       onClick={onSelect}
-      className={`group flex min-h-[4.5rem] items-center gap-3 border-b border-slate-200 bg-white px-3 py-3 text-left transition sm:border-b-0 sm:border-r ${
+      className={`group flex min-h-[4.5rem] items-center gap-3 border-b border-slate-200 bg-white px-3 py-3 text-left transition md:border-b-0 md:border-r ${
         active ? 'bg-[#f8fffc] shadow-[inset_0_0_0_1px_#008b6d]' : 'hover:bg-slate-50'
       }`}
       aria-pressed={active}
@@ -91,7 +89,7 @@ function VideoPreviewTile({ video, active, onSelect }: { video: (typeof oneStopV
 
 function PaymentStat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex min-h-[4.5rem] items-center gap-3 border-b border-slate-200 px-5 py-3.5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+    <div className="flex min-h-[4.5rem] items-center gap-3 border-b border-slate-200 px-5 py-3.5 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0">
       <svg aria-hidden="true" viewBox="0 0 24 24" className="h-9 w-9 flex-none text-[#008b6d]" fill="none" stroke="currentColor" strokeWidth="1.8">
         <path d="M4 7.5h14.5A2.5 2.5 0 0 1 21 10v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5a2 2 0 0 1 2-2Z" />
         <path d="M4.5 7.5 16 4.4a2 2 0 0 1 2.5 1.9v1.2" />
