@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { InternationalPhoneInput } from '../../components/account/InternationalPhoneInput';
 import { Navbar } from '../../components/layout/Navbar';
@@ -15,6 +15,8 @@ const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
 const savedShippingAddressesKey = 'kendronics.customer.shipping-addresses';
 const savedBillingAddressesKey = 'kendronics.customer.billing-addresses';
+const profilePromoCodeIndexKey = 'kendronics.profile.promo-code-index';
+const profileSocialStorageKey = 'kendronics.profile.social';
 const siteGreen = '#0f8f6b';
 const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
 const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
@@ -555,7 +557,7 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
       items: [
         { label: 'Services et demandes', view: 'services' },
         { label: 'Support', view: 'support' },
-        { label: 'Publier', view: 'benefits' },
+        { label: 'Mon profil', view: 'benefits' },
         { label: 'Parrainage', view: 'invite' },
       ],
     },
@@ -632,7 +634,7 @@ function ProfileViewContent({
   if (view === 'comments') return <CommentsManagementSection orders={orders} dataStatus={dataStatus} />;
   if (view === 'services') return <ServicesHubSection />;
   if (view === 'support') return <SupportHubSection orders={orders} dataStatus={dataStatus} />;
-  if (view === 'benefits') return <BenefitsHubSection />;
+  if (view === 'benefits') return <BenefitsHubSection profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} />;
   if (view === 'notifications') return <NotificationsSection notifications={notifications} dataStatus={dataStatus} onNotificationsChange={onNotificationsChange} />;
   if (view === 'shipping-address') return <AddressFormSection title="Adresse de livraison" note="Veuillez entrer votre nouveau contact/adresse" kind="shippingAddress" initialAddress={profile.shippingAddress} onSaved={(address) => onProfileChange((current) => ({ ...current, shippingAddress: address }))} />;
   if (view === 'invite') return <InviteSection />;
@@ -1994,19 +1996,151 @@ function SupportHubSection({ orders, dataStatus }: { orders: ProfileOrder[]; dat
   );
 }
 
-function BenefitsHubSection() {
+function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: ProfileForm; userId: string; avatarDataUrl: string }) {
+  const displayName = profile.name || profile.profileDetails?.firstName || emailName(profile.email) || 'Client Kendronics';
+  const fallbackCode = makeDefaultPromoCode(userId, profile.email || displayName);
+  const socialStorageKey = `${profileSocialStorageKey}:${userId}`;
+  const [promoCode, setPromoCode] = useState(fallbackCode);
+  const [draftPromoCode, setDraftPromoCode] = useState(fallbackCode);
+  const [promoStatus, setPromoStatus] = useState('');
+  const [profileDescription, setProfileDescription] = useState('');
+  const [draftDescription, setDraftDescription] = useState('');
+  const [activeTab, setActiveTab] = useState<'projects' | 'favorites'>('projects');
+
+  useEffect(() => {
+    const stored = readProfileSocialState(socialStorageKey);
+    const initialCode = stored.promoCode || fallbackCode;
+    setPromoCode(initialCode);
+    setDraftPromoCode(initialCode);
+    setProfileDescription(stored.description);
+    setDraftDescription(stored.description);
+    ensurePromoCodeRegistered(userId, initialCode);
+  }, [fallbackCode, socialStorageKey, userId]);
+
+  const renderedDescription = useMemo(() => linkifyText(profileDescription), [profileDescription]);
+
+  function savePromoCode() {
+    const normalized = normalizePromoCode(draftPromoCode);
+    if (normalized.length < 4) {
+      setPromoStatus('Le code doit contenir au moins 4 caracteres.');
+      return;
+    }
+
+    if (!claimPromoCode(userId, promoCode, normalized)) {
+      setPromoStatus('Ce code est deja utilise par un autre utilisateur.');
+      return;
+    }
+
+    setPromoCode(normalized);
+    setDraftPromoCode(normalized);
+    writeProfileSocialState(socialStorageKey, { promoCode: normalized, description: profileDescription });
+    setPromoStatus('Code client mis a jour.');
+  }
+
+  function saveDescription() {
+    writeProfileSocialState(socialStorageKey, { promoCode, description: draftDescription.trim() });
+    setProfileDescription(draftDescription.trim());
+  }
+
   return (
-    <section className="min-h-[690px] bg-white p-6 text-[#102033] shadow-sm ring-1 ring-[#dbe4ee]">
-      <HubHeader eyebrow="Avantages" title="Coupons, credits et parrainage" actionLabel="Parrainage" actionHref="/profile?view=invite" />
-      <div className="mt-5 grid grid-cols-3 gap-4">
-        <HubMetric label="Coupons actifs" value="0" />
-        <HubMetric label="Credits disponibles" value="0 EUR" />
-        <HubMetric label="Points" value="0" />
+    <section className="min-h-[690px] bg-[#f5f7fb] text-[#102033]">
+      <div className="h-[70px] bg-[linear-gradient(135deg,#004c8f,#0f8f6b)]" />
+      <div className="-mt-7 bg-white px-5 pb-7 pt-6 sm:px-8">
+        <div className="grid gap-6 lg:grid-cols-[9.5rem_minmax(0,1fr)_minmax(28rem,0.9fr)] lg:items-center">
+          <div className="mx-auto grid h-32 w-32 place-items-center overflow-hidden rounded-full bg-[#eaf3f7] lg:mx-0">
+            <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
+          </div>
+
+          <div className="min-w-0 text-center lg:text-left">
+            <h1 className="truncate text-2xl font-black text-[#1f2f43]">{displayName}</h1>
+            <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,16rem)_auto] sm:items-center">
+              <label className="sr-only" htmlFor="profile-promo-code">Code Client</label>
+              <input
+                id="profile-promo-code"
+                value={draftPromoCode}
+                onChange={(event) => {
+                  setDraftPromoCode(normalizePromoCode(event.target.value));
+                  setPromoStatus('');
+                }}
+                className="h-10 border border-[#dbe4ee] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]"
+                aria-label="Code Client"
+              />
+              <button type="button" onClick={savePromoCode} className="h-10 bg-[#0f8f6b] px-4 text-sm font-black text-white transition hover:bg-[#0b7558]">
+                Modifier
+              </button>
+            </div>
+            <p className="mt-2 text-sm text-[#64748b]">Code Client: <span className="font-semibold text-[#102033]">{promoCode}</span></p>
+            {promoStatus ? <p className={`mt-2 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
+          </div>
+
+          <div className="grid grid-cols-4 divide-x divide-[#dbe4ee] text-center">
+            <ProfilePublicMetric label="Suivi" value="0" />
+            <ProfilePublicMetric label="Abonnés" value="0" />
+            <ProfilePublicMetric label="Likes" value="0" />
+            <ProfilePublicMetric label="Points" value="4" />
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-3 lg:grid-cols-[minmax(0,1fr)_11rem]">
+          <label className="grid gap-2 text-sm font-semibold text-[#102033]">
+            Description du profil
+            <textarea
+              value={draftDescription}
+              onChange={(event) => setDraftDescription(event.target.value)}
+              className="min-h-[86px] resize-y border border-[#dbe4ee] bg-white px-3 py-2 text-sm font-medium leading-6 text-[#102033] outline-none focus:border-[#0f8f6b]"
+              placeholder="Presentez votre profil, vos projets, votre entreprise ou ajoutez vos liens LinkedIn, YouTube, GitHub..."
+              maxLength={420}
+            />
+          </label>
+          <button type="button" onClick={saveDescription} className="h-11 self-end bg-[#102033] px-4 text-sm font-black text-white transition hover:bg-[#0f8f6b]">
+            Enregistrer
+          </button>
+        </div>
+
+        <div className="mt-4 min-h-10 text-sm leading-6 text-[#64748b]">
+          {profileDescription ? renderedDescription : 'Ajoutez une description publique avec vos liens et reseaux sociaux.'}
+        </div>
       </div>
-      <div className="mt-6 bg-[#f8fafc] p-5 text-sm leading-6 text-[#53657a] ring-1 ring-[#e4ebf2]">
-        Les avantages client seront affiches ici lorsqu'ils seront disponibles. Cette section centralisera les coupons, credits, parrainage et recompenses.
+
+      <div className="mt-4 bg-white px-5 py-5 sm:px-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <nav className="flex gap-6 border-b border-[#dbe4ee] text-sm font-semibold text-[#64748b]" aria-label="Contenu profil">
+            <button type="button" onClick={() => setActiveTab('projects')} className={`border-b-2 px-1 pb-3 ${activeTab === 'projects' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
+              Projets
+            </button>
+            <button type="button" onClick={() => setActiveTab('favorites')} className={`border-b-2 px-1 pb-3 ${activeTab === 'favorites' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
+              Favoris
+            </button>
+          </nav>
+          <a href="/explorer" className="inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
+            Créer un projet
+          </a>
+        </div>
+
+        <div className="grid min-h-[220px] place-items-center text-center">
+          <div>
+            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#eefbf6] text-3xl font-black text-[#0f8f6b]">
+              {activeTab === 'projects' ? 'P' : 'F'}
+            </div>
+            <p className="mt-4 text-base font-black text-[#102033]">
+              {activeTab === 'projects' ? 'Aucun projet public pour le moment.' : 'Aucun favori pour le moment.'}
+            </p>
+            <p className="mt-2 text-sm text-[#64748b]">
+              {activeTab === 'projects' ? 'Les projets publics que vous creez apparaitront ici.' : 'Les projets que vous aimez ou sauvegardez apparaitront ici.'}
+            </p>
+          </div>
+        </div>
       </div>
     </section>
+  );
+}
+
+function ProfilePublicMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="px-3">
+      <p className="text-xl font-black text-[#1f2f43]">{value}</p>
+      <p className="mt-2 text-sm text-[#7c8795]">{label}</p>
+    </div>
   );
 }
 
@@ -2029,6 +2163,90 @@ function HubMetric({ label, value }: { label: string; value: string }) {
       <p className="mt-2 text-2xl font-black text-[#102033]">{value}</p>
     </div>
   );
+}
+
+function normalizePromoCode(value: string) {
+  return value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 18);
+}
+
+function makeDefaultPromoCode(userId: string, seed: string) {
+  const base = normalizePromoCode(seed || userId).slice(0, 10) || 'CLIENT';
+  const suffix = normalizePromoCode(userId).slice(-4) || '0000';
+  return `${base}${suffix}`.slice(0, 18);
+}
+
+function readPromoCodeIndex(): Record<string, string> {
+  try {
+    const raw = window.localStorage.getItem(profilePromoCodeIndexKey);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, string> : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePromoCodeIndex(index: Record<string, string>) {
+  try {
+    window.localStorage.setItem(profilePromoCodeIndexKey, JSON.stringify(index));
+  } catch {
+    // Local storage can be unavailable in private contexts.
+  }
+}
+
+function ensurePromoCodeRegistered(userId: string, promoCode: string) {
+  const normalized = normalizePromoCode(promoCode);
+  if (!normalized) return;
+  const index = readPromoCodeIndex();
+  if (!index[normalized]) {
+    index[normalized] = userId;
+    writePromoCodeIndex(index);
+  }
+}
+
+function claimPromoCode(userId: string, previousCode: string, nextCode: string) {
+  const normalizedNext = normalizePromoCode(nextCode);
+  const normalizedPrevious = normalizePromoCode(previousCode);
+  const index = readPromoCodeIndex();
+  const owner = index[normalizedNext];
+  if (owner && owner !== userId) return false;
+  if (normalizedPrevious && normalizedPrevious !== normalizedNext && index[normalizedPrevious] === userId) {
+    delete index[normalizedPrevious];
+  }
+  index[normalizedNext] = userId;
+  writePromoCodeIndex(index);
+  return true;
+}
+
+function readProfileSocialState(storageKey: string): { promoCode: string; description: string } {
+  try {
+    const raw = readScopedLocalStorage(storageKey);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return {
+      promoCode: typeof parsed?.promoCode === 'string' ? parsed.promoCode : '',
+      description: typeof parsed?.description === 'string' ? parsed.description : '',
+    };
+  } catch {
+    return { promoCode: '', description: '' };
+  }
+}
+
+function writeProfileSocialState(storageKey: string, value: { promoCode: string; description: string }) {
+  writeScopedLocalStorage(storageKey, JSON.stringify(value));
+}
+
+function linkifyText(text: string) {
+  const parts = text.split(/(https?:\/\/[^\s]+|www\.[^\s]+)/g);
+  return parts.map((part, index) => {
+    if (/^(https?:\/\/|www\.)/.test(part)) {
+      const href = part.startsWith('http') ? part : `https://${part}`;
+      return (
+        <a key={`${part}-${index}`} href={href} target="_blank" rel="noreferrer" className="font-semibold text-[#0f8f6b] underline underline-offset-2">
+          {part}
+        </a>
+      );
+    }
+    return <span key={`${part}-${index}`}>{part}</span>;
+  });
 }
 
 function SupportTile({ title, body, href }: { title: string; body: string; href: string }) {

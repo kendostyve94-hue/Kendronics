@@ -140,7 +140,7 @@ function mobileProfileMenuGroups(unreadNotifications: number): MobileProfileMenu
       title: 'Services',
       items: [
         { label: 'Services et demandes', href: '/profile?view=services' },
-        { label: 'Publier', href: '/explorer' },
+        { label: 'Mon profil', href: '/profile?view=benefits' },
         { label: 'Parrainage', href: '/profile?view=invite' },
       ],
     },
