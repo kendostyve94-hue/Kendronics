@@ -1,9 +1,9 @@
 import { HeroQuickQuote } from '../components/home/HeroQuickQuote';
+import { OneStopVideoPanel } from '../components/home/OneStopVideoPanel';
 import { ProductCatalog } from '../components/home/ProductCatalog';
 import { Footer } from '../components/layout/Footer';
 import { Navbar } from '../components/layout/Navbar';
 import { Button } from '../components/ui/Button';
-import { africanCountries } from '../lib/african-countries';
 import { getApiBaseUrl } from '../lib/api-base-url';
 import { officialContactEmail } from '../lib/official-contact';
 
@@ -12,9 +12,7 @@ const heroControllerBoardImage = '/images/hero-controller-board-transparent.png'
 const heroStackedPcbImage = '/images/hero-stacked-pcb-transparent.png';
 const smartOrderingMapImage = '/images/home-schematic-preview.png';
 const kendronicsChoiceBannerImage = '/images/hero-pcb-color-variants.png';
-const oneStopSolutionVideoMp4 = '/videos/one-stop-solution.mp4';
 const oneStopPaymentMethodCount = 4;
-const oneStopServiceCount = 6;
 
 const oneStopCapabilities = [
   'PCB standard et avance',
@@ -321,30 +319,7 @@ function HomeCapabilityMatrix() {
 
             </div>
 
-            <div className="min-w-0">
-              <div className="relative h-[13rem] overflow-hidden bg-slate-950 sm:h-[16rem] lg:h-full lg:min-h-[21rem]">
-                <video
-                  className="h-full w-full object-cover"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  aria-label="Video Kendronics PCB et assemblage"
-                >
-                  <source src={oneStopSolutionVideoMp4} type="video/mp4" />
-                </video>
-                <div className="absolute bottom-0 left-0 right-0 bg-slate-950/45 px-4 py-2.5 text-white">
-                  <p className="text-base font-normal">Parcours PCB et assemblage Kendronics</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid bg-white sm:grid-cols-3">
-            <OneStopStat icon="gear" value={`${oneStopServiceCount}+`} label="Services proposes" />
-            <OneStopStat icon="planet" value={`${africanCountries.length}`} label="Pays livres" />
-            <OneStopStat icon="wallet" value={`${oneStopPaymentMethodCount}`} label="Moyens de paiement" />
+            <OneStopVideoPanel paymentMethodCount={oneStopPaymentMethodCount} />
           </div>
         </div>
 
@@ -390,51 +365,6 @@ function HomeCapabilityMatrix() {
         </div>
       </div>
     </section>
-  );
-}
-
-function OneStopStat({ icon, value, label }: { icon: 'gear' | 'planet' | 'wallet'; value: string; label: string }) {
-  return (
-    <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-3.5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
-      <OneStopStatIcon icon={icon} />
-      <span>
-        <span className="block text-sm font-semibold text-[#ff5a00]">{value}</span>
-        <span className="block text-sm leading-4 text-slate-700">{label}</span>
-      </span>
-    </div>
-  );
-}
-
-function OneStopStatIcon({ icon }: { icon: 'gear' | 'planet' | 'wallet' }) {
-  if (icon === 'gear') {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 64 64" className="h-9 w-9 flex-none text-[#526f82]" fill="currentColor">
-        <path d="M25.6 11.5 29 8h6l3.4 3.5 4.8-1.2 4.2 4.2-1.2 4.8 3.5 3.4v6l-3.5 3.4 1.2 4.8-4.2 4.2-4.8-1.2-3.4 3.5h-6l-3.4-3.5-4.8 1.2-4.2-4.2 1.2-4.8-3.5-3.4v-6l3.5-3.4-1.2-4.8 4.2-4.2 4.8 1.2Zm6.4 8.8a5.4 5.4 0 1 0 0 10.8 5.4 5.4 0 0 0 0-10.8Z" />
-        <path d="m46.2 34.8 2.4-2.5h4.2l2.4 2.5 3.3-.8 3 3-.8 3.3 2.5 2.4v4.2l-2.5 2.4.8 3.3-3 3-3.3-.8-2.4 2.5h-4.2l-2.4-2.5-3.3.8-3-3 .8-3.3-2.5-2.4v-4.2l2.5-2.4-.8-3.3 3-3 3.3.8Zm4.5 6.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" />
-      </svg>
-    );
-  }
-
-  if (icon === 'planet') {
-    return (
-      <svg aria-hidden="true" viewBox="0 0 64 64" className="h-9 w-9 flex-none text-[#4f4f4f]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.5">
-        <circle cx="26" cy="34" r="20" />
-        <path d="M10 27c5-3 9-3 13-1 3 2 7 1 10-2 3-2 7-2 10 0" />
-        <path d="M11 42c5-2 9-2 12 1 2 2 3 5 2 9" />
-        <path d="M29 16c-3 5-3 10 1 14 3 3 8 3 11 7" />
-        <path d="M44 5c-6 0-11 5-11 11 0 8 11 22 11 22s11-14 11-22c0-6-5-11-11-11Z" fill="white" />
-        <circle cx="44" cy="16" r="4" fill="white" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-9 w-9 flex-none text-[#008b6d]" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M4 7.5h14.5A2.5 2.5 0 0 1 21 10v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5a2 2 0 0 1 2-2Z" />
-      <path d="M4.5 7.5 16 4.4a2 2 0 0 1 2.5 1.9v1.2" />
-      <path d="M17 13h4v4h-4a2 2 0 0 1 0-4Z" />
-      <path d="M18.5 15h.01" />
-    </svg>
   );
 }
 
