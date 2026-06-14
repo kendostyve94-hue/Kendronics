@@ -605,6 +605,8 @@ const africaOperationNodes = [
   { label: 'Livraison', color: '#0f8f6b', icon: 'delivery', x: 16, y: 71 },
 ];
 
+const operationMapCenter = { x: 50, y: 50, radius: 12 };
+
 function AfricaOperationsCard() {
   return (
     <article className="overflow-hidden border border-slate-300 bg-white lg:min-h-[24rem]">
@@ -625,14 +627,31 @@ function AfricaOperationsCard() {
             className="absolute left-1/2 top-1/2 h-[86%] w-[86%] -translate-x-1/2 -translate-y-1/2 object-contain opacity-70 mix-blend-multiply"
           />
           <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden="true">
-            <circle cx="50" cy="50" r="13" fill="#ffffff" opacity="0.78" />
-            {africaOperationNodes.map((node) => (
-              <line key={`${node.label}-line`} x1="50" y1="50" x2={node.x} y2={node.y} stroke="#0f8f6b" strokeWidth="0.35" opacity="0.5" />
-            ))}
+            <circle cx={operationMapCenter.x} cy={operationMapCenter.y} r={operationMapCenter.radius} fill="#ffffff" opacity="0.58" />
+            {africaOperationNodes.map((node) => {
+              const dx = node.x - operationMapCenter.x;
+              const dy = node.y - operationMapCenter.y;
+              const length = Math.max(Math.hypot(dx, dy), 1);
+              const startX = operationMapCenter.x + (dx / length) * operationMapCenter.radius;
+              const startY = operationMapCenter.y + (dy / length) * operationMapCenter.radius;
+
+              return (
+                <line
+                  key={`${node.label}-line`}
+                  x1={startX}
+                  y1={startY}
+                  x2={node.x}
+                  y2={node.y}
+                  stroke="#0f8f6b"
+                  strokeWidth="0.35"
+                  opacity="0.52"
+                />
+              );
+            })}
           </svg>
 
-          <div className="absolute left-1/2 top-1/2 grid h-24 w-32 -translate-x-1/2 -translate-y-1/2 place-items-center">
-            <img src="/images/kendronics-logo.png" alt="Kendronics" className="max-h-14 w-auto object-contain" />
+          <div className="absolute left-1/2 top-1/2 grid h-[5.8rem] w-[7.4rem] -translate-x-1/2 -translate-y-1/2 place-items-center">
+            <img src="/images/kendronics-logo.png" alt="Kendronics" className="max-h-11 w-auto object-contain" />
           </div>
 
           <div className="absolute inset-0">
@@ -659,9 +678,14 @@ function SmartOrderingCard({ className = '' }: { className?: string }) {
   return (
     <div className={`relative min-h-[18rem] overflow-hidden border border-slate-300 bg-white lg:min-h-[24rem] ${className}`}>
       <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      <span className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/62 to-white/8" aria-hidden="true" />
       <div className="relative p-4 sm:p-6">
-        <div className="max-w-[25rem]">
+        <div className="max-w-[29rem]">
           <p className="label-caps text-ink">Commande intelligente</p>
+          <h2 className="mt-3 text-2xl font-semibold leading-tight text-ink sm:text-3xl">Chaque schéma devient un dossier de fabrication lisible.</h2>
+          <p className="mt-3 max-w-[27rem] text-sm leading-6 text-slate-700">
+            Kendronics relie les reperes techniques, fichiers Gerber, BOM/CPL et contraintes d assemblage pour preparer une commande exploitable avant revue, paiement et lancement production.
+          </p>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:flex sm:gap-3">
             <Button href="/quote" className="min-w-[7.5rem] sm:h-10">Commencer</Button>
             <Button href="/how-it-works" variant="secondary" className="min-w-[10rem] whitespace-nowrap sm:h-10">
