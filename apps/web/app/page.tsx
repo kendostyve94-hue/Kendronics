@@ -300,9 +300,9 @@ function HomeCapabilityMatrix() {
 
   return (
     <section className="bg-white px-0 py-5 sm:px-4 lg:px-5">
-      <div className="mx-auto grid w-full max-w-[1368px] items-start gap-5 xl:grid-cols-[minmax(38rem,0.95fr)_minmax(36rem,1.05fr)]">
+      <div className="mx-auto grid w-full max-w-[1368px] items-start gap-5 xl:grid-cols-[minmax(45rem,1.16fr)_minmax(28rem,0.84fr)]">
         <div className="overflow-hidden border border-slate-300 bg-white">
-          <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(14rem,17rem)_minmax(22rem,1fr)]">
+          <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(13rem,16rem)_minmax(29rem,1fr)]">
             <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
               <span className="mb-3 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
               <h2 className="text-xl font-semibold leading-tight tracking-tight text-ink">Solution complete pour PCB et assemblage</h2>

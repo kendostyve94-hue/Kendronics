@@ -71,8 +71,8 @@ function VideoPreviewTile({ video, active, onSelect }: { video: (typeof oneStopV
     <button
       type="button"
       onClick={onSelect}
-      className={`group flex min-h-[4.5rem] items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 text-left transition sm:border-b-0 sm:border-r ${
-        active ? 'bg-[#f5fbf8] ring-2 ring-inset ring-[#008b6d]' : 'hover:bg-slate-50'
+      className={`group flex min-h-[4.5rem] items-center gap-3 border-b border-slate-200 bg-white px-3 py-3 text-left transition sm:border-b-0 sm:border-r ${
+        active ? 'bg-[#f8fffc] shadow-[inset_0_0_0_1px_#008b6d]' : 'hover:bg-slate-50'
       }`}
       aria-pressed={active}
     >
@@ -82,19 +82,10 @@ function VideoPreviewTile({ video, active, onSelect }: { video: (typeof oneStopV
         </video>
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold leading-5 text-ink">{video.label}</span>
-        <span className="mt-0.5 block truncate text-xs leading-4 text-slate-500">{video.description}</span>
+        <span className="block break-words text-sm font-semibold leading-5 text-ink">{video.label}</span>
+        <span className="mt-0.5 block break-words text-xs leading-4 text-slate-500">{video.description}</span>
       </span>
-      <ChevronDownIcon />
     </button>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg viewBox="0 0 20 20" className="h-5 w-5 flex-none text-slate-600 transition group-hover:translate-y-0.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m5 7.5 5 5 5-5" />
-    </svg>
   );
 }
 
