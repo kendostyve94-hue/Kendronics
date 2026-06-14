@@ -109,7 +109,7 @@ function mobileNavGroups(unreadNotifications: number, isAdmin: boolean, isSigned
     },
     {
       title: 'Support',
-      items: supportMenuGroups.flatMap((group) => group.items.map((item) => ({ label: item.label, href: item.href }))),
+      items: supportMenuGroups.flatMap((group) => group.items.filter((item) => item.label !== "Centre d'aide").map((item) => ({ label: item.label, href: item.href }))),
     },
   ];
 
@@ -127,14 +127,6 @@ function mobileNavGroups(unreadNotifications: number, isAdmin: boolean, isSigned
 function mobileProfileMenuGroups(unreadNotifications: number): MobileProfileMenuGroup[] {
   return [
     {
-      title: 'Espace client',
-      items: [
-        { label: 'Tableau de bord', href: '/profile' },
-        { label: 'Mes commandes', href: '/profile?view=orders' },
-        { label: 'Notifications', href: '/profile?view=notifications', count: unreadNotifications },
-      ],
-    },
-    {
       title: 'Suivi commande',
       items: [
         { label: 'Verification', href: '/profile?view=verification' },
@@ -148,14 +140,16 @@ function mobileProfileMenuGroups(unreadNotifications: number): MobileProfileMenu
       title: 'Services',
       items: [
         { label: 'Services et demandes', href: '/profile?view=services' },
-        { label: 'Support', href: '/profile?view=support' },
+        { label: 'Publier', href: '/explorer' },
         { label: 'Parrainage', href: '/profile?view=invite' },
-        { label: 'Centre aide', href: '/centre-aide' },
       ],
     },
     {
-      title: 'Profil',
+      title: 'Espace client',
       items: [
+        { label: 'Tableau de bord', href: '/profile' },
+        { label: 'Mes commandes', href: '/profile?view=orders' },
+        { label: 'Notifications', href: '/profile?view=notifications', count: unreadNotifications },
         { label: 'Adresse livraison', href: '/profile?view=shipping-address' },
         { label: 'Historique des commandes', href: '/profile?view=all-orders' },
         { label: 'Parametres', href: '/profile?view=settings' },
@@ -466,14 +460,6 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
                   onNavigate={() => setIsMenuOpen(false)}
                 />
               ))}
-            </div>
-            <div className="mt-5 grid gap-2.5">
-              <a href="/quote" onClick={() => setIsMenuOpen(false)} className="flex min-h-12 items-center justify-center gap-2 rounded-sm bg-[#0f8f6b] px-4 text-sm font-semibold text-white transition hover:bg-[#0b7558]">
-                Demarrer maintenant <span aria-hidden="true">›</span>
-              </a>
-              <a href="/contact" onClick={() => setIsMenuOpen(false)} className="flex min-h-12 items-center justify-center rounded-sm border border-[#0f8f6b]/35 bg-white px-4 text-sm font-semibold text-[#0f8f6b] transition hover:border-[#0f8f6b] hover:bg-[#eefbf6]">
-                Contacter notre equipe
-              </a>
             </div>
           </nav>
         ) : null}
