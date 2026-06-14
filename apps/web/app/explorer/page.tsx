@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { Navbar } from '../../components/layout/Navbar';
 import { getApiBaseUrl } from '../../lib/api-base-url';
@@ -34,8 +34,6 @@ type ExplorerProject = {
   createdAt: string;
   comments: ExplorerComment[];
 };
-
-type SubmitState = 'idle' | 'submitting' | 'published' | 'error';
 
 const apiBaseUrl = getApiBaseUrl();
 const actorKeyStorageKey = 'kendronics.explorer.actor';
@@ -105,18 +103,7 @@ export default function ExplorerPage() {
   const [activeCategory, setActiveCategory] = useState('Tous');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(fallbackProjects[0]?.id ?? null);
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
-  const [submitState, setSubmitState] = useState<SubmitState>('idle');
-  const [draft, setDraft] = useState({
-    title: '',
-    category: 'Prototype',
-    summary: '',
-    description: '',
-    tags: '',
-    imageUrl: '',
-    attachmentName: '',
-    attachmentType: 'Gerber',
-    repositoryUrl: '',
-  });
+  const isSignedIn = Boolean(readAuthSession());
 
   useEffect(() => {
     let cancelled = false;
@@ -158,45 +145,6 @@ export default function ExplorerPage() {
   }, [activeCategory, projects]);
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? filteredProjects[0] ?? projects[0];
-
-  async function publishProject(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const session = readAuthSession();
-    if (!session) {
-      openAuthRequired('login');
-      return;
-    }
-
-    setSubmitState('submitting');
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/explorer/projects`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `${session.tokenType} ${session.accessToken}`,
-        },
-        body: JSON.stringify({
-          title: draft.title,
-          category: draft.category,
-          summary: draft.summary,
-          description: draft.description || undefined,
-          tags: draft.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
-          imageUrl: draft.imageUrl || undefined,
-          attachmentName: draft.attachmentName || undefined,
-          attachmentType: draft.attachmentType || undefined,
-          repositoryUrl: draft.repositoryUrl || undefined,
-        }),
-      });
-      if (!response.ok) throw new Error(`Publish failed: ${response.status}`);
-      const project = (await response.json()) as ExplorerProject;
-      setProjects((current) => [project, ...current]);
-      setSelectedProjectId(project.id);
-      setDraft({ title: '', category: 'Prototype', summary: '', description: '', tags: '', imageUrl: '', attachmentName: '', attachmentType: 'Gerber', repositoryUrl: '' });
-      setSubmitState('published');
-    } catch {
-      setSubmitState('error');
-    }
-  }
 
   async function likeProject(project: ExplorerProject) {
     const actorKey = readActorKey();
@@ -253,7 +201,7 @@ export default function ExplorerPage() {
               Publiez PCB, prototypes, fichiers, notes de fabrication et retours terrain. Les visiteurs peuvent consulter, aimer, commenter et transformer un projet en devis.
             </p>
             <div className="mt-5 flex flex-wrap gap-2 sm:gap-3">
-              <a href="#create" className="inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-4 text-sm font-black text-white transition hover:bg-[#0b7558] sm:h-11 sm:px-5">Creer un projet</a>
+              <a href={isSignedIn ? '/profile?view=benefits&create=1' : '#create'} onClick={(event) => { if (!isSignedIn) { event.preventDefault(); openAuthRequired('login'); } }} className="inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-4 text-sm font-black text-white transition hover:bg-[#0b7558] sm:h-11 sm:px-5">Creer un projet</a>
               <a href="#feed" className="inline-flex h-10 items-center justify-center border border-white/25 bg-white/10 px-4 text-sm font-black text-white transition hover:bg-white/15 sm:h-11 sm:px-5">Voir les projets</a>
             </div>
           </div>
@@ -277,37 +225,6 @@ export default function ExplorerPage() {
               <ProjectCard key={project.id} project={project} selected={selectedProject?.id === project.id} onSelect={() => setSelectedProjectId(project.id)} onLike={() => void likeProject(project)} />
             ))}
           </div>
-        </div>
-      </section>
-
-      <section id="create" className="border-y border-[#d8e1ea] bg-white">
-        <div className="mx-auto grid max-w-[1368px] gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_440px] lg:px-5">
-          <div>
-            <h2 className="text-3xl font-black tracking-tight text-[#07111f]">Publier un projet public Kendronics.</h2>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-[#526173]">
-              La publication est liee au compte client. Les champs sont moderables, limites et persistants dans l API.
-            </p>
-          </div>
-          <form onSubmit={publishProject} className="grid gap-3 bg-[#f7fafc] p-4 ring-1 ring-[#d8e1ea]">
-            <input value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Titre du projet" maxLength={90} required />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <select value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value }))} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]">
-                {['Prototype', 'PCB', 'IoT', 'Energie', 'Robotique', 'Education', 'Audio', 'Medical'].map((item) => <option key={item}>{item}</option>)}
-              </select>
-              <input value={draft.tags} onChange={(event) => setDraft((current) => ({ ...current, tags: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Tags separes par virgule" maxLength={120} />
-            </div>
-            <textarea value={draft.summary} onChange={(event) => setDraft((current) => ({ ...current, summary: event.target.value }))} className="min-h-[92px] resize-y border border-[#cfd8e3] px-3 py-2 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Resume public du projet" maxLength={360} required />
-            <textarea value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} className="min-h-[120px] resize-y border border-[#cfd8e3] px-3 py-2 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Details techniques, composants, contraintes, instructions..." maxLength={2200} />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input value={draft.attachmentName} onChange={(event) => setDraft((current) => ({ ...current, attachmentName: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Nom fichier Gerber/PDF" maxLength={120} />
-              <input value={draft.repositoryUrl} onChange={(event) => setDraft((current) => ({ ...current, repositoryUrl: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Lien GitHub/EasyEDA optionnel" />
-            </div>
-            <button type="submit" disabled={submitState === 'submitting'} className="h-11 bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558] disabled:bg-slate-300">
-              {submitState === 'submitting' ? 'Publication...' : 'Publier'}
-            </button>
-            {submitState === 'published' ? <p className="text-xs font-bold text-[#0f8f6b]">Projet publie dans le feed public.</p> : null}
-            {submitState === 'error' ? <p className="text-xs font-bold text-red-600">Publication impossible. Verifiez la connexion et les champs.</p> : null}
-          </form>
         </div>
       </section>
 

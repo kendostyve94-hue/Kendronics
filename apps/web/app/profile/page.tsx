@@ -462,7 +462,7 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
           <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-none bg-[#14c469] px-1 text-[11px] font-black leading-none text-white">0</span>
         </a>
         <a href="/profile" className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-none border border-[#d1d5db] bg-[#f4f4f4]">
+          <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-[#d1d5db] bg-[#f4f4f4]">
             {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : null}
           </span>
           <span className="text-xs leading-5 text-[#64748b]">
@@ -540,6 +540,10 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
         { label: 'Tableau de bord', view: null },
         { label: 'Commandes', view: 'all-orders', count: counts.all },
         { label: 'Notifications', view: 'notifications', count: unread },
+        { label: 'Adresse livraison', view: 'shipping-address' },
+        { label: 'Historique des commandes', view: 'order-history' },
+        { label: "Centre d'aide", view: 'support' },
+        { label: 'Paramètres', view: 'settings' },
       ],
     },
     {
@@ -559,15 +563,6 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
         { label: 'Support', view: 'support' },
         { label: 'Mon profil', view: 'benefits' },
         { label: 'Parrainage', view: 'invite' },
-      ],
-    },
-    {
-      title: 'Profil',
-      items: [
-        { label: 'Adresse livraison', view: 'shipping-address' },
-        { label: 'Historique des commandes', view: 'order-history' },
-        { label: "Centre d'aide", view: 'support' },
-        { label: 'Paramètres', view: 'settings' },
       ],
     },
   ];
@@ -2006,8 +2001,19 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   const [profileDescription, setProfileDescription] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
   const [activeTab, setActiveTab] = useState<'projects' | 'favorites'>('projects');
+  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+  const [projectDraft, setProjectDraft] = useState({
+    title: '',
+    category: 'Prototype',
+    tags: '',
+    summary: '',
+    description: '',
+    attachmentName: '',
+    repositoryUrl: '',
+  });
 
   useEffect(() => {
+    setIsCreateProjectOpen(new URLSearchParams(window.location.search).get('create') === '1');
     const stored = readProfileSocialState(socialStorageKey);
     const initialCode = stored.promoCode || fallbackCode;
     setPromoCode(initialCode);
@@ -2034,7 +2040,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
     setPromoCode(normalized);
     setDraftPromoCode(normalized);
     writeProfileSocialState(socialStorageKey, { promoCode: normalized, description: profileDescription });
-    setPromoStatus('Code client mis a jour.');
+    setPromoStatus('Code promo mis a jour.');
   }
 
   function saveDescription() {
@@ -2044,9 +2050,8 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
   return (
     <section className="min-h-[690px] bg-[#f5f7fb] text-[#102033]">
-      <div className="h-[70px] bg-[linear-gradient(135deg,#004c8f,#0f8f6b)]" />
-      <div className="-mt-7 bg-white px-5 pb-7 pt-6 sm:px-8">
-        <div className="grid gap-6 lg:grid-cols-[9.5rem_minmax(0,1fr)_minmax(28rem,0.9fr)] lg:items-center">
+      <div className="bg-white px-5 pb-7 pt-6 sm:px-8">
+        <div className="grid gap-6 lg:grid-cols-[9.5rem_minmax(0,1fr)_minmax(24rem,0.82fr)] lg:items-center">
           <div className="mx-auto grid h-32 w-32 place-items-center overflow-hidden rounded-full bg-[#eaf3f7] lg:mx-0">
             <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
           </div>
@@ -2054,7 +2059,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
           <div className="min-w-0 text-center lg:text-left">
             <h1 className="truncate text-2xl font-black text-[#1f2f43]">{displayName}</h1>
             <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,16rem)_auto] sm:items-center">
-              <label className="sr-only" htmlFor="profile-promo-code">Code Client</label>
+              <label className="sr-only" htmlFor="profile-promo-code">Code promo</label>
               <input
                 id="profile-promo-code"
                 value={draftPromoCode}
@@ -2063,13 +2068,13 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
                   setPromoStatus('');
                 }}
                 className="h-10 border border-[#dbe4ee] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]"
-                aria-label="Code Client"
+                aria-label="Code promo"
               />
               <button type="button" onClick={savePromoCode} className="h-10 bg-[#0f8f6b] px-4 text-sm font-black text-white transition hover:bg-[#0b7558]">
                 Modifier
               </button>
             </div>
-            <p className="mt-2 text-sm text-[#64748b]">Code Client: <span className="font-semibold text-[#102033]">{promoCode}</span></p>
+            <p className="mt-2 text-sm text-[#64748b]">Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span></p>
             {promoStatus ? <p className={`mt-2 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
           </div>
 
@@ -2097,25 +2102,44 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
           </button>
         </div>
 
-        <div className="mt-4 min-h-10 text-sm leading-6 text-[#64748b]">
-          {profileDescription ? renderedDescription : 'Ajoutez une description publique avec vos liens et reseaux sociaux.'}
-        </div>
+        {profileDescription ? <div className="mt-4 min-h-10 text-sm leading-6 text-[#64748b]">{renderedDescription}</div> : null}
       </div>
 
       <div className="mt-4 bg-white px-5 py-5 sm:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <nav className="flex gap-6 border-b border-[#dbe4ee] text-sm font-semibold text-[#64748b]" aria-label="Contenu profil">
-            <button type="button" onClick={() => setActiveTab('projects')} className={`border-b-2 px-1 pb-3 ${activeTab === 'projects' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
+            <button type="button" onClick={() => setActiveTab('projects')} className={`inline-flex items-center gap-2 border-b-2 px-1 pb-3 ${activeTab === 'projects' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
+              <ProjectTabIcon />
               Projets
             </button>
-            <button type="button" onClick={() => setActiveTab('favorites')} className={`border-b-2 px-1 pb-3 ${activeTab === 'favorites' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
+            <button type="button" onClick={() => setActiveTab('favorites')} className={`inline-flex items-center gap-2 border-b-2 px-1 pb-3 ${activeTab === 'favorites' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
+              <ProfileStarIcon />
               Favoris
             </button>
           </nav>
-          <a href="/explorer" className="inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
+          <button type="button" onClick={() => { setActiveTab('projects'); setIsCreateProjectOpen((open) => !open); }} className="inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
             Créer un projet
-          </a>
+          </button>
         </div>
+
+        {isCreateProjectOpen ? (
+          <form className="mt-5 grid gap-3 bg-[#f7fafc] p-4 ring-1 ring-[#d8e1ea]" onSubmit={(event) => event.preventDefault()}>
+            <input value={projectDraft.title} onChange={(event) => setProjectDraft((current) => ({ ...current, title: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Titre du projet" maxLength={90} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <select value={projectDraft.category} onChange={(event) => setProjectDraft((current) => ({ ...current, category: event.target.value }))} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]">
+                {['Prototype', 'PCB', 'IoT', 'Energie', 'Robotique', 'Education', 'Audio', 'Medical'].map((item) => <option key={item}>{item}</option>)}
+              </select>
+              <input value={projectDraft.tags} onChange={(event) => setProjectDraft((current) => ({ ...current, tags: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Tags separes par virgule" maxLength={120} />
+            </div>
+            <textarea value={projectDraft.summary} onChange={(event) => setProjectDraft((current) => ({ ...current, summary: event.target.value }))} className="min-h-[92px] resize-y border border-[#cfd8e3] px-3 py-2 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Resume public du projet" maxLength={360} />
+            <textarea value={projectDraft.description} onChange={(event) => setProjectDraft((current) => ({ ...current, description: event.target.value }))} className="min-h-[120px] resize-y border border-[#cfd8e3] px-3 py-2 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Details techniques, composants, contraintes, instructions..." maxLength={2200} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input value={projectDraft.attachmentName} onChange={(event) => setProjectDraft((current) => ({ ...current, attachmentName: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Nom fichier Gerber/PDF" maxLength={120} />
+              <input value={projectDraft.repositoryUrl} onChange={(event) => setProjectDraft((current) => ({ ...current, repositoryUrl: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Lien GitHub/EasyEDA optionnel" />
+            </div>
+            <button type="submit" className="h-11 bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">Publier</button>
+          </form>
+        ) : null}
 
         <div className="grid min-h-[220px] place-items-center text-center">
           <div>
@@ -2141,6 +2165,23 @@ function ProfilePublicMetric({ label, value }: { label: string; value: string })
       <p className="text-xl font-black text-[#1f2f43]">{value}</p>
       <p className="mt-2 text-sm text-[#7c8795]">{label}</p>
     </div>
+  );
+}
+
+function ProjectTabIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 4h12v12H4z" />
+      <path d="M7 7h6M7 10h4M7 13h5" />
+    </svg>
+  );
+}
+
+function ProfileStarIcon() {
+  return (
+    <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m10 2.8 2.1 4.25 4.7.68-3.4 3.31.8 4.68L10 13.5l-4.2 2.22.8-4.68-3.4-3.31 4.7-.68L10 2.8Z" />
+    </svg>
   );
 }
 
@@ -4788,7 +4829,7 @@ function Avatar({ avatarDataUrl, size }: { avatarDataUrl: string; size: 'small' 
   const className = size === 'large' ? 'h-28 w-28 border-2 border-[#0f8f6b]' : size === 'small' ? 'h-7 w-7 border border-slate-200' : 'h-24 w-24 border border-slate-200';
 
   return (
-    <span className={`grid shrink-0 place-items-center overflow-hidden rounded-none bg-slate-200 ${className}`}>
+    <span className={`grid shrink-0 place-items-center overflow-hidden rounded-full bg-slate-200 ${className}`}>
       {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full object-cover" /> : <span className="h-full w-full bg-gradient-to-br from-slate-200 to-slate-400" />}
     </span>
   );
