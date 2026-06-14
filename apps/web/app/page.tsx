@@ -658,10 +658,66 @@ function MobileInstantQuote() {
 function SmartOrdering() {
   return (
     <section className="bg-white px-0 py-4 sm:px-4 lg:px-5">
-      <div className="mx-auto w-full max-w-[1368px]">
+      <div className="mx-auto grid w-full max-w-[1368px] gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <AfricaOperationsCard />
         <SmartOrderingCard />
       </div>
     </section>
+  );
+}
+
+const africaOperationNodes = [
+  { label: 'Gerber', x: 24, y: 28, color: '#7c3aed', icon: 'upload' },
+  { label: 'BOM / CPL', x: 42, y: 30, color: '#be185d', icon: 'review' },
+  { label: 'Devis', x: 68, y: 25, color: '#0284c7', icon: 'quote' },
+  { label: 'Paiement', x: 82, y: 54, color: '#e11d48', icon: 'payment' },
+  { label: 'Production', x: 52, y: 75, color: '#16a34a', icon: 'tracking' },
+  { label: 'Livraison', x: 65, y: 91, color: '#0d9488', icon: 'delivery' },
+];
+
+function AfricaOperationsCard() {
+  return (
+    <article className="relative min-h-[18rem] overflow-hidden border border-slate-300 bg-[#073a54] text-white lg:min-h-[16rem]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_46%,rgba(19,122,159,0.95),rgba(7,58,84,0.9)_48%,rgba(5,41,62,1)_100%)]" />
+      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden="true">
+        <g fill="white" opacity="0.9">
+          {[
+            [8, 12], [15, 36], [24, 7], [32, 64], [38, 14], [47, 47], [58, 9], [74, 18], [82, 42], [91, 74], [20, 84], [12, 70], [68, 67], [51, 88],
+          ].map(([x, y]) => <rect key={`${x}-${y}`} x={x} y={y} width="0.7" height="0.7" />)}
+        </g>
+        <path
+          d="M24 14c8-4 18-1 21 4 9-2 16 0 21 5 6 6 9 16 7 25 8 3 12 9 10 17-2 10-12 13-20 12-2 8-7 15-15 18-11 3-20-4-20-15 0-8-2-13-9-17-10 1-18-2-23-10-5-8-2-17 6-22 6-4 10-10 12-17Z"
+          fill="rgba(10,104,145,0.54)"
+          stroke="rgba(255,255,255,0.78)"
+          strokeWidth="0.8"
+        />
+        <path
+          d="M24 14c8-4 18-1 21 4 9-2 16 0 21 5 6 6 9 16 7 25 8 3 12 9 10 17-2 10-12 13-20 12-2 8-7 15-15 18-11 3-20-4-20-15 0-8-2-13-9-17-10 1-18-2-23-10-5-8-2-17 6-22 6-4 10-10 12-17Z"
+          fill="none"
+          stroke="rgba(255,255,255,0.42)"
+          strokeWidth="1.6"
+        />
+        {africaOperationNodes.map((node) => (
+          <line key={`${node.label}-line`} x1="56" y1="52" x2={node.x} y2={node.y} stroke="rgba(162,220,240,0.42)" strokeWidth="0.45" />
+        ))}
+      </svg>
+
+      <div className="absolute left-1/2 top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-cyan-200/30 bg-[#064663] text-center shadow-[0_0_0_8px_rgba(14,165,233,0.08)]">
+        <span className="text-lg font-black leading-none">K</span>
+        <span className="-mt-5 text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-100">Kendronics</span>
+      </div>
+
+      {africaOperationNodes.map((node) => (
+        <div key={node.label} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${node.x}%`, top: `${node.y}%` }}>
+          <div className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white/10">
+            <span className="grid h-8 w-8 place-items-center rounded-full text-white" style={{ backgroundColor: node.color }}>
+              <WorkflowIcon name={node.icon} />
+            </span>
+          </div>
+          <span className="mt-1 block whitespace-nowrap text-center text-[10px] font-semibold text-cyan-50">{node.label}</span>
+        </div>
+      ))}
+    </article>
   );
 }
 
