@@ -218,7 +218,7 @@ function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivi
             <ul className="mt-5 space-y-2 text-sm leading-5 text-slate-600">
               {kendronicsChoiceReasons.map((reason) => (
                 <li key={reason} className="flex gap-3">
-                  <span className="mt-0.5 text-base font-semibold text-[#87c98a]">v</span>
+                  <SmallCheckIcon />
                   <span className="min-w-0 break-words">{reason}</span>
                 </li>
               ))}
@@ -304,9 +304,9 @@ function HomeCapabilityMatrix() {
 
   return (
     <section className="bg-white px-0 py-5 sm:px-4 lg:px-5">
-      <div className="mx-auto grid w-full max-w-[1368px] items-start gap-5 xl:grid-cols-[minmax(25rem,0.78fr)_minmax(40rem,1.22fr)]">
+      <div className="mx-auto grid w-full max-w-[1368px] items-start gap-5 xl:grid-cols-[minmax(38rem,0.95fr)_minmax(36rem,1.05fr)]">
         <div className="overflow-hidden border border-slate-300 bg-white">
-          <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(17rem,24rem)_1fr]">
+          <div className="grid border-b border-slate-300 lg:grid-cols-[minmax(16rem,20rem)_minmax(18rem,1fr)]">
             <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
               <span className="mb-3 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
               <h2 className="text-xl font-semibold leading-tight tracking-tight text-ink">Solution complete pour PCB et assemblage</h2>
@@ -315,15 +315,15 @@ function HomeCapabilityMatrix() {
               <ul className="mt-4 space-y-1.5 text-sm leading-5 text-slate-600">
                 {oneStopCapabilities.map((item) => (
                   <li key={item} className="flex gap-3">
-                    <span className="text-base font-semibold text-[#008b6d]">v</span>
+                    <SmallCheckIcon />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-4 grid grid-cols-3 gap-2">
                 {oneStopBadges.map((badge) => (
-                  <span key={badge} className="bg-[#008b6d] px-3 py-2 text-xs font-semibold text-white">
+                  <span key={badge} className="flex min-h-8 items-center justify-center bg-[#008b6d] px-2 py-2 text-center text-[11px] font-semibold leading-4 text-white">
                     {badge}
                   </span>
                 ))}
@@ -331,7 +331,7 @@ function HomeCapabilityMatrix() {
             </div>
 
             <div className="min-w-0">
-              <div className="relative h-[13rem] overflow-hidden bg-slate-950 sm:h-[16rem] lg:h-full lg:min-h-[18rem]">
+              <div className="relative h-[13rem] overflow-hidden bg-slate-950 sm:h-[16rem] lg:h-full lg:min-h-[21rem]">
                 <video
                   className="h-full w-full object-cover"
                   autoPlay
@@ -447,6 +447,22 @@ function OneStopStatIcon({ icon }: { icon: 'gear' | 'planet' | 'wallet' }) {
   );
 }
 
+function SmallCheckIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="mt-1 h-3.5 w-3.5 shrink-0 text-[#008b6d]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3.5 8.5 6.5 11.5 12.5 4.5" />
+    </svg>
+  );
+}
+
+function SmallChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0 text-deepblue transition group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m4 6 4 4 4-4" />
+    </svg>
+  );
+}
+
 function HomeCapabilityRow({ row, stripe: _stripe }: { row: string[]; stripe: boolean }) {
   return (
     <tr className="bg-white">
@@ -473,7 +489,7 @@ function HomeExpandableCapabilityRow({ row, stripe: _stripe, detail }: { row: st
                 {index === 0 ? (
                   <span className="flex items-center justify-between gap-3">
                     {cell}
-                    <span className="text-sm text-deepblue transition group-open:rotate-180">v</span>
+                    <SmallChevronDownIcon />
                   </span>
                 ) : (
                   cell
