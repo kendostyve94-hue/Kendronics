@@ -667,56 +667,65 @@ function SmartOrdering() {
 }
 
 const africaOperationNodes = [
-  { label: 'Gerber', x: 24, y: 28, color: '#7c3aed', icon: 'upload' },
-  { label: 'BOM / CPL', x: 42, y: 30, color: '#be185d', icon: 'review' },
-  { label: 'Devis', x: 68, y: 25, color: '#0284c7', icon: 'quote' },
-  { label: 'Paiement', x: 82, y: 54, color: '#e11d48', icon: 'payment' },
-  { label: 'Production', x: 52, y: 75, color: '#16a34a', icon: 'tracking' },
-  { label: 'Livraison', x: 65, y: 91, color: '#0d9488', icon: 'delivery' },
+  { label: 'Gerber', color: '#0f8f6b', icon: 'upload' },
+  { label: 'BOM / CPL', color: '#0877ff', icon: 'review' },
+  { label: 'Devis', color: '#0f8f6b', icon: 'quote' },
+  { label: 'Paiement', color: '#ff5a00', icon: 'payment' },
+  { label: 'Production', color: '#102033', icon: 'tracking' },
+  { label: 'Livraison', color: '#0f8f6b', icon: 'delivery' },
 ];
 
 function AfricaOperationsCard() {
   return (
-    <article className="relative min-h-[18rem] overflow-hidden border border-slate-300 bg-[#073a54] text-white lg:min-h-[16rem]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_46%,rgba(19,122,159,0.95),rgba(7,58,84,0.9)_48%,rgba(5,41,62,1)_100%)]" />
-      <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden="true">
-        <g fill="white" opacity="0.9">
-          {[
-            [8, 12], [15, 36], [24, 7], [32, 64], [38, 14], [47, 47], [58, 9], [74, 18], [82, 42], [91, 74], [20, 84], [12, 70], [68, 67], [51, 88],
-          ].map(([x, y]) => <rect key={`${x}-${y}`} x={x} y={y} width="0.7" height="0.7" />)}
-        </g>
-        <path
-          d="M24 14c8-4 18-1 21 4 9-2 16 0 21 5 6 6 9 16 7 25 8 3 12 9 10 17-2 10-12 13-20 12-2 8-7 15-15 18-11 3-20-4-20-15 0-8-2-13-9-17-10 1-18-2-23-10-5-8-2-17 6-22 6-4 10-10 12-17Z"
-          fill="rgba(10,104,145,0.54)"
-          stroke="rgba(255,255,255,0.78)"
-          strokeWidth="0.8"
-        />
-        <path
-          d="M24 14c8-4 18-1 21 4 9-2 16 0 21 5 6 6 9 16 7 25 8 3 12 9 10 17-2 10-12 13-20 12-2 8-7 15-15 18-11 3-20-4-20-15 0-8-2-13-9-17-10 1-18-2-23-10-5-8-2-17 6-22 6-4 10-10 12-17Z"
-          fill="none"
-          stroke="rgba(255,255,255,0.42)"
-          strokeWidth="1.6"
-        />
-        {africaOperationNodes.map((node) => (
-          <line key={`${node.label}-line`} x1="56" y1="52" x2={node.x} y2={node.y} stroke="rgba(162,220,240,0.42)" strokeWidth="0.45" />
-        ))}
-      </svg>
-
-      <div className="absolute left-1/2 top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-cyan-200/30 bg-[#064663] text-center shadow-[0_0_0_8px_rgba(14,165,233,0.08)]">
-        <span className="text-lg font-black leading-none">K</span>
-        <span className="-mt-5 text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-100">Kendronics</span>
-      </div>
-
-      {africaOperationNodes.map((node) => (
-        <div key={node.label} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${node.x}%`, top: `${node.y}%` }}>
-          <div className="grid h-12 w-12 place-items-center rounded-full border border-white/20 bg-white/10">
-            <span className="grid h-8 w-8 place-items-center rounded-full text-white" style={{ backgroundColor: node.color }}>
-              <WorkflowIcon name={node.icon} />
-            </span>
+    <article className="overflow-hidden border border-slate-300 bg-white lg:min-h-[16rem]">
+      <div className="grid min-h-[16rem] lg:grid-cols-[minmax(13rem,0.72fr)_minmax(17rem,1fr)]">
+        <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
+          <p className="label-caps text-[#0f8f6b]">Reseau operationnel</p>
+          <h2 className="mt-3 text-xl font-semibold leading-tight text-ink">Un dossier unique pour coordonner vos commandes hardware.</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Gerber, BOM, devis, paiement, production et livraison restent relies au meme suivi client Kendronics.
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-semibold text-[#334155]">
+            <span className="border border-[#d8e2ea] px-3 py-2">Afrique</span>
+            <span className="border border-[#d8e2ea] px-3 py-2">Support</span>
           </div>
-          <span className="mt-1 block whitespace-nowrap text-center text-[10px] font-semibold text-cyan-50">{node.label}</span>
         </div>
-      ))}
+
+        <div className="relative min-h-[16rem] bg-[#f5fbf8] p-4">
+          <svg viewBox="0 0 420 240" className="absolute inset-0 h-full w-full" aria-hidden="true">
+            <defs>
+              <linearGradient id="kendronics-africa-map" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stopColor="#dff7ef" />
+                <stop offset="100%" stopColor="#cceee4" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M155 28c31-12 63 1 76 21 34-8 68 3 84 30 16 28 13 62-9 83 10 22 1 44-20 54-31 15-65-6-73-34-19 5-43-2-56-22-9-14-10-30-4-43-25-2-45-17-49-39-4-22 16-39 51-50Z"
+              fill="url(#kendronics-africa-map)"
+              stroke="#0f8f6b"
+              strokeWidth="2"
+              opacity="0.92"
+            />
+            <circle cx="225" cy="122" r="30" fill="#0f8f6b" />
+            <text x="225" y="119" textAnchor="middle" fill="white" fontSize="16" fontWeight="800">K</text>
+            <text x="225" y="135" textAnchor="middle" fill="white" fontSize="8" letterSpacing="1.4">KENDRONICS</text>
+            {[[96, 58], [126, 154], [194, 58], [300, 70], [316, 158], [226, 198]].map(([x, y], index) => (
+              <line key={`${x}-${y}`} x1="225" y1="122" x2={x} y2={y} stroke="#9ccfbd" strokeWidth="1.4" />
+            ))}
+          </svg>
+
+          <div className="relative grid h-full grid-cols-3 gap-3">
+            {africaOperationNodes.map((node) => (
+              <div key={node.label} className="flex min-h-[5rem] flex-col items-center justify-center border border-[#d8e2ea] bg-white text-center">
+                <span className="grid h-9 w-9 place-items-center rounded-sm text-white" style={{ backgroundColor: node.color }}>
+                  <WorkflowIcon name={node.icon} />
+                </span>
+                <span className="mt-2 text-[11px] font-semibold leading-4 text-[#102033]">{node.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </article>
   );
 }
