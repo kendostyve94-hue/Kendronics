@@ -396,7 +396,7 @@ export default function ProfilePage() {
     <main className="mobile-free-page min-h-screen overflow-x-hidden bg-white text-[#1f2f43]">
       <Navbar />
       <div className="w-full pt-[70px]">
-        <div className="mx-auto grid w-full max-w-none gap-4 px-4 py-3 sm:max-w-[40rem] lg:min-w-[1328px] lg:max-w-[1368px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
+        <div className="mx-auto grid w-full max-w-none gap-4 px-4 py-3 sm:max-w-[42rem] lg:min-w-[1328px] lg:max-w-[1440px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
           <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} counts={orderCounts(orders)} unreadNotifications={unreadNotifications(notifications)} profile={profile} />
 
           <section className="min-w-0">
@@ -2051,38 +2051,39 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   return (
     <section className="min-h-[690px] bg-[#f5f7fb] text-[#102033]">
       <div className="bg-white px-5 pb-7 pt-6 sm:px-8">
-        <div className="grid gap-6 lg:grid-cols-[9.5rem_minmax(0,1fr)_minmax(24rem,0.82fr)] lg:items-center">
-          <div className="mx-auto grid h-32 w-32 place-items-center overflow-hidden rounded-full bg-[#eaf3f7] lg:mx-0">
+        <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-4 sm:grid-cols-[9rem_minmax(0,1fr)] lg:gap-6">
+          <div className="grid h-28 w-28 place-items-center overflow-hidden rounded-full bg-[#eaf3f7] sm:h-32 sm:w-32">
             <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
           </div>
 
-          <div className="min-w-0 text-center lg:text-left">
-            <h1 className="truncate text-2xl font-black text-[#1f2f43]">{displayName}</h1>
-            <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,16rem)_auto] sm:items-center">
-              <label className="sr-only" htmlFor="profile-promo-code">Code promo</label>
-              <input
-                id="profile-promo-code"
-                value={draftPromoCode}
-                onChange={(event) => {
-                  setDraftPromoCode(normalizePromoCode(event.target.value));
-                  setPromoStatus('');
-                }}
-                className="h-10 border border-[#dbe4ee] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]"
-                aria-label="Code promo"
-              />
-              <button type="button" onClick={savePromoCode} className="h-10 bg-[#0f8f6b] px-4 text-sm font-black text-white transition hover:bg-[#0b7558]">
-                Modifier
-              </button>
+          <div className="min-w-0">
+            <h1 className="break-words text-2xl font-black leading-tight text-[#1f2f43]">{displayName}</h1>
+            <div className="mt-4 grid grid-cols-4 divide-x divide-[#dbe4ee] text-center">
+              <ProfilePublicMetric label="Suivi" value="0" />
+              <ProfilePublicMetric label="Abonnés" value="0" />
+              <ProfilePublicMetric label="Likes" value="0" />
+              <ProfilePublicMetric label="Points" value="4" />
             </div>
-            <p className="mt-2 text-sm text-[#64748b]">Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span></p>
-            {promoStatus ? <p className={`mt-2 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
-          </div>
-
-          <div className="grid grid-cols-4 divide-x divide-[#dbe4ee] text-center">
-            <ProfilePublicMetric label="Suivi" value="0" />
-            <ProfilePublicMetric label="Abonnés" value="0" />
-            <ProfilePublicMetric label="Likes" value="0" />
-            <ProfilePublicMetric label="Points" value="4" />
+            <div className="mt-4 max-w-[24rem]">
+              <label className="sr-only" htmlFor="profile-promo-code">Code promo</label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="profile-promo-code"
+                  value={draftPromoCode}
+                  onChange={(event) => {
+                    setDraftPromoCode(normalizePromoCode(event.target.value));
+                    setPromoStatus('');
+                  }}
+                  className="h-9 min-w-0 flex-1 border border-[#dbe4ee] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]"
+                  aria-label="Code promo"
+                />
+                <button type="button" onClick={savePromoCode} className="grid h-9 w-9 shrink-0 place-items-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Modifier le code promo">
+                  <PencilIcon />
+                </button>
+              </div>
+              <p className="mt-2 text-sm text-[#64748b]">Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span></p>
+              {promoStatus ? <p className={`mt-2 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
+            </div>
           </div>
         </div>
 
@@ -2106,7 +2107,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
       </div>
 
       <div className="mt-4 bg-white px-5 py-5 sm:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between gap-3">
           <nav className="flex gap-6 border-b border-[#dbe4ee] text-sm font-semibold text-[#64748b]" aria-label="Contenu profil">
             <button type="button" onClick={() => setActiveTab('projects')} className={`inline-flex items-center gap-2 border-b-2 px-1 pb-3 ${activeTab === 'projects' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
               <ProjectTabIcon />
@@ -2117,7 +2118,8 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
               Favoris
             </button>
           </nav>
-          <button type="button" onClick={() => { setActiveTab('projects'); setIsCreateProjectOpen((open) => !open); }} className="inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
+          <button type="button" onClick={() => { setActiveTab('projects'); setIsCreateProjectOpen((open) => !open); }} className="inline-flex h-10 shrink-0 items-center justify-center gap-2 bg-[#0f8f6b] px-3 text-sm font-black text-white transition hover:bg-[#0b7558] sm:px-5">
+            <ProjectTabIcon />
             Créer un projet
           </button>
         </div>
@@ -2161,10 +2163,18 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
 function ProfilePublicMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="px-3">
-      <p className="text-xl font-black text-[#1f2f43]">{value}</p>
-      <p className="mt-2 text-sm text-[#7c8795]">{label}</p>
+    <div className="px-2 sm:px-3">
+      <p className="text-lg font-black text-[#1f2f43] sm:text-xl">{value}</p>
+      <p className="mt-1 text-xs text-[#7c8795] sm:mt-2 sm:text-sm">{label}</p>
     </div>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+      <path d="M4 17.25V21h3.75L18.8 9.95l-3.75-3.75L4 17.25Zm17.7-10.2a1 1 0 0 0 0-1.42l-2.33-2.33a1 1 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" />
+    </svg>
   );
 }
 
