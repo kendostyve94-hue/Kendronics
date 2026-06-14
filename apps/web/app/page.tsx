@@ -618,35 +618,16 @@ function AfricaOperationsCard() {
         </div>
 
         <div className="relative min-h-[24rem] overflow-hidden bg-[#f5fbf8] p-4">
-          <svg viewBox="0 0 460 320" className="absolute inset-0 h-full w-full" aria-hidden="true">
-            <defs>
-              <linearGradient id="kendronics-africa-map" x1="0" x2="1" y1="0" y2="1">
-                <stop offset="0%" stopColor="#dff7ef" />
-                <stop offset="100%" stopColor="#cceee4" />
-              </linearGradient>
-              <radialGradient id="kendronics-africa-glow" cx="50%" cy="48%" r="58%">
-                <stop offset="0%" stopColor="#0f8f6b" stopOpacity="0.16" />
-                <stop offset="100%" stopColor="#0f8f6b" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-            <rect width="460" height="320" fill="url(#kendronics-africa-glow)" opacity="0.9" />
-            <path
-              d="M202 22c-24 7-41 22-53 43-22 1-45 8-63 21-28 20-41 52-34 83 5 22 20 38 42 48 18 8 39 10 61 6-6 20-3 42 9 58 14 19 37 25 60 15 19-8 31-25 39-43 12 12 28 19 45 18 26-2 47-24 49-51 1-15-4-29-13-41 22-21 29-54 16-83-15-34-51-54-91-50-15-19-41-31-67-24Z"
-              fill="url(#kendronics-africa-map)"
-              stroke="#0f8f6b"
-              strokeWidth="2"
-              opacity="0.96"
-            />
-            <path
-              d="M214 63c19 7 32 22 40 42 10 25 7 47-4 72-9 20-12 39-4 57"
-              fill="none"
-              stroke="#ffffff"
-              strokeWidth="1.3"
-              opacity="0.48"
-            />
-            <circle cx="230" cy="158" r="47" fill="#ffffff" opacity="0.72" />
-            {[[74, 74], [220, 56], [382, 84], [386, 228], [220, 270], [76, 228]].map(([x, y]) => (
-              <line key={`${x}-${y}`} x1="230" y1="158" x2={x} y2={y} stroke="#0f8f6b" strokeWidth="1.15" opacity="0.42" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(15,143,107,0.16),rgba(15,143,107,0)_64%)]" aria-hidden="true" />
+          <img
+            src="/images/africa-map.svg"
+            alt=""
+            className="absolute left-1/2 top-1/2 h-[86%] w-[86%] -translate-x-1/2 -translate-y-1/2 object-contain opacity-70 mix-blend-multiply"
+          />
+          <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden="true">
+            <circle cx="50" cy="50" r="13" fill="#ffffff" opacity="0.78" />
+            {africaOperationNodes.map((node) => (
+              <line key={`${node.label}-line`} x1="50" y1="50" x2={node.x} y2={node.y} stroke="#0f8f6b" strokeWidth="0.35" opacity="0.5" />
             ))}
           </svg>
 
