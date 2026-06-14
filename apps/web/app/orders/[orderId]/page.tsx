@@ -1,7 +1,6 @@
 'use client';
 
 import { use, useEffect, useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Navbar } from '../../../components/layout/Navbar';
 import { Card } from '../../../components/ui/Card';
@@ -877,47 +876,16 @@ function CheckoutPaymentMethodCard({
         {confirmed ? <button type="button" onClick={onChange} className="text-sm text-[#0f8f6b] hover:text-[#0877ff]">Modifier</button> : null}
       </div>
 
-      <div className="mt-6 grid gap-3">
-        {(!confirmed || method === 'mobile_money') ? (
-          <PaymentMethodOption
-            value="mobile_money"
-            selected={method === 'mobile_money'}
-            locked={confirmed}
-            title="Mobile Money"
-            description="Paiement mobile compatible avec les operateurs actifs par pays."
-            badges={['Orange Money', 'Wave', 'Moov Money', 'MTN Mobile Money']}
-            onSelect={onMethodChange}
-          >
-            {method === 'mobile_money' && !confirmed ? (
-              <div className="mt-4 grid gap-3 sm:grid-cols-[160px_1fr]">
-                <select
-                  value={mobileMoneyCountryIso2 || destinationCountryIso2}
-                  onChange={(event) => onMobileMoneyCountryIso2Change(event.target.value)}
-                  className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm outline-none focus:border-[#0f8f6b]"
-                >
-                  {africanCountries.map((country) => (
-                    <option key={country.iso2} value={country.iso2}>{country.name}</option>
-                  ))}
-                </select>
-                <input
-                  value={mobileMoneyPhone}
-                  onChange={(event) => onMobileMoneyPhoneChange(event.target.value)}
-                  placeholder="Numero Mobile Money"
-                  className="h-11 border border-[#cfd8e3] bg-white px-4 text-sm outline-none focus:border-[#0f8f6b]"
-                />
-              </div>
-            ) : null}
-          </PaymentMethodOption>
-        ) : null}
-
+      <div className="mt-6">
+        <p className="mb-4 text-sm font-semibold text-[#102033]">Moyen de paiement</p>
+        <div className="grid grid-cols-3 gap-4">
         {(!confirmed || method === 'stripe') ? (
           <PaymentMethodOption
             value="stripe"
             selected={method === 'stripe'}
             locked={confirmed}
-            title="Carte et virement securise"
-            description="Paiement via Stripe avec carte bancaire et moyens compatibles configures."
-            badges={['Visa', 'Mastercard', 'American Express', 'Apple Pay', 'Google Pay', 'Virement bancaire']}
+            title="Carte bancaire"
+            icon="card"
             onSelect={onMethodChange}
           />
         ) : null}
@@ -928,10 +896,41 @@ function CheckoutPaymentMethodCard({
             selected={method === 'paypal'}
             locked={confirmed}
             title="PayPal"
-            description="Paiement PayPal lorsque le module marchand est active."
-            badges={['PayPal']}
+            icon="paypal"
             onSelect={onMethodChange}
           />
+        ) : null}
+
+        {(!confirmed || method === 'mobile_money') ? (
+          <PaymentMethodOption
+            value="mobile_money"
+            selected={method === 'mobile_money'}
+            locked={confirmed}
+            title="Mobile Money"
+            icon="mobile_money"
+            onSelect={onMethodChange}
+          />
+        ) : null}
+        </div>
+
+        {method === 'mobile_money' && !confirmed ? (
+          <div className="mt-4 grid gap-3 sm:grid-cols-[160px_1fr]">
+            <select
+              value={mobileMoneyCountryIso2 || destinationCountryIso2}
+              onChange={(event) => onMobileMoneyCountryIso2Change(event.target.value)}
+              className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm outline-none focus:border-[#0f8f6b]"
+            >
+              {africanCountries.map((country) => (
+                <option key={country.iso2} value={country.iso2}>{country.name}</option>
+              ))}
+            </select>
+            <input
+              value={mobileMoneyPhone}
+              onChange={(event) => onMobileMoneyPhoneChange(event.target.value)}
+              placeholder="Numero Mobile Money"
+              className="h-11 border border-[#cfd8e3] bg-white px-4 text-sm outline-none focus:border-[#0f8f6b]"
+            />
+          </div>
         ) : null}
       </div>
 
@@ -954,119 +953,54 @@ function PaymentMethodOption({
   value,
   selected,
   title,
-  description,
-  badges,
+  icon,
   onSelect,
   locked = false,
-  children,
 }: {
   value: PaymentMethod;
   selected: boolean;
   title: string;
-  description: string;
-  badges: string[];
+  icon: 'card' | 'paypal' | 'mobile_money';
   onSelect: (method: PaymentMethod) => void;
   locked?: boolean;
-  children?: ReactNode;
 }) {
   return (
-    <label className={`block border p-4 transition ${locked ? 'cursor-default' : 'cursor-pointer'} ${selected ? 'border-[#0f8f6b] bg-[#eefbf4]' : 'border-[#dbe4ee] bg-white hover:border-[#0f8f6b]'}`}>
-      <div className="flex items-start gap-3">
-        <input
-          type="radio"
-          name="checkout-payment-method"
-          checked={selected}
-          disabled={locked}
-          onChange={() => {
-            if (!locked) onSelect(value);
-          }}
-          className="mt-1 h-4 w-4 accent-[#0f8f6b]"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-black">{title}</p>
-          <p className="mt-1 text-sm leading-5 text-[#64748b]">{description}</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {badges.map((badge) => (
-              <PaymentBrandBadge key={badge} label={badge} />
-            ))}
-          </div>
-          {children}
-        </div>
-      </div>
+    <label className={`block min-h-[74px] rounded-sm border bg-white p-3 transition ${locked ? 'cursor-default' : 'cursor-pointer'} ${selected ? 'border-[#28527a] ring-1 ring-[#28527a]' : 'border-[#dbe4ee] hover:border-[#28527a]'}`}>
+      <input
+        type="radio"
+        name="checkout-payment-method"
+        checked={selected}
+        disabled={locked}
+        onChange={() => {
+          if (!locked) onSelect(value);
+        }}
+        className="sr-only"
+      />
+      <PaymentMethodIcon icon={icon} />
+      <span className="mt-3 block text-sm font-medium leading-4 text-[#526173]">{title}</span>
     </label>
   );
 }
 
-function PaymentBrandBadge({ label }: { label: string }) {
-  const asset = paymentBrandAssets[label];
-  if (asset) {
+function PaymentMethodIcon({ icon }: { icon: 'card' | 'paypal' | 'mobile_money' }) {
+  if (icon === 'paypal') {
+    return <img src="/payments/paypal-logo-black.png" alt="" className="h-5 w-auto" loading="lazy" />;
+  }
+
+  if (icon === 'mobile_money') {
     return (
-      <span className="inline-flex min-h-12 min-w-[74px] items-center justify-center border border-[#dbe4ee] bg-white px-3 py-1">
-        <img src={asset.src} alt={asset.alt} className={asset.className} loading="lazy" />
+      <span className="inline-grid h-5 min-w-5 place-items-center rounded-sm bg-[#ff7aa2] px-1 text-[10px] font-black text-[#172033]" aria-hidden="true">
+        MM
       </span>
     );
   }
 
-  return <span className="inline-flex min-h-8 items-center border border-[#dbe4ee] bg-white px-3 text-xs font-semibold text-[#0f172a]">{label}</span>;
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#526173]" fill="currentColor" aria-hidden="true">
+      <path d="M3 6.75A2.75 2.75 0 0 1 5.75 4h12.5A2.75 2.75 0 0 1 21 6.75v10.5A2.75 2.75 0 0 1 18.25 20H5.75A2.75 2.75 0 0 1 3 17.25V6.75Zm2 1.5h14v-1.5a.75.75 0 0 0-.75-.75H5.75a.75.75 0 0 0-.75.75v1.5Zm0 3v6a.75.75 0 0 0 .75.75h12.5a.75.75 0 0 0 .75-.75v-6H5Zm2.25 4.25h4.5v1.5h-4.5v-1.5Z" />
+    </svg>
+  );
 }
-
-const paymentBrandAssets: Record<string, { src: string; alt: string; className: string }> = {
-  Visa: {
-    src: '/payments/visa-brandmark-blue.png',
-    alt: 'Visa',
-    className: 'h-4 w-auto',
-  },
-  PayPal: {
-    src: '/payments/paypal-logo-black.png',
-    alt: 'PayPal',
-    className: 'h-5 w-auto',
-  },
-  Mastercard: {
-    src: '/payments/mastercard-mark.svg',
-    alt: 'Mastercard',
-    className: 'h-7 w-auto',
-  },
-  'American Express': {
-    src: '/payments/amex-mark.svg',
-    alt: 'American Express',
-    className: 'h-7 w-auto',
-  },
-  'Apple Pay': {
-    src: '/payments/apple-pay-mark.svg',
-    alt: 'Apple Pay',
-    className: 'h-8 w-auto',
-  },
-  'Google Pay': {
-    src: '/payments/google-pay-mark.svg',
-    alt: 'Google Pay',
-    className: 'h-7 w-auto',
-  },
-  'Virement bancaire': {
-    src: '/payments/bank-transfer-mark.svg',
-    alt: 'Virement bancaire',
-    className: 'h-7 w-auto',
-  },
-  'Orange Money': {
-    src: '/payments/orange-money-mark.svg',
-    alt: 'Orange Money',
-    className: 'h-10 w-auto',
-  },
-  Wave: {
-    src: '/payments/wave-source.png',
-    alt: 'Wave',
-    className: 'h-10 w-auto rounded-full',
-  },
-  'Moov Money': {
-    src: '/payments/moov-money-source.png',
-    alt: 'Moov Money',
-    className: 'h-10 w-auto',
-  },
-  'MTN Mobile Money': {
-    src: '/payments/mtn-mobile-money-source.png',
-    alt: 'MTN Mobile Money',
-    className: 'h-10 w-auto',
-  },
-};
 
 function CheckoutAddressFields({
   address,
