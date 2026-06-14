@@ -667,57 +667,71 @@ function SmartOrdering() {
 }
 
 const africaOperationNodes = [
-  { label: 'Gerber', color: '#0f8f6b', icon: 'upload' },
-  { label: 'BOM / CPL', color: '#0877ff', icon: 'review' },
-  { label: 'Devis', color: '#0f8f6b', icon: 'quote' },
-  { label: 'Paiement', color: '#ff5a00', icon: 'payment' },
-  { label: 'Production', color: '#102033', icon: 'tracking' },
-  { label: 'Livraison', color: '#0f8f6b', icon: 'delivery' },
+  { label: 'Gerber', color: '#0f8f6b', icon: 'upload', x: 16, y: 23 },
+  { label: 'BOM / CPL', color: '#0877ff', icon: 'review', x: 48, y: 17 },
+  { label: 'Devis', color: '#0f8f6b', icon: 'quote', x: 83, y: 25 },
+  { label: 'Paiement', color: '#ff5a00', icon: 'payment', x: 84, y: 71 },
+  { label: 'Production', color: '#102033', icon: 'tracking', x: 48, y: 84 },
+  { label: 'Livraison', color: '#0f8f6b', icon: 'delivery', x: 16, y: 71 },
 ];
 
 function AfricaOperationsCard() {
   return (
-    <article className="overflow-hidden border border-slate-300 bg-white lg:min-h-[16rem]">
-      <div className="grid min-h-[16rem] lg:grid-cols-[minmax(13rem,0.72fr)_minmax(17rem,1fr)]">
-        <div className="border-b border-slate-200 p-4 sm:p-5 lg:border-b-0 lg:border-r">
+    <article className="overflow-hidden border border-slate-300 bg-white lg:min-h-[24rem]">
+      <div className="grid min-h-[24rem] lg:grid-cols-[minmax(13rem,0.62fr)_minmax(20rem,1fr)]">
+        <div className="border-b border-slate-200 p-5 sm:p-6 lg:border-b-0 lg:border-r">
           <p className="label-caps text-[#0f8f6b]">Reseau operationnel</p>
           <h2 className="mt-3 text-xl font-semibold leading-tight text-ink">Un dossier unique pour coordonner vos commandes hardware.</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             Gerber, BOM, devis, paiement, production et livraison restent relies au meme suivi client Kendronics.
           </p>
-          <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-semibold text-[#334155]">
-            <span className="border border-[#d8e2ea] px-3 py-2">Afrique</span>
-            <span className="border border-[#d8e2ea] px-3 py-2">Support</span>
-          </div>
         </div>
 
-        <div className="relative min-h-[16rem] bg-[#f5fbf8] p-4">
-          <svg viewBox="0 0 420 240" className="absolute inset-0 h-full w-full" aria-hidden="true">
+        <div className="relative min-h-[24rem] overflow-hidden bg-[#f5fbf8] p-4">
+          <svg viewBox="0 0 460 320" className="absolute inset-0 h-full w-full" aria-hidden="true">
             <defs>
               <linearGradient id="kendronics-africa-map" x1="0" x2="1" y1="0" y2="1">
                 <stop offset="0%" stopColor="#dff7ef" />
                 <stop offset="100%" stopColor="#cceee4" />
               </linearGradient>
+              <radialGradient id="kendronics-africa-glow" cx="50%" cy="48%" r="58%">
+                <stop offset="0%" stopColor="#0f8f6b" stopOpacity="0.16" />
+                <stop offset="100%" stopColor="#0f8f6b" stopOpacity="0" />
+              </radialGradient>
             </defs>
+            <rect width="460" height="320" fill="url(#kendronics-africa-glow)" opacity="0.9" />
             <path
-              d="M155 28c31-12 63 1 76 21 34-8 68 3 84 30 16 28 13 62-9 83 10 22 1 44-20 54-31 15-65-6-73-34-19 5-43-2-56-22-9-14-10-30-4-43-25-2-45-17-49-39-4-22 16-39 51-50Z"
+              d="M202 22c-24 7-41 22-53 43-22 1-45 8-63 21-28 20-41 52-34 83 5 22 20 38 42 48 18 8 39 10 61 6-6 20-3 42 9 58 14 19 37 25 60 15 19-8 31-25 39-43 12 12 28 19 45 18 26-2 47-24 49-51 1-15-4-29-13-41 22-21 29-54 16-83-15-34-51-54-91-50-15-19-41-31-67-24Z"
               fill="url(#kendronics-africa-map)"
               stroke="#0f8f6b"
               strokeWidth="2"
-              opacity="0.92"
+              opacity="0.96"
             />
-            <circle cx="225" cy="122" r="30" fill="#0f8f6b" />
-            <text x="225" y="119" textAnchor="middle" fill="white" fontSize="16" fontWeight="800">K</text>
-            <text x="225" y="135" textAnchor="middle" fill="white" fontSize="8" letterSpacing="1.4">KENDRONICS</text>
-            {[[96, 58], [126, 154], [194, 58], [300, 70], [316, 158], [226, 198]].map(([x, y], index) => (
-              <line key={`${x}-${y}`} x1="225" y1="122" x2={x} y2={y} stroke="#9ccfbd" strokeWidth="1.4" />
+            <path
+              d="M214 63c19 7 32 22 40 42 10 25 7 47-4 72-9 20-12 39-4 57"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="1.3"
+              opacity="0.48"
+            />
+            <circle cx="230" cy="158" r="47" fill="#ffffff" opacity="0.72" />
+            {[[74, 74], [220, 56], [382, 84], [386, 228], [220, 270], [76, 228]].map(([x, y]) => (
+              <line key={`${x}-${y}`} x1="230" y1="158" x2={x} y2={y} stroke="#0f8f6b" strokeWidth="1.15" opacity="0.42" />
             ))}
           </svg>
 
-          <div className="relative grid h-full grid-cols-3 gap-3">
+          <div className="absolute left-1/2 top-1/2 grid h-24 w-32 -translate-x-1/2 -translate-y-1/2 place-items-center">
+            <img src="/images/kendronics-logo.png" alt="Kendronics" className="max-h-14 w-auto object-contain" />
+          </div>
+
+          <div className="absolute inset-0">
             {africaOperationNodes.map((node) => (
-              <div key={node.label} className="flex min-h-[5rem] flex-col items-center justify-center border border-[#d8e2ea] bg-white text-center">
-                <span className="grid h-9 w-9 place-items-center rounded-sm text-white" style={{ backgroundColor: node.color }}>
+              <div
+                key={node.label}
+                className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center"
+                style={{ left: `${node.x}%`, top: `${node.y}%`, color: node.color }}
+              >
+                <span className="grid h-10 w-10 place-items-center">
                   <WorkflowIcon name={node.icon} />
                 </span>
                 <span className="mt-2 text-[11px] font-semibold leading-4 text-[#102033]">{node.label}</span>
@@ -732,7 +746,7 @@ function AfricaOperationsCard() {
 
 function SmartOrderingCard({ className = '' }: { className?: string }) {
   return (
-    <div className={`relative min-h-[13rem] overflow-hidden border border-slate-300 bg-white lg:min-h-[16rem] ${className}`}>
+    <div className={`relative min-h-[18rem] overflow-hidden border border-slate-300 bg-white lg:min-h-[24rem] ${className}`}>
       <img src={smartOrderingMapImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
       <div className="relative p-4 sm:p-6">
         <div className="max-w-[25rem]">
@@ -750,7 +764,7 @@ function SmartOrderingCard({ className = '' }: { className?: string }) {
 }
 
 function WorkflowIcon({ name }: { name: string }) {
-  const common = 'h-7 w-7 text-white/75';
+  const common = 'h-8 w-8 text-current';
 
   if (name === 'quote') {
     return (
