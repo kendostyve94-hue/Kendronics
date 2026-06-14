@@ -984,14 +984,22 @@ function PaymentMethodOption({
 
 function PaymentMethodIcon({ icon }: { icon: 'card' | 'paypal' | 'mobile_money' }) {
   if (icon === 'paypal') {
-    return <img src="/payments/paypal-logo-black.png" alt="" className="h-5 w-auto" loading="lazy" />;
+    return (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+        <path fill="#003087" d="M8.24 20h-3.1L7.82 4h6.35c2.1 0 3.67.47 4.7 1.42 1.03.94 1.36 2.25.98 3.92-.43 1.92-1.5 3.37-3.19 4.34-1.45.84-3.25 1.26-5.4 1.26H9.2L8.24 20Z" />
+        <path fill="#009cde" d="M9.66 12.82h2.13c1.4 0 2.55-.27 3.43-.82.88-.54 1.44-1.34 1.68-2.4.2-.9.03-1.58-.52-2.04-.55-.47-1.43-.7-2.64-.7h-3.13l-.95 5.96Z" />
+      </svg>
+    );
   }
 
   if (icon === 'mobile_money') {
     return (
-      <span className="inline-grid h-5 min-w-5 place-items-center rounded-sm bg-[#ff7aa2] px-1 text-[10px] font-black text-[#172033]" aria-hidden="true">
-        MM
-      </span>
+      <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#526173]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M4 7.5h14.5A2.5 2.5 0 0 1 21 10v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5a2 2 0 0 1 2-2Z" />
+        <path d="M4.5 7.5 16 4.4a2 2 0 0 1 2.5 1.9v1.2" />
+        <path d="M17 13h4v4h-4a2 2 0 0 1 0-4Z" />
+        <path d="M18.5 15h.01" />
+      </svg>
     );
   }
 
