@@ -396,7 +396,7 @@ export default function ProfilePage() {
     <main className="mobile-free-page min-h-screen overflow-x-hidden bg-white text-[#1f2f43]">
       <Navbar />
       <div className="w-full pt-[70px]">
-        <div className="mx-auto grid w-full max-w-none gap-4 px-4 py-3 sm:max-w-[42rem] lg:min-w-[1328px] lg:max-w-[1440px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
+        <div className="mx-auto grid w-full max-w-none gap-4 px-2 py-3 sm:max-w-[42rem] sm:px-4 lg:min-w-[1328px] lg:max-w-[1440px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
           <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} counts={orderCounts(orders)} unreadNotifications={unreadNotifications(notifications)} profile={profile} />
 
           <section className="min-w-0">
@@ -1697,8 +1697,8 @@ function ProductDetailModal({ order, onClose }: { order: ProfileOrder; onClose: 
   const rows = productDetailRows(order);
 
   return (
-    <div className="fixed inset-0 z-[90] bg-black/55 px-0 py-0 sm:px-4 sm:py-10">
-      <div className="sheet-panel-in absolute inset-x-0 bottom-0 max-h-[72vh] overflow-hidden rounded-t-2xl bg-white text-black shadow-xl sm:relative sm:mx-auto sm:max-h-[86vh] sm:max-w-[1100px] sm:rounded-none">
+    <div className="fixed inset-0 z-[90] grid place-items-center bg-black/55 px-4 py-4 sm:px-4 sm:py-10">
+      <div className="sheet-panel-in relative max-h-[86vh] w-full overflow-hidden bg-white text-black shadow-xl sm:mx-auto sm:max-w-[1100px]">
         <div className="sticky top-0 z-10 mb-3 flex items-center justify-between gap-4 border-b border-[#dfe5ec] bg-white px-4 py-3 sm:static sm:mb-4 sm:border-b-0 sm:px-7 sm:py-5">
           <h2 className="text-lg font-semibold">Detail du produit</h2>
           <button type="button" onClick={onClose} className="grid h-9 w-9 place-items-center bg-[#f1f5f9] text-2xl text-[#6b7280] hover:text-black sm:bg-transparent" aria-label="Fermer">
@@ -2069,30 +2069,34 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
   return (
     <section className="min-h-[690px] bg-[#f5f7fb] text-[#102033]">
-      <div className="bg-white px-5 pb-7 pt-6 sm:px-8">
-        <div className="grid grid-cols-[6.25rem_minmax(0,1fr)] items-start gap-4 sm:grid-cols-[9rem_minmax(0,1fr)] lg:gap-6">
-          <div className="grid h-24 w-24 place-items-center overflow-hidden rounded-full bg-[#eaf3f7] sm:h-32 sm:w-32">
+      <div className="bg-white px-4 pb-7 pt-6 sm:px-8">
+        <div className="grid grid-cols-[5.75rem_minmax(0,1fr)] items-start gap-3 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4 lg:gap-6">
+          <div className="grid h-[88px] w-[88px] place-items-center overflow-hidden rounded-full bg-[#eaf3f7] sm:h-32 sm:w-32">
             <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full rounded-full object-cover" />
           </div>
 
           <div className="min-w-0 max-w-[42rem]">
-            <h1 className="break-words text-2xl font-black leading-tight text-[#1f2f43]">{displayName}</h1>
-            <div className="mt-4 grid max-w-[34rem] grid-cols-2 gap-y-3 text-center sm:grid-cols-4 sm:divide-x sm:divide-[#dbe4ee]">
+            <h1 className="break-words text-xl font-black leading-tight text-[#1f2f43] sm:text-2xl">{displayName}</h1>
+            <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] leading-4 text-[#64748b] sm:mt-4 sm:gap-2 sm:text-sm">
+              <span>Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span></span>
+              <button type="button" onClick={openPromoEditor} className="grid h-7 w-7 shrink-0 place-items-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-8 sm:w-8" aria-label="Modifier le code promo">
+                <PencilIcon />
+              </button>
+            </div>
+            <div className="mt-4 hidden max-w-[34rem] grid-cols-4 text-center sm:grid sm:divide-x sm:divide-[#dbe4ee]">
               <ProfilePublicMetric label="Suivi" value="0" />
               <ProfilePublicMetric label="Abonnés" value="0" />
               <ProfilePublicMetric label="Likes" value="0" />
               <ProfilePublicMetric label="Points" value="4" />
             </div>
-            <div className="mt-4">
-              <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-[#64748b]">
-                <span>Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span></span>
-                <button type="button" onClick={openPromoEditor} className="grid h-8 w-8 shrink-0 place-items-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Modifier le code promo">
-                  <PencilIcon />
-                </button>
-              </div>
-              {promoStatus ? <p className={`mt-2 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
-            </div>
+            {promoStatus ? <p className={`mt-2 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
           </div>
+        </div>
+        <div className="mt-4 grid grid-cols-4 text-center sm:hidden">
+          <ProfilePublicMetric label="Suivi" value="0" />
+          <ProfilePublicMetric label="Abonnés" value="0" />
+          <ProfilePublicMetric label="Likes" value="0" />
+          <ProfilePublicMetric label="Points" value="4" />
         </div>
 
         <div className="mt-6 grid gap-3">
@@ -2121,7 +2125,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         {profileDescription ? <div className="mt-4 min-h-10 text-sm leading-6 text-[#64748b]">{renderedDescription}</div> : null}
       </div>
 
-      <div className="mt-4 bg-white px-5 py-5 sm:px-8">
+      <div className="mt-4 bg-white px-4 py-5 sm:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
           <nav className="flex min-w-0 flex-1 gap-4 border-b border-[#dbe4ee] text-xs font-semibold text-[#64748b] sm:gap-6 sm:text-sm" aria-label="Contenu profil">
             <button type="button" onClick={() => setActiveTab('projects')} className={`inline-flex shrink-0 items-center gap-1.5 border-b-2 px-0.5 pb-3 sm:gap-2 sm:px-1 ${activeTab === 'projects' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent hover:text-[#0f8f6b]'}`}>
@@ -2133,7 +2137,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
               Favoris
             </button>
           </nav>
-          <button type="button" onClick={() => { setActiveTab('projects'); setIsCreateProjectOpen((open) => !open); }} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 bg-[#0f8f6b] px-2 text-xs font-black text-white transition hover:bg-[#0b7558] sm:gap-2 sm:px-5 sm:text-sm">
+          <button type="button" onClick={() => { setActiveTab('projects'); setIsCreateProjectOpen((open) => !open); }} className="inline-flex h-8 shrink-0 items-center justify-center gap-1 bg-[#0f8f6b] px-2 text-[11px] font-black text-white transition hover:bg-[#0b7558] sm:h-10 sm:gap-2 sm:px-5 sm:text-sm">
             <ProjectTabIcon />
             Créer un projet
           </button>
@@ -2702,47 +2706,50 @@ function SettingsSection({
   }
 
   return (
-    <section className="min-h-[690px] bg-white p-6 text-black shadow-sm ring-1 ring-slate-200">
+    <section className="min-h-[690px] bg-white p-4 text-black shadow-sm ring-1 ring-slate-200 sm:p-6">
       <h1 className="border-b border-[#e5e7eb] pb-4 text-xl font-normal">Paramètres du compte</h1>
-      <div className="grid grid-cols-[108px_minmax(0,1fr)] gap-4 border-b border-[#e5e7eb] py-6 sm:grid-cols-[140px_1fr_160px] sm:gap-6">
+      <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-4 border-b border-[#e5e7eb] py-6 sm:grid-cols-[140px_1fr_160px] sm:gap-6">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div className="grid min-w-0 gap-3 text-sm">
           <p className="break-words text-base">
             {profile.name || 'Client Kendronics'} <AccountTypeBadge profile={profile} />
           </p>
           <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
-          <p className="grid gap-1 text-[#6b7280] sm:block">Pays/region <span className="text-black sm:ml-20">{profile.country ? countryDisplayName(profile.country) : 'Non renseigne'}</span></p>
+          <p className="flex items-baseline justify-between gap-3 text-[#6b7280] sm:block">Pays/region <span className="text-right text-black sm:ml-20 sm:text-left">{profile.country ? countryDisplayName(profile.country) : 'Non renseigne'}</span></p>
           {profile.profileDetails?.accountType === 'company' ? <p className="grid gap-1 text-[#6b7280] sm:block">Societe <span className="text-black sm:ml-24">{profile.company || 'Non renseignee'}</span></p> : null}
+          <button type="button" onClick={() => setEditingProfile(true)} className={`justify-self-start text-sm sm:hidden ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
+            {isAccountLevelOne(profile) ? 'Modifier le compte' : 'Completer le compte'}
+          </button>
         </div>
-        <button type="button" onClick={() => setEditingProfile(true)} className={`col-span-2 justify-self-start text-sm sm:col-span-1 sm:self-start sm:justify-self-auto sm:pt-12 sm:text-right ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
-          {isAccountLevelOne(profile) ? 'Modifier le profil' : 'Completer le profil'}
+        <button type="button" onClick={() => setEditingProfile(true)} className={`hidden text-sm sm:block sm:self-start sm:pt-12 sm:text-right ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
+          {isAccountLevelOne(profile) ? 'Modifier le compte' : 'Completer le compte'}
         </button>
       </div>
-      <div className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
         <h2 className="min-w-0 break-words text-lg">Statut compte</h2>
-        <p className={`min-w-0 break-words ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
+        <p className={`col-span-2 min-w-0 break-words sm:col-span-1 ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
           {(profile.verificationLevel ?? 0) >= 2
             ? 'Votre identite est certifiee. Votre compte peut acceder aux commandes de niveau superieur.'
             : isAccountLevelOne(profile)
             ? 'Votre compte est verifie et peut soumettre des commandes.'
             : 'Votre compte doit etre complete avant de soumettre une commande.'}
         </p>
-        <span className={`col-start-2 min-w-0 justify-self-start break-words text-left sm:col-start-auto sm:justify-self-auto sm:text-right ${(profile.verificationLevel ?? 0) >= 1 ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
+        <span className={`min-w-0 justify-self-end break-words text-right sm:justify-self-auto ${(profile.verificationLevel ?? 0) >= 1 ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
           {(profile.verificationLevel ?? 0) >= 2 ? 'Certifie' : (profile.verificationLevel ?? 0) >= 1 ? 'Verifie' : 'A completer'}
         </span>
       </div>
-      <div className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
         <h2 className="min-w-0 break-words text-lg">Identite</h2>
-        <p className={`min-w-0 break-words ${(profile.verificationLevel ?? 0) >= 2 ? 'text-[#0f8f6b]' : 'text-[#4b5563]'}`}>
+        <p className={`col-span-2 min-w-0 break-words sm:col-span-1 ${(profile.verificationLevel ?? 0) >= 2 ? 'text-[#0f8f6b]' : 'text-[#4b5563]'}`}>
           {(profile.verificationLevel ?? 0) >= 2
             ? 'Identite certifiee via controle securise.'
             : 'Verifier votre identite pour passer au compte Professionnel certifie.'}
           {identityStatus === 'error' && identityMessage ? <span className="mt-1 block text-xs font-semibold text-red-500">{identityMessage}</span> : null}
         </p>
         {(profile.verificationLevel ?? 0) >= 2 ? (
-          <span className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">Verifie</span>
+          <span className="min-w-0 justify-self-end break-words text-right text-[#0f8f6b] sm:justify-self-auto">Verifie</span>
         ) : (
-          <button type="button" disabled={identityStatus === 'starting'} onClick={() => void startIdentityVerification()} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#d97706] disabled:text-slate-300 sm:col-start-auto sm:justify-self-auto sm:text-right">
+          <button type="button" disabled={identityStatus === 'starting'} onClick={() => void startIdentityVerification()} className="min-w-0 justify-self-end break-words text-right text-[#d97706] disabled:text-slate-300 sm:justify-self-auto">
             {identityStatus === 'starting' ? 'Ouverture...' : 'A verifier'}
           </button>
         )}
@@ -2756,32 +2763,32 @@ function SettingsSection({
         ['A propos', 'Comprendre Kendronics et le fonctionnement de la plateforme.', 'Decouvrir', '/how-it-works'],
         ["Besoin d'aide", 'Ouvrir un ticket support pour une question de compte ou commande.', 'Ticket support', '/contact'],
       ].map(([label, value, action, href]) => (
-        <div key={label} className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
+        <div key={label} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
           <h2 className="min-w-0 break-words text-lg">{label}</h2>
-          <p className={`min-w-0 break-words ${!profile.email && label === 'E-mail' || label === 'Téléphone' && !profile.phoneVerifiedAt || label === 'Adresse de livraison' && !isCompleteProfileAddress(profile.shippingAddress) ? 'text-[#d97706]' : 'text-[#4b5563]'}`}>{value}</p>
+          <p className={`col-span-2 min-w-0 break-words sm:col-span-1 ${!profile.email && label === 'E-mail' || label === 'Téléphone' && !profile.phoneVerifiedAt || label === 'Adresse de livraison' && !isCompleteProfileAddress(profile.shippingAddress) ? 'text-[#d97706]' : 'text-[#4b5563]'}`}>{value}</p>
           {label === 'E-mail' ? (
-            <button type="button" onClick={() => setEmailModalOpen(true)} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">{action}</button>
+            <button type="button" onClick={() => setEmailModalOpen(true)} className="min-w-0 justify-self-end break-words text-right text-[#0f8f6b] sm:justify-self-auto">{action}</button>
           ) : label === 'Téléphone' ? (
-            <button type="button" onClick={() => setPhoneModalOpen(true)} className={`col-start-2 min-w-0 justify-self-start break-words text-left sm:col-start-auto sm:justify-self-auto sm:text-right ${profile.phoneVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>{action}</button>
+            <button type="button" onClick={() => setPhoneModalOpen(true)} className={`min-w-0 justify-self-end break-words text-right sm:justify-self-auto ${profile.phoneVerifiedAt ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>{action}</button>
           ) : label === 'Mot de passe' ? (
-            <button type="button" onClick={() => setPasswordModalOpen(true)} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">{action}</button>
+            <button type="button" onClick={() => setPasswordModalOpen(true)} className="min-w-0 justify-self-end break-words text-right text-[#0f8f6b] sm:justify-self-auto">{action}</button>
           ) : (
-            <a href={href} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">{action}</a>
+            <a href={href} className="min-w-0 justify-self-end break-words text-right text-[#0f8f6b] sm:justify-self-auto">{action}</a>
           )}
         </div>
       ))}
-      <div className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
         <h2 className="min-w-0 break-words text-lg">Déconnexion</h2>
-        <p className="min-w-0 break-words text-[#4b5563]">Fermer la session sur cet appareil.</p>
-        <button type="button" onClick={logout} className="col-start-2 min-w-0 justify-self-start break-words text-left text-[#0f8f6b] sm:col-start-auto sm:justify-self-auto sm:text-right">Se déconnecter</button>
+        <p className="col-span-2 min-w-0 break-words text-[#4b5563] sm:col-span-1">Fermer la session sur cet appareil.</p>
+        <button type="button" onClick={logout} className="min-w-0 justify-self-end break-words text-right text-[#0f8f6b] sm:justify-self-auto">Se déconnecter</button>
       </div>
-      <div className="grid grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] gap-3 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2 border-b border-[#e5e7eb] py-5 text-sm sm:grid-cols-[160px_1fr_160px] sm:gap-0">
         <h2 className="min-w-0 break-words text-lg">Supprimer le compte</h2>
-        <p className="min-w-0 break-words text-[#4b5563]">Suppression definitive du compte et des donnees client associees, apres verification par e-mail.</p>
+        <p className="col-span-2 min-w-0 break-words text-[#4b5563] sm:col-span-1">Suppression definitive du compte et des donnees client associees, apres verification par e-mail.</p>
         <button
           type="button"
           onClick={() => setDeleteModalOpen(true)}
-          className="col-start-2 min-w-0 justify-self-start break-words text-left text-red-400 transition hover:text-red-600 active:text-red-700 disabled:cursor-not-allowed disabled:text-red-200 sm:col-start-auto sm:justify-self-auto sm:text-right"
+          className="min-w-0 justify-self-end break-words text-right text-red-400 transition hover:text-red-600 active:text-red-700 disabled:cursor-not-allowed disabled:text-red-200 sm:justify-self-auto"
         >
           Supprimer
         </button>
@@ -3874,7 +3881,7 @@ function deleteAlternativeCopy(alternative: DeleteAlternative) {
 
 const profileModalFieldClassName = 'h-11 border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#009a38]';
 const profileModalTextAreaClassName = 'min-h-24 resize-y border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-[#009a38]';
-const profileModalBackdropClassName = 'fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/45 px-0 sm:items-center sm:px-4 sm:py-4';
+const profileModalBackdropClassName = 'fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/45 px-4 py-4';
 const profileModalPanelClassName = 'w-full max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-sm border border-slate-300 bg-white p-5 text-black sm:max-w-lg sm:p-6';
 const profileModalActionsClassName = 'mt-6 grid grid-cols-1 gap-3 sm:flex sm:justify-end';
 const profileModalSecondaryButtonClassName = 'inline-flex h-10 items-center justify-center border border-slate-200 bg-white px-5 text-sm font-normal text-slate-700 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:text-slate-300';

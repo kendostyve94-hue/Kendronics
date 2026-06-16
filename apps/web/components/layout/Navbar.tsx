@@ -153,7 +153,6 @@ function mobileProfileMenuGroups(unreadNotifications: number): MobileProfileMenu
         { label: 'Adresse livraison', href: '/profile?view=shipping-address' },
         { label: 'Historique des commandes', href: '/profile?view=all-orders' },
         { label: 'Parametres', href: '/profile?view=settings' },
-        { label: 'Deconnexion et securite', href: '/profile?view=settings' },
       ],
     },
   ];

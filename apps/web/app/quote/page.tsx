@@ -1305,7 +1305,6 @@ function MobileSheetRow({
   sheetId,
   openSheet,
   onOpenSheet,
-  estimatedPcbPrice,
   mobileWide = false,
   children,
 }: {
@@ -1340,12 +1339,6 @@ function MobileSheetRow({
       {isOpen ? (
         <div className="sheet-backdrop-in fixed inset-0 z-[70] bg-slate-950/35 sm:hidden" role="dialog" aria-modal="true" aria-label={label} onClick={() => onOpenSheet(null)}>
           <div className="sheet-panel-in absolute inset-x-0 bottom-0 max-h-[82vh] overflow-y-auto rounded-t-2xl bg-[#ffffff] p-4" onClick={(event) => event.stopPropagation()}>
-            {typeof estimatedPcbPrice === 'number' ? (
-              <div className="quote-sheet-total sticky top-0 z-10 -mx-4 -mt-4 mb-3 flex items-center justify-between border-b border-slate-200 bg-[#ffffff] px-4 py-3">
-                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Cout PCB</span>
-                <span className="text-lg font-semibold text-[#ff7a00]">${estimatedPcbPrice.toFixed(2)}</span>
-              </div>
-            ) : null}
             <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-slate-300" />
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
