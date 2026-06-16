@@ -3174,7 +3174,33 @@ function ProfileReadonlyRow({ label, value }: { label: string; value: string }) 
 
 function AccountTypeBadge({ profile }: { profile: ProfileForm }) {
   const badge = accountBadge(profile);
-  return <span className="ml-2 rounded-none px-2 py-1 text-xs font-black text-white" style={{ backgroundColor: badge.color }}>{badge.label}</span>;
+  return (
+    <span className="ml-2 inline-flex align-[-0.2em]" title={badge.label} aria-label={badge.label}>
+      <BadgeLevelIcon color={badge.color} level={badge.level} />
+      <span className="sr-only">{badge.label}</span>
+    </span>
+  );
+}
+
+function BadgeLevelIcon({ color, level }: { color: string; level: number }) {
+  return (
+    <svg viewBox="0 0 32 32" className="h-6 w-6" role="img" aria-hidden="true">
+      <path
+        d="M16 2.5 19.1 5l4-.7 1.4 3.8 3.5 2-1 4 1.8 3.6-3.1 2.6-.4 4-4 .8-2.5 3.2-3.8-1.5-3.8 1.5-2.5-3.2-4-.8-.4-4-3.1-2.6L5 14.1l-1-4 3.5-2 1.4-3.8 4 .7L16 2.5Z"
+        fill={color}
+      />
+      <circle cx="16" cy="16" r="8.2" fill="white" opacity="0.22" />
+      {level >= 3 ? (
+        <path d="M10 19.5h12l-1-7-3.2 2.7L16 10.6l-1.8 4.6L11 12.5l-1 7Zm1.2 2.2h9.6" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      ) : level >= 2 ? (
+        <path d="m16 8.8 2.1 4.2 4.6.7-3.3 3.2.8 4.6-4.2-2.2-4.2 2.2.8-4.6-3.3-3.2 4.6-.7L16 8.8Z" fill="white" />
+      ) : level >= 1 ? (
+        <path d="m10.4 16.2 3.7 3.6 7.7-8.1" fill="none" stroke="white" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      ) : (
+        <path d="M11.2 16h9.6M16 11.2v9.6" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+      )}
+    </svg>
+  );
 }
 
 function ProfileTextField({
@@ -3930,12 +3956,12 @@ function isAccountLevelOne(profile: ProfileForm): boolean {
   return Boolean(profile.email && profile.emailVerifiedAt && profile.phone && profile.phoneVerifiedAt && profile.name && profile.country && isCompleteProfileAddress(profile.shippingAddress));
 }
 
-function accountBadge(profile: ProfileForm): { label: string; color: string } {
-  if ((profile.verificationLevel ?? 0) >= 3) return { label: 'Industriel certifie', color: '#0f8f6b' };
-  if ((profile.verificationLevel ?? 0) >= 2) return { label: 'Professionnel certifie', color: '#0877ff' };
-  if ((profile.verificationLevel ?? 0) >= 1) return { label: 'Individuel verifie', color: '#f59e0b' };
-  if (!isAccountLevelOne(profile)) return { label: 'Individuel', color: '#94a3b8' };
-  return { label: 'Individuel verifie', color: '#f59e0b' };
+function accountBadge(profile: ProfileForm): { label: string; color: string; level: number } {
+  if ((profile.verificationLevel ?? 0) >= 3) return { label: 'Industriel certifie', color: '#0f8f6b', level: 3 };
+  if ((profile.verificationLevel ?? 0) >= 2) return { label: 'Professionnel certifie', color: '#0877ff', level: 2 };
+  if ((profile.verificationLevel ?? 0) >= 1) return { label: 'Individuel verifie', color: '#f59e0b', level: 1 };
+  if (!isAccountLevelOne(profile)) return { label: 'Individuel', color: '#94a3b8', level: 0 };
+  return { label: 'Individuel verifie', color: '#f59e0b', level: 1 };
 }
 
 function maskPhone(phone: string): string {
@@ -4117,17 +4143,17 @@ function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firs
   const companyOrType = profile.company || 'Compte client';
   const countryCode = normalizeProfileCountry(profile.country);
   const displayLocation = countryCode ? countryDisplayName(countryCode) : 'Pays non renseigne';
-  const badge = accountBadge(profile);
-
   return (
     <div className="mb-4 flex items-center gap-4 bg-white py-4 text-left lg:hidden">
       <div className="shrink-0">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
       </div>
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-base font-semibold text-[#102033]">{displayName}</h1>
+        <h1 className="flex min-w-0 items-center text-base font-semibold text-[#102033]">
+          <span className="truncate">{displayName}</span>
+          <AccountTypeBadge profile={profile} />
+        </h1>
         <p className="mt-0.5 truncate text-sm text-[#102033]">{companyOrType}</p>
-        <p className="mt-1 text-xs font-semibold" style={{ color: badge.color }}>{badge.label}</p>
         <p className="mt-1 text-xs text-[#64748b]">ID Client: {userId}</p>
         <p className="mt-1 truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : displayLocation}</p>
         <div className="mt-1">
