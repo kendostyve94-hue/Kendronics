@@ -3571,12 +3571,16 @@ function PhoneChangeModal({ currentPhone, onClose, onChanged }: { currentPhone: 
         headers: { Authorization: `Bearer ${session.accessToken}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone }),
       });
-      if (!response.ok) throw new Error(`Phone verification request failed: ${response.status}`);
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { message?: string | string[] } | null;
+        const detail = Array.isArray(payload?.message) ? payload.message.join(' ') : payload?.message;
+        throw new Error(detail || `Phone verification request failed: ${response.status}`);
+      }
       setStatus('sent');
       setMessage('Code envoye par SMS. Il reste valide 10 minutes.');
-    } catch {
+    } catch (error) {
       setStatus('error');
-      setMessage("Impossible d'envoyer le code SMS pour le moment.");
+      setMessage(error instanceof Error && error.message ? error.message : "Impossible d'envoyer le code SMS pour le moment.");
     }
   }
 

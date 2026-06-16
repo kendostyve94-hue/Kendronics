@@ -375,8 +375,8 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
             {isSignedIn ? (
               <>
                 <NotificationBell count={unreadNotifications} compact />
-                <a href="/profile" className="grid h-8 w-8 place-items-center overflow-hidden rounded-full border border-[#d1d5db] bg-[#0b1724] text-xs font-black text-white" aria-label={t('nav.openAccount')}>
-                  <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
+                <a href="/profile" className="grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-xs font-black text-white" aria-label={t('nav.openAccount')}>
+                  <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full rounded-full object-cover" />
                 </a>
               </>
             ) : (
@@ -661,8 +661,8 @@ function LoginMenu({ isSignedIn, avatarDataUrl, firstName, t }: { isSignedIn: bo
   if (isSignedIn) {
     return (
       <div className="flex min-w-0 items-center gap-2.5">
-        <a href="/profile" className="grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-[#d1d5db] bg-[#0b1724]" aria-label={t('nav.openAccount')}>
-          <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full object-cover" />
+        <a href="/profile" className="grid h-10 w-10 place-items-center overflow-hidden rounded-full bg-[#0b1724]" aria-label={t('nav.openAccount')}>
+          <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full rounded-full object-cover" />
         </a>
         <a href="/profile" className="min-w-0 max-w-[8.5rem] text-xs leading-5 text-[#64748b] transition hover:text-[#0f8f6b] xl:max-w-[9.5rem]" aria-label={t('nav.openAccount')}>
           <span className="block truncate">Bonjour, {firstName}</span>

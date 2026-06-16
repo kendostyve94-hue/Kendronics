@@ -119,7 +119,7 @@ export function InternationalPhoneInput({ label, value, error, placeholder = 'Nu
       </div>
       {error ? <span className="mt-1 block text-xs font-medium text-red-600">{error}</span> : null}
       {open ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+0.25rem)] z-50 max-h-72 overflow-hidden border border-slate-300 bg-white shadow-lg">
+        <div className="fixed left-4 right-4 top-[12rem] z-[120] max-h-[52vh] overflow-hidden border border-slate-300 bg-white shadow-lg sm:absolute sm:left-0 sm:right-0 sm:top-[calc(100%+0.25rem)] sm:z-50 sm:max-h-72">
           <div className="border-b border-slate-200 p-2">
             <input
               value={search}
@@ -128,7 +128,7 @@ export function InternationalPhoneInput({ label, value, error, placeholder = 'Nu
               className="h-10 w-full border border-slate-200 px-3 text-sm outline-none focus:border-[#0f8f6b]"
             />
           </div>
-          <div className="max-h-56 overflow-y-auto py-1">
+          <div className="max-h-[calc(52vh-3.5rem)] overflow-y-auto py-1 sm:max-h-56">
             {countries.map((item) => (
               <button
                 key={item.iso2}
