@@ -2644,6 +2644,8 @@ function SettingsSection({
   const [deleteFeedback, setDeleteFeedback] = useState<DeleteFeedback>(createEmptyDeleteFeedback());
   const [identityStatus, setIdentityStatus] = useState<'idle' | 'starting' | 'error'>('idle');
   const [identityMessage, setIdentityMessage] = useState('');
+  const profileCountryCode = normalizeProfileCountry(profile.country);
+  const profileCountryName = profile.country ? countryDisplayName(profile.country) : 'Non renseigne';
 
   async function startIdentityVerification() {
     setIdentityStatus('starting');
@@ -2715,7 +2717,13 @@ function SettingsSection({
             {profile.name || 'Client Kendronics'} <AccountTypeBadge profile={profile} />
           </p>
           <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
-          <p className="flex items-baseline justify-between gap-3 text-[#6b7280] sm:block">Pays/region <span className="text-right text-black sm:ml-20 sm:text-left">{profile.country ? countryDisplayName(profile.country) : 'Non renseigne'}</span></p>
+          <p className="flex items-center justify-between gap-3 text-[#6b7280] sm:block">
+            Pays/region
+            <span className="inline-flex items-center justify-end gap-2 text-right text-black sm:ml-20 sm:justify-start sm:text-left">
+              {profileCountryCode ? <CountryFlag iso2={profileCountryCode} name={profileCountryName} /> : null}
+              {profileCountryName}
+            </span>
+          </p>
           {profile.profileDetails?.accountType === 'company' ? <p className="grid gap-1 text-[#6b7280] sm:block">Societe <span className="text-black sm:ml-24">{profile.company || 'Non renseignee'}</span></p> : null}
           <button type="button" onClick={() => setEditingProfile(true)} className={`justify-self-start text-sm sm:hidden ${isAccountLevelOne(profile) ? 'text-[#0f8f6b]' : 'text-[#d97706]'}`}>
             {isAccountLevelOne(profile) ? 'Modifier le compte' : 'Completer le compte'}
