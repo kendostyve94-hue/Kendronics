@@ -196,7 +196,7 @@ export class UsersService {
     if (provider === 'twilio') {
       const verification = await twilioVerifyRequest('Verifications', {
         To: normalizedPhone,
-        Channel: process.env.TWILIO_VERIFY_CHANNEL ?? 'sms',
+        Channel: twilioVerifyChannel(),
       });
       providerVerificationSid = stringValue(verification.sid);
     } else if (provider === 'dev') {
@@ -376,6 +376,16 @@ function internalPhoneEmail(phone: string): string {
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+function twilioVerifyChannel(): string {
+  const allowedChannels = new Set(['sms', 'call', 'email', 'whatsapp']);
+  const configuredChannels = (process.env.TWILIO_VERIFY_CHANNEL ?? 'sms')
+    .split(',')
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+
+  return configuredChannels.find((channel) => allowedChannels.has(channel)) ?? 'sms';
 }
 
 async function verifyTwilioPhoneCode(phone: string, code: string): Promise<boolean> {
