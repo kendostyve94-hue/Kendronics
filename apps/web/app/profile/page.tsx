@@ -2080,12 +2080,12 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
           </div>
 
           <div className="min-w-0 max-w-[42rem]">
-            <h1 className="inline-flex max-w-full flex-wrap items-center gap-2 break-words text-xl font-black leading-tight text-[#1f2f43] sm:text-2xl">
-              <span>{displayName}</span>
+            <h1 className="flex w-full min-w-0 flex-nowrap items-center gap-2 text-xl font-black leading-tight text-[#1f2f43] sm:inline-flex sm:w-auto sm:max-w-full sm:flex-wrap sm:break-words sm:text-2xl">
+              <span className="min-w-0 truncate sm:overflow-visible sm:whitespace-normal">{displayName}</span>
               <AccountTypeBadge profile={profile} />
             </h1>
-            <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] leading-4 text-[#64748b] sm:mt-4 sm:gap-2 sm:text-sm">
-              <span>Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span></span>
+            <div className="mt-2 flex min-w-0 flex-nowrap items-center gap-1.5 text-[11px] leading-4 text-[#64748b] sm:mt-4 sm:flex-wrap sm:gap-2 sm:text-sm">
+              <span className="min-w-0 truncate whitespace-nowrap">Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span></span>
               <button type="button" onClick={openPromoEditor} className="grid h-7 w-7 shrink-0 place-items-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-8 sm:w-8" aria-label="Modifier le code promo">
                 <PencilIcon />
               </button>
