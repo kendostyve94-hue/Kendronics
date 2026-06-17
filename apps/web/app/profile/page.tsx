@@ -1916,9 +1916,13 @@ function NotificationsList({ notifications, dataStatus }: { notifications: Profi
     );
   }
 
+  const visibleNotifications = [...notifications]
+    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+    .slice(0, 8);
+
   return (
     <div className="grid gap-2 text-xs sm:block sm:divide-y sm:divide-slate-200">
-      {notifications.map((notification) => (
+      {visibleNotifications.map((notification) => (
         <div key={notification.id} className="grid gap-2 border border-[#e5e7eb] bg-white px-3 py-3 sm:border-0 sm:bg-transparent sm:grid-cols-[1fr_1fr_160px] sm:px-5 sm:py-4">
           <span className={notification.readAt ? 'text-[#6b7280]' : 'font-black text-black'}>{notification.title}</span>
           <span>{notification.body || notification.type}</span>
@@ -3176,30 +3180,9 @@ function AccountTypeBadge({ profile }: { profile: ProfileForm }) {
   const badge = accountBadge(profile);
   return (
     <span className="ml-2 inline-flex align-[-0.2em]" title={badge.label} aria-label={badge.label}>
-      <BadgeLevelIcon color={badge.color} level={badge.level} />
+      <img src={badge.icon} alt="" className="h-7 w-7 object-contain" style={badge.filter ? { filter: badge.filter } : undefined} />
       <span className="sr-only">{badge.label}</span>
     </span>
-  );
-}
-
-function BadgeLevelIcon({ color, level }: { color: string; level: number }) {
-  return (
-    <svg viewBox="0 0 32 32" className="h-6 w-6" role="img" aria-hidden="true">
-      <path
-        d="M16 2.5 19.1 5l4-.7 1.4 3.8 3.5 2-1 4 1.8 3.6-3.1 2.6-.4 4-4 .8-2.5 3.2-3.8-1.5-3.8 1.5-2.5-3.2-4-.8-.4-4-3.1-2.6L5 14.1l-1-4 3.5-2 1.4-3.8 4 .7L16 2.5Z"
-        fill={color}
-      />
-      <circle cx="16" cy="16" r="8.2" fill="white" opacity="0.22" />
-      {level >= 3 ? (
-        <path d="M10 19.5h12l-1-7-3.2 2.7L16 10.6l-1.8 4.6L11 12.5l-1 7Zm1.2 2.2h9.6" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      ) : level >= 2 ? (
-        <path d="m16 8.8 2.1 4.2 4.6.7-3.3 3.2.8 4.6-4.2-2.2-4.2 2.2.8-4.6-3.3-3.2 4.6-.7L16 8.8Z" fill="white" />
-      ) : level >= 1 ? (
-        <path d="m10.4 16.2 3.7 3.6 7.7-8.1" fill="none" stroke="white" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-      ) : (
-        <path d="M11.2 16h9.6M16 11.2v9.6" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
-      )}
-    </svg>
   );
 }
 
@@ -3956,12 +3939,12 @@ function isAccountLevelOne(profile: ProfileForm): boolean {
   return Boolean(profile.email && profile.emailVerifiedAt && profile.phone && profile.phoneVerifiedAt && profile.name && profile.country && isCompleteProfileAddress(profile.shippingAddress));
 }
 
-function accountBadge(profile: ProfileForm): { label: string; color: string; level: number } {
-  if ((profile.verificationLevel ?? 0) >= 3) return { label: 'Industriel certifie', color: '#0f8f6b', level: 3 };
-  if ((profile.verificationLevel ?? 0) >= 2) return { label: 'Professionnel certifie', color: '#0877ff', level: 2 };
-  if ((profile.verificationLevel ?? 0) >= 1) return { label: 'Individuel verifie', color: '#f59e0b', level: 1 };
-  if (!isAccountLevelOne(profile)) return { label: 'Individuel', color: '#94a3b8', level: 0 };
-  return { label: 'Individuel verifie', color: '#f59e0b', level: 1 };
+function accountBadge(profile: ProfileForm): { label: string; color: string; level: number; icon: string; filter?: string } {
+  if ((profile.verificationLevel ?? 0) >= 3) return { label: 'Industriel certifie', color: '#0f8f6b', level: 3, icon: '/images/icons8-approval-64.png' };
+  if ((profile.verificationLevel ?? 0) >= 2) return { label: 'Professionnel certifie', color: '#0877ff', level: 2, icon: '/images/icons8-verified-badge-64.png' };
+  if ((profile.verificationLevel ?? 0) >= 1) return { label: 'Individuel verifie', color: '#f59e0b', level: 1, icon: '/images/icons8-approval-64.png' };
+  if (!isAccountLevelOne(profile)) return { label: 'Individuel', color: '#94a3b8', level: 0, icon: '/images/icons8-verified-badge-64.png', filter: 'grayscale(1) saturate(0.55) opacity(0.72)' };
+  return { label: 'Individuel verifie', color: '#f59e0b', level: 1, icon: '/images/icons8-approval-64.png' };
 }
 
 function maskPhone(phone: string): string {
@@ -4006,7 +3989,7 @@ function ProductQuickGrid() {
 
 function shouldShowProfileRightRail(view: ProfileView): boolean {
   if (!view) return false;
-  if (view === 'all-orders' || view === 'settings' || view === 'invite') return false;
+  if (view === 'all-orders' || view === 'invite') return false;
 
   return [
     'notifications',

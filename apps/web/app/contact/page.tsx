@@ -3,8 +3,6 @@
 import { ChangeEvent, FormEvent, useState } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { Navbar } from '../../components/layout/Navbar';
-import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
 import {
   contactCategories,
   contactCategoryLabels,
@@ -30,6 +28,7 @@ const whatsAppPhoneDigits = '3307970427';
 const whatsAppHref = `https://wa.me/${whatsAppPhoneDigits}`;
 const whatsAppChannelHref = process.env.NEXT_PUBLIC_WHATSAPP_CHANNEL_URL ?? whatsAppHref;
 const youtubeChannelHref = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_URL ?? 'https://www.youtube.com';
+const facebookHref = process.env.NEXT_PUBLIC_FACEBOOK_URL ?? 'https://www.facebook.com';
 
 const initialValues: ContactFormState = {
   name: '',
@@ -113,7 +112,7 @@ export default function ContactPage() {
       <ContactHero />
 
       <section className="mx-auto grid max-w-7xl gap-6 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_24rem] lg:px-8">
-        <Card className="p-6 sm:p-8">
+        <section className="bg-white p-0 sm:p-2">
           <p className="text-sm font-black uppercase tracking-[0.18em] text-signal">Formulaire de contact</p>
           <h2 className="mt-2 text-3xl font-black tracking-tight text-ink">Ouvrez un ticket support professionnel.</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
@@ -223,7 +222,7 @@ export default function ContactPage() {
               {submitState === 'submitting' ? 'Envoi du ticket...' : 'Envoyer le ticket support'}
             </button>
           </form>
-        </Card>
+        </section>
 
         <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
           <ContactActionPanel
@@ -260,18 +259,26 @@ export default function ContactPage() {
           />
           <ContactActionPanel
             tone="neutral"
+            icon="facebook"
+            title="Facebook"
+            body="Kendronics"
+            detail="Actualites et messages"
+            href={facebookHref}
+          />
+          <ContactActionPanel
+            tone="neutral"
             icon="help"
             title="Centre d'aide"
             body="Documentation Kendronics"
             detail="Bases PCB, paiement, livraison et compte"
             href="/centre-aide"
           />
-          <Card glass className="p-5">
+          <div className="bg-white p-0">
             <h3 className="text-lg font-black text-ink">Consulter la FAQ avant de nous ecrire ?</h3>
-            <Button href="/faq" className="mt-5 w-full">
+            <a href="/faq" className="mt-5 inline-flex h-11 w-full items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
               Voir la FAQ
-            </Button>
-          </Card>
+            </a>
+          </div>
         </aside>
       </section>
 
@@ -288,13 +295,10 @@ function ContactHero() {
         alt="Conseillere support Kendronics avec casque"
         className="absolute inset-0 h-full w-full object-cover object-[center_28%]"
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.84] to-deepblue/[0.56]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-ink/[0.58] via-ink/[0.38] to-deepblue/[0.22]" />
       <div className="relative mx-auto max-w-[1368px] px-4 py-8 sm:px-6 sm:py-10 lg:px-5 lg:py-12">
         <div className="max-w-3xl">
-          <p className="inline-flex rounded-sm border border-white/[0.18] bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-sky-100 backdrop-blur-xl">
-            Contact
-          </p>
-          <h1 className="mt-5 text-2xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+          <h1 className="text-2xl font-black tracking-tight sm:text-4xl lg:text-5xl">
             Une equipe disponible pour accompagner vos commandes PCB de bout en bout.
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base sm:leading-7">
@@ -385,7 +389,7 @@ function ContactActionPanel({
       href={href}
       target={isExternal ? '_blank' : undefined}
       rel={isExternal ? 'noreferrer' : undefined}
-      className={`flex items-center gap-4 rounded-sm border p-5 transition hover:-translate-y-0.5 hover:border-[#0f8f6b] ${toneClasses}`}
+      className={`flex items-center gap-4 bg-white p-0 transition hover:text-[#0f8f6b] ${toneClasses}`}
     >
       <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-sm text-sm font-black ${iconClasses}`}>
         <BrandIcon icon={icon} />
@@ -462,6 +466,14 @@ function BrandIcon({ icon }: { icon: string }) {
           fill="currentColor"
           d="M29.3 9.2a3.7 3.7 0 0 0-2.6-2.6C24.4 6 16 6 16 6s-8.4 0-10.7.6a3.7 3.7 0 0 0-2.6 2.6C2.1 11.5 2.1 16 2.1 16s0 4.5.6 6.8a3.7 3.7 0 0 0 2.6 2.6C7.6 26 16 26 16 26s8.4 0 10.7-.6a3.7 3.7 0 0 0 2.6-2.6c.6-2.3.6-6.8.6-6.8s0-4.5-.6-6.8ZM13.2 20.3v-8.6l7.4 4.3-7.4 4.3Z"
         />
+      </svg>
+    );
+  }
+
+  if (icon === 'facebook') {
+    return (
+      <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
+        <path fill="currentColor" d="M18.2 28V17.1h3.7l.6-4.3h-4.3v-2.7c0-1.2.35-2.1 2.15-2.1h2.3V4.2c-.4-.05-1.75-.17-3.35-.17-3.32 0-5.6 2.03-5.6 5.76v3.01H10v4.3h3.7V28h4.5Z" />
       </svg>
     );
   }
