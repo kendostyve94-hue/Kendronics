@@ -245,12 +245,31 @@ type SidebarItem = {
   label: string;
   view: ProfileView;
   count?: number;
+  icon: ProfileSidebarIconName;
 };
 
 type SidebarGroup = {
   title: string;
   items: SidebarItem[];
 };
+
+type ProfileSidebarIconName =
+  | 'dashboard'
+  | 'orders'
+  | 'notifications'
+  | 'location'
+  | 'history'
+  | 'help'
+  | 'settings'
+  | 'verified'
+  | 'payment'
+  | 'production'
+  | 'delivery'
+  | 'comments'
+  | 'services'
+  | 'support'
+  | 'profile'
+  | 'invite';
 
 const serviceTiles = [
   { title: 'Prototype PCB', body: 'Devis rapide pour valider une carte, une revision ou une petite quantite.', href: '/quote' },
@@ -504,7 +523,7 @@ function ProfileSidebar({
         <section key={group.title} className="border-b border-[#e4ebf2] last:border-b-0">
           <h2 className="px-4 pb-2 pt-5 text-[11px] font-black uppercase tracking-[0.14em] text-[#64748b]">{group.title}</h2>
           <div className="block px-0 pb-4">
-            {group.items.map((item, index) => {
+            {group.items.map((item) => {
               const isActive = item.view === activeProfileView;
 
               return (
@@ -516,9 +535,11 @@ function ProfileSidebar({
                     isActive ? 'font-black text-[#0f8f6b]' : 'text-[#334155]'
                   }`}
                 >
-                  <span className={`grid h-4 w-4 shrink-0 place-items-center border text-[9px] ${
-                    isActive ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-[#dbe4ee] text-[#94a3b8]'
-                  }`}>{index + 1}</span>
+                  <span className={`grid h-5 w-5 shrink-0 place-items-center ${
+                    isActive ? 'text-[#0f8f6b]' : 'text-[#7c8ca0]'
+                  }`}>
+                    <ProfileSidebarIcon name={item.icon} />
+                  </span>
                   <span className={`min-w-0 truncate ${item.view === 'shipping-address' && !isCompleteProfileAddress(profile.shippingAddress) ? 'text-[#d97706]' : ''}`}>{item.label}</span>
                   {item.count && item.count > 0 ? <span className="ml-auto bg-[#102033] px-1.5 text-[10px] font-black text-white">{item.count}</span> : null}
                   {isActive ? <span className="absolute right-0 top-0 h-full w-[4px] bg-[#0f8f6b]" /> : null}
@@ -532,37 +553,64 @@ function ProfileSidebar({
   );
 }
 
+function ProfileSidebarIcon({ name }: { name: ProfileSidebarIconName }) {
+  const paths: Record<ProfileSidebarIconName, string> = {
+    dashboard: 'M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z',
+    orders: 'M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2ZM1 2v2h2l3.6 7.59-1.35 2.45A2 2 0 0 0 7 17h12v-2H7.42a.25.25 0 0 1-.22-.37L8.1 13h7.45a2 2 0 0 0 1.75-1.03L20.88 5H5.21l-.94-2H1Zm16 16c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2Z',
+    notifications: 'M12 22a2.01 2.01 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2Z',
+    location: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z',
+    history: 'M13 3a9 9 0 0 0-8.95 8H1l4 4 4-4H6.05A7 7 0 1 1 13 19a6.9 6.9 0 0 1-4.9-2.1l-1.42 1.42A8.9 8.9 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z',
+    help: 'M11 18h2v-2h-2v2Zm1-16A10 10 0 1 0 12 22 10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm0-14a4 4 0 0 0-4 4h2a2 2 0 1 1 3.17 1.62C12.1 12.4 11 13.27 11 15h2c0-.9.66-1.42 1.45-2A4 4 0 0 0 12 6Z',
+    settings: 'M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.08-.98l2.11-1.65-2-3.46-2.49 1a7.3 7.3 0 0 0-1.69-.98L15 3.28h-4l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.08.66-.08.98s.03.66.08.98l-2.11 1.65 2 3.46 2.49-1c.52.4 1.08.73 1.69.98L11 20.72h4l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1 2-3.46-2.13-1.65ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z',
+    verified: 'm23 12-2.44-2.79.34-3.69-3.61-.82L15.4 1.5 12 2.96 8.6 1.5 6.71 4.69l-3.61.82.34 3.69L1 12l2.44 2.79-.34 3.7 3.61.81 1.89 3.2 3.4-1.47 3.4 1.47 1.89-3.19 3.61-.82-.34-3.69L23 12Zm-12.91 4.72-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35Z',
+    payment: 'M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 14H3v-6h18v6Zm0-10H3V6h18v2Z',
+    production: 'M19.14 12.94a7.4 7.4 0 0 0 .05-.94 7.4 7.4 0 0 0-.05-.94l2.03-1.58-1.92-3.32-2.39.96a7.6 7.6 0 0 0-1.63-.94L14.87 3h-3.74l-.36 3.18c-.59.24-1.13.56-1.63.94l-2.39-.96-1.92 3.32 2.03 1.58c-.03.31-.05.63-.05.94s.02.63.05.94l-2.03 1.58 1.92 3.32 2.39-.96c.5.38 1.04.7 1.63.94l.36 3.18h3.74l.36-3.18c.59-.24 1.13-.56 1.63-.94l2.39.96 1.92-3.32-2.03-1.58ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z',
+    delivery: 'M20 8h-3V4H3a2 2 0 0 0-2 2v11h2a3 3 0 0 0 6 0h6a3 3 0 0 0 6 0h2v-5l-3-4ZM6 18.5A1.5 1.5 0 1 1 6 15a1.5 1.5 0 0 1 0 3.5ZM15 15H9a3 3 0 0 0-6 0V6h12v9Zm3 3.5a1.5 1.5 0 1 1 0-3.5 1.5 1.5 0 0 1 0 3.5ZM17 12V9.5h2.5l1.96 2.5H17Z',
+    comments: 'M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1Zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1Z',
+    services: 'M22.7 19 13.6 9.9c.9-2.3.4-5-1.5-6.9A6 6 0 0 0 5 2l4.3 4.3-3 3L2 5a6 6 0 0 0 1 7.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.4-.4.4-1 0-1.4Z',
+    support: 'M12 2a9 9 0 0 0-9 9v7a3 3 0 0 0 3 3h3v-8H5v-2a7 7 0 0 1 14 0v2h-4v8h4a3 3 0 0 0 3-3v-7a9 9 0 0 0-9-9h-1Z',
+    profile: 'M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.42 0-8 2.24-8 5v3h16v-3c0-2.76-3.58-5-8-5Z',
+    invite: 'M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4ZM6 10V7H4v3H1v2h3v3h2v-3h3v-2H6Zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z',
+  };
+
+  return (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
+      <path d={paths[name]} />
+    </svg>
+  );
+}
+
 function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: number): SidebarGroup[] {
   return [
     {
       title: 'Espace client',
       items: [
-        { label: 'Tableau de bord', view: null },
-        { label: 'Commandes', view: 'all-orders', count: counts.all },
-        { label: 'Notifications', view: 'notifications', count: unread },
-        { label: 'Adresse livraison', view: 'shipping-address' },
-        { label: 'Historique des commandes', view: 'order-history' },
-        { label: "Centre d'aide", view: 'support' },
-        { label: 'Paramètres', view: 'settings' },
+        { label: 'Tableau de bord', view: null, icon: 'dashboard' },
+        { label: 'Commandes', view: 'all-orders', count: counts.all, icon: 'orders' },
+        { label: 'Notifications', view: 'notifications', count: unread, icon: 'notifications' },
+        { label: 'Adresse livraison', view: 'shipping-address', icon: 'location' },
+        { label: 'Historique des commandes', view: 'order-history', icon: 'history' },
+        { label: "Centre d'aide", view: 'support', icon: 'help' },
+        { label: 'Paramètres', view: 'settings', icon: 'settings' },
       ],
     },
     {
       title: 'Suivi commande',
       items: [
-        { label: 'Vérification', view: 'verification', count: counts.verification },
-        { label: 'Paiement', view: 'payment-pending', count: counts.paymentPending },
-        { label: 'Production', view: 'production', count: counts.production },
-        { label: 'Livraison', view: 'delivery', count: counts.delivery },
-        { label: 'Commentaires', view: 'comments', count: counts.comments },
+        { label: 'Vérification', view: 'verification', count: counts.verification, icon: 'verified' },
+        { label: 'Paiement', view: 'payment-pending', count: counts.paymentPending, icon: 'payment' },
+        { label: 'Production', view: 'production', count: counts.production, icon: 'production' },
+        { label: 'Livraison', view: 'delivery', count: counts.delivery, icon: 'delivery' },
+        { label: 'Commentaires', view: 'comments', count: counts.comments, icon: 'comments' },
       ],
     },
     {
       title: 'Services',
       items: [
-        { label: 'Services et demandes', view: 'services' },
-        { label: 'Support', view: 'support' },
-        { label: 'Mon profil', view: 'benefits' },
-        { label: 'Parrainage', view: 'invite' },
+        { label: 'Services et demandes', view: 'services', icon: 'services' },
+        { label: 'Support', view: 'support', icon: 'support' },
+        { label: 'Mon profil', view: 'benefits', icon: 'profile' },
+        { label: 'Parrainage', view: 'invite', icon: 'invite' },
       ],
     },
   ];

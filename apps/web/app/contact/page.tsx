@@ -293,14 +293,6 @@ export default function ContactPage() {
             detail="Suivi professionnel"
             href={linkedinHref}
           />
-          <ContactActionPanel
-            tone="neutral"
-            icon="help"
-            title="Centre d'aide"
-            body="Documentation Kendronics"
-            detail="Bases PCB, paiement, livraison et compte"
-            href="/centre-aide"
-          />
           <div className="bg-white p-0">
             <h3 className="text-lg font-black text-ink">Consulter la FAQ avant de nous ecrire ?</h3>
             <a href="/faq" className="mt-5 inline-flex h-11 w-full items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
