@@ -396,7 +396,7 @@ export default function ProfilePage() {
     <main className="mobile-free-page min-h-screen overflow-x-hidden bg-white text-[#1f2f43]">
       <Navbar />
       <div className="w-full pt-[70px]">
-        <div className="mx-auto grid w-full max-w-none gap-4 px-2 py-3 sm:max-w-[42rem] sm:px-4 lg:min-w-[1328px] lg:max-w-[1440px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
+        <div className="mx-auto grid w-full max-w-none gap-4 px-4 py-3 sm:max-w-[42rem] sm:px-4 lg:min-w-[1328px] lg:max-w-[1440px] lg:grid-cols-[250px_minmax(0,1fr)] lg:px-5 lg:py-4">
           <ProfileSidebar activeProfileView={activeProfileView} onSelectView={setActiveProfileView} counts={orderCounts(orders)} unreadNotifications={unreadNotifications(notifications)} profile={profile} />
 
           <section className="min-w-0">
@@ -2080,7 +2080,10 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
           </div>
 
           <div className="min-w-0 max-w-[42rem]">
-            <h1 className="break-words text-xl font-black leading-tight text-[#1f2f43] sm:text-2xl">{displayName}</h1>
+            <h1 className="inline-flex max-w-full flex-wrap items-center gap-2 break-words text-xl font-black leading-tight text-[#1f2f43] sm:text-2xl">
+              <span>{displayName}</span>
+              <AccountTypeBadge profile={profile} />
+            </h1>
             <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] leading-4 text-[#64748b] sm:mt-4 sm:gap-2 sm:text-sm">
               <span>Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span></span>
               <button type="button" onClick={openPromoEditor} className="grid h-7 w-7 shrink-0 place-items-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-8 sm:w-8" aria-label="Modifier le code promo">
@@ -3180,8 +3183,8 @@ function ProfileReadonlyRow({ label, value }: { label: string; value: string }) 
 function AccountTypeBadge({ profile }: { profile: ProfileForm }) {
   const badge = accountBadge(profile);
   return (
-    <span className="inline-flex shrink-0 items-center" title={badge.label} aria-label={badge.label}>
-      <img src={badge.icon} alt="" className="h-6 w-6 object-contain" style={badge.filter ? { filter: badge.filter } : undefined} />
+    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden" title={badge.label} aria-label={badge.label}>
+      <img src={badge.icon} alt="" className="h-8 w-8 max-w-none object-contain" style={badge.filter ? { filter: badge.filter } : undefined} />
       <span className="sr-only">{badge.label}</span>
     </span>
   );
@@ -4063,15 +4066,15 @@ function DashboardPanel({
   const displayLocation = countryCode ? countryDisplayName(countryCode) : 'Pays non renseigne';
 
   return (
-    <section className="grid bg-white lg:grid-cols-[190px_minmax(0,1fr)] lg:shadow-sm lg:ring-1 lg:ring-[#dbe4ee]">
+    <section className="grid bg-white lg:grid-cols-[230px_minmax(0,1fr)] lg:shadow-sm lg:ring-1 lg:ring-[#dbe4ee]">
       {dataStatus === 'signed-out' ? (
         <SignedOutMobileAccount />
       ) : (
         <MobileAccountCard firstName={firstName} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} />
       )}
-      <div className="hidden place-items-center border-r border-[#e4ebf2] px-4 py-8 text-center lg:grid">
+      <div className="hidden border-r border-[#e4ebf2] px-5 py-8 text-center lg:block">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
-        <div>
+        <div className="mx-auto mt-4 max-w-[180px]">
           <h1 className="mt-4 inline-flex max-w-full items-center justify-center gap-1.5 text-lg font-semibold text-[#102033]">
             <span className="truncate">{displayName}</span>
             <AccountTypeBadge profile={profile} />
@@ -4079,11 +4082,11 @@ function DashboardPanel({
           <p className="mt-1 text-xs font-semibold text-[#0f8f6b]">{companyOrType}</p>
           <p className="mt-2 text-xs text-[#64748b]">ID Client: {userId}</p>
           <p className="mt-1 truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : displayLocation}</p>
-          <p className="mt-1 inline-flex items-center justify-center gap-1.5 text-xs text-[#64748b]">
+          <p className="mt-2 inline-flex max-w-full items-center justify-center gap-1.5 text-xs text-[#64748b]">
             {countryCode ? <CountryFlag iso2={countryCode} name={displayLocation} /> : null}
-            <span>{displayLocation}</span>
+            <span className="truncate">{displayLocation}</span>
           </p>
-          <a href="/profile?view=settings" className="mt-4 inline-flex text-xs font-semibold text-[#0f8f6b]">Gérer mon compte</a>
+          <a href="/profile?view=settings" className="mx-auto mt-4 flex w-fit text-xs font-semibold text-[#0f8f6b]">Gérer mon compte</a>
         </div>
       </div>
 

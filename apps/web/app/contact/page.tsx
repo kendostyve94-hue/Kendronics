@@ -29,6 +29,10 @@ const whatsAppHref = `https://wa.me/${whatsAppPhoneDigits}`;
 const whatsAppChannelHref = process.env.NEXT_PUBLIC_WHATSAPP_CHANNEL_URL ?? whatsAppHref;
 const youtubeChannelHref = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_URL ?? 'https://www.youtube.com';
 const facebookHref = process.env.NEXT_PUBLIC_FACEBOOK_URL ?? 'https://www.facebook.com';
+const instagramHref = process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? 'https://www.instagram.com';
+const tiktokHref = process.env.NEXT_PUBLIC_TIKTOK_URL ?? 'https://www.tiktok.com';
+const xHref = process.env.NEXT_PUBLIC_X_URL ?? 'https://x.com';
+const linkedinHref = process.env.NEXT_PUBLIC_LINKEDIN_URL ?? 'https://www.linkedin.com';
 
 const initialValues: ContactFormState = {
   name: '',
@@ -226,14 +230,6 @@ export default function ContactPage() {
 
         <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
           <ContactActionPanel
-            tone="neutral"
-            icon="mail"
-            title="E-mail"
-            body={officialContactEmail}
-            detail="Reponse professionnelle par ticket"
-            href={`mailto:${officialContactEmail}`}
-          />
-          <ContactActionPanel
             tone="success"
             icon="whatsapp"
             title="WhatsApp"
@@ -264,6 +260,38 @@ export default function ContactPage() {
             body="Kendronics"
             detail="Actualites et messages"
             href={facebookHref}
+          />
+          <ContactActionPanel
+            tone="neutral"
+            icon="instagram"
+            title="Instagram"
+            body="Kendronics"
+            detail="Projets, ateliers et coulisses"
+            href={instagramHref}
+          />
+          <ContactActionPanel
+            tone="neutral"
+            icon="tiktok"
+            title="TikTok"
+            body="Kendronics"
+            detail="Formats courts et tutoriels"
+            href={tiktokHref}
+          />
+          <ContactActionPanel
+            tone="neutral"
+            icon="x"
+            title="X"
+            body="Kendronics"
+            detail="Actualites rapides"
+            href={xHref}
+          />
+          <ContactActionPanel
+            tone="neutral"
+            icon="linkedin"
+            title="LinkedIn"
+            body="Kendronics"
+            detail="Suivi professionnel"
+            href={linkedinHref}
           />
           <ContactActionPanel
             tone="neutral"
@@ -474,6 +502,40 @@ function BrandIcon({ icon }: { icon: string }) {
     return (
       <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
         <path fill="currentColor" d="M18.2 28V17.1h3.7l.6-4.3h-4.3v-2.7c0-1.2.35-2.1 2.15-2.1h2.3V4.2c-.4-.05-1.75-.17-3.35-.17-3.32 0-5.6 2.03-5.6 5.76v3.01H10v4.3h3.7V28h4.5Z" />
+      </svg>
+    );
+  }
+
+  if (icon === 'instagram') {
+    return (
+      <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
+        <path fill="none" stroke="currentColor" strokeWidth="2.5" d="M10.5 5.5h11A5 5 0 0 1 26.5 10.5v11a5 5 0 0 1-5 5h-11a5 5 0 0 1-5-5v-11a5 5 0 0 1 5-5Z" />
+        <path fill="none" stroke="currentColor" strokeWidth="2.5" d="M20.5 16a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
+        <path fill="currentColor" d="M22.9 9.1a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+      </svg>
+    );
+  }
+
+  if (icon === 'tiktok') {
+    return (
+      <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
+        <path fill="currentColor" d="M20.7 4.5c.4 3 2.1 5 5.1 5.4v4.1a9.5 9.5 0 0 1-5.1-1.7v7.7c0 4.4-2.9 7.5-7.2 7.5-4 0-7.3-2.8-7.3-6.7 0-4.6 4.2-7.5 8.5-6.6v4.3c-2-.7-4.1.3-4.1 2.3 0 1.6 1.3 2.7 2.9 2.7 1.8 0 2.9-1.1 2.9-3.5V4.5h4.3Z" />
+      </svg>
+    );
+  }
+
+  if (icon === 'x') {
+    return (
+      <svg viewBox="0 0 32 32" className="h-6 w-6" aria-hidden="true">
+        <path fill="currentColor" d="M18.7 14.1 28.5 3h-2.3l-8.5 9.6L10.9 3H3l10.3 14.6L3 29.2h2.3l9-10.1 7.1 10.1h7.9L18.7 14.1Zm-3.2 3.6-1-1.5L6.2 4.7h3.6l6.7 9.4 1 1.5 8.7 12.1h-3.6l-7.1-10Z" />
+      </svg>
+    );
+  }
+
+  if (icon === 'linkedin') {
+    return (
+      <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true">
+        <path fill="currentColor" d="M7.2 11.9h4.4V26H7.2V11.9Zm2.2-6.8a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM14.3 11.9h4.2v1.9h.1c.6-1.1 2-2.3 4.2-2.3 4.5 0 5.3 3 5.3 6.8V26h-4.4v-6.9c0-1.7 0-3.8-2.3-3.8s-2.7 1.8-2.7 3.7v7h-4.4V11.9Z" />
       </svg>
     );
   }

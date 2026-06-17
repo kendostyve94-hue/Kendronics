@@ -190,8 +190,8 @@ export default function ExplorerPage() {
       <Navbar />
 
       <section className="relative overflow-hidden border-b border-[#d8e1ea] bg-ink pt-[70px] text-white">
-        <img src={heroBackgroundImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-95" />
-        <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink/[0.84] to-deepblue/[0.56]" aria-hidden="true" />
+        <img src={heroBackgroundImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-100" />
+        <div className="absolute inset-0 bg-gradient-to-br from-ink/[0.46] via-ink/[0.30] to-deepblue/[0.18]" aria-hidden="true" />
         <div className="relative mx-auto max-w-[1368px] px-4 py-8 sm:px-6 sm:py-10 lg:px-5 lg:py-12">
           <div className="max-w-2xl">
             <h1 className="text-2xl font-black tracking-tight sm:text-4xl lg:text-5xl">

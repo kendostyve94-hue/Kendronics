@@ -1,5 +1,3 @@
-import { officialContactEmail } from '../../lib/official-contact';
-
 const footerGroups = [
   {
     title: 'PRODUIT',
@@ -62,13 +60,16 @@ const paymentLogos = [
   { name: 'Virement bancaire', src: '/payments/bank-transfer-mark.svg', className: 'h-6 w-auto' },
 ];
 
+const footerWhatsAppHref = process.env.NEXT_PUBLIC_WHATSAPP_URL ?? 'https://wa.me/3307970427';
+
 const socialLinks = [
   { name: 'Facebook', href: 'https://www.facebook.com', src: 'https://cdn.simpleicons.org/facebook/ffffff', bg: '#1877F2' },
   { name: 'X', href: 'https://x.com', src: 'https://cdn.simpleicons.org/x/ffffff', bg: '#111111' },
   { name: 'YouTube', href: 'https://www.youtube.com', src: 'https://cdn.simpleicons.org/youtube/ffffff', bg: '#FF0000' },
-  { name: 'LinkedIn', href: 'https://www.linkedin.com', src: '', bg: '#0A66C2', label: 'in' },
+  { name: 'LinkedIn', href: 'https://www.linkedin.com', src: 'https://cdn.simpleicons.org/linkedin/ffffff', bg: '#0A66C2' },
   { name: 'Instagram', href: 'https://www.instagram.com', src: 'https://cdn.simpleicons.org/instagram/ffffff', bg: '#E4405F' },
   { name: 'TikTok', href: 'https://www.tiktok.com', src: 'https://cdn.simpleicons.org/tiktok/ffffff', bg: '#111111' },
+  { name: 'WhatsApp', href: footerWhatsAppHref, src: 'https://cdn.simpleicons.org/whatsapp/ffffff', bg: '#25D366' },
 ];
 
 export function Footer({ forceDesktop = false }: { forceDesktop?: boolean }) {
@@ -90,9 +91,6 @@ export function Footer({ forceDesktop = false }: { forceDesktop?: boolean }) {
               Plateforme de devis, paiement, coordination, suivi et support pour commandes PCB vers l'Afrique.
             </p>
             <div className="mt-4 grid gap-2 text-sm text-slate-300">
-              <a href={`mailto:${officialContactEmail}`} className="transition hover:text-white">
-                {officialContactEmail}
-              </a>
               <a
                 href="/contact"
                 className="inline-flex w-fit rounded-sm border border-[#33465b] px-3 py-1.5 transition hover:border-signal/60 hover:text-white"
@@ -193,11 +191,7 @@ function SocialGroup() {
             className="inline-flex h-8 w-8 items-center justify-center transition hover:opacity-80"
             style={{ backgroundColor: item.bg }}
           >
-            {item.label ? (
-              <span className="font-sans text-xl font-bold leading-none text-white">{item.label}</span>
-            ) : (
-              <img src={item.src} alt="" className="h-5 w-5" />
-            )}
+            <img src={item.src} alt="" className="h-5 w-5" />
           </a>
         ))}
       </div>
