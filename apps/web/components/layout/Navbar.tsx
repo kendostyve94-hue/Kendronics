@@ -524,7 +524,7 @@ function NotificationBell({ count, compact = false }: { count: number; compact?:
     <a href="/profile?view=notifications" className={`relative inline-flex items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] ${compact ? 'h-9 w-9' : 'h-10 w-10'}`} aria-label="Notifications">
       <BellIcon />
       {count > 0 ? (
-        <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#f59e0b] px-1 text-[10px] font-medium leading-none text-white">
+        <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center bg-[#102033] px-1 text-[10px] font-semibold leading-none text-white">
           {count > 9 ? '9+' : count}
         </span>
       ) : null}
@@ -571,11 +571,11 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
               }`}
               aria-current={isActive ? 'page' : undefined}
             >
-              <span className={`relative grid h-5 w-5 place-items-center ${isActive ? 'text-[#0f8f6b]' : ''}`}>
+              <span className={`relative grid h-5 w-5 place-items-center [&>svg]:h-5 [&>svg]:w-5 ${isActive ? 'text-[#0f8f6b]' : ''}`}>
                 {item.icon}
                 {item.count != null ? (
-                <span className="absolute -right-2 -top-2 grid h-5 w-5 place-items-center rounded-full bg-[#ec3b91] text-[10px] font-medium leading-none text-white">
-                    {item.count}
+                <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center bg-[#102033] px-1 text-[10px] font-semibold leading-none text-white">
+                    {item.count > 9 ? '9+' : item.count}
                   </span>
                 ) : null}
               </span>
@@ -878,8 +878,8 @@ function CartLink({ href, count, requireAuth = false }: { href: string; count: n
       aria-label={t('nav.cart')}
     >
       <CartIcon />
-      <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[#ec3b91] text-[10px] font-medium leading-none text-white">
-        {count}
+      <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center bg-[#102033] px-1 text-[10px] font-semibold leading-none text-white">
+        {count > 9 ? '9+' : count}
       </span>
     </a>
   );
@@ -887,19 +887,16 @@ function CartLink({ href, count, requireAuth = false }: { href: string; count: n
 
 function CartIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="9" cy="20" r="1.4" />
-      <circle cx="18" cy="20" r="1.4" />
-      <path d="M3 4h2l2.3 11.2a2 2 0 0 0 2 1.6h8.5a2 2 0 0 0 1.9-1.4L21 8H6.2" />
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
+      <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2ZM1 2v2h2l3.6 7.59-1.35 2.45A2 2 0 0 0 7 17h12v-2H7.42a.25.25 0 0 1-.22-.37L8.1 13h7.45a2 2 0 0 0 1.75-1.03L20.88 5H5.21l-.94-2H1Zm16 16c-1.1 0-1.99.9-1.99 2S15.9 22 17 22s2-.9 2-2-.9-2-2-2Z" />
     </svg>
   );
 }
 
 function BellIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-      <path d="M10 21h4" />
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
+      <path d="M12 22a2.01 2.01 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2Z" />
     </svg>
   );
 }
@@ -962,41 +959,32 @@ function GlobeIcon() {
 
 function UserIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="7.5" r="3.5" />
-      <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
+      <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.42 0-8 2.24-8 5v3h16v-3c0-2.76-3.58-5-8-5Z" />
     </svg>
   );
 }
 
 function HomeIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 10.8 12 3l9 7.8" />
-      <path d="M5.5 9.5V21h13V9.5" />
-      <path d="M9.5 21v-6h5v6" />
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+      <path d="m12 3-10 9h3v9h6v-6h2v6h6v-9h3L12 3Z" />
     </svg>
   );
 }
 
 function PlusIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
-      <path d="M12 5v14" />
-      <path d="M5 12h14" />
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+      <path d="M4 3h16v18H4V3Zm3 4v2h10V7H7Zm0 4v2h6v-2H7Zm0 4v2h10v-2H7Zm9-4h-2v2h2v2h2v-2h2v-2h-2V9h-2v2Z" />
     </svg>
   );
 }
 
 function ExplorerIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="m15.5 8.5-2.1 4.9-4.9 2.1 2.1-4.9 4.9-2.1Z" />
-      <path d="M12 3v2" />
-      <path d="M12 19v2" />
-      <path d="M3 12h2" />
-      <path d="M19 12h2" />
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+      <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5 5-2ZM12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" />
     </svg>
   );
 }
