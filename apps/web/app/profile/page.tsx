@@ -3183,8 +3183,15 @@ function ProfileReadonlyRow({ label, value }: { label: string; value: string }) 
 function AccountTypeBadge({ profile }: { profile: ProfileForm }) {
   const badge = accountBadge(profile);
   return (
-    <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden" title={badge.label} aria-label={badge.label}>
-      <img src={badge.icon} alt="" className="h-8 w-8 max-w-none object-contain" style={badge.filter ? { filter: badge.filter } : undefined} />
+    <span
+      className="inline-flex h-6 w-6 shrink-0 items-center justify-center"
+      title={badge.label}
+      aria-label={badge.label}
+      style={{ color: badge.color }}
+    >
+      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
+        <path d="m23 12-2.44-2.79.34-3.69-3.61-.82L15.4 1.5 12 2.96 8.6 1.5 6.71 4.69l-3.61.82.34 3.69L1 12l2.44 2.79-.34 3.7 3.61.81 1.89 3.2 3.4-1.47 3.4 1.47 1.89-3.19 3.61-.82-.34-3.69L23 12Zm-12.91 4.72-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35Z" />
+      </svg>
       <span className="sr-only">{badge.label}</span>
     </span>
   );
@@ -3943,12 +3950,12 @@ function isAccountLevelOne(profile: ProfileForm): boolean {
   return Boolean(profile.email && profile.emailVerifiedAt && profile.phone && profile.phoneVerifiedAt && profile.name && profile.country && isCompleteProfileAddress(profile.shippingAddress));
 }
 
-function accountBadge(profile: ProfileForm): { label: string; color: string; level: number; icon: string; filter?: string } {
-  if ((profile.verificationLevel ?? 0) >= 3) return { label: 'Industriel certifie', color: '#0f8f6b', level: 3, icon: '/images/icons8-approval-64.png' };
-  if ((profile.verificationLevel ?? 0) >= 2) return { label: 'Professionnel certifie', color: '#0877ff', level: 2, icon: '/images/icons8-verified-badge-64.png' };
-  if ((profile.verificationLevel ?? 0) >= 1) return { label: 'Individuel verifie', color: '#f59e0b', level: 1, icon: '/images/icons8-approval-64.png' };
-  if (!isAccountLevelOne(profile)) return { label: 'Individuel', color: '#94a3b8', level: 0, icon: '/images/icons8-verified-badge-64.png', filter: 'grayscale(1) saturate(0.55) opacity(0.72)' };
-  return { label: 'Individuel verifie', color: '#f59e0b', level: 1, icon: '/images/icons8-approval-64.png' };
+function accountBadge(profile: ProfileForm): { label: string; color: string; level: number } {
+  if ((profile.verificationLevel ?? 0) >= 3) return { label: 'Industriel certifie', color: '#0f8f6b', level: 3 };
+  if ((profile.verificationLevel ?? 0) >= 2) return { label: 'Professionnel certifie', color: '#0877ff', level: 2 };
+  if ((profile.verificationLevel ?? 0) >= 1) return { label: 'Individuel verifie', color: '#f59e0b', level: 1 };
+  if (!isAccountLevelOne(profile)) return { label: 'Individuel', color: '#94a3b8', level: 0 };
+  return { label: 'Individuel verifie', color: '#f59e0b', level: 1 };
 }
 
 function maskPhone(phone: string): string {
