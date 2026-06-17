@@ -2717,13 +2717,14 @@ function SettingsSection({
       <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-4 border-b border-[#e5e7eb] py-6 sm:grid-cols-[140px_1fr_160px] sm:gap-6">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div className="grid min-w-0 gap-3 text-sm">
-          <p className="break-words text-base">
-            {profile.name || 'Client Kendronics'} <AccountTypeBadge profile={profile} />
+          <p className="flex min-w-0 items-center gap-1.5 text-base">
+            <span className="min-w-0 break-words">{profile.name || 'Client Kendronics'}</span>
+            <AccountTypeBadge profile={profile} />
           </p>
           <p className="text-[#6b7280]">ID utilisateur: <span className="text-[#1f2937]">{userId}</span></p>
           <p className="flex items-center justify-between gap-3 text-[#6b7280] sm:block">
             Pays/region
-            <span className="inline-flex items-center justify-end gap-2 text-right text-black sm:ml-20 sm:justify-start sm:text-left">
+            <span className="inline-flex items-center justify-end gap-1.5 text-right text-black sm:ml-8 sm:justify-start sm:text-left">
               {profileCountryCode ? <CountryFlag iso2={profileCountryCode} name={profileCountryName} /> : null}
               {profileCountryName}
             </span>
@@ -3179,8 +3180,8 @@ function ProfileReadonlyRow({ label, value }: { label: string; value: string }) 
 function AccountTypeBadge({ profile }: { profile: ProfileForm }) {
   const badge = accountBadge(profile);
   return (
-    <span className="ml-2 inline-flex align-[-0.2em]" title={badge.label} aria-label={badge.label}>
-      <img src={badge.icon} alt="" className="h-7 w-7 object-contain" style={badge.filter ? { filter: badge.filter } : undefined} />
+    <span className="inline-flex shrink-0 items-center" title={badge.label} aria-label={badge.label}>
+      <img src={badge.icon} alt="" className="h-6 w-6 object-contain" style={badge.filter ? { filter: badge.filter } : undefined} />
       <span className="sr-only">{badge.label}</span>
     </span>
   );
@@ -4002,6 +4003,7 @@ function shouldShowProfileRightRail(view: ProfileView): boolean {
     'services',
     'support',
     'benefits',
+    'settings',
     'shipping-address',
     'order-history',
     'billing',
@@ -4070,7 +4072,10 @@ function DashboardPanel({
       <div className="hidden place-items-center border-r border-[#e4ebf2] px-4 py-8 text-center lg:grid">
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
         <div>
-          <h1 className="mt-4 text-lg font-semibold text-[#102033]">{displayName}</h1>
+          <h1 className="mt-4 inline-flex max-w-full items-center justify-center gap-1.5 text-lg font-semibold text-[#102033]">
+            <span className="truncate">{displayName}</span>
+            <AccountTypeBadge profile={profile} />
+          </h1>
           <p className="mt-1 text-xs font-semibold text-[#0f8f6b]">{companyOrType}</p>
           <p className="mt-2 text-xs text-[#64748b]">ID Client: {userId}</p>
           <p className="mt-1 truncate text-xs text-[#64748b]">{profile.email ? maskEmail(profile.email) : displayLocation}</p>
@@ -4132,7 +4137,7 @@ function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firs
         <Avatar avatarDataUrl={avatarDataUrl} size="medium" />
       </div>
       <div className="min-w-0 flex-1">
-        <h1 className="flex min-w-0 items-center text-base font-semibold text-[#102033]">
+        <h1 className="flex min-w-0 items-center gap-1.5 text-base font-semibold text-[#102033]">
           <span className="truncate">{displayName}</span>
           <AccountTypeBadge profile={profile} />
         </h1>
