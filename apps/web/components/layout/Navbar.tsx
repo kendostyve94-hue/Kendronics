@@ -524,7 +524,7 @@ function NotificationBell({ count, compact = false }: { count: number; compact?:
     <a href="/profile?view=notifications" className={`relative inline-flex items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] ${compact ? 'h-9 w-9' : 'h-10 w-10'}`} aria-label="Notifications">
       <BellIcon />
       {count > 0 ? (
-        <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center bg-[#102033] px-1 text-[10px] font-semibold leading-none text-white">
+        <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#102033] px-1 text-[10px] font-semibold leading-none text-white">
           {count > 9 ? '9+' : count}
         </span>
       ) : null}
@@ -574,7 +574,7 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
               <span className={`relative grid h-5 w-5 place-items-center [&>svg]:h-5 [&>svg]:w-5 ${isActive ? 'text-[#0f8f6b]' : ''}`}>
                 {item.icon}
                 {item.count != null ? (
-                <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center bg-[#102033] px-1 text-[10px] font-semibold leading-none text-white">
+                <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-[#102033] px-1 text-[10px] font-semibold leading-none text-white">
                     {item.count > 9 ? '9+' : item.count}
                   </span>
                 ) : null}
@@ -629,7 +629,7 @@ function MobileProfileSection({
                 <MobileMaterialIcon name={item.icon} />
               </span>
               <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              {item.count && item.count > 0 ? <span className="grid min-h-5 min-w-5 place-items-center bg-[#102033] px-1 text-[10px] font-semibold text-white">{item.count > 9 ? '9+' : item.count}</span> : null}
+              {item.count && item.count > 0 ? <span className="grid min-h-5 min-w-5 place-items-center rounded-full bg-[#102033] px-1 text-[10px] font-semibold text-white">{item.count > 9 ? '9+' : item.count}</span> : null}
               {isActive ? <span className="absolute right-0 top-0 h-full w-[3px] bg-[#0f8f6b]" /> : null}
             </a>
           );
@@ -660,7 +660,7 @@ function MobileMaterialIcon({ name }: { name: MobileMenuIconName }) {
     quote: 'M4 3h16v18H4V3Zm2 2v14h12V5H6Zm2 3h8v2H8V8Zm0 4h5v2H8v-2Zm0 4h8v2H8v-2Z',
     capabilities: 'M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z',
     discover: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5 5-2ZM12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z',
-    explorer: 'M12 2 2 7l10 5 8-4v6h2V7L12 2Zm-6 8.9V15l6 3 6-3v-4.1l-6 3-6-3Z',
+    explorer: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5 5-2ZM12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z',
     blog: 'M4 3h16v18H4V3Zm3 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h7v-2H7Z',
     about: 'M11 17h2v-6h-2v6Zm1-15a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm-1-11h2V7h-2v2Z',
     contact: 'M20 4H4a2 2 0 0 0-2 2v12h4v4l4-4h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2ZM6 9h12v2H6V9Zm0 4h8v2H6v-2Z',
@@ -878,7 +878,7 @@ function CartLink({ href, count, requireAuth = false }: { href: string; count: n
       aria-label={t('nav.cart')}
     >
       <CartIcon />
-      <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center bg-[#102033] px-1 text-[10px] font-semibold leading-none text-white">
+      <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#102033] px-1 text-[10px] font-semibold leading-none text-white">
         {count > 9 ? '9+' : count}
       </span>
     </a>
