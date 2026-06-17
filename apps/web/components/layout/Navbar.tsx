@@ -20,7 +20,41 @@ type MainNavItem =
   | { type: 'link'; label: string; href: string }
   | { type: 'products'; label: string; groups: MenuGroup[] }
   | { type: 'support'; label: string; groups: MenuGroup[] };
-type MobileProfileMenuItem = { label: string; href: string; count?: number };
+type MobileMenuIconName =
+  | 'pcb'
+  | 'layers'
+  | 'flex'
+  | 'engineering'
+  | 'assembly'
+  | 'stencil'
+  | 'manufacturing'
+  | 'quote'
+  | 'capabilities'
+  | 'discover'
+  | 'explorer'
+  | 'blog'
+  | 'about'
+  | 'contact'
+  | 'whatsapp'
+  | 'channel'
+  | 'youtube'
+  | 'faq'
+  | 'verified'
+  | 'payment'
+  | 'production'
+  | 'delivery'
+  | 'comments'
+  | 'services'
+  | 'profile'
+  | 'invite'
+  | 'dashboard'
+  | 'orders'
+  | 'notifications'
+  | 'location'
+  | 'history'
+  | 'settings'
+  | 'admin';
+type MobileProfileMenuItem = { label: string; href: string; count?: number; icon: MobileMenuIconName };
 type MobileProfileMenuGroup = { title: string; items: MobileProfileMenuItem[] };
 
 const whatsAppHref = 'https://wa.me/3307970427';
@@ -94,22 +128,36 @@ function mobileNavGroups(unreadNotifications: number, isAdmin: boolean, isSigned
   const groups: MobileProfileMenuGroup[] = [
     {
       title: 'Produits',
-      items: productMenuGroups.flatMap((group) => group.items.map((item) => ({ label: item.label, href: item.href }))),
+      items: [
+        { label: 'PCB prototype', href: '/services#pcb-standard', icon: 'pcb' },
+        { label: 'Petites séries', href: '/services#pcb-petit-lot', icon: 'layers' },
+        { label: 'PCB Flexible & Rigide-flex', href: '/quote?product=fpc_rigid_flex', icon: 'flex' },
+        { label: 'Assistance Technique', href: '/services#assistance-technique', icon: 'engineering' },
+        { label: 'PCB Assemblage', href: '/services#pcba', icon: 'assembly' },
+        { label: 'Pochoir CMS', href: '/services#stencil', icon: 'stencil' },
+        { label: 'Impression 3D & CNC', href: '/quote?product=cnc_3d', icon: 'manufacturing' },
+      ],
     },
     {
       title: 'Navigation',
       items: [
-        { label: 'Devis Immédiat', href: '/quote' },
-        { label: 'Capacité', href: '/capabilities' },
-        { label: 'Découvrir', href: '/how-it-works' },
-        { label: 'Explorer', href: '/explorer' },
-        { label: 'Blog', href: '/blog' },
-        { label: 'Apropos', href: '/terms/mentions-legales' },
+        { label: 'Devis Immédiat', href: '/quote', icon: 'quote' },
+        { label: 'Capacité', href: '/capabilities', icon: 'capabilities' },
+        { label: 'Découvrir', href: '/how-it-works', icon: 'discover' },
+        { label: 'Explorer', href: '/explorer', icon: 'explorer' },
+        { label: 'Blog', href: '/blog', icon: 'blog' },
+        { label: 'Apropos', href: '/terms/mentions-legales', icon: 'about' },
       ],
     },
     {
       title: 'Support',
-      items: supportMenuGroups.flatMap((group) => group.items.filter((item) => item.label !== "Centre d'aide").map((item) => ({ label: item.label, href: item.href }))),
+      items: [
+        { label: 'Contact', href: '/contact', icon: 'contact' },
+        { label: 'Contact WhatsApp', href: whatsAppHref, icon: 'whatsapp' },
+        { label: 'Chaîne WhatsApp', href: whatsAppChannelHref, icon: 'channel' },
+        { label: 'Chaîne Youtube', href: youtubeChannelHref, icon: 'youtube' },
+        { label: 'FAQ', href: '/faq', icon: 'faq' },
+      ],
     },
   ];
 
@@ -118,7 +166,7 @@ function mobileNavGroups(unreadNotifications: number, isAdmin: boolean, isSigned
   }
 
   if (isAdmin) {
-    groups.push({ title: 'Administration', items: [{ label: 'Admin', href: '/admin' }] });
+    groups.push({ title: 'Administration', items: [{ label: 'Admin', href: '/admin', icon: 'admin' }] });
   }
 
   return groups;
@@ -129,30 +177,30 @@ function mobileProfileMenuGroups(unreadNotifications: number): MobileProfileMenu
     {
       title: 'Suivi commande',
       items: [
-        { label: 'Verification', href: '/profile?view=verification' },
-        { label: 'Paiement', href: '/profile?view=payment-pending' },
-        { label: 'Production', href: '/profile?view=production' },
-        { label: 'Livraison', href: '/profile?view=delivery' },
-        { label: 'Commentaires', href: '/profile?view=comments' },
+        { label: 'Verification', href: '/profile?view=verification', icon: 'verified' },
+        { label: 'Paiement', href: '/profile?view=payment-pending', icon: 'payment' },
+        { label: 'Production', href: '/profile?view=production', icon: 'production' },
+        { label: 'Livraison', href: '/profile?view=delivery', icon: 'delivery' },
+        { label: 'Commentaires', href: '/profile?view=comments', icon: 'comments' },
       ],
     },
     {
       title: 'Services',
       items: [
-        { label: 'Services et demandes', href: '/profile?view=services' },
-        { label: 'Mon profil', href: '/profile?view=benefits' },
-        { label: 'Parrainage', href: '/profile?view=invite' },
+        { label: 'Services et demandes', href: '/profile?view=services', icon: 'services' },
+        { label: 'Mon profil', href: '/profile?view=benefits', icon: 'profile' },
+        { label: 'Parrainage', href: '/profile?view=invite', icon: 'invite' },
       ],
     },
     {
       title: 'Espace client',
       items: [
-        { label: 'Tableau de bord', href: '/profile' },
-        { label: 'Mes commandes', href: '/profile?view=orders' },
-        { label: 'Notifications', href: '/profile?view=notifications', count: unreadNotifications },
-        { label: 'Adresse livraison', href: '/profile?view=shipping-address' },
-        { label: 'Historique des commandes', href: '/profile?view=all-orders' },
-        { label: 'Parametres', href: '/profile?view=settings' },
+        { label: 'Tableau de bord', href: '/profile', icon: 'dashboard' },
+        { label: 'Mes commandes', href: '/profile?view=orders', icon: 'orders' },
+        { label: 'Notifications', href: '/profile?view=notifications', count: unreadNotifications, icon: 'notifications' },
+        { label: 'Adresse livraison', href: '/profile?view=shipping-address', icon: 'location' },
+        { label: 'Historique des commandes', href: '/profile?view=all-orders', icon: 'history' },
+        { label: 'Parametres', href: '/profile?view=settings', icon: 'settings' },
       ],
     },
   ];
@@ -455,6 +503,8 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
                   key={group.title}
                   group={group}
                   isOpen={openMobileSection === group.title}
+                  pathname={pathname}
+                  profileView={profileView}
                   onToggle={() => setOpenMobileSection((current) => (current === group.title ? null : group.title))}
                   onNavigate={() => setIsMenuOpen(false)}
                 />
@@ -538,29 +588,107 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
   );
 }
 
-function MobileProfileSection({ group, isOpen, onToggle, onNavigate }: { group: MobileProfileMenuGroup; isOpen: boolean; onToggle: () => void; onNavigate: () => void }) {
+function MobileProfileSection({
+  group,
+  isOpen,
+  pathname,
+  profileView,
+  onToggle,
+  onNavigate,
+}: {
+  group: MobileProfileMenuGroup;
+  isOpen: boolean;
+  pathname: string;
+  profileView: string;
+  onToggle: () => void;
+  onNavigate: () => void;
+}) {
   return (
     <div className="border-b border-dashed border-slate-200 last:border-b-0">
       <button type="button" className="flex min-h-[2.9rem] w-full items-center justify-between text-left text-[1.08rem] font-semibold leading-none text-[#0b1724]" aria-expanded={isOpen} onClick={onToggle}>
         <span>{group.title}</span>
-        <span className={`text-xl leading-none text-[#0f8f6b] transition ${isOpen ? 'rotate-90' : ''}`} aria-hidden="true">›</span>
+        <span className={`grid h-6 w-6 place-items-center text-[#0f8f6b] transition ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true">
+          <ChevronDownIcon />
+        </span>
       </button>
       {isOpen ? (
       <div className="grid gap-1 pb-2">
-        {group.items.map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            className="flex min-h-9 items-center justify-between rounded-sm bg-[#eef6fb] px-3 text-xs font-medium text-[#243447] transition hover:bg-[#e4f7f0] hover:text-[#0f8f6b]"
-            onClick={onNavigate}
-          >
-            <span>{item.label}</span>
-            {item.count && item.count > 0 ? <span className="grid min-h-5 min-w-5 place-items-center rounded-full bg-[#f59e0b] px-1 text-[10px] font-semibold text-white">{item.count > 9 ? '9+' : item.count}</span> : null}
-          </a>
-        ))}
+        {group.items.map((item) => {
+          const isActive = isMobileMenuItemActive(item.href, pathname, profileView);
+          return (
+            <a
+              key={`${item.label}-${item.href}`}
+              href={item.href}
+              className={`relative flex min-h-10 items-center gap-3 px-3 text-xs font-medium transition hover:bg-[#f6faf8] hover:text-[#0f8f6b] ${
+                isActive ? 'bg-[#f2faf7] font-black text-[#0f8f6b]' : 'text-[#334155]'
+              }`}
+              onClick={onNavigate}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <span className={`grid h-5 w-5 shrink-0 place-items-center ${isActive ? 'text-[#0f8f6b]' : 'text-[#7c8ca0]'}`}>
+                <MobileMaterialIcon name={item.icon} />
+              </span>
+              <span className="min-w-0 flex-1 truncate">{item.label}</span>
+              {item.count && item.count > 0 ? <span className="grid min-h-5 min-w-5 place-items-center bg-[#102033] px-1 text-[10px] font-semibold text-white">{item.count > 9 ? '9+' : item.count}</span> : null}
+              {isActive ? <span className="absolute right-0 top-0 h-full w-[3px] bg-[#0f8f6b]" /> : null}
+            </a>
+          );
+        })}
       </div>
       ) : null}
     </div>
+  );
+}
+
+function isMobileMenuItemActive(href: string, pathname: string, profileView: string): boolean {
+  if (href.startsWith('http')) return false;
+  const [path, query = ''] = href.split('?');
+  if (path !== pathname) return false;
+  const targetView = new URLSearchParams(query).get('view') ?? '';
+  return path === '/profile' ? targetView === profileView || (!targetView && !profileView) : true;
+}
+
+function MobileMaterialIcon({ name }: { name: MobileMenuIconName }) {
+  const paths: Record<MobileMenuIconName, string> = {
+    pcb: 'M3 3h18v18H3V3Zm2 2v14h14V5H5Zm2 2h4v4H7V7Zm6 0h4v2h-4V7Zm0 4h4v6h-4v-6Zm-6 2h4v4H7v-4Z',
+    layers: 'm12 2-10 5 10 5 10-5-10-5Zm-8.8 9L12 15.4l8.8-4.4L22 12l-10 5-10-5 1.2-1Zm0 4L12 19.4l8.8-4.4L22 16l-10 5-10-5 1.2-1Z',
+    flex: 'M3 6h10a5 5 0 0 1 0 10H8v3l-5-4 5-4v3h5a3 3 0 0 0 0-6H3V6Z',
+    engineering: 'M14.7 6.3a4 4 0 0 0-5-5l2.2 2.2-2.4 2.4-2.2-2.2a4 4 0 0 0 5 5L20 16.4l-3.6 3.6-7.7-7.7a4 4 0 0 0-5 5l2.2-2.2 2.4 2.4-2.2 2.2a4 4 0 0 0 5-5L14.7 6.3Z',
+    assembly: 'M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Zm-3-9h2v4h-2V5Zm0 10h2v4h-2v-4ZM5 11h4v2H5v-2Zm10 0h4v2h-4v-2Z',
+    stencil: 'M3 4h18v16H3V4Zm3 3v2h2V7H6Zm5 0v2h2V7h-2Zm5 0v2h2V7h-2ZM6 12v2h2v-2H6Zm5 0v2h2v-2h-2Zm5 0v2h2v-2h-2Z',
+    manufacturing: 'M3 21V9l5 3V9l5 3V3h8v18H3Zm12-2h4V5h-4v14ZM5 19h8v-3l-3-1.8V16l-5-3v6Z',
+    quote: 'M4 3h16v18H4V3Zm2 2v14h12V5H6Zm2 3h8v2H8V8Zm0 4h5v2H8v-2Zm0 4h8v2H8v-2Z',
+    capabilities: 'M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z',
+    discover: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 6.5-2 5-5 2 2-5 5-2ZM12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z',
+    explorer: 'M12 2 2 7l10 5 8-4v6h2V7L12 2Zm-6 8.9V15l6 3 6-3v-4.1l-6 3-6-3Z',
+    blog: 'M4 3h16v18H4V3Zm3 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h7v-2H7Z',
+    about: 'M11 17h2v-6h-2v6Zm1-15a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm-1-11h2V7h-2v2Z',
+    contact: 'M20 4H4a2 2 0 0 0-2 2v12h4v4l4-4h10a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2ZM6 9h12v2H6V9Zm0 4h8v2H6v-2Z',
+    whatsapp: 'M16.04 3.2A12.75 12.75 0 0 0 5.2 22.64L3.6 28.8l6.3-1.65a12.72 12.72 0 1 0 6.14-23.95Zm0 23.34a10.58 10.58 0 0 1-5.4-1.48l-.39-.23-3.74.98 1-3.65-.25-.38a10.59 10.59 0 1 1 8.79 4.76Z',
+    channel: 'M4 6h16v12H4V6Zm2 2v8h12V8H6Zm3 2 6 2-6 2v-4Z',
+    youtube: 'M21.6 7.2a3 3 0 0 0-2.1-2.1C17.6 4.6 12 4.6 12 4.6s-5.6 0-7.5.5a3 3 0 0 0-2.1 2.1C2 9.1 2 12 2 12s0 2.9.4 4.8a3 3 0 0 0 2.1 2.1c1.9.5 7.5.5 7.5.5s5.6 0 7.5-.5a3 3 0 0 0 2.1-2.1c.4-1.9.4-4.8.4-4.8s0-2.9-.4-4.8ZM10 15.5v-7l6 3.5-6 3.5Z',
+    faq: 'M11 18h2v-2h-2v2Zm1-16A10 10 0 1 0 12 22 10 10 0 0 0 12 2Zm0 14h-2c0-3 3-2.75 3-5a1 1 0 0 0-2 0H9a3 3 0 0 1 6 0c0 3.25-3 3.5-3 5Z',
+    verified: 'm23 12-2.44-2.79.34-3.69-3.61-.82L15.4 1.5 12 2.96 8.6 1.5 6.71 4.69l-3.61.82.34 3.69L1 12l2.44 2.79-.34 3.7 3.61.81 1.89 3.2 3.4-1.47 3.4 1.47 1.89-3.19 3.61-.82-.34-3.69L23 12Zm-12.91 4.72-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35Z',
+    payment: 'M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 14H3v-6h18v6Zm0-10H3V6h18v2Z',
+    production: 'M3 21V9l5 3V9l5 3V3h8v18H3Zm12-2h4V5h-4v14ZM5 19h8v-3l-3-1.8V16l-5-3v6Z',
+    delivery: 'M20 8h-3V4H3a2 2 0 0 0-2 2v11h2a3 3 0 0 0 6 0h6a3 3 0 0 0 6 0h2v-5l-3-4ZM6 18.5A1.5 1.5 0 1 1 6 15a1.5 1.5 0 0 1 0 3.5ZM17 12V9.5h2.5l1.96 2.5H17Z',
+    comments: 'M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1Zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1Z',
+    services: 'M22.7 19 13.6 9.9c.9-2.3.4-5-1.5-6.9A6 6 0 0 0 5 2l4.3 4.3-3 3L2 5a6 6 0 0 0 1 7.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1 3.7-3.7Z',
+    profile: 'M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.42 0-8 2.24-8 5v3h16v-3c0-2.76-3.58-5-8-5Z',
+    invite: 'M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4ZM6 10V7H4v3H1v2h3v3h2v-3h3v-2H6Zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z',
+    dashboard: 'M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z',
+    orders: 'M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2ZM1 2v2h2l3.6 7.59-1.35 2.45A2 2 0 0 0 7 17h12v-2H7.42l.9-2h7.23a2 2 0 0 0 1.75-1.03L20.88 5H5.21l-.94-2H1Zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2Z',
+    notifications: 'M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 0 0-3 0v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2Z',
+    location: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z',
+    history: 'M13 3a9 9 0 0 0-8.95 8H1l4 4 4-4H6.05A7 7 0 1 1 13 19a6.9 6.9 0 0 1-4.9-2.1l-1.42 1.42A8.9 8.9 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z',
+    settings: 'M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.08-.98l2.11-1.65-2-3.46-2.49 1a7.3 7.3 0 0 0-1.69-.98L15 3.28h-4l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.08.66-.08.98s.03.66.08.98l-2.11 1.65 2 3.46 2.49-1c.52.4 1.08.73 1.69.98l.38 2.65h4l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1 2-3.46-2.13-1.65ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z',
+    admin: 'M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4Zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8Z',
+  };
+
+  return (
+    <svg viewBox={name === 'whatsapp' ? '0 0 32 32' : '0 0 24 24'} className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
+      <path d={paths[name]} />
+    </svg>
   );
 }
 
