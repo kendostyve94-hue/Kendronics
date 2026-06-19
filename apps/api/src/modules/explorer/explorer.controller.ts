@@ -47,6 +47,12 @@ export class ExplorerController {
     return this.explorerService.listUserFavorites(user.id);
   }
 
+  @Post('projects/:projectId/favorites')
+  @UseGuards(JwtAuthGuard)
+  favoriteProject(@CurrentUser() user: AuthenticatedUser, @Param('projectId') projectId: string) {
+    return this.explorerService.toggleFavorite(projectId, user.id);
+  }
+
   @Post('projects/:projectId/comments')
   commentProject(
     @Param('projectId') projectId: string,

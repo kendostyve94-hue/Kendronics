@@ -157,6 +157,7 @@ test('persists public profiles, projects, favorites, and social counters', () =>
     'publicDescription String?',
     'model ExplorerProject',
     'model ExplorerProjectLike',
+    'model ExplorerProjectFavorite',
     'model UserFollow',
   ].forEach((marker) => expectIncludes(schema, marker));
 
@@ -172,6 +173,7 @@ test('persists public profiles, projects, favorites, and social counters', () =>
   const explorerController = read('apps/api/src/modules/explorer/explorer.controller.ts');
   expectIncludes(explorerController, "@Get('me/projects')");
   expectIncludes(explorerController, "@Get('me/favorites')");
+  expectIncludes(explorerController, "@Post('projects/:projectId/favorites')");
 
   const profilePage = read('apps/web/app/profile/page.tsx');
   expectIncludes(profilePage, '/api/users/me/public-profile');

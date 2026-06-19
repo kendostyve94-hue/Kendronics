@@ -67,7 +67,10 @@ export class ExplorerService {
       where: { status: 'published' },
       orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
       take: 80,
-      include: { comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 } },
+      include: {
+        _count: { select: { favorites: true } },
+        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+      },
     });
 
     return projects.map(toExplorerProject);
@@ -90,7 +93,7 @@ export class ExplorerService {
         imageUrl: clean(dto.imageUrl),
         repositoryUrl: clean(dto.repositoryUrl),
       },
-      include: { comments: true },
+      include: { _count: { select: { favorites: true } }, comments: true },
     });
 
     return toExplorerProject(project);
@@ -100,22 +103,42 @@ export class ExplorerService {
     const projects = await this.prisma.explorerProject.findMany({
       where: { userId, status: 'published' },
       orderBy: { createdAt: 'desc' },
-      include: { comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 } },
+      include: {
+        _count: { select: { favorites: true } },
+        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+      },
     });
     return projects.map(toExplorerProject);
   }
 
   async listUserFavorites(userId: string): Promise<ExplorerProject[]> {
-    const likes = await this.prisma.explorerProjectLike.findMany({
+    const favorites = await this.prisma.explorerProjectFavorite.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
       include: {
         project: {
-          include: { comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 } },
+          include: {
+            _count: { select: { favorites: true } },
+            comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+          },
         },
       },
     });
-    return likes.filter((like) => like.project.status === 'published').map((like) => toExplorerProject(like.project));
+    return favorites.filter((favorite) => favorite.project.status === 'published').map((favorite) => toExplorerProject(favorite.project));
+  }
+
+  async toggleFavorite(projectId: string, userId: string): Promise<{ favorited: boolean; favoritesCount: number }> {
+    await this.ensureProject(projectId);
+    const existing = await this.prisma.explorerProjectFavorite.findUnique({
+      where: { projectId_userId: { projectId, userId } },
+    });
+    if (existing) {
+      await this.prisma.explorerProjectFavorite.delete({ where: { id: existing.id } });
+    } else {
+      await this.prisma.explorerProjectFavorite.create({ data: { projectId, userId } });
+    }
+    const favoritesCount = await this.prisma.explorerProjectFavorite.count({ where: { projectId } });
+    return { favorited: !existing, favoritesCount };
   }
 
   async likeProject(projectId: string, actorKey: string, user?: AuthenticatedUser): Promise<{ liked: boolean; likesCount: number }> {
@@ -163,7 +186,10 @@ export class ExplorerService {
       return tx.explorerProject.update({
         where: { id: projectId },
         data: { commentsCount: { increment: 1 } },
-        include: { comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 } },
+        include: {
+          _count: { select: { favorites: true } },
+          comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+        },
       });
     });
 
@@ -183,7 +209,9 @@ export class ExplorerService {
   }
 }
 
-type ExplorerProjectRecord = Prisma.ExplorerProjectGetPayload<{ include: { comments: true } }>;
+type ExplorerProjectRecord = Prisma.ExplorerProjectGetPayload<{
+  include: { _count: { select: { favorites: true } }; comments: true };
+}>;
 
 function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
   return {
@@ -202,6 +230,7 @@ function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
     featured: project.featured,
     viewsCount: project.viewsCount,
     likesCount: project.likesCount,
+    favoritesCount: project._count.favorites,
     commentsCount: project.commentsCount,
     forksCount: project.forksCount,
     createdAt: project.createdAt,

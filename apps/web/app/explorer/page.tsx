@@ -29,6 +29,7 @@ type ExplorerProject = {
   featured: boolean;
   viewsCount: number;
   likesCount: number;
+  favoritesCount: number;
   commentsCount: number;
   forksCount: number;
   createdAt: string;
@@ -55,6 +56,7 @@ const fallbackProjects: ExplorerProject[] = [
     featured: true,
     viewsCount: 2400,
     likesCount: 84,
+    favoritesCount: 0,
     commentsCount: 7,
     forksCount: 18,
     createdAt: '2026-01-12T09:00:00.000Z',
@@ -73,6 +75,7 @@ const fallbackProjects: ExplorerProject[] = [
     featured: true,
     viewsCount: 1600,
     likesCount: 61,
+    favoritesCount: 0,
     commentsCount: 5,
     forksCount: 11,
     createdAt: '2026-02-04T14:30:00.000Z',
@@ -91,6 +94,7 @@ const fallbackProjects: ExplorerProject[] = [
     featured: false,
     viewsCount: 980,
     likesCount: 32,
+    favoritesCount: 0,
     commentsCount: 3,
     forksCount: 9,
     createdAt: '2026-03-11T08:20:00.000Z',
@@ -103,6 +107,7 @@ export default function ExplorerPage() {
   const [activeCategory, setActiveCategory] = useState('Tous');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(fallbackProjects[0]?.id ?? null);
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  const [favoriteProjectIds, setFavoriteProjectIds] = useState<Set<string>>(new Set());
   const isSignedIn = Boolean(readAuthSession());
 
   useEffect(() => {
@@ -126,6 +131,18 @@ export default function ExplorerPage() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    const session = readAuthSession();
+    if (!session) return;
+    fetch(`${apiBaseUrl}/api/explorer/me/favorites`, {
+      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+      cache: 'no-store',
+    })
+      .then((response) => response.ok ? response.json() : [])
+      .then((payload: ExplorerProject[]) => setFavoriteProjectIds(new Set(payload.map((project) => project.id))))
+      .catch(() => undefined);
   }, []);
 
   const categories = useMemo(() => {
@@ -189,6 +206,31 @@ export default function ExplorerPage() {
     }
   }
 
+  async function favoriteProject(project: ExplorerProject) {
+    const session = readAuthSession();
+    if (!session) {
+      openAuthRequired('login');
+      return;
+    }
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}/favorites`, {
+        method: 'POST',
+        headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+      });
+      if (!response.ok) throw new Error('Favorite failed');
+      const payload = await response.json() as { favorited: boolean; favoritesCount: number };
+      setFavoriteProjectIds((current) => {
+        const next = new Set(current);
+        if (payload.favorited) next.add(project.id);
+        else next.delete(project.id);
+        return next;
+      });
+      setProjects((current) => current.map((item) => item.id === project.id ? { ...item, favoritesCount: payload.favoritesCount } : item));
+    } catch {
+      // The visible state remains synchronized with the persisted API response.
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f4f7fb] text-[#172033]">
       <Navbar />
@@ -226,7 +268,15 @@ export default function ExplorerPage() {
         <div className="min-w-0">
           <div className="grid gap-x-7 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} selected={selectedProject?.id === project.id} onSelect={() => setSelectedProjectId(project.id)} onLike={() => void likeProject(project)} />
+              <ProjectCard
+                key={project.id}
+                project={project}
+                selected={selectedProject?.id === project.id}
+                favorited={favoriteProjectIds.has(project.id)}
+                onSelect={() => setSelectedProjectId(project.id)}
+                onLike={() => void likeProject(project)}
+                onFavorite={() => void favoriteProject(project)}
+              />
             ))}
           </div>
         </div>
@@ -237,7 +287,21 @@ export default function ExplorerPage() {
   );
 }
 
-function ProjectCard({ project, selected, onSelect, onLike }: { project: ExplorerProject; selected: boolean; onSelect: () => void; onLike: () => void }) {
+function ProjectCard({
+  project,
+  selected,
+  favorited,
+  onSelect,
+  onLike,
+  onFavorite,
+}: {
+  project: ExplorerProject;
+  selected: boolean;
+  favorited: boolean;
+  onSelect: () => void;
+  onLike: () => void;
+  onFavorite: () => void;
+}) {
   return (
     <article className={`min-w-0 bg-transparent transition ${selected ? 'opacity-100' : 'opacity-95 hover:opacity-100'}`}>
       <button type="button" onClick={onSelect} className="block w-full text-left">
@@ -252,7 +316,9 @@ function ProjectCard({ project, selected, onSelect, onLike }: { project: Explore
       <div className="mt-3 flex items-center gap-4 text-sm text-[#9aa6b2]">
         <span className="inline-flex items-center gap-1"><EyeIcon />{formatCompact(project.viewsCount)}</span>
         <button type="button" onClick={onLike} className="inline-flex items-center gap-1 transition hover:text-[#0f8f6b]"><ThumbIcon />{project.likesCount}</button>
-        <span className="inline-flex items-center gap-1"><StarIcon />{project.forksCount}</span>
+        <button type="button" onClick={onFavorite} className={`inline-flex items-center gap-1 transition hover:text-[#0f8f6b] ${favorited ? 'text-[#0f8f6b]' : ''}`} aria-label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
+          <StarIcon filled={favorited} />{project.favoritesCount}
+        </button>
         <span className="inline-flex items-center gap-1"><CommentIcon />{project.commentsCount}</span>
       </div>
       <div className="mt-4 flex items-center gap-2 text-sm text-[#0b1724]">
@@ -324,9 +390,9 @@ function ThumbIcon() {
   );
 }
 
-function StarIcon() {
+function StarIcon({ filled = false }: { filled?: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
     </svg>
   );

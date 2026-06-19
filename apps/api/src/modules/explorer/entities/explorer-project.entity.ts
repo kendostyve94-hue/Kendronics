@@ -21,6 +21,7 @@ export type ExplorerProject = {
   featured: boolean;
   viewsCount: number;
   likesCount: number;
+  favoritesCount: number;
   commentsCount: number;
   forksCount: number;
   createdAt: Date;

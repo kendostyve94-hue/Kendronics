@@ -183,7 +183,7 @@ export class UsersService {
         _count: {
           select: {
             explorerProjects: { where: { status: 'published' } },
-            explorerProjectLikes: true,
+            explorerProjectFavorites: true,
             followers: true,
             following: true,
           },
@@ -208,7 +208,7 @@ export class UsersService {
       followingCount: user._count.following,
       followersCount: user._count.followers,
       likesCount: receivedLikes,
-      favoritesCount: user._count.explorerProjectLikes,
+      favoritesCount: user._count.explorerProjectFavorites,
       projectsCount: user._count.explorerProjects,
       points: user._count.explorerProjects * 10 + receivedLikes * 2 + receivedComments * 3 + receivedForks * 5,
     };
