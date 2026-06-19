@@ -569,7 +569,7 @@ function HeroPromoPanels() {
 
 function MobileInstantQuote() {
   return (
-    <section className="bg-white px-4 py-4 sm:px-6 lg:hidden">
+    <section className="bg-white px-2 py-4 sm:px-6 lg:hidden">
       <div className="mx-auto max-w-[40rem]">
         <HeroQuickQuote />
       </div>

@@ -473,7 +473,6 @@ function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatar
           <ProfileNavLink href="/quote" label="Assemblage PCB" />
           <ProfileNavLink href="/services" label="Impression 3D" />
           <ProfileNavLink href="/services" label="Conception PCB" />
-          <ProfileNavLink href="/profile?view=orders" label="Mes commandes" />
           <ProfileNavLink href="/profile" label="Paramètres" />
         </nav>
         <a href="/profile?view=orders" className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Panier">
@@ -806,7 +805,6 @@ function OrderStatusHeader({ activeKey, counts }: { activeKey: OrderStatusKey; c
     <div className="px-3 pt-4 sm:px-6">
       <div className="flex h-11 items-center gap-3 border-b border-[#e5e7eb]">
         <span className="grid h-6 w-6 place-items-center text-xl text-[#b8b8b8]">▤</span>
-        <h1 className="text-xl font-normal">Mes commandes</h1>
       </div>
       <div className="flex snap-x gap-2 overflow-x-auto px-0 pt-4 sm:grid sm:h-[112px] sm:grid-cols-5 sm:gap-0 sm:overflow-hidden sm:px-1 sm:pt-6">
         {orderStatuses.map((status) => {
@@ -2053,6 +2051,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   const [isPromoEditorOpen, setIsPromoEditorOpen] = useState(false);
   const [profileDescription, setProfileDescription] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
+  const [isDescriptionEditing, setIsDescriptionEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<'projects' | 'favorites'>('projects');
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [projectDraft, setProjectDraft] = useState({
@@ -2111,12 +2110,15 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   }
 
   function saveDescription() {
-    writeProfileSocialState(socialStorageKey, { promoCode, description: draftDescription.trim() });
-    setProfileDescription(draftDescription.trim());
+    const nextDescription = draftDescription.trim();
+    writeProfileSocialState(socialStorageKey, { promoCode, description: nextDescription });
+    setProfileDescription(nextDescription);
+    setIsDescriptionEditing(false);
   }
 
   function cancelDescriptionEdit() {
     setDraftDescription(profileDescription);
+    setIsDescriptionEditing(false);
   }
 
   return (
@@ -2132,12 +2134,9 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
               <span className="min-w-0 truncate sm:overflow-visible sm:whitespace-normal">{displayName}</span>
               <AccountTypeBadge profile={profile} />
             </h1>
-            <div className="mt-2 flex min-w-0 flex-nowrap items-center gap-1.5 text-[11px] leading-4 text-[#64748b] sm:mt-4 sm:flex-wrap sm:gap-2 sm:text-sm">
-              <span className="min-w-0 truncate whitespace-nowrap">Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span></span>
-              <button type="button" onClick={openPromoEditor} className="grid h-7 w-7 shrink-0 place-items-center text-[#0f8f6b] transition hover:text-[#0b7558] sm:h-8 sm:w-8" aria-label="Modifier le code promo">
-                <PencilIcon />
-              </button>
-            </div>
+            <button type="button" onClick={openPromoEditor} className="mt-2 block max-w-full truncate whitespace-nowrap text-left text-[11px] leading-4 text-[#64748b] transition hover:text-[#0f8f6b] sm:mt-4 sm:text-sm" aria-label="Modifier le code promo">
+              Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span>
+            </button>
             <div className="mt-4 hidden max-w-[34rem] grid-cols-4 text-center sm:grid sm:divide-x sm:divide-[#dbe4ee]">
               <ProfilePublicMetric label="Suivi" value="0" />
               <ProfilePublicMetric label="Abonnés" value="0" />
@@ -2155,29 +2154,43 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         </div>
 
         <div className="mt-6 grid gap-3">
-          <label className="grid gap-2 text-sm font-semibold text-[#102033]">
-            Description du profil
+          <div className="flex items-center gap-1.5 text-sm font-semibold text-[#102033]">
+            <span>Description du profil</span>
+            <button
+              type="button"
+              onClick={() => {
+                setDraftDescription(profileDescription);
+                setIsDescriptionEditing(true);
+              }}
+              className="grid h-7 w-7 place-items-center text-[#0f8f6b] transition hover:text-[#0b7558]"
+              aria-label="Modifier la description du profil"
+            >
+              <PencilIcon />
+            </button>
+          </div>
+          {isDescriptionEditing ? (
             <textarea
               value={draftDescription}
               onChange={(event) => setDraftDescription(event.target.value)}
               className="min-h-[86px] resize-y border border-[#dbe4ee] bg-white px-3 py-2 text-sm font-medium leading-6 text-[#102033] outline-none focus:border-[#0f8f6b]"
               placeholder="Presentez votre profil, vos projets, votre entreprise ou ajoutez vos liens LinkedIn, YouTube, GitHub..."
               maxLength={420}
+              autoFocus
             />
-          </label>
-          {descriptionChanged ? (
+          ) : profileDescription ? (
+            <div className="text-sm leading-6 text-[#64748b]">{renderedDescription}</div>
+          ) : null}
+          {isDescriptionEditing ? (
             <div className="flex flex-wrap justify-end gap-2">
               <button type="button" onClick={cancelDescriptionEdit} className="h-10 border border-[#dbe4ee] bg-white px-4 text-sm font-black text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
                 Annuler
               </button>
-              <button type="button" onClick={saveDescription} className="h-10 bg-[#102033] px-4 text-sm font-black text-white transition hover:bg-[#0f8f6b]">
+              <button type="button" onClick={saveDescription} disabled={!descriptionChanged} className="h-10 bg-[#102033] px-4 text-sm font-black text-white transition hover:bg-[#0f8f6b] disabled:cursor-not-allowed disabled:opacity-40">
                 Enregistrer
               </button>
             </div>
           ) : null}
         </div>
-
-        {profileDescription ? <div className="mt-4 min-h-10 text-sm leading-6 text-[#64748b]">{renderedDescription}</div> : null}
       </div>
 
       <div className="mt-4 bg-white px-4 py-5 sm:px-8">

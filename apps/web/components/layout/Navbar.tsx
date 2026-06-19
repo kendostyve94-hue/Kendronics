@@ -196,7 +196,6 @@ function mobileProfileMenuGroups(unreadNotifications: number): MobileProfileMenu
       title: 'Espace client',
       items: [
         { label: 'Tableau de bord', href: '/profile', icon: 'dashboard' },
-        { label: 'Mes commandes', href: '/profile?view=orders', icon: 'orders' },
         { label: 'Notifications', href: '/profile?view=notifications', count: unreadNotifications, icon: 'notifications' },
         { label: 'Adresse livraison', href: '/profile?view=shipping-address', icon: 'location' },
         { label: 'Historique des commandes', href: '/profile?view=all-orders', icon: 'history' },
