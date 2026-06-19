@@ -17,6 +17,8 @@ model User {
   phoneVerifiedAt DateTime?
   country         String?
   avatarDataUrl   String?
+  promoCode       String?   @unique
+  publicDescription String?
   profileDetails  Json?
   shippingAddress Json?
   billingAddress  Json?
@@ -42,7 +44,10 @@ model User {
   adminAccesses AdminAccess[]
   notifications Notification[]
   explorerProjects ExplorerProject[]
+  explorerProjectLikes ExplorerProjectLike[]
   explorerComments ExplorerComment[]
+  followers UserFollow[] @relation("UserFollowers")
+  following UserFollow[] @relation("UserFollowing")
   profileVerificationCodes ProfileVerificationCode[]
   passwordResetTokens PasswordResetToken[]
   accountDeletionFeedbacks AccountDeletionFeedback[]
@@ -804,13 +809,30 @@ model ExplorerProject {
 model ExplorerProjectLike {
   id        String   @id @default(uuid())
   projectId String
+  userId    String?
   actorKey  String
   createdAt DateTime @default(now())
 
   project ExplorerProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, actorKey])
   @@index([projectId])
+  @@index([userId])
+}
+
+model UserFollow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }
 
 model ExplorerComment {

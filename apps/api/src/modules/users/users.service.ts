@@ -7,6 +7,7 @@ import { PasswordService } from '../auth/password.service';
 import { UploadRepository } from '../uploads/repositories/upload.repository';
 import { AccountDeletionFeedbackDto } from './dto/account-deletion-feedback.dto';
 import { UpdateAccountAddressDto, UpdateAccountProfileDto } from './dto/update-account-settings.dto';
+import { UpdatePublicProfileDto } from './dto/update-public-profile.dto';
 import { UpsertCookieConsentDto } from './dto/cookie-consent.dto';
 import { CookieConsent } from './entities/cookie-consent.entity';
 import { User } from './entities/user.entity';
@@ -168,6 +169,99 @@ export class UsersService {
       emailVerifiedAt: nextEmail && nextEmail !== current.email ? null : current.emailVerifiedAt ?? null,
       phoneVerifiedAt: nextPhone !== (current.phone ?? null) ? null : current.phoneVerifiedAt ?? null,
     });
+  }
+
+  async getPublicProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        promoCode: true,
+        publicDescription: true,
+        _count: {
+          select: {
+            explorerProjects: { where: { status: 'published' } },
+            explorerProjectLikes: true,
+            followers: true,
+            following: true,
+          },
+        },
+        explorerProjects: {
+          where: { status: 'published' },
+          select: { likesCount: true, commentsCount: true, forksCount: true },
+        },
+      },
+    });
+    if (!user) throw new NotFoundException('User not found.');
+
+    const promoCode = user.promoCode || await this.ensurePromoCode(user.id, user.fullName || user.email);
+    const receivedLikes = user.explorerProjects.reduce((total, project) => total + project.likesCount, 0);
+    const receivedComments = user.explorerProjects.reduce((total, project) => total + project.commentsCount, 0);
+    const receivedForks = user.explorerProjects.reduce((total, project) => total + project.forksCount, 0);
+
+    return {
+      userId: user.id,
+      promoCode,
+      description: user.publicDescription ?? '',
+      followingCount: user._count.following,
+      followersCount: user._count.followers,
+      likesCount: receivedLikes,
+      favoritesCount: user._count.explorerProjectLikes,
+      projectsCount: user._count.explorerProjects,
+      points: user._count.explorerProjects * 10 + receivedLikes * 2 + receivedComments * 3 + receivedForks * 5,
+    };
+  }
+
+  async updatePublicProfile(userId: string, dto: UpdatePublicProfileDto) {
+    const data: { promoCode?: string; publicDescription?: string } = {};
+    if (dto.promoCode !== undefined) data.promoCode = normalizePromoCode(dto.promoCode);
+    if (dto.description !== undefined) data.publicDescription = dto.description.trim();
+
+    try {
+      await this.prisma.user.update({ where: { id: userId }, data });
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        throw new ConflictException('Ce code promo est deja utilise par un autre utilisateur.');
+      }
+      throw error;
+    }
+    return this.getPublicProfile(userId);
+  }
+
+  async toggleFollow(followerId: string, followingId: string) {
+    if (followerId === followingId) throw new BadRequestException('Vous ne pouvez pas suivre votre propre compte.');
+    const target = await this.prisma.user.findUnique({ where: { id: followingId }, select: { id: true } });
+    if (!target) throw new NotFoundException('User not found.');
+    const existing = await this.prisma.userFollow.findUnique({
+      where: { followerId_followingId: { followerId, followingId } },
+    });
+    if (existing) {
+      await this.prisma.userFollow.delete({ where: { id: existing.id } });
+    } else {
+      await this.prisma.userFollow.create({ data: { followerId, followingId } });
+    }
+    const [followersCount, followingCount] = await Promise.all([
+      this.prisma.userFollow.count({ where: { followingId } }),
+      this.prisma.userFollow.count({ where: { followerId } }),
+    ]);
+    return { following: !existing, followersCount, followingCount };
+  }
+
+  private async ensurePromoCode(userId: string, seed: string): Promise<string> {
+    const base = normalizePromoCode(seed).slice(0, 10) || 'CLIENT';
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const suffix = createHash('sha256').update(`${userId}:${attempt}`).digest('hex').slice(0, 6).toUpperCase();
+      const promoCode = `${base}${suffix}`.slice(0, 18);
+      try {
+        await this.prisma.user.update({ where: { id: userId }, data: { promoCode } });
+        return promoCode;
+      } catch (error) {
+        if (!isUniqueConstraintError(error)) throw error;
+      }
+    }
+    throw new ServiceUnavailableException('Impossible de generer un code promo unique.');
   }
 
   updateAddress(userId: string, kind: 'shippingAddress' | 'billingAddress', dto: UpdateAccountAddressDto): Promise<User> {
@@ -364,6 +458,14 @@ function validAvatarDataUrl(value: string | undefined): boolean {
 
 function uniqueRoles(roles: UserRole[]): UserRole[] {
   return Array.from(new Set(roles));
+}
+
+function normalizePromoCode(value: string): string {
+  return value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 18);
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return Boolean(error && typeof error === 'object' && 'code' in error && error.code === 'P2002');
 }
 
 function hashCode(code: string): string {

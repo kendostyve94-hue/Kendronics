@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { IsString } from 'class-validator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -8,6 +8,7 @@ import { AccountDeletionFeedbackDto } from './dto/account-deletion-feedback.dto'
 import { UpsertCookieConsentDto } from './dto/cookie-consent.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
 import { UpdateAccountAddressDto, UpdateAccountProfileDto } from './dto/update-account-settings.dto';
+import { UpdatePublicProfileDto } from './dto/update-public-profile.dto';
 import { UsersService } from './users.service';
 import { VerificationLevelService } from './verification-level.service';
 
@@ -38,6 +39,21 @@ export class UsersController {
   @Put('me/profile')
   updateProfile(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateAccountProfileDto) {
     return this.usersService.updateProfile(user.id, dto);
+  }
+
+  @Get('me/public-profile')
+  publicProfile(@CurrentUser() user: AuthenticatedUser) {
+    return this.usersService.getPublicProfile(user.id);
+  }
+
+  @Put('me/public-profile')
+  updatePublicProfile(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdatePublicProfileDto) {
+    return this.usersService.updatePublicProfile(user.id, dto);
+  }
+
+  @Post(':userId/follow')
+  followUser(@CurrentUser() user: AuthenticatedUser, @Param('userId') targetUserId: string) {
+    return this.usersService.toggleFollow(user.id, targetUserId);
   }
 
   @Put('me/shipping-address')

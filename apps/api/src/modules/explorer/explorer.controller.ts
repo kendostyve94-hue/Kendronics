@@ -27,8 +27,24 @@ export class ExplorerController {
   }
 
   @Post('projects/:projectId/likes')
-  likeProject(@Param('projectId') projectId: string, @Body() dto: LikeExplorerProjectDto) {
-    return this.explorerService.likeProject(projectId, dto.actorKey);
+  likeProject(
+    @Param('projectId') projectId: string,
+    @Body() dto: LikeExplorerProjectDto,
+    @Req() request: { headers: Record<string, string> },
+  ) {
+    return this.explorerService.likeProject(projectId, dto.actorKey, this.readOptionalUser(request));
+  }
+
+  @Get('me/projects')
+  @UseGuards(JwtAuthGuard)
+  myProjects(@CurrentUser() user: AuthenticatedUser) {
+    return this.explorerService.listUserProjects(user.id);
+  }
+
+  @Get('me/favorites')
+  @UseGuards(JwtAuthGuard)
+  myFavorites(@CurrentUser() user: AuthenticatedUser) {
+    return this.explorerService.listUserFavorites(user.id);
   }
 
   @Post('projects/:projectId/comments')

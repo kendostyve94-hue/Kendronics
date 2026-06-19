@@ -150,6 +150,36 @@ test('keeps order, quote, upload, payment, support, and tracking routes availabl
     }
 });
 
+test('persists public profiles, projects, favorites, and social counters', () => {
+  const schema = read('apps/api/prisma/schema.prisma');
+  [
+    'promoCode       String?   @unique',
+    'publicDescription String?',
+    'model ExplorerProject',
+    'model ExplorerProjectLike',
+    'model UserFollow',
+  ].forEach((marker) => expectIncludes(schema, marker));
+
+  assert.ok(
+    existsSync(join(root, 'apps/api/prisma/migrations/20260619120000_persist_public_profiles/migration.sql')),
+    'Expected public profile migration',
+  );
+
+  const usersController = read('apps/api/src/modules/users/users.controller.ts');
+  expectIncludes(usersController, "@Get('me/public-profile')");
+  expectIncludes(usersController, "@Put('me/public-profile')");
+
+  const explorerController = read('apps/api/src/modules/explorer/explorer.controller.ts');
+  expectIncludes(explorerController, "@Get('me/projects')");
+  expectIncludes(explorerController, "@Get('me/favorites')");
+
+  const profilePage = read('apps/web/app/profile/page.tsx');
+  expectIncludes(profilePage, '/api/users/me/public-profile');
+  expectIncludes(profilePage, '/api/explorer/me/projects');
+  expectIncludes(profilePage, '/api/explorer/me/favorites');
+  expectIncludes(profilePage, '/api/explorer/projects');
+});
+
 test('keeps deployment checks wired to build, migrate, and run production paths', () => {
     const packageJson = JSON.parse(read('package.json'));
     assert.equal(packageJson.scripts['web:build'], 'node --max-old-space-size=8192 node_modules/next/dist/bin/next build apps/web');

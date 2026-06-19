@@ -15,8 +15,6 @@ const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
 const savedShippingAddressesKey = 'kendronics.customer.shipping-addresses';
 const savedBillingAddressesKey = 'kendronics.customer.billing-addresses';
-const profilePromoCodeIndexKey = 'kendronics.profile.promo-code-index';
-const profileSocialStorageKey = 'kendronics.profile.social';
 const siteGreen = '#0f8f6b';
 const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
 const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
@@ -246,6 +244,31 @@ type SidebarItem = {
   view: ProfileView;
   count?: number;
   icon: ProfileSidebarIconName;
+};
+
+type PublicSocialProfile = {
+  userId: string;
+  promoCode: string;
+  description: string;
+  followingCount: number;
+  followersCount: number;
+  likesCount: number;
+  favoritesCount: number;
+  projectsCount: number;
+  points: number;
+};
+
+type ProfileExplorerProject = {
+  id: string;
+  title: string;
+  category: string;
+  summary: string;
+  tags: string[];
+  imageUrl?: string;
+  likesCount: number;
+  commentsCount: number;
+  forksCount: number;
+  createdAt: string;
 };
 
 type SidebarGroup = {
@@ -2041,7 +2064,6 @@ function SupportHubSection({ orders, dataStatus }: { orders: ProfileOrder[]; dat
 function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: ProfileForm; userId: string; avatarDataUrl: string }) {
   const displayName = profile.name || profile.profileDetails?.firstName || emailName(profile.email) || 'Client Kendronics';
   const fallbackCode = makeDefaultPromoCode(userId, profile.email || displayName);
-  const socialStorageKey = `${profileSocialStorageKey}:${userId}`;
   const [promoCode, setPromoCode] = useState(fallbackCode);
   const [draftPromoCode, setDraftPromoCode] = useState(fallbackCode);
   const [promoStatus, setPromoStatus] = useState('');
@@ -2051,6 +2073,21 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   const [isDescriptionEditing, setIsDescriptionEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<'projects' | 'favorites'>('projects');
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+  const [socialProfile, setSocialProfile] = useState<PublicSocialProfile>({
+    userId,
+    promoCode: fallbackCode,
+    description: '',
+    followingCount: 0,
+    followersCount: 0,
+    likesCount: 0,
+    favoritesCount: 0,
+    projectsCount: 0,
+    points: 0,
+  });
+  const [projects, setProjects] = useState<ProfileExplorerProject[]>([]);
+  const [favorites, setFavorites] = useState<ProfileExplorerProject[]>([]);
+  const [socialStatus, setSocialStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [projectStatus, setProjectStatus] = useState('');
   const [projectDraft, setProjectDraft] = useState({
     title: '',
     category: 'Prototype',
@@ -2063,33 +2100,77 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
   useEffect(() => {
     setIsCreateProjectOpen(new URLSearchParams(window.location.search).get('create') === '1');
-    const stored = readProfileSocialState(socialStorageKey);
-    const initialCode = stored.promoCode || fallbackCode;
-    setPromoCode(initialCode);
-    setDraftPromoCode(initialCode);
-    setProfileDescription(stored.description);
-    setDraftDescription(stored.description);
-    ensurePromoCodeRegistered(userId, initialCode);
-  }, [fallbackCode, socialStorageKey, userId]);
+    let cancelled = false;
+
+    async function loadSocialProfile() {
+      const session = await readFreshAuthSession();
+      if (!session) {
+        if (!cancelled) setSocialStatus('error');
+        return;
+      }
+      const headers = { Authorization: `${session.tokenType} ${session.accessToken}` };
+      try {
+        const [profileResponse, projectsResponse, favoritesResponse] = await Promise.all([
+          fetch(`${getApiBaseUrl()}/api/users/me/public-profile`, { headers, cache: 'no-store' }),
+          fetch(`${getApiBaseUrl()}/api/explorer/me/projects`, { headers, cache: 'no-store' }),
+          fetch(`${getApiBaseUrl()}/api/explorer/me/favorites`, { headers, cache: 'no-store' }),
+        ]);
+        if (!profileResponse.ok || !projectsResponse.ok || !favoritesResponse.ok) throw new Error('Social profile unavailable.');
+        const nextProfile = await profileResponse.json() as PublicSocialProfile;
+        const nextProjects = await projectsResponse.json() as ProfileExplorerProject[];
+        const nextFavorites = await favoritesResponse.json() as ProfileExplorerProject[];
+        if (cancelled) return;
+        setSocialProfile(nextProfile);
+        setPromoCode(nextProfile.promoCode);
+        setDraftPromoCode(nextProfile.promoCode);
+        setProfileDescription(nextProfile.description);
+        setDraftDescription(nextProfile.description);
+        setProjects(nextProjects);
+        setFavorites(nextFavorites);
+        setSocialStatus('ready');
+      } catch {
+        if (!cancelled) setSocialStatus('error');
+      }
+    }
+
+    void loadSocialProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [fallbackCode, userId]);
 
   const renderedDescription = useMemo(() => linkifyText(profileDescription), [profileDescription]);
   const descriptionChanged = draftDescription.trim() !== profileDescription;
 
-  function savePromoCode() {
+  async function savePromoCode() {
     const normalized = normalizePromoCode(draftPromoCode);
     if (normalized.length < 4) {
       setPromoStatus('Le code doit contenir au moins 4 caracteres.');
       return;
     }
 
-    if (!claimPromoCode(userId, promoCode, normalized)) {
-      setPromoStatus('Ce code est deja utilise par un autre utilisateur.');
+    const session = await readFreshAuthSession();
+    if (!session) {
+      setPromoStatus('Session expiree. Reconnectez-vous.');
       return;
     }
-
-    setPromoCode(normalized);
-    setDraftPromoCode(normalized);
-    writeProfileSocialState(socialStorageKey, { promoCode: normalized, description: profileDescription });
+    const response = await fetch(`${getApiBaseUrl()}/api/users/me/public-profile`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `${session.tokenType} ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ promoCode: normalized }),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({})) as { message?: string | string[] };
+      setPromoStatus(Array.isArray(error.message) ? error.message.join(' ') : error.message || 'Impossible de modifier le code promo.');
+      return;
+    }
+    const nextProfile = await response.json() as PublicSocialProfile;
+    setSocialProfile(nextProfile);
+    setPromoCode(nextProfile.promoCode);
+    setDraftPromoCode(nextProfile.promoCode);
     setPromoStatus('Code promo mis a jour.');
     setIsPromoEditorOpen(false);
   }
@@ -2106,16 +2187,67 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
     setIsPromoEditorOpen(false);
   }
 
-  function saveDescription() {
+  async function saveDescription() {
     const nextDescription = draftDescription.trim();
-    writeProfileSocialState(socialStorageKey, { promoCode, description: nextDescription });
-    setProfileDescription(nextDescription);
+    const session = await readFreshAuthSession();
+    if (!session) return;
+    const response = await fetch(`${getApiBaseUrl()}/api/users/me/public-profile`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `${session.tokenType} ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ description: nextDescription }),
+    });
+    if (!response.ok) return;
+    const nextProfile = await response.json() as PublicSocialProfile;
+    setSocialProfile(nextProfile);
+    setProfileDescription(nextProfile.description);
+    setDraftDescription(nextProfile.description);
     setIsDescriptionEditing(false);
   }
 
   function cancelDescriptionEdit() {
     setDraftDescription(profileDescription);
     setIsDescriptionEditing(false);
+  }
+
+  async function publishProject(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setProjectStatus('');
+    const session = await readFreshAuthSession();
+    if (!session) {
+      setProjectStatus('Reconnectez-vous pour publier.');
+      return;
+    }
+    const response = await fetch(`${getApiBaseUrl()}/api/explorer/projects`, {
+      method: 'POST',
+      headers: {
+        Authorization: `${session.tokenType} ${session.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: projectDraft.title.trim(),
+        category: projectDraft.category,
+        tags: projectDraft.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
+        summary: projectDraft.summary.trim(),
+        description: projectDraft.description.trim() || undefined,
+        attachmentName: projectDraft.attachmentName.trim() || undefined,
+        attachmentType: projectDraft.attachmentName ? 'Fichier projet' : undefined,
+        repositoryUrl: projectDraft.repositoryUrl.trim() || undefined,
+      }),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({})) as { message?: string | string[] };
+      setProjectStatus(Array.isArray(error.message) ? error.message.join(' ') : error.message || 'Publication impossible.');
+      return;
+    }
+    const created = await response.json() as ProfileExplorerProject;
+    setProjects((current) => [created, ...current]);
+    setSocialProfile((current) => ({ ...current, projectsCount: current.projectsCount + 1, points: current.points + 10 }));
+    setProjectDraft({ title: '', category: 'Prototype', tags: '', summary: '', description: '', attachmentName: '', repositoryUrl: '' });
+    setProjectStatus('Projet publie avec succes.');
+    setIsCreateProjectOpen(false);
   }
 
   return (
@@ -2135,20 +2267,21 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
               Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span>
             </button>
             <div className="mt-4 hidden max-w-[34rem] grid-cols-4 text-center sm:grid sm:divide-x sm:divide-[#dbe4ee]">
-              <ProfilePublicMetric label="Suivi" value="0" />
-              <ProfilePublicMetric label="Abonnés" value="0" />
-              <ProfilePublicMetric label="Likes" value="0" />
-              <ProfilePublicMetric label="Points" value="4" />
+              <ProfilePublicMetric label="Suivi" value={String(socialProfile.followingCount)} />
+              <ProfilePublicMetric label="Abonnés" value={String(socialProfile.followersCount)} />
+              <ProfilePublicMetric label="Likes" value={String(socialProfile.likesCount)} />
+              <ProfilePublicMetric label="Points" value={String(socialProfile.points)} />
             </div>
             {promoStatus ? <p className={`mt-2 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
           </div>
         </div>
         <div className="mt-4 grid grid-cols-4 text-center sm:hidden">
-          <ProfilePublicMetric label="Suivi" value="0" />
-          <ProfilePublicMetric label="Abonnés" value="0" />
-          <ProfilePublicMetric label="Likes" value="0" />
-          <ProfilePublicMetric label="Points" value="4" />
+          <ProfilePublicMetric label="Suivi" value={String(socialProfile.followingCount)} />
+          <ProfilePublicMetric label="Abonnés" value={String(socialProfile.followersCount)} />
+          <ProfilePublicMetric label="Likes" value={String(socialProfile.likesCount)} />
+          <ProfilePublicMetric label="Points" value={String(socialProfile.points)} />
         </div>
+        {socialStatus === 'error' ? <p className="mt-4 text-sm font-semibold text-red-600">Le profil public n'a pas pu etre charge. Reessayez apres reconnexion.</p> : null}
 
         <div className="mt-6 grid gap-3">
           <div className="flex items-center gap-1.5 text-sm font-semibold text-[#102033]">
@@ -2209,7 +2342,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         </div>
 
         {isCreateProjectOpen ? (
-          <form className="mt-5 grid gap-3 bg-[#f7fafc] p-4 ring-1 ring-[#d8e1ea]" onSubmit={(event) => event.preventDefault()}>
+          <form className="mt-5 grid gap-3 bg-[#f7fafc] p-4 ring-1 ring-[#d8e1ea]" onSubmit={publishProject}>
             <input value={projectDraft.title} onChange={(event) => setProjectDraft((current) => ({ ...current, title: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Titre du projet" maxLength={90} />
             <div className="grid gap-3 sm:grid-cols-2">
               <select value={projectDraft.category} onChange={(event) => setProjectDraft((current) => ({ ...current, category: event.target.value }))} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]">
@@ -2224,11 +2357,33 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
               <input value={projectDraft.repositoryUrl} onChange={(event) => setProjectDraft((current) => ({ ...current, repositoryUrl: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Lien GitHub/EasyEDA optionnel" />
             </div>
             <button type="submit" className="h-11 bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">Publier</button>
+            {projectStatus ? <p className={`text-sm font-semibold ${projectStatus.includes('succes') ? 'text-[#0f8f6b]' : 'text-red-600'}`}>{projectStatus}</p> : null}
           </form>
         ) : null}
 
-        <div className="grid min-h-[220px] place-items-center text-center">
-          <div>
+        {(activeTab === 'projects' ? projects : favorites).length > 0 ? (
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {(activeTab === 'projects' ? projects : favorites).map((project) => (
+              <a key={project.id} href={`/explorer#project-${project.id}`} className="grid min-h-[150px] border border-[#dbe4ee] bg-white p-4 transition hover:border-[#0f8f6b]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#0f8f6b]">{project.category}</p>
+                    <h3 className="mt-1 truncate text-base font-black text-[#102033]">{project.title}</h3>
+                  </div>
+                  <span className="text-xs text-[#64748b]">{new Date(project.createdAt).toLocaleDateString('fr-FR')}</span>
+                </div>
+                <p className="mt-3 line-clamp-2 text-sm leading-6 text-[#64748b]">{project.summary}</p>
+                <div className="mt-auto flex gap-4 pt-4 text-xs text-[#64748b]">
+                  <span>{project.likesCount} likes</span>
+                  <span>{project.commentsCount} commentaires</span>
+                  <span>{project.forksCount} forks</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="grid min-h-[220px] place-items-center text-center">
+            <div>
             <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#eefbf6] text-3xl font-black text-[#0f8f6b]">
               {activeTab === 'projects' ? 'P' : 'F'}
             </div>
@@ -2238,8 +2393,9 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
             <p className="mt-2 text-sm text-[#64748b]">
               {activeTab === 'projects' ? 'Les projets publics que vous creez apparaitront ici.' : 'Les projets que vous aimez ou sauvegardez apparaitront ici.'}
             </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       {isPromoEditorOpen ? (
         <div className="fixed inset-0 z-[80] grid place-items-center bg-[#102033]/40 px-4">
@@ -2338,65 +2494,6 @@ function makeDefaultPromoCode(userId: string, seed: string) {
   const base = normalizePromoCode(seed || userId).slice(0, 10) || 'CLIENT';
   const suffix = normalizePromoCode(userId).slice(-4) || '0000';
   return `${base}${suffix}`.slice(0, 18);
-}
-
-function readPromoCodeIndex(): Record<string, string> {
-  try {
-    const raw = window.localStorage.getItem(profilePromoCodeIndexKey);
-    const parsed = raw ? JSON.parse(raw) : {};
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, string> : {};
-  } catch {
-    return {};
-  }
-}
-
-function writePromoCodeIndex(index: Record<string, string>) {
-  try {
-    window.localStorage.setItem(profilePromoCodeIndexKey, JSON.stringify(index));
-  } catch {
-    // Local storage can be unavailable in private contexts.
-  }
-}
-
-function ensurePromoCodeRegistered(userId: string, promoCode: string) {
-  const normalized = normalizePromoCode(promoCode);
-  if (!normalized) return;
-  const index = readPromoCodeIndex();
-  if (!index[normalized]) {
-    index[normalized] = userId;
-    writePromoCodeIndex(index);
-  }
-}
-
-function claimPromoCode(userId: string, previousCode: string, nextCode: string) {
-  const normalizedNext = normalizePromoCode(nextCode);
-  const normalizedPrevious = normalizePromoCode(previousCode);
-  const index = readPromoCodeIndex();
-  const owner = index[normalizedNext];
-  if (owner && owner !== userId) return false;
-  if (normalizedPrevious && normalizedPrevious !== normalizedNext && index[normalizedPrevious] === userId) {
-    delete index[normalizedPrevious];
-  }
-  index[normalizedNext] = userId;
-  writePromoCodeIndex(index);
-  return true;
-}
-
-function readProfileSocialState(storageKey: string): { promoCode: string; description: string } {
-  try {
-    const raw = readScopedLocalStorage(storageKey);
-    const parsed = raw ? JSON.parse(raw) : {};
-    return {
-      promoCode: typeof parsed?.promoCode === 'string' ? parsed.promoCode : '',
-      description: typeof parsed?.description === 'string' ? parsed.description : '',
-    };
-  } catch {
-    return { promoCode: '', description: '' };
-  }
-}
-
-function writeProfileSocialState(storageKey: string, value: { promoCode: string; description: string }) {
-  writeScopedLocalStorage(storageKey, JSON.stringify(value));
 }
 
 function linkifyText(text: string) {

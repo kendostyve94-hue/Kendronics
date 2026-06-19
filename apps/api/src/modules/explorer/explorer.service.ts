@@ -96,19 +96,54 @@ export class ExplorerService {
     return toExplorerProject(project);
   }
 
-  async likeProject(projectId: string, actorKey: string): Promise<{ liked: boolean; likesCount: number }> {
-    await this.ensureProject(projectId);
+  async listUserProjects(userId: string): Promise<ExplorerProject[]> {
+    const projects = await this.prisma.explorerProject.findMany({
+      where: { userId, status: 'published' },
+      orderBy: { createdAt: 'desc' },
+      include: { comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 } },
+    });
+    return projects.map(toExplorerProject);
+  }
 
-    try {
-      const [, project] = await this.prisma.$transaction([
-        this.prisma.explorerProjectLike.create({ data: { projectId, actorKey: clean(actorKey) || 'anonymous' } }),
-        this.prisma.explorerProject.update({ where: { id: projectId }, data: { likesCount: { increment: 1 } } }),
-      ]);
-      return { liked: true, likesCount: project.likesCount };
-    } catch {
-      const project = await this.prisma.explorerProject.findUnique({ where: { id: projectId } });
-      return { liked: false, likesCount: project?.likesCount ?? 0 };
+  async listUserFavorites(userId: string): Promise<ExplorerProject[]> {
+    const likes = await this.prisma.explorerProjectLike.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        project: {
+          include: { comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 } },
+        },
+      },
+    });
+    return likes.filter((like) => like.project.status === 'published').map((like) => toExplorerProject(like.project));
+  }
+
+  async likeProject(projectId: string, actorKey: string, user?: AuthenticatedUser): Promise<{ liked: boolean; likesCount: number }> {
+    await this.ensureProject(projectId);
+    const resolvedActorKey = user ? `user:${user.id}` : clean(actorKey) || 'anonymous';
+    const existing = await this.prisma.explorerProjectLike.findUnique({
+      where: { projectId_actorKey: { projectId, actorKey: resolvedActorKey } },
+    });
+
+    if (existing) {
+      const likesCount = await this.prisma.$transaction(async (tx) => {
+        await tx.explorerProjectLike.delete({ where: { id: existing.id } });
+        const count = await tx.explorerProjectLike.count({ where: { projectId } });
+        await tx.explorerProject.update({ where: { id: projectId }, data: { likesCount: count } });
+        return count;
+      });
+      return { liked: false, likesCount };
     }
+
+    const likesCount = await this.prisma.$transaction(async (tx) => {
+      await tx.explorerProjectLike.create({
+        data: { projectId, userId: user?.id, actorKey: resolvedActorKey },
+      });
+      const count = await tx.explorerProjectLike.count({ where: { projectId } });
+      await tx.explorerProject.update({ where: { id: projectId }, data: { likesCount: count } });
+      return count;
+    });
+    return { liked: true, likesCount };
   }
 
   async commentProject(projectId: string, dto: CreateExplorerCommentDto, user?: AuthenticatedUser): Promise<ExplorerProject> {

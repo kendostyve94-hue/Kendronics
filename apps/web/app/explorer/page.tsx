@@ -148,17 +148,21 @@ export default function ExplorerPage() {
 
   async function likeProject(project: ExplorerProject) {
     const actorKey = readActorKey();
+    const session = readAuthSession();
     try {
       const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}/likes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session ? { Authorization: `${session.tokenType} ${session.accessToken}` } : {}),
+        },
         body: JSON.stringify({ actorKey }),
       });
       if (!response.ok) throw new Error('Like failed');
-      const payload = (await response.json()) as { likesCount: number };
+      const payload = (await response.json()) as { liked: boolean; likesCount: number };
       setProjects((current) => current.map((item) => (item.id === project.id ? { ...item, likesCount: payload.likesCount } : item)));
     } catch {
-      setProjects((current) => current.map((item) => (item.id === project.id ? { ...item, likesCount: item.likesCount + 1 } : item)));
+      // Keep the persisted server state if the request fails.
     }
   }
 
