@@ -38,6 +38,7 @@ model User {
   orders   Order[]
   payments Payment[]
   gerberUploads GerberUpload[]
+  explorerProjectAssets ExplorerProjectAsset[]
   cookieConsents CookieConsent[]
   supportTickets SupportTicket[]
   adminAuditLogs AdminAuditLog[]
@@ -96,6 +97,7 @@ model GerberUpload {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   analysis GerberAnalysis?
+  explorerProjectAssets ExplorerProjectAsset[]
 
   @@index([userId])
   @@index([storageKey])
@@ -786,7 +788,16 @@ model ExplorerProject {
   attachmentName String?
   attachmentType String?
   repositoryUrl  String?
-  status         String   @default("published")
+  projectType    String   @default("free")
+  priceCents     Int?
+  currency       String   @default("EUR")
+  licenseCode    String   @default("CC-BY-SA-4.0")
+  allowedUses    String[] @default(["download", "modify", "manufacture", "republish"])
+  visibility     String   @default("public")
+  technicalDetails Json?
+  documentation  Json?
+  status         String   @default("draft")
+  publishedAt    DateTime?
   featured       Boolean  @default(false)
   viewsCount     Int      @default(0)
   likesCount     Int      @default(0)
@@ -799,6 +810,7 @@ model ExplorerProject {
   likes ExplorerProjectLike[]
   favorites ExplorerProjectFavorite[]
   comments ExplorerComment[]
+  assets ExplorerProjectAsset[]
 
   @@index([userId])
   @@index([status])
@@ -806,6 +818,30 @@ model ExplorerProject {
   @@index([category])
   @@index([createdAt])
   @@index([likesCount])
+  @@index([projectType])
+}
+
+model ExplorerProjectAsset {
+  id           String   @id @default(uuid())
+  projectId    String
+  userId       String
+  uploadId     String
+  kind         String
+  visibility   String   @default("protected")
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  createdAt    DateTime @default(now())
+
+  project ExplorerProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  upload  GerberUpload    @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, uploadId])
+  @@index([projectId])
+  @@index([userId])
+  @@index([uploadId])
+  @@index([visibility])
 }
 
 model ExplorerProjectLike {

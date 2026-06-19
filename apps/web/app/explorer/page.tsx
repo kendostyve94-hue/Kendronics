@@ -26,6 +26,11 @@ type ExplorerProject = {
   attachmentName?: string;
   attachmentType?: string;
   repositoryUrl?: string;
+  projectType?: 'free' | 'paid';
+  priceCents?: number;
+  currency?: string;
+  licenseCode?: string;
+  allowedUses?: string[];
   featured: boolean;
   viewsCount: number;
   likesCount: number;
@@ -309,7 +314,9 @@ function ProjectCard({
           <img src={project.imageUrl || '/images/quote-product-standard-pcb.png'} alt="" className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]" />
         </div>
         <div className="mt-3 flex min-w-0 items-center gap-2">
-          <span className="shrink-0 bg-[#fff1e6] px-2 py-1 text-xs font-medium leading-none text-[#ff6a00]">PRO</span>
+          <span className={`shrink-0 px-2 py-1 text-xs font-bold leading-none ${project.projectType === 'paid' ? 'bg-[#fff1e6] text-[#c45100]' : 'bg-[#e7f5f0] text-[#0f8f6b]'}`}>
+            {project.projectType === 'paid' ? formatProjectPrice(project.priceCents, project.currency) : 'GRATUIT'}
+          </span>
           <h3 className="min-w-0 truncate text-base font-medium text-[#0b1724]">{project.title}</h3>
         </div>
       </button>
@@ -342,6 +349,12 @@ function ProjectDetailPanel({ project, commentValue, onCommentChange, onComment,
         </div>
       </div>
       <p className="mt-4 text-sm leading-6 text-[#526173]">{project.description || project.summary}</p>
+      <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+        <span className={project.projectType === 'paid' ? 'bg-[#fff1e6] px-2 py-1 text-[#c45100]' : 'bg-[#e7f5f0] px-2 py-1 text-[#0f8f6b]'}>
+          {project.projectType === 'paid' ? formatProjectPrice(project.priceCents, project.currency) : 'Projet gratuit'}
+        </span>
+        {project.licenseCode ? <span className="bg-[#eef3f8] px-2 py-1 text-[#526173]">{project.licenseCode}</span> : null}
+      </div>
       <div className="mt-4 grid grid-cols-4 border border-[#edf2f7] text-center text-xs">
         <PanelMetric label="Vues" value={formatCompact(project.viewsCount)} />
         <PanelMetric label="Likes" value={String(project.likesCount)} />
@@ -443,4 +456,9 @@ function formatDate(value: string) {
 
 function formatCompact(value: number) {
   return new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+}
+
+function formatProjectPrice(priceCents?: number, currency = 'EUR') {
+  if (!priceCents) return 'PAYANT';
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 2 }).format(priceCents / 100);
 }

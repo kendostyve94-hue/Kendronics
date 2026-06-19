@@ -37,6 +37,21 @@ export class UploadsController {
     return this.uploadsService.uploadFileThroughApi(user.id, file);
   }
 
+  @Post('project-direct')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 50 * 1024 * 1024 } }))
+  uploadProjectFile(
+    @CurrentUser() user: AuthenticatedUser,
+    @UploadedFile()
+    file?: {
+      originalname: string;
+      mimetype: string;
+      size: number;
+      buffer: Buffer;
+    },
+  ) {
+    return this.uploadsService.uploadProjectFile(user.id, file);
+  }
+
   @Get(':uploadId/analysis')
   async analysis(@CurrentUser() user: AuthenticatedUser, @Param('uploadId') uploadId: string) {
     const analysis = await this.uploadsService.getAnalysis(user.id, uploadId);

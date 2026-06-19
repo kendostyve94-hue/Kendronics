@@ -2087,16 +2087,6 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   const [projects, setProjects] = useState<ProfileExplorerProject[]>([]);
   const [favorites, setFavorites] = useState<ProfileExplorerProject[]>([]);
   const [socialStatus, setSocialStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [projectStatus, setProjectStatus] = useState('');
-  const [projectDraft, setProjectDraft] = useState({
-    title: '',
-    category: 'Prototype',
-    tags: '',
-    summary: '',
-    description: '',
-    attachmentName: '',
-    repositoryUrl: '',
-  });
 
   useEffect(() => {
     setIsCreateProjectOpen(new URLSearchParams(window.location.search).get('create') === '1');
@@ -2212,44 +2202,6 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
     setIsDescriptionEditing(false);
   }
 
-  async function publishProject(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setProjectStatus('');
-    const session = await readFreshAuthSession();
-    if (!session) {
-      setProjectStatus('Reconnectez-vous pour publier.');
-      return;
-    }
-    const response = await fetch(`${getApiBaseUrl()}/api/explorer/projects`, {
-      method: 'POST',
-      headers: {
-        Authorization: `${session.tokenType} ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: projectDraft.title.trim(),
-        category: projectDraft.category,
-        tags: projectDraft.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
-        summary: projectDraft.summary.trim(),
-        description: projectDraft.description.trim() || undefined,
-        attachmentName: projectDraft.attachmentName.trim() || undefined,
-        attachmentType: projectDraft.attachmentName ? 'Fichier projet' : undefined,
-        repositoryUrl: projectDraft.repositoryUrl.trim() || undefined,
-      }),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({})) as { message?: string | string[] };
-      setProjectStatus(Array.isArray(error.message) ? error.message.join(' ') : error.message || 'Publication impossible.');
-      return;
-    }
-    const created = await response.json() as ProfileExplorerProject;
-    setProjects((current) => [created, ...current]);
-    setSocialProfile((current) => ({ ...current, projectsCount: current.projectsCount + 1, points: current.points + 10 }));
-    setProjectDraft({ title: '', category: 'Prototype', tags: '', summary: '', description: '', attachmentName: '', repositoryUrl: '' });
-    setProjectStatus('Projet publie avec succes.');
-    setIsCreateProjectOpen(false);
-  }
-
   return (
     <section className="min-h-[690px] bg-[#f5f7fb] text-[#102033]">
       <div className="bg-white px-4 pb-7 pt-6 sm:px-8">
@@ -2342,23 +2294,34 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         </div>
 
         {isCreateProjectOpen ? (
-          <form className="mt-5 grid gap-3 bg-[#f7fafc] p-4 ring-1 ring-[#d8e1ea]" onSubmit={publishProject}>
-            <input value={projectDraft.title} onChange={(event) => setProjectDraft((current) => ({ ...current, title: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Titre du projet" maxLength={90} />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <select value={projectDraft.category} onChange={(event) => setProjectDraft((current) => ({ ...current, category: event.target.value }))} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]">
-                {['Prototype', 'PCB', 'IoT', 'Energie', 'Robotique', 'Education', 'Audio', 'Medical'].map((item) => <option key={item}>{item}</option>)}
-              </select>
-              <input value={projectDraft.tags} onChange={(event) => setProjectDraft((current) => ({ ...current, tags: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Tags separes par virgule" maxLength={120} />
+          <div className="fixed inset-0 z-[90] grid place-items-center bg-[#07172a]/45 px-4" role="dialog" aria-modal="true" aria-labelledby="project-type-title">
+            <div className="w-full max-w-[620px] bg-white p-5 sm:p-8">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-[#0f8f6b]">Nouveau projet</p>
+                  <h2 id="project-type-title" className="mt-2 text-2xl font-black text-[#102033]">Choisissez le type de publication</h2>
+                  <p className="mt-2 text-sm leading-6 text-[#64748b]">Vous pourrez enregistrer un brouillon et verifier chaque parametre avant la publication.</p>
+                </div>
+                <button type="button" onClick={() => setIsCreateProjectOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#dbe4ee] text-xl text-[#64748b]" aria-label="Fermer">×</button>
+              </div>
+              <div className="mt-7 grid gap-4">
+                <a href="/projects/new?type=paid" className="group flex min-h-[104px] items-center gap-4 border border-[#cfd8e3] bg-white p-5 transition hover:border-[#0f8f6b] hover:bg-[#f4fbf8]">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e5f6f0] text-[#0f8f6b]"><PaidProjectIcon /></span>
+                  <span>
+                    <strong className="block text-lg text-[#102033]">Creer un nouveau projet</strong>
+                    <span className="mt-1 block text-sm leading-5 text-[#64748b]">Projet payant avec fichiers proteges, prix, licence et droits d'utilisation.</span>
+                  </span>
+                </a>
+                <a href="/projects/new?type=free" className="group flex min-h-[104px] items-center gap-4 border border-[#cfd8e3] bg-white p-5 transition hover:border-[#0877ff] hover:bg-[#f4f8ff]">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eaf2ff] text-[#0877ff]"><OpenProjectIcon /></span>
+                  <span>
+                    <strong className="block text-lg text-[#102033]">Publier un projet</strong>
+                    <span className="mt-1 block text-sm leading-5 text-[#64748b]">Projet gratuit partage avec la communaute sous une licence ouverte.</span>
+                  </span>
+                </a>
+              </div>
             </div>
-            <textarea value={projectDraft.summary} onChange={(event) => setProjectDraft((current) => ({ ...current, summary: event.target.value }))} className="min-h-[92px] resize-y border border-[#cfd8e3] px-3 py-2 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Resume public du projet" maxLength={360} />
-            <textarea value={projectDraft.description} onChange={(event) => setProjectDraft((current) => ({ ...current, description: event.target.value }))} className="min-h-[120px] resize-y border border-[#cfd8e3] px-3 py-2 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Details techniques, composants, contraintes, instructions..." maxLength={2200} />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input value={projectDraft.attachmentName} onChange={(event) => setProjectDraft((current) => ({ ...current, attachmentName: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Nom fichier Gerber/PDF" maxLength={120} />
-              <input value={projectDraft.repositoryUrl} onChange={(event) => setProjectDraft((current) => ({ ...current, repositoryUrl: event.target.value }))} className="h-11 border border-[#cfd8e3] px-3 text-sm font-semibold outline-none focus:border-[#0f8f6b]" placeholder="Lien GitHub/EasyEDA optionnel" />
-            </div>
-            <button type="submit" className="h-11 bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">Publier</button>
-            {projectStatus ? <p className={`text-sm font-semibold ${projectStatus.includes('succes') ? 'text-[#0f8f6b]' : 'text-red-600'}`}>{projectStatus}</p> : null}
-          </form>
+          </div>
         ) : null}
 
         {(activeTab === 'projects' ? projects : favorites).length > 0 ? (
@@ -2453,6 +2416,22 @@ function ProjectTabIcon() {
     <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M4 4h12v12H4z" />
       <path d="M7 7h6M7 10h4M7 13h5" />
+    </svg>
+  );
+}
+
+function PaidProjectIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+      <path fill="currentColor" d="M7 3h8l4 4v14H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm7 2v3h3l-3-3Zm-2 5c-2.2 0-4 1.12-4 2.5 0 1.46 1.27 2.08 3.72 2.53 1.43.27 1.78.55 1.78.97 0 .45-.55.8-1.5.8-1.08 0-1.98-.36-2.86-1.04L8 17.13c.85.7 1.86 1.16 3 1.32V20h2v-1.53c1.82-.28 3-1.28 3-2.65 0-1.57-1.25-2.23-3.75-2.7-1.38-.26-1.75-.49-1.75-.87 0-.4.5-.7 1.35-.7.92 0 1.7.27 2.52.84l1.08-1.43A6.1 6.1 0 0 0 13 10.05V9h-2v1.06c.33-.04.66-.06 1-.06Z" />
+    </svg>
+  );
+}
+
+function OpenProjectIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+      <path fill="currentColor" d="M12 2a5 5 0 0 1 4.9 4H18a4 4 0 0 1 .2 8H15v-2h3.2a2 2 0 0 0-.2-4h-3V7a3 3 0 0 0-5.83-1H8a4 4 0 0 0 0 8h1v2H8A6 6 0 0 1 7.1 4.07 5 5 0 0 1 12 2Zm-1 8h2v7.17l2.59-2.58L17 16l-5 5-5-5 1.41-1.41L11 17.17V10Z" />
     </svg>
   );
 }

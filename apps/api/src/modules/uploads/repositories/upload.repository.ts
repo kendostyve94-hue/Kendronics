@@ -50,7 +50,7 @@ export class UploadRepository {
     const presignedUpload = await this.createPresignedUpload(userId, sanitizedFilename, dto);
     const response = await fetch(presignedUpload.uploadUrl, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/zip' },
+      headers: { 'Content-Type': dto.mimeType },
       body: new Uint8Array(fileBuffer),
     });
 
@@ -60,6 +60,22 @@ export class UploadRepository {
 
     return {
       ...presignedUpload,
+      status: 'uploaded',
+    };
+  }
+
+  async markUploaded(uploadId: string, userId: string): Promise<PresignedUpload | null> {
+    const upload = await this.prisma.gerberUpload.findFirst({ where: { id: uploadId, userId } });
+    if (!upload) return null;
+    const updated = await this.prisma.gerberUpload.update({
+      where: { id: upload.id },
+      data: { status: 'uploaded' },
+    });
+    return {
+      uploadId: updated.id,
+      storageKey: updated.storageKey,
+      uploadUrl: '',
+      expiresAt: new Date(),
       status: 'uploaded',
     };
   }

@@ -55,6 +55,57 @@ export class UploadsService {
     return recordedUpload;
   }
 
+  async uploadProjectFile(
+    userId: string,
+    file:
+      | {
+          originalname: string;
+          mimetype: string;
+          size: number;
+          buffer: Buffer;
+        }
+      | undefined,
+  ): Promise<PresignedUpload & { originalName: string; mimeType: string; sizeBytes: number }> {
+    if (!file) {
+      throw new BadRequestException('A project file is required.');
+    }
+    const allowedMimeTypes = new Set([
+      'application/zip',
+      'application/x-zip-compressed',
+      'application/pdf',
+      'text/plain',
+      'text/csv',
+      'application/json',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'video/mp4',
+      'video/quicktime',
+      'application/octet-stream',
+    ]);
+    if (!allowedMimeTypes.has(file.mimetype || 'application/octet-stream')) {
+      throw new BadRequestException('Unsupported project file type.');
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      throw new BadRequestException('Project file exceeds the 50MB limit.');
+    }
+    const sanitizedFilename = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const dto = {
+      filename: file.originalname,
+      mimeType: file.mimetype || 'application/octet-stream',
+      fileSizeBytes: file.size,
+    } as PresignUploadDto;
+    const uploaded = await this.uploadRepository.uploadFile(userId, sanitizedFilename, dto, file.buffer);
+    const recorded = await this.uploadRepository.markUploaded(uploaded.uploadId, userId);
+    if (!recorded) throw new NotFoundException('Uploaded project file was not recorded.');
+    return {
+      ...recorded,
+      originalName: file.originalname,
+      mimeType: dto.mimeType,
+      sizeBytes: file.size,
+    };
+  }
+
   async confirmDirectStorageUpload(userId: string, uploadId: string): Promise<PresignedUpload> {
     const uploadedFile = await this.uploadRepository.downloadUploadFile(uploadId, userId);
     if (!uploadedFile) {

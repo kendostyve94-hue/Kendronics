@@ -158,6 +158,7 @@ test('persists public profiles, projects, favorites, and social counters', () =>
     'model ExplorerProject',
     'model ExplorerProjectLike',
     'model ExplorerProjectFavorite',
+    'model ExplorerProjectAsset',
     'model UserFollow',
   ].forEach((marker) => expectIncludes(schema, marker));
 
@@ -174,12 +175,23 @@ test('persists public profiles, projects, favorites, and social counters', () =>
   expectIncludes(explorerController, "@Get('me/projects')");
   expectIncludes(explorerController, "@Get('me/favorites')");
   expectIncludes(explorerController, "@Post('projects/:projectId/favorites')");
+  expectIncludes(explorerController, "@Post('projects/drafts')");
+  expectIncludes(explorerController, "@Patch('projects/:projectId')");
+  expectIncludes(explorerController, "@Post('projects/:projectId/assets')");
+  expectIncludes(explorerController, "@Delete('projects/:projectId/assets/:assetId')");
+  expectIncludes(explorerController, "@Post('projects/:projectId/publish')");
 
   const profilePage = read('apps/web/app/profile/page.tsx');
   expectIncludes(profilePage, '/api/users/me/public-profile');
   expectIncludes(profilePage, '/api/explorer/me/projects');
   expectIncludes(profilePage, '/api/explorer/me/favorites');
-  expectIncludes(profilePage, '/api/explorer/projects');
+  expectIncludes(profilePage, '/projects/new?type=paid');
+  expectIncludes(profilePage, '/projects/new?type=free');
+
+  const projectEditor = read('apps/web/app/projects/new/page.tsx');
+  expectIncludes(projectEditor, '/api/explorer/projects/drafts');
+  expectIncludes(projectEditor, '/api/uploads/project-direct');
+  expectIncludes(projectEditor, '/publish');
 });
 
 test('keeps deployment checks wired to build, migrate, and run production paths', () => {

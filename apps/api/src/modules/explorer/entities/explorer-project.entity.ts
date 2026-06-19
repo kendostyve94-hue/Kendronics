@@ -18,6 +18,11 @@ export type ExplorerProject = {
   attachmentName?: string;
   attachmentType?: string;
   repositoryUrl?: string;
+  projectType: 'free' | 'paid';
+  priceCents?: number;
+  currency: string;
+  licenseCode: string;
+  allowedUses: string[];
   featured: boolean;
   viewsCount: number;
   likesCount: number;
