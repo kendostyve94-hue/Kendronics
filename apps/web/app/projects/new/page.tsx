@@ -97,15 +97,6 @@ const initialForm: EditorForm = {
   rightsConfirmed: false,
 };
 
-const steps = [
-  ['01', 'Informations', 'Identite et presentation publique'],
-  ['02', 'Technique', 'Caracteristiques reproductibles'],
-  ['03', 'Documentation', 'Montage, logiciel et securite'],
-  ['04', 'Fichiers', 'Sources publiques ou protegees'],
-  ['05', 'Licence et prix', 'Droits accordes au public'],
-  ['06', 'Publication', 'Controle avant mise en ligne'],
-];
-
 export default function NewProjectPage() {
   const initialized = useRef(false);
   const [projectType, setProjectType] = useState<ProjectType>('free');
@@ -385,21 +376,7 @@ export default function NewProjectPage() {
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-[1320px] gap-6 px-4 py-7 sm:px-6 lg:grid-cols-[250px_minmax(0,1fr)] lg:px-8">
-        <aside className="self-start border border-[#dbe4ee] bg-white lg:sticky lg:top-4">
-          <div className="border-b border-[#e4ebf2] px-5 py-4">
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">Dossier de publication</p>
-          </div>
-          <nav className="divide-y divide-[#edf1f5]" aria-label="Etapes de creation">
-            {steps.map(([number, label, detail]) => (
-              <a key={number} href={`#step-${number}`} className="flex gap-3 px-5 py-4 transition hover:bg-[#f4fbf8]">
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#e7f5f0] text-xs font-black text-[#0f8f6b]">{number}</span>
-                <span><strong className="block text-sm">{label}</strong><span className="mt-0.5 block text-xs leading-5 text-[#7a8899]">{detail}</span></span>
-              </a>
-            ))}
-          </nav>
-        </aside>
-
+      <div className="mx-auto max-w-[1180px] px-4 py-7 sm:px-6 lg:px-8">
         <div className="min-w-0 space-y-6">
           <EditorSection id="step-01" number="01" title="Informations publiques" description="Ce que les visiteurs verront en premier dans Explorer.">
             <Field label="Titre du projet" required>
