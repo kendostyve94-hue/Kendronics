@@ -294,7 +294,7 @@ function HomeCapabilityMatrix() {
   return (
     <section className="bg-white px-0 py-5 sm:px-4 lg:px-5">
       <div className="mx-auto grid w-full max-w-[1368px] items-start gap-5 xl:grid-cols-[minmax(45rem,1.16fr)_minmax(28rem,0.84fr)]">
-        <div className="overflow-hidden bg-white">
+        <div className="home-floating-surface home-float-delay-2 overflow-hidden border border-[#dce8e3] bg-white">
           <div className="grid lg:grid-cols-[minmax(13rem,16rem)_minmax(29rem,1fr)]">
             <div className="p-4 sm:p-5">
               <span className="mb-3 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
@@ -602,7 +602,7 @@ const operationMapCenter = { x: 50, y: 52, radius: 10.5 };
 
 function AfricaOperationsCard() {
   return (
-    <article className="overflow-hidden bg-white lg:min-h-[24rem]">
+    <article className="home-floating-surface overflow-hidden border border-[#dce8e3] bg-white lg:min-h-[24rem]">
       <div className="grid min-h-[24rem] lg:grid-cols-[minmax(13rem,0.62fr)_minmax(20rem,1fr)]">
         <div className="p-5 sm:p-6">
           <p className="label-caps text-[#0f8f6b]">Reseau operationnel</p>
@@ -678,7 +678,7 @@ function AfricaOperationsCard() {
 
 function SmartOrderingCard({ className = '' }: { className?: string }) {
   return (
-    <article className={`overflow-hidden bg-white lg:min-h-[24rem] ${className}`}>
+    <article className={`home-floating-surface home-float-delay-1 overflow-hidden border border-[#dce8e3] bg-white lg:min-h-[24rem] ${className}`}>
       <div className="grid min-h-[24rem] lg:grid-cols-[minmax(16rem,0.46fr)_minmax(20rem,1fr)]">
         <div className="p-5 sm:p-6">
           <p className="label-caps text-ink">Commande intelligente</p>
@@ -704,65 +704,18 @@ function SmartOrderingCard({ className = '' }: { className?: string }) {
 
 function WorkflowIcon({ name }: { name: string }) {
   const common = 'h-8 w-8 text-current';
-
-  if (name === 'quote') {
-    return (
-      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-        <path d="M7 3h10v18H7z" />
-        <path d="M9 7h6M9 11h2M13 11h2M9 15h2M13 15h2" />
-      </svg>
-    );
-  }
-
-  if (name === 'upload') {
-    return (
-      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-        <path d="M6 3h9l3 3v15H6z" />
-        <path d="M14 3v4h4M12 17V9M9 12l3-3 3 3" />
-      </svg>
-    );
-  }
-
-  if (name === 'review') {
-    return (
-      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-        <path d="M4 4h14v16H4z" />
-        <path d="M7 8h8M7 12h5M16 16l4 4M17.5 17.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
-      </svg>
-    );
-  }
-
-  if (name === 'payment') {
-    return (
-      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-        <rect x="3" y="6" width="18" height="12" rx="1.5" />
-        <path d="M3 10h18M7 15h5" />
-      </svg>
-    );
-  }
-
-  if (name === 'tracking') {
-    return (
-      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-        <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" />
-        <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" />
-      </svg>
-    );
-  }
-
-  if (name === 'delivery') {
-    return (
-      <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-        <path d="M3 11l18-7-7 18-3-8-8-3Z" />
-      </svg>
-    );
-  }
+  const materialPaths: Record<string, string> = {
+    quote: 'M4 3h16v18H4V3Zm3 4v2h10V7H7Zm0 4v2h6v-2H7Zm0 4v2h10v-2H7Zm8-4v2h2v2h2v-2h2v-2h-2V9h-2v2h-2Z',
+    upload: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm1 7V4.5L19.5 9H15Zm-4 9v-4H8l4-4 4 4h-3v4h-2Z',
+    review: 'M4 3h16v18H4V3Zm3 4v2h8V7H7Zm0 4v2h5v-2H7Zm8.5 1a3.5 3.5 0 1 0 2.15 6.26L20.4 21 22 19.4l-2.74-2.75A3.5 3.5 0 0 0 15.5 12Zm0 2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z',
+    payment: 'M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 14H3v-6h18v6Zm0-10H3V6h18v2Z',
+    tracking: 'M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.08-.98l2.11-1.65-2-3.46-2.49 1a7.3 7.3 0 0 0-1.69-.98L15 3.28h-4l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.08.66-.08.98s.03.66.08.98l-2.11 1.65 2 3.46 2.49-1c.52.4 1.08.73 1.69.98l.38 2.65h4l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1 2-3.46-2.13-1.65ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z',
+    delivery: 'M2 12 22 3l-7 18-4-7-9-2Zm5.2-.7 5.1 1.3 1.6 3.8L18.5 7 7.2 11.3Z',
+  };
 
   return (
-    <svg viewBox="0 0 24 24" className={common} fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-      <path d="M12 3 4 7l8 4 8-4-8-4Z" />
-      <path d="M4 7v9l8 5 8-5V7M12 11v10M16 5l-8 4" />
-      <path d="m15.5 14.5 1.5 1.5 3-3" />
+    <svg viewBox="0 0 24 24" className={common} fill="currentColor" aria-hidden="true">
+      <path d={materialPaths[name] ?? materialPaths.quote} />
     </svg>
   );
 }

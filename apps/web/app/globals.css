@@ -916,3 +916,35 @@ main.mobile-free-page form[class*="border"],
 main.mobile-free-page details[class*="border"] {
   border-radius: 6px;
 }
+
+.home-floating-surface {
+  border-radius: 18px;
+  box-shadow: none !important;
+  animation: home-surface-float 6.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.home-float-delay-1 {
+  animation-delay: -2.15s;
+}
+
+.home-float-delay-2 {
+  animation-delay: -4.3s;
+}
+
+@keyframes home-surface-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-floating-surface {
+    animation: none;
+  }
+}
