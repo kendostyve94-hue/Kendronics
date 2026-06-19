@@ -205,7 +205,7 @@ async function getRecentProductionActivity(): Promise<RecentProductionActivityIt
 
 function WhyBuyPcbSection({ recentProductionActivity }: { recentProductionActivity: RecentProductionActivityItem[] }) {
   return (
-    <section className="bg-white px-0 py-5 sm:px-4 lg:px-5">
+    <section className="bg-white px-2 py-5 sm:px-4 lg:px-5">
       <div className="mx-auto w-full max-w-[1368px] bg-white">
         <div className="grid lg:grid-cols-[minmax(18rem,25rem)_1fr]">
           <div className="min-w-0 p-5 sm:p-6">
@@ -292,9 +292,9 @@ function HomeCapabilityMatrix() {
   const finishGroup = homeCapabilityGroups[2];
 
   return (
-    <section className="bg-white px-0 py-5 sm:px-4 lg:px-5">
+    <section className="bg-white px-2 py-5 sm:px-4 lg:px-5">
       <div className="mx-auto grid w-full max-w-[1368px] items-start gap-5 xl:grid-cols-[minmax(45rem,1.16fr)_minmax(28rem,0.84fr)]">
-        <div className="home-floating-surface home-float-delay-2 overflow-hidden border border-[#dce8e3] bg-white">
+        <div className="home-floating-surface overflow-hidden border border-[#dce8e3] bg-white">
           <div className="grid lg:grid-cols-[minmax(13rem,16rem)_minmax(29rem,1fr)]">
             <div className="p-4 sm:p-5">
               <span className="mb-3 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
@@ -580,7 +580,7 @@ function MobileInstantQuote() {
 
 function SmartOrdering() {
   return (
-    <section className="bg-white px-0 py-4 sm:px-4 lg:px-5">
+    <section className="bg-white px-2 py-4 sm:px-4 lg:px-5">
       <div className="mx-auto grid w-full max-w-[1368px] gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <AfricaOperationsCard />
         <SmartOrderingCard />
@@ -678,7 +678,7 @@ function AfricaOperationsCard() {
 
 function SmartOrderingCard({ className = '' }: { className?: string }) {
   return (
-    <article className={`home-floating-surface home-float-delay-1 overflow-hidden border border-[#dce8e3] bg-white lg:min-h-[24rem] ${className}`}>
+    <article className={`home-floating-surface overflow-hidden border border-[#dce8e3] bg-white lg:min-h-[24rem] ${className}`}>
       <div className="grid min-h-[24rem] lg:grid-cols-[minmax(16rem,0.46fr)_minmax(20rem,1fr)]">
         <div className="p-5 sm:p-6">
           <p className="label-caps text-ink">Commande intelligente</p>
@@ -710,7 +710,7 @@ function WorkflowIcon({ name }: { name: string }) {
     review: 'M4 3h16v18H4V3Zm3 4v2h8V7H7Zm0 4v2h5v-2H7Zm8.5 1a3.5 3.5 0 1 0 2.15 6.26L20.4 21 22 19.4l-2.74-2.75A3.5 3.5 0 0 0 15.5 12Zm0 2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z',
     payment: 'M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 14H3v-6h18v6Zm0-10H3V6h18v2Z',
     tracking: 'M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.08-.98l2.11-1.65-2-3.46-2.49 1a7.3 7.3 0 0 0-1.69-.98L15 3.28h-4l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1-2 3.46 2.11 1.65c-.04.32-.08.66-.08.98s.03.66.08.98l-2.11 1.65 2 3.46 2.49-1c.52.4 1.08.73 1.69.98l.38 2.65h4l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1 2-3.46-2.13-1.65ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z',
-    delivery: 'M2 12 22 3l-7 18-4-7-9-2Zm5.2-.7 5.1 1.3 1.6 3.8L18.5 7 7.2 11.3Z',
+    delivery: 'M20 8h-3V4H3a2 2 0 0 0-2 2v11h2a3 3 0 0 0 6 0h6a3 3 0 0 0 6 0h2v-5l-3-4ZM6 18.5A1.5 1.5 0 1 1 6 15a1.5 1.5 0 0 1 0 3.5ZM15 15H9a3 3 0 0 0-6 0V6h12v9Zm3 3.5a1.5 1.5 0 1 1 0-3.5 1.5 1.5 0 0 1 0 3.5ZM17 12V9.5h2.5l1.96 2.5H17Z',
   };
 
   return (
