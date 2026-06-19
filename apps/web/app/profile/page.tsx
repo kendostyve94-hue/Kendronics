@@ -803,10 +803,7 @@ function OrderReviewSection({
 function OrderStatusHeader({ activeKey, counts }: { activeKey: OrderStatusKey; counts: ReturnType<typeof orderCounts> }) {
   return (
     <div className="px-3 pt-4 sm:px-6">
-      <div className="flex h-11 items-center gap-3 border-b border-[#e5e7eb]">
-        <span className="grid h-6 w-6 place-items-center text-xl text-[#b8b8b8]">▤</span>
-      </div>
-      <div className="flex snap-x gap-2 overflow-x-auto px-0 pt-4 sm:grid sm:h-[112px] sm:grid-cols-5 sm:gap-0 sm:overflow-hidden sm:px-1 sm:pt-6">
+      <div className="flex snap-x gap-2 overflow-x-auto px-0 sm:grid sm:h-[112px] sm:grid-cols-5 sm:gap-0 sm:overflow-hidden sm:px-1 sm:pt-2">
         {orderStatuses.map((status) => {
           const active = status.key === activeKey;
 
