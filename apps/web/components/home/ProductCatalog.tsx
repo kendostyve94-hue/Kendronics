@@ -81,7 +81,7 @@ export function ProductCatalog() {
     <section className="bg-white px-2 py-5 sm:px-4 lg:px-5">
       <div className="mx-auto w-full max-w-[1368px]">
         <div className="grid items-start overflow-hidden bg-transparent lg:grid-cols-[15rem_1fr]">
-          <aside className="grid border-b border-line bg-white lg:border-b-0 lg:border-r">
+          <aside className="product-catalog-focus-panel grid overflow-hidden border border-line bg-white">
             <article className="bg-white p-4">
               <p className="label-caps text-deepblue">{activeCard.tag}</p>
               <h3 className="mt-2 text-lg font-black leading-6 text-ink">{activeCard.title}</h3>

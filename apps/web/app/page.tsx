@@ -14,12 +14,12 @@ const smartOrderingMapImage = '/images/home-schematic-preview.png';
 const oneStopPaymentMethodCount = 4;
 
 const oneStopCapabilities = [
-  'PCB standard et avance',
-  'Assemblage PCBA',
-  'FPC, flex et rigid-flex',
-  'Stencil SMT',
-  'CNC, impression 3D et tolerie',
-  'Assistance Gerber avant paiement',
+  'Exporter un dossier Gerber propre depuis KiCad',
+  'Verifier les fichiers avant le lancement du devis',
+  'Configurer les exigences PCB ou PCBA',
+  'Centraliser Gerber, BOM et CPL dans la commande',
+  'Suivre la revue, la production et la livraison',
+  'Conserver un historique exploitable par votre equipe',
 ];
 
 const kendronicsChoiceCards = [
@@ -297,9 +297,8 @@ function HomeCapabilityMatrix() {
         <div className="home-floating-surface overflow-hidden border border-[#dce8e3] bg-white">
           <div className="grid lg:grid-cols-[minmax(13rem,16rem)_minmax(29rem,1fr)]">
             <div className="p-4 sm:p-5">
-              <span className="mb-3 block h-5 w-1 bg-[#008b6d]" aria-hidden="true" />
-              <h2 className="text-xl font-semibold leading-tight tracking-tight text-ink">Solution complete pour PCB et assemblage</h2>
-              <p className="mt-1 text-sm text-slate-500">Simple, qualite suivie, delais visibles</p>
+              <h2 className="text-xl font-semibold leading-tight tracking-tight text-ink">De la conception KiCad au suivi de fabrication.</h2>
+              <p className="mt-2 text-sm leading-5 text-slate-500">Deux parcours pratiques pour préparer les fichiers, structurer la commande et suivre chaque étape jusqu’à la livraison.</p>
 
               <ul className="mt-4 space-y-1.5 text-sm leading-5 text-slate-600">
                 {oneStopCapabilities.map((item) => (
@@ -550,14 +549,14 @@ function Hero() {
 function HeroPromoPanels() {
   return (
     <aside className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:self-end" aria-label="Offres PCB">
-      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=5&thickness=1.6mm" className="relative min-h-[5.6rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2.5 text-center text-[#102033] transition hover:border-[#0f8f6b] sm:min-h-[6.2rem]">
+      <a href="/quote?productType=standard_pcb&layers=2&length=100&width=100&quantity=5&thickness=1.6mm" className="home-promo-panel relative min-h-[5.6rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2.5 text-center text-[#102033] transition hover:border-[#0f8f6b] sm:min-h-[6.2rem]">
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
         <p className="text-lg font-normal leading-none text-[#0f8f6b] sm:text-xl">$ 6.75</p>
         <p className="mt-1 text-[11px] leading-4 text-slate-600">5 pieces, 1-2 couches</p>
         <p className="text-xs leading-4 text-slate-600">Production: 24 heures</p>
         <p className="text-xs leading-4 text-slate-600">PCB prototypes</p>
       </a>
-      <a href="/quote?productType=advanced_pcb&layers=4&length=100&width=100&quantity=30&thickness=1.6mm" className="relative min-h-[5.6rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2.5 text-center text-[#102033] transition hover:border-[#0f8f6b] sm:min-h-[6.2rem]">
+      <a href="/quote?productType=advanced_pcb&layers=4&length=100&width=100&quantity=30&thickness=1.6mm" className="home-promo-panel relative min-h-[5.6rem] overflow-hidden border border-[#0f8f6b]/45 bg-white p-2.5 text-center text-[#102033] transition hover:border-[#0f8f6b] sm:min-h-[6.2rem]">
         <div className="absolute inset-x-0 top-0 h-1 bg-[#0f8f6b]" />
         <p className="text-lg font-normal leading-none text-[#0f8f6b] sm:text-xl">$ 221.72</p>
         <p className="mt-1 text-[11px] leading-4 text-slate-600">4 couches, 5-30 pieces</p>
@@ -681,8 +680,8 @@ function SmartOrderingCard({ className = '' }: { className?: string }) {
     <article className={`home-floating-surface overflow-hidden border border-[#dce8e3] bg-white lg:min-h-[24rem] ${className}`}>
       <div className="grid min-h-[24rem] lg:grid-cols-[minmax(16rem,0.46fr)_minmax(20rem,1fr)]">
         <div className="p-5 sm:p-6">
-          <p className="label-caps text-ink">Commande intelligente</p>
-          <h2 className="mt-3 text-xl font-semibold leading-tight text-ink">Chaque schema devient un dossier de fabrication lisible.</h2>
+          <p className="label-caps text-ink">Préparation industrielle</p>
+          <h2 className="mt-3 text-xl font-semibold leading-tight text-ink">Du schéma électronique au dossier prêt pour la revue.</h2>
           <p className="mt-3 text-sm leading-6 text-slate-700">
             Kendronics relie les reperes techniques, fichiers Gerber, BOM/CPL et contraintes d assemblage pour preparer une commande exploitable avant revue, paiement et lancement production.
           </p>

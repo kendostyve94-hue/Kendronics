@@ -39,7 +39,7 @@ export function HeroQuickQuote() {
   }, [layers, length, productType, quantity, thickness, width]);
 
   return (
-    <aside className="w-full border border-[#d8e2ea] bg-white text-ink">
+    <aside className="home-quick-quote-frame w-full overflow-hidden border border-[#d8e2ea] bg-white text-ink">
       <div className="grid grid-cols-[6.4rem_minmax(0,1fr)] sm:grid-cols-[8.8rem_1fr]">
         <nav className="grid border-r border-[#d8e2ea] bg-[#0f8f6b] text-white">
           {productOptions.map((option) => {

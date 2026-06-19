@@ -922,3 +922,15 @@ main.mobile-free-page details[class*="border"] {
   box-shadow: 0 10px 26px rgba(15, 35, 52, 0.09) !important;
   transform: translateY(-2px);
 }
+
+.home-quick-quote-frame {
+  border-radius: 18px !important;
+}
+
+.home-promo-panel {
+  border-radius: 14px !important;
+}
+
+.product-catalog-focus-panel {
+  border-radius: 10px !important;
+}
