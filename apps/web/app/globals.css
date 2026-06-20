@@ -923,6 +923,19 @@ main.mobile-free-page details[class*="border"] {
   transform: translateY(-2px);
 }
 
+.project-editor-section {
+  border-radius: 0;
+}
+
+@media (min-width: 640px) {
+  .project-editor-section {
+    border-radius: 18px;
+    box-shadow: 0 10px 26px rgba(15, 35, 52, 0.09) !important;
+    transform: translateY(-2px);
+    overflow: hidden;
+  }
+}
+
 .home-quick-quote-frame {
   border-radius: 10px !important;
 }

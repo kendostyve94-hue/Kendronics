@@ -46,6 +46,8 @@ type EditorForm = {
   summary: string;
   description: string;
   imageUrl: string;
+  coverPreviewUrl: string;
+  videoPreviewUrl: string;
   repositoryUrl: string;
   boardType: string;
   dimensions: string;
@@ -75,6 +77,8 @@ const initialForm: EditorForm = {
   summary: '',
   description: '',
   imageUrl: '',
+  coverPreviewUrl: '',
+  videoPreviewUrl: '',
   repositoryUrl: '',
   boardType: 'PCB rigide',
   dimensions: '',
@@ -179,6 +183,8 @@ export default function NewProjectPage() {
       summary: draft.summary === 'Brouillon en cours de preparation.' ? '' : draft.summary,
       description: draft.description ?? '',
       imageUrl: draft.imageUrl ?? '',
+      coverPreviewUrl: draft.imageUrl ?? '',
+      videoPreviewUrl: '',
       repositoryUrl: draft.repositoryUrl ?? '',
       boardType: stringValue(technical.boardType, 'PCB rigide'),
       dimensions: stringValue(technical.dimensions),
@@ -222,6 +228,22 @@ export default function NewProjectPage() {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  function previewMedia(event: ChangeEvent<HTMLInputElement>, kind: 'cover' | 'video') {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const objectUrl = URL.createObjectURL(file);
+    if (kind === 'cover') {
+      update('coverPreviewUrl', objectUrl);
+      setAssetKind('cover');
+      setAssetVisibility('public');
+    } else {
+      update('videoPreviewUrl', objectUrl);
+      setAssetKind('video');
+      setAssetVisibility('public');
+    }
+    void uploadAsset(event, kind, 'public');
+  }
+
   function toggleUse(value: string) {
     setForm((current) => ({
       ...current,
@@ -259,7 +281,7 @@ export default function NewProjectPage() {
     return true;
   }
 
-  async function uploadAsset(event: ChangeEvent<HTMLInputElement>) {
+  async function uploadAsset(event: ChangeEvent<HTMLInputElement>, overrideKind?: string, overrideVisibility?: AssetVisibility) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file || !projectId) return;
@@ -298,8 +320,8 @@ export default function NewProjectPage() {
       },
       body: JSON.stringify({
         uploadId: upload.uploadId,
-        kind: assetKind,
-        visibility: projectType === 'free' ? assetVisibility : assetVisibility,
+        kind: overrideKind ?? assetKind,
+        visibility: overrideVisibility ?? assetVisibility,
         originalName: upload.originalName,
         mimeType: upload.mimeType,
         sizeBytes: upload.sizeBytes,
@@ -378,7 +400,7 @@ export default function NewProjectPage() {
 
       <div className="mx-auto max-w-[1180px] px-4 py-7 sm:px-6 lg:px-8">
         <div className="min-w-0 space-y-6">
-          <EditorSection id="step-01" number="01" title="Informations publiques" description="Ce que les visiteurs verront en premier dans Explorer.">
+          <EditorSection id="step-01" icon="public" title="Informations publiques" description="Ce que les visiteurs verront en premier dans Explorer.">
             <Field label="Titre du projet" required>
               <input value={form.title} onChange={(event) => update('title', event.target.value)} className={inputClass} maxLength={90} placeholder="Ex. Station meteo solaire ESP32" />
             </Field>
@@ -398,17 +420,32 @@ export default function NewProjectPage() {
             <Field label="Presentation detaillee" required>
               <textarea value={form.description} onChange={(event) => update('description', event.target.value)} className={`${inputClass} min-h-[190px] py-3`} maxLength={12000} placeholder="Contexte, architecture, fonctionnement, choix techniques, limites et cas d usage." />
             </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Image de couverture externe">
-                <input value={form.imageUrl} onChange={(event) => update('imageUrl', event.target.value)} className={inputClass} placeholder="https://..." />
-              </Field>
-              <Field label="Depot de code optionnel">
-                <input value={form.repositoryUrl} onChange={(event) => update('repositoryUrl', event.target.value)} className={inputClass} placeholder="GitHub, GitLab ou EasyEDA" />
-              </Field>
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+              <div className="grid gap-4">
+                <Field label="Image de couverture">
+                  <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                    <input value={form.imageUrl} onChange={(event) => { update('imageUrl', event.target.value); update('coverPreviewUrl', event.target.value); }} className={inputClass} placeholder="https://... ou televersez une image" />
+                    <label className="inline-flex h-11 cursor-pointer items-center justify-center border border-[#0f8f6b] px-4 text-sm font-black text-[#0f8f6b]">
+                      Televerser
+                      <input type="file" className="sr-only" accept=".jpg,.jpeg,.png,.webp" onChange={(event) => previewMedia(event, 'cover')} />
+                    </label>
+                  </div>
+                </Field>
+                <Field label="Video de presentation">
+                  <label className="inline-flex h-11 w-fit cursor-pointer items-center justify-center border border-[#cfd8e3] px-4 text-sm font-black text-[#102033]">
+                    Ajouter une video
+                    <input type="file" className="sr-only" accept=".mp4,.mov,.webm" onChange={(event) => previewMedia(event, 'video')} />
+                  </label>
+                </Field>
+                <Field label="Lien document externe">
+                  <input value={form.repositoryUrl} onChange={(event) => update('repositoryUrl', event.target.value)} className={inputClass} placeholder="GitHub, GitLab, EasyEDA, Drive, documentation..." />
+                </Field>
+              </div>
+              <ProjectPublishPreview form={form} projectType={projectType} />
             </div>
           </EditorSection>
 
-          <EditorSection id="step-02" number="02" title="Caracteristiques techniques" description="Les donnees necessaires pour comprendre et reproduire correctement le materiel.">
+          <EditorSection id="step-02" icon="memory" title="Caracteristiques techniques" description="Les donnees necessaires pour comprendre et reproduire correctement le materiel.">
             <div className="grid gap-4 sm:grid-cols-3">
               <Field label="Type de carte" required><select value={form.boardType} onChange={(event) => update('boardType', event.target.value)} className={inputClass}>{['PCB rigide', 'PCB flexible', 'Rigide-flex', 'Module assemble', 'Systeme mecanique', 'Autre'].map((item) => <option key={item}>{item}</option>)}</select></Field>
               <Field label="Dimensions" required><input value={form.dimensions} onChange={(event) => update('dimensions', event.target.value)} className={inputClass} placeholder="100 x 80 mm" /></Field>
@@ -424,14 +461,14 @@ export default function NewProjectPage() {
             <Field label="Tests realises" required><textarea value={form.tested} onChange={(event) => update('tested', event.target.value)} className={`${inputClass} min-h-[110px] py-3`} placeholder="Tests electriques, fonctionnels, thermiques, radio, autonomie et conditions de validation." /></Field>
           </EditorSection>
 
-          <EditorSection id="step-03" number="03" title="Documentation de reproduction" description="Des instructions suffisamment precises pour eviter les interpretations dangereuses ou couteuses.">
+          <EditorSection id="step-03" icon="article" title="Documentation de reproduction" description="Des instructions suffisamment precises pour eviter les interpretations dangereuses ou couteuses.">
             <Field label="Fabrication et assemblage" required><textarea value={form.buildInstructions} onChange={(event) => update('buildInstructions', event.target.value)} className={`${inputClass} min-h-[150px] py-3`} placeholder="Preparation des fichiers, contraintes PCB, ordre d assemblage, composants alternatifs et controles." /></Field>
             <Field label="Programmation et mise en service"><textarea value={form.softwareInstructions} onChange={(event) => update('softwareInstructions', event.target.value)} className={`${inputClass} min-h-[130px] py-3`} placeholder="Installation, compilation, flash, configuration et premier demarrage." /></Field>
             <Field label="Securite, limites et avertissements"><textarea value={form.safetyNotes} onChange={(event) => update('safetyNotes', event.target.value)} className={`${inputClass} min-h-[110px] py-3`} placeholder="Tensions dangereuses, courant maximal, environnement, certifications et usages interdits." /></Field>
             <Field label="Historique de version"><textarea value={form.changelog} onChange={(event) => update('changelog', event.target.value)} className={`${inputClass} min-h-[90px] py-3`} /></Field>
           </EditorSection>
 
-          <EditorSection id="step-04" number="04" title="Fichiers et medias" description="Chaque fichier est stocke dans l espace prive Kendronics. Vous choisissez ce qui est visible publiquement.">
+          <EditorSection id="step-04" icon="folder" title="Fichiers et medias" description="Chaque fichier est stocke dans l espace prive Kendronics. Vous choisissez ce qui est visible publiquement.">
             <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
               <Field label="Nature du fichier">
                 <select value={assetKind} onChange={(event) => setAssetKind(event.target.value)} className={inputClass}>
@@ -462,7 +499,7 @@ export default function NewProjectPage() {
             </div>
           </EditorSection>
 
-          <EditorSection id="step-05" number="05" title="Licence, droits et tarification" description="Les visiteurs doivent comprendre exactement ce qu ils peuvent faire avec le projet.">
+          <EditorSection id="step-05" icon="license" title="Licence, droits et tarification" description="Les visiteurs doivent comprendre exactement ce qu ils peuvent faire avec le projet.">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Licence" required>
                 <select value={form.licenseCode} onChange={(event) => update('licenseCode', event.target.value)} className={inputClass}>
@@ -490,7 +527,7 @@ export default function NewProjectPage() {
             </fieldset>
           </EditorSection>
 
-          <EditorSection id="step-06" number="06" title="Controle et publication" description="La publication reste impossible tant que les informations essentielles ne sont pas completes.">
+          <EditorSection id="step-06" icon="publish" title="Controle et publication" description="La publication reste impossible tant que les informations essentielles ne sont pas completes.">
             <label className="flex items-start gap-3 border border-[#dbe4ee] bg-[#f8fafc] p-4 text-sm leading-6">
               <input type="checkbox" checked={form.rightsConfirmed} onChange={(event) => update('rightsConfirmed', event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#0f8f6b]" />
               <span>Je confirme etre l auteur du projet ou disposer des droits necessaires pour publier les textes, medias, fichiers et licences associes.</span>
@@ -512,13 +549,15 @@ export default function NewProjectPage() {
   );
 }
 
-const inputClass = 'h-11 w-full border border-[#cfd8e3] bg-white px-3 text-sm text-[#102033] outline-none transition focus:border-[#0f8f6b]';
+const inputClass = 'h-11 w-full rounded-[10px] border border-[#cfd8e3] bg-white px-3 text-sm text-[#102033] outline-none transition focus:border-[#0f8f6b]';
 
-function EditorSection({ id, number, title, description, children }: { id: string; number: string; title: string; description: string; children: React.ReactNode }) {
+function EditorSection({ id, icon, title, description, children }: { id: string; icon: ProjectEditorIconName; title: string; description: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-5 border border-[#dbe4ee] bg-white">
+    <section id={id} className="project-editor-section scroll-mt-5 bg-white sm:border sm:border-[#dce8e3]">
       <header className="flex gap-4 border-b border-[#e4ebf2] px-5 py-5 sm:px-7">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#e7f5f0] text-sm font-black text-[#0f8f6b]">{number}</span>
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#e7f5f0] text-[#0f8f6b]">
+          <ProjectEditorIcon name={icon} />
+        </span>
         <div><h2 className="text-xl font-black">{title}</h2><p className="mt-1 text-sm leading-6 text-[#64748b]">{description}</p></div>
       </header>
       <div className="grid gap-5 px-5 py-6 sm:px-7">{children}</div>
@@ -529,9 +568,62 @@ function EditorSection({ id, number, title, description, children }: { id: strin
 function Field({ label, required = false, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
   return (
     <label className="grid gap-2">
-      <span className="flex items-center justify-between gap-3 text-sm font-black">{label}{required ? <span className="text-[#d9485f]">*</span> : null}{hint ? <span className="ml-auto text-xs font-normal text-[#7a8899]">{hint}</span> : null}</span>
+      <span className="flex items-center justify-between gap-3 text-sm font-black">
+        <span className="inline-flex items-center gap-1.5">{label}{required ? <span className="text-[#d9485f]">*</span> : null}</span>
+        {hint ? <span className="text-xs font-normal text-[#7a8899]">{hint}</span> : null}
+      </span>
       {children}
     </label>
+  );
+}
+
+function ProjectPublishPreview({ form, projectType }: { form: EditorForm; projectType: ProjectType }) {
+  const cover = form.coverPreviewUrl || '/images/quote-product-standard-pcb.png';
+  return (
+    <aside className="rounded-[14px] border border-[#dbe4ee] bg-[#f8fafc] p-3">
+      <p className="mb-3 text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">Apercu publication</p>
+      <article className="overflow-hidden rounded-[12px] bg-white ring-1 ring-[#dbe4ee]">
+        <div className="relative aspect-video bg-[#dce8e3]">
+          {form.videoPreviewUrl ? (
+            <video src={form.videoPreviewUrl} controls className="h-full w-full bg-black object-cover" />
+          ) : (
+            <img src={cover} alt="" className="h-full w-full object-cover" />
+          )}
+          {!form.videoPreviewUrl ? <span className="absolute inset-0 grid place-items-center"><span className="grid h-12 w-12 place-items-center rounded-full bg-black/65 text-white"><ProjectEditorIcon name="play" /></span></span> : null}
+        </div>
+        <div className="p-4">
+          <div className="flex items-center gap-2">
+            <span className={`rounded px-2 py-1 text-[11px] font-black ${projectType === 'paid' ? 'bg-[#fff1e6] text-[#c45100]' : 'bg-[#e7f5f0] text-[#0f8f6b]'}`}>{projectType === 'paid' ? 'PAYANT' : 'GRATUIT'}</span>
+            <span className="truncate text-xs font-semibold text-[#64748b]">{form.category}</span>
+          </div>
+          <h3 className="mt-2 line-clamp-2 text-base font-black text-[#102033]">{form.title || 'Titre du projet'}</h3>
+          <p className="mt-2 line-clamp-2 text-sm leading-5 text-[#64748b]">{form.summary || 'Le resume public apparaitra ici pour aider les visiteurs a comprendre le projet.'}</p>
+          <div className="mt-3 flex items-center gap-2 text-xs text-[#64748b]">
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-[#102033] font-black text-white">K</span>
+            <span>Kendronics Creator</span>
+          </div>
+        </div>
+      </article>
+    </aside>
+  );
+}
+
+type ProjectEditorIconName = 'public' | 'memory' | 'article' | 'folder' | 'license' | 'publish' | 'play';
+
+function ProjectEditorIcon({ name }: { name: ProjectEditorIconName }) {
+  const paths: Record<ProjectEditorIconName, string> = {
+    public: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.93 9h-3.02a15.2 15.2 0 0 0-1.12-5.05A8.04 8.04 0 0 1 18.93 11ZM12 4.04c.83 1.2 1.48 3.05 1.71 5.96h-3.42C10.52 7.09 11.17 5.24 12 4.04ZM4.26 13h3.83c.09 1.6.35 3.09.76 4.31A8.02 8.02 0 0 1 4.26 13Zm3.83-2H4.26a8.02 8.02 0 0 1 4.59-4.31A17.3 17.3 0 0 0 8.09 11ZM12 19.96c-.83-1.2-1.48-3.05-1.71-5.96h3.42c-.23 2.91-.88 4.76-1.71 5.96Zm2.85-2.65c.41-1.22.67-2.71.76-4.31h3.83a8.02 8.02 0 0 1-4.59 4.31Z',
+    memory: 'M7 3h10v2h2v2h2v2h-2v2h2v2h-2v2h2v2h-2v2h-2v2H7v-2H5v-2H3v-2h2v-2H3v-2h2V9H3V7h2V5h2V3Zm2 4v10h6V7H9Zm2 2h2v6h-2V9Z',
+    article: 'M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 2v4h4l-4-4ZM8 12h8v2H8v-2Zm0 4h8v2H8v-2Zm0-8h4v2H8V8Z',
+    folder: 'M10 4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6Zm10 6H4v8h16v-8Z',
+    license: 'M12 2 4 5v6c0 5.1 3.4 9.4 8 11 4.6-1.6 8-5.9 8-11V5l-8-3Zm3.7 7.3 1.4 1.4-5.8 5.8-3.4-3.4 1.4-1.4 2 2 4.4-4.4Z',
+    publish: 'M5 20h14v-2H5v2ZM13 4.83V16h-2V4.83L7.41 8.42 6 7l6-6 6 6-1.41 1.42L13 4.83Z',
+    play: 'M8 5v14l11-7L8 5Z',
+  };
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+      <path fill="currentColor" d={paths[name]} />
+    </svg>
   );
 }
 
