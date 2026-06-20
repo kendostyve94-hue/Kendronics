@@ -99,6 +99,12 @@ export class ExplorerController {
     return this.explorerService.listUserFavorites(user.id);
   }
 
+  @Get('me/following/projects')
+  @UseGuards(JwtAuthGuard)
+  myFollowingProjects(@CurrentUser() user: AuthenticatedUser) {
+    return this.explorerService.listFollowingProjects(user.id);
+  }
+
   @Post('projects/:projectId/favorites')
   @UseGuards(JwtAuthGuard)
   favoriteProject(@CurrentUser() user: AuthenticatedUser, @Param('projectId') projectId: string) {

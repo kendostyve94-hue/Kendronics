@@ -41,6 +41,8 @@ type ExplorerProject = {
   comments: ExplorerComment[];
 };
 
+type MobileExplorerFeed = 'reels' | 'forks' | 'following';
+
 const apiBaseUrl = getApiBaseUrl();
 const actorKeyStorageKey = 'kendronics.explorer.actor';
 const heroBackgroundImage = '/images/explorer-hero-community.webp';
@@ -113,6 +115,9 @@ export default function ExplorerPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(fallbackProjects[0]?.id ?? null);
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [favoriteProjectIds, setFavoriteProjectIds] = useState<Set<string>>(new Set());
+  const [followingProjectIds, setFollowingProjectIds] = useState<Set<string>>(new Set());
+  const [followingProjects, setFollowingProjects] = useState<ExplorerProject[]>([]);
+  const [mobileFeed, setMobileFeed] = useState<MobileExplorerFeed>('reels');
   const isSignedIn = Boolean(readAuthSession());
 
   useEffect(() => {
@@ -148,6 +153,17 @@ export default function ExplorerPage() {
       .then((response) => response.ok ? response.json() : [])
       .then((payload: ExplorerProject[]) => setFavoriteProjectIds(new Set(payload.map((project) => project.id))))
       .catch(() => undefined);
+
+    fetch(`${apiBaseUrl}/api/explorer/me/following/projects`, {
+      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+      cache: 'no-store',
+    })
+      .then((response) => response.ok ? response.json() : [])
+      .then((payload: ExplorerProject[]) => {
+        setFollowingProjectIds(new Set(payload.map((project) => project.id)));
+        setFollowingProjects(payload);
+      })
+      .catch(() => undefined);
   }, []);
 
   const categories = useMemo(() => {
@@ -156,7 +172,8 @@ export default function ExplorerPage() {
   }, [projects]);
 
   const filteredProjects = useMemo(() => {
-    return projects
+    const sourceProjects = mobileFeed === 'following' && followingProjects.length > 0 ? followingProjects : projects;
+    const categoryFiltered = sourceProjects
       .filter((project) => {
         if (activeCategory === 'Tous') return true;
         if (activeCategory === 'Stars') return project.featured;
@@ -164,7 +181,11 @@ export default function ExplorerPage() {
         return project.category === activeCategory || project.tags.includes(activeCategory);
       })
       .sort((left, right) => Number(right.featured) - Number(left.featured) || new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
-  }, [activeCategory, projects]);
+
+    if (mobileFeed === 'forks') return categoryFiltered.filter((project) => project.projectType === 'paid');
+    if (mobileFeed === 'following') return categoryFiltered.filter((project) => followingProjectIds.has(project.id));
+    return categoryFiltered;
+  }, [activeCategory, followingProjectIds, followingProjects, mobileFeed, projects]);
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? filteredProjects[0] ?? projects[0];
 
@@ -238,7 +259,15 @@ export default function ExplorerPage() {
 
   return (
     <main className="min-h-screen bg-[#f4f7fb] text-[#172033]">
-      <Navbar />
+      <div className="hidden lg:block">
+        <Navbar />
+      </div>
+
+      <MobileExplorerTopNav
+        activeFeed={mobileFeed}
+        isSignedIn={isSignedIn}
+        onFeedChange={setMobileFeed}
+      />
 
       <section className="relative overflow-hidden border-b border-[#d8e1ea] bg-ink pt-[70px] text-white">
         <img src={heroBackgroundImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-100" />
@@ -259,7 +288,7 @@ export default function ExplorerPage() {
         </div>
       </section>
 
-      <section className="sticky top-0 z-40 border-b border-[#d8e1ea] bg-white">
+      <section className="sticky top-0 z-40 hidden border-b border-[#d8e1ea] bg-white lg:block">
         <div className="mx-auto flex max-w-[1368px] gap-2 overflow-x-auto px-4 py-3 sm:px-6 lg:px-5">
           {categories.map((item) => (
             <button key={item} type="button" onClick={() => setActiveCategory(item)} className={`h-9 shrink-0 px-3 text-sm font-black transition ${activeCategory === item ? 'bg-[#0f8f6b] text-white' : 'text-[#334155] hover:bg-[#edf3f8]'}`}>
@@ -272,7 +301,7 @@ export default function ExplorerPage() {
       <section id="feed" className="mx-auto grid max-w-[1368px] gap-6 px-4 py-8 sm:px-6 lg:px-5">
         <div className="min-w-0">
           <div className="grid gap-x-7 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredProjects.map((project) => (
+            {filteredProjects.length > 0 ? filteredProjects.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}
@@ -282,13 +311,61 @@ export default function ExplorerPage() {
                 onLike={() => void likeProject(project)}
                 onFavorite={() => void favoriteProject(project)}
               />
-            ))}
+            )) : (
+              <div className="col-span-full grid min-h-[220px] place-items-center bg-white px-5 py-10 text-center ring-1 ring-[#d8e1ea]">
+                <div>
+                  <p className="text-base font-black text-[#0b1724]">Aucun projet dans cette vue.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#64748b]">
+                    {mobileFeed === 'following' ? 'Les nouvelles publications des profils suivis apparaitront ici.' : 'Les projets correspondants apparaitront ici des leur publication.'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      <Footer />
+      <div className="hidden lg:block">
+        <Footer />
+      </div>
     </main>
+  );
+}
+
+function MobileExplorerTopNav({ activeFeed, isSignedIn, onFeedChange }: { activeFeed: MobileExplorerFeed; isSignedIn: boolean; onFeedChange: (feed: MobileExplorerFeed) => void }) {
+  const feeds: Array<{ id: MobileExplorerFeed; label: string }> = [
+    { id: 'reels', label: 'Reels' },
+    { id: 'forks', label: 'Forks' },
+    { id: 'following', label: 'Suivis' },
+  ];
+
+  return (
+    <nav className="sticky top-0 z-50 flex h-14 items-center gap-1 overflow-x-auto border-b border-[#d8e1ea] bg-white px-3 lg:hidden" aria-label="Navigation Explorer mobile">
+      <a
+        href={isSignedIn ? '/profile?view=benefits&create=1' : '#create'}
+        onClick={(event) => {
+          if (!isSignedIn) {
+            event.preventDefault();
+            openAuthRequired('login');
+          }
+        }}
+        className="grid h-9 shrink-0 place-items-center bg-[#0f8f6b] px-4 text-sm font-black text-white"
+      >
+        Creer
+      </a>
+      {feeds.map((feed) => (
+        <button
+          key={feed.id}
+          type="button"
+          onClick={() => onFeedChange(feed.id)}
+          className={`h-9 shrink-0 px-4 text-sm font-black transition ${
+            activeFeed === feed.id ? 'bg-[#102033] text-white' : 'text-[#102033] hover:bg-[#edf3f8]'
+          }`}
+        >
+          {feed.label}
+        </button>
+      ))}
+    </nav>
   );
 }
 

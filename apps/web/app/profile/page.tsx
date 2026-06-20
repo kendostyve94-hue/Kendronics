@@ -2295,7 +2295,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
         {isCreateProjectOpen ? (
           <div className="fixed inset-0 z-[90] grid place-items-center bg-[#07172a]/45 px-4" role="dialog" aria-modal="true" aria-labelledby="project-type-title">
-            <div className="w-full max-w-[620px] bg-white p-5 sm:p-8">
+            <div className="w-full max-w-[548px] rounded-[18px] bg-white p-5 shadow-[0_24px_70px_rgba(7,23,42,0.24)] ring-1 ring-white/70 sm:p-7">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-[#0f8f6b]">Nouveau projet</p>
@@ -2304,15 +2304,15 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
                 </div>
                 <button type="button" onClick={() => setIsCreateProjectOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#dbe4ee] text-xl text-[#64748b]" aria-label="Fermer">×</button>
               </div>
-              <div className="mt-7 grid gap-4">
-                <a href="/projects/new?type=paid" className="group flex min-h-[104px] items-center gap-4 border border-[#cfd8e3] bg-white p-5 transition hover:border-[#0f8f6b] hover:bg-[#f4fbf8]">
+              <div className="mt-6 grid gap-3">
+                <a href="/projects/new?type=paid" className="group flex min-h-[96px] items-center gap-4 rounded-[14px] border border-[#cfd8e3] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,52,0.06)] transition hover:border-[#0f8f6b] hover:bg-[#f4fbf8] sm:p-5">
                   <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e5f6f0] text-[#0f8f6b]"><PaidProjectIcon /></span>
                   <span>
                     <strong className="block text-lg text-[#102033]">Creer un nouveau projet</strong>
-                    <span className="mt-1 block text-sm leading-5 text-[#64748b]">Projet payant avec fichiers proteges, prix, licence et droits d'utilisation.</span>
+                    <span className="mt-1 block text-sm leading-5 text-[#64748b]">Publication commerciale avec fichiers proteges, prix, licence et droits d'utilisation.</span>
                   </span>
                 </a>
-                <a href="/projects/new?type=free" className="group flex min-h-[104px] items-center gap-4 border border-[#cfd8e3] bg-white p-5 transition hover:border-[#0877ff] hover:bg-[#f4f8ff]">
+                <a href="/projects/new?type=free" className="group flex min-h-[96px] items-center gap-4 rounded-[14px] border border-[#cfd8e3] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,52,0.06)] transition hover:border-[#0877ff] hover:bg-[#f4f8ff] sm:p-5">
                   <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eaf2ff] text-[#0877ff]"><OpenProjectIcon /></span>
                   <span>
                     <strong className="block text-lg text-[#102033]">Publier un projet</strong>

@@ -185,7 +185,7 @@ function mobileProfileMenuGroups(unreadNotifications: number): MobileProfileMenu
       ],
     },
     {
-      title: 'Services',
+      title: 'Espace professionnel',
       items: [
         { label: 'Services et demandes', href: '/profile?view=services', icon: 'services' },
         { label: 'Mon profil', href: '/profile?view=benefits', icon: 'profile' },

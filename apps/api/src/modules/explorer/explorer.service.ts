@@ -243,6 +243,26 @@ export class ExplorerService {
     return favorites.filter((favorite) => favorite.project.status === 'published').map((favorite) => toExplorerProject(favorite.project));
   }
 
+  async listFollowingProjects(userId: string): Promise<ExplorerProject[]> {
+    const projects = await this.prisma.explorerProject.findMany({
+      where: {
+        status: 'published',
+        user: {
+          followers: {
+            some: { followerId: userId },
+          },
+        },
+      },
+      orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
+      take: 80,
+      include: {
+        _count: { select: { favorites: true } },
+        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+      },
+    });
+    return projects.map(toExplorerProject);
+  }
+
   async toggleFavorite(projectId: string, userId: string): Promise<{ favorited: boolean; favoritesCount: number }> {
     await this.ensureProject(projectId);
     const existing = await this.prisma.explorerProjectFavorite.findUnique({
