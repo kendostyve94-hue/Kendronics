@@ -9,6 +9,7 @@ import { TrackingService } from '../tracking/tracking.service';
 import { VerificationLevelService } from '../users/verification-level.service';
 import { AuthorizePaypalOrderDto } from './dto/authorize-paypal-order.dto';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
+import { CreateProjectCheckoutDto } from './dto/create-project-checkout.dto';
 import { CreateMobileMoneyPaymentDto } from './dto/create-mobile-money-payment.dto';
 import { CreatePaypalOrderDto } from './dto/create-paypal-order.dto';
 import { MobileMoneyCallbackDto } from './dto/mobile-money-callback.dto';
@@ -77,6 +78,44 @@ export class PaymentsService {
     });
 
     await this.paymentsRepository.attachProviderReference(payment.id, checkout.providerSessionId);
+    return checkout;
+  }
+
+  async createProjectCheckout(userId: string, customerEmail: string, dto: CreateProjectCheckoutDto): Promise<CheckoutSession> {
+    const purchase = await this.prisma.projectPurchase.findUnique({
+      where: { id: dto.purchaseId },
+      include: { project: true },
+    });
+    if (!purchase || purchase.buyerId !== userId) {
+      throw new BadRequestException('Marketplace purchase is not attached to this account.');
+    }
+    if (purchase.status !== 'pending') {
+      throw new BadRequestException(`Marketplace purchase status ${purchase.status} cannot start checkout.`);
+    }
+    if (purchase.project.status !== 'published' || purchase.project.projectType !== 'paid') {
+      throw new BadRequestException('This project is not available for marketplace checkout.');
+    }
+
+    const checkout = await this.stripeProvider.createProjectCheckoutSession({
+      purchaseId: purchase.id,
+      projectId: purchase.projectId,
+      buyerId: purchase.buyerId,
+      title: purchase.project.title,
+      amountCents: purchase.amountCents,
+      currency: purchase.currency,
+      customerEmail,
+      successUrl: dto.successUrl,
+      cancelUrl: dto.cancelUrl,
+    });
+
+    await this.prisma.projectPurchase.update({
+      where: { id: purchase.id },
+      data: {
+        provider: 'stripe',
+        providerSessionId: checkout.providerSessionId,
+      },
+    });
+
     return checkout;
   }
 

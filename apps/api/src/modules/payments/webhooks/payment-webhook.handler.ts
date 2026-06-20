@@ -22,6 +22,10 @@ export class PaymentWebhookHandler {
   ) {}
 
   async handleStripeEvent(event: VerifiedStripePaymentEvent) {
+    if (event.marketplacePurchaseId) {
+      return this.handleMarketplaceStripeEvent(event);
+    }
+
     const payment = await this.findStripePayment(event);
     const { duplicate } = await this.paymentsRepository.recordWebhookEvent({
       provider: 'stripe',
@@ -120,6 +124,127 @@ export class PaymentWebhookHandler {
 
     await this.paymentsRepository.markEventProcessed('stripe', event.id);
     return { received: true, duplicate: false };
+  }
+
+  private async handleMarketplaceStripeEvent(event: VerifiedStripePaymentEvent) {
+    const purchase = await this.prisma.projectPurchase.findUnique({
+      where: { id: event.marketplacePurchaseId },
+      include: { project: true },
+    });
+    const { duplicate } = await this.paymentsRepository.recordWebhookEvent({
+      provider: 'stripe',
+      providerEventId: event.id,
+      eventType: event.type,
+      payload: event.raw,
+    });
+
+    if (duplicate) {
+      return { received: true, duplicate: true };
+    }
+
+    if (event.paymentStatus === 'ignored') {
+      await this.paymentsRepository.markEventProcessed('stripe', event.id);
+      return { received: true, duplicate: false, ignored: true };
+    }
+
+    if (!purchase) {
+      await this.paymentsRepository.markEventProcessed(
+        'stripe',
+        event.id,
+        'No marketplace purchase matched the Stripe event.',
+      );
+      throw new NotFoundException('Marketplace purchase not found for Stripe event.');
+    }
+
+    if (event.providerPaymentId || event.providerIntentId) {
+      await this.prisma.projectPurchase.update({
+        where: { id: purchase.id },
+        data: {
+          provider: 'stripe',
+          providerSessionId: event.type.startsWith('checkout.session') ? event.providerPaymentId : purchase.providerSessionId,
+          providerPaymentId: event.providerIntentId ?? event.providerPaymentId,
+        },
+      });
+    }
+
+    if (event.paymentStatus === 'succeeded') {
+      const updatedPurchase = await this.prisma.$transaction(async (tx) => {
+        const paidPurchase = await tx.projectPurchase.update({
+          where: { id: purchase.id },
+          data: {
+            status: 'paid',
+            paidAt: purchase.paidAt ?? new Date(),
+            provider: 'stripe',
+            providerPaymentId: event.providerIntentId ?? event.providerPaymentId,
+          },
+        });
+        await tx.projectLicenseGrant.upsert({
+          where: { projectId_userId: { projectId: purchase.projectId, userId: purchase.buyerId } },
+          create: {
+            projectId: purchase.projectId,
+            userId: purchase.buyerId,
+            purchaseId: purchase.id,
+            status: 'active',
+            licenseCode: purchase.project.licenseCode,
+            allowedUses: purchase.project.allowedUses,
+            source: 'purchase',
+            metadata: {
+              provider: 'stripe',
+              providerEventId: event.id,
+              providerPaymentId: event.providerPaymentId,
+              providerIntentId: event.providerIntentId,
+            },
+          },
+          update: {
+            status: 'active',
+            purchaseId: purchase.id,
+            licenseCode: purchase.project.licenseCode,
+            allowedUses: purchase.project.allowedUses,
+            revokedAt: null,
+            metadata: {
+              provider: 'stripe',
+              providerEventId: event.id,
+              providerPaymentId: event.providerPaymentId,
+              providerIntentId: event.providerIntentId,
+            },
+          },
+        });
+        return paidPurchase;
+      });
+
+      await this.notificationsService.create({
+        userId: updatedPurchase.buyerId,
+        type: 'project.license.granted',
+        title: 'Licence de projet activee',
+        body: `Votre licence pour ${purchase.project.title} est maintenant active.`,
+      });
+    }
+
+    if (event.paymentStatus === 'failed') {
+      await this.prisma.projectPurchase.update({
+        where: { id: purchase.id },
+        data: { status: 'failed' },
+      });
+      await this.notificationsService.create({
+        userId: purchase.buyerId,
+        type: 'project.purchase.failed',
+        title: 'Paiement marketplace non confirme',
+        body: `Le paiement pour ${purchase.project.title} n a pas pu etre confirme.`,
+      });
+    }
+
+    if (event.paymentStatus === 'canceled' || event.paymentStatus === 'expired') {
+      await this.prisma.projectPurchase.update({
+        where: { id: purchase.id },
+        data: {
+          status: event.paymentStatus,
+          canceledAt: new Date(),
+        },
+      });
+    }
+
+    await this.paymentsRepository.markEventProcessed('stripe', event.id);
+    return { received: true, duplicate: false, marketplace: true };
   }
 
   private async sendWorkflowEmail(userId: string, orderId: string, template: Parameters<EmailNotificationService['sendOrderWorkflowEmail']>[0]['template']) {

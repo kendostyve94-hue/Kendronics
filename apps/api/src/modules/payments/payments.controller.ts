@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { CreateMobileMoneyPaymentDto } from './dto/create-mobile-money-payment.dto';
+import { CreateProjectCheckoutDto } from './dto/create-project-checkout.dto';
 import { AuthorizePaypalOrderDto } from './dto/authorize-paypal-order.dto';
 import { CreatePaypalOrderDto } from './dto/create-paypal-order.dto';
 import { MobileMoneyCallbackDto } from './dto/mobile-money-callback.dto';
@@ -18,6 +19,12 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard)
   checkout(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateCheckoutDto) {
     return this.paymentsService.createCheckout(user.id, user.email, dto);
+  }
+
+  @Post('project-checkout')
+  @UseGuards(JwtAuthGuard)
+  projectCheckout(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateProjectCheckoutDto) {
+    return this.paymentsService.createProjectCheckout(user.id, user.email, dto);
   }
 
   @Post('mobile-money')

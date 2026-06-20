@@ -8,6 +8,18 @@ export interface CreateProviderCheckoutInput {
   cancelUrl: string;
 }
 
+export interface CreateProjectCheckoutInput {
+  purchaseId: string;
+  projectId: string;
+  buyerId: string;
+  title: string;
+  amountCents: number;
+  currency: string;
+  customerEmail: string;
+  successUrl: string;
+  cancelUrl: string;
+}
+
 export interface CreatePaypalOrderInput {
   paymentId: string;
   orderId: string;
@@ -46,6 +58,7 @@ export interface VerifiedStripePaymentEvent {
   providerPaymentId: string;
   providerIntentId?: string;
   localPaymentId?: string;
+  marketplacePurchaseId?: string;
   captureBefore?: Date;
   raw: unknown;
 }

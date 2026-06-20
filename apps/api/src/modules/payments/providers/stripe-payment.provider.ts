@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import Stripe from 'stripe';
 import { CheckoutSession } from '../entities/checkout-session.entity';
-import { CreateProviderCheckoutInput, VerifiedStripePaymentEvent } from './payment-provider.types';
+import { CreateProjectCheckoutInput, CreateProviderCheckoutInput, VerifiedStripePaymentEvent } from './payment-provider.types';
 
 @Injectable()
 export class StripePaymentProvider {
@@ -78,6 +78,67 @@ export class StripePaymentProvider {
     };
   }
 
+  async createProjectCheckoutSession(input: CreateProjectCheckoutInput): Promise<CheckoutSession> {
+    if (!this.stripe) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new ServiceUnavailableException('Stripe is not configured for production payments.');
+      }
+
+      return {
+        paymentId: input.purchaseId,
+        provider: 'stripe',
+        providerSessionId: `cs_project_sim_${input.purchaseId}`,
+        checkoutUrl: `https://checkout.stripe.com/pay/cs_project_sim_${input.purchaseId}`,
+        status: 'pending',
+      };
+    }
+
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'payment',
+      success_url: input.successUrl,
+      cancel_url: input.cancelUrl,
+      customer_email: input.customerEmail,
+      client_reference_id: input.purchaseId,
+      metadata: {
+        marketplacePurchaseId: input.purchaseId,
+        projectId: input.projectId,
+        buyerId: input.buyerId,
+      },
+      payment_intent_data: {
+        metadata: {
+          marketplacePurchaseId: input.purchaseId,
+          projectId: input.projectId,
+          buyerId: input.buyerId,
+        },
+      },
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: input.currency.toLowerCase(),
+            unit_amount: input.amountCents,
+            product_data: {
+              name: input.title,
+              description: 'Licence de projet hardware Kendronics.',
+            },
+          },
+        },
+      ],
+    });
+
+    if (!session.url) {
+      throw new ServiceUnavailableException('Stripe did not return a checkout URL.');
+    }
+
+    return {
+      paymentId: input.purchaseId,
+      provider: 'stripe',
+      providerSessionId: session.id,
+      checkoutUrl: session.url,
+      status: 'pending',
+    };
+  }
+
   verifyWebhook(
     signature: string,
     rawBody: Buffer | undefined,
@@ -111,6 +172,7 @@ export class StripePaymentProvider {
       providerPaymentId: event.providerPaymentId,
       providerIntentId: event.providerIntentId,
       localPaymentId: event.localPaymentId,
+      marketplacePurchaseId: event.marketplacePurchaseId,
       captureBefore: event.captureBefore ? new Date(event.captureBefore) : undefined,
       paymentStatus: event.paymentStatus,
       raw: parsedBody,
@@ -149,6 +211,7 @@ export class StripePaymentProvider {
         providerPaymentId: session.id,
         providerIntentId: paymentIntentId,
         localPaymentId: stringMetadata(session.metadata?.paymentId),
+        marketplacePurchaseId: stringMetadata(session.metadata?.marketplacePurchaseId),
         paymentStatus: session.payment_status === 'paid' ? 'succeeded' : paymentIntentId ? 'authorized' : 'pending',
         raw: event,
       };
@@ -162,6 +225,7 @@ export class StripePaymentProvider {
         providerPaymentId: session.id,
         providerIntentId: stringId(session.payment_intent),
         localPaymentId: stringMetadata(session.metadata?.paymentId),
+        marketplacePurchaseId: stringMetadata(session.metadata?.marketplacePurchaseId),
         paymentStatus: 'succeeded',
         raw: event,
       };
@@ -178,6 +242,7 @@ export class StripePaymentProvider {
         providerPaymentId: session.id,
         providerIntentId: stringId(session.payment_intent),
         localPaymentId: stringMetadata(session.metadata?.paymentId),
+        marketplacePurchaseId: stringMetadata(session.metadata?.marketplacePurchaseId),
         paymentStatus: 'failed',
         raw: event,
       };
@@ -196,6 +261,7 @@ export class StripePaymentProvider {
         providerPaymentId: intent.id,
         providerIntentId: intent.id,
         localPaymentId: stringMetadata(intent.metadata?.paymentId),
+        marketplacePurchaseId: stringMetadata(intent.metadata?.marketplacePurchaseId),
         captureBefore: captureBeforeFromPaymentIntent(intent),
         paymentStatus:
           event.type === 'payment_intent.amount_capturable_updated'

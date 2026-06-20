@@ -226,6 +226,41 @@ export default function ExplorerPage() {
     }
   }
 
+  async function buyProject(project: ExplorerProject) {
+    const session = readAuthSession();
+    if (!session) {
+      openAuthRequired('login');
+      return;
+    }
+    if (project.projectType !== 'paid') return;
+
+    try {
+      const purchaseResponse = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}/purchases`, {
+        method: 'POST',
+        headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+      });
+      if (!purchaseResponse.ok) throw new Error('Purchase intent failed');
+      const purchase = await purchaseResponse.json() as { id: string };
+      const checkoutResponse = await fetch(`${apiBaseUrl}/api/payments/project-checkout`, {
+        method: 'POST',
+        headers: {
+          Authorization: `${session.tokenType} ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          purchaseId: purchase.id,
+          successUrl: `${window.location.origin}/explorer?purchase=success`,
+          cancelUrl: `${window.location.origin}/explorer?purchase=cancelled`,
+        }),
+      });
+      if (!checkoutResponse.ok) throw new Error('Checkout failed');
+      const checkout = await checkoutResponse.json() as { checkoutUrl?: string };
+      if (checkout.checkoutUrl) window.location.href = checkout.checkoutUrl;
+    } catch {
+      // The marketplace state remains unchanged if checkout cannot be created.
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f4f7fb] text-[#172033]">
       <div className="hidden lg:block">
@@ -281,6 +316,7 @@ export default function ExplorerPage() {
                 onLike={() => void likeProject(project)}
                 onFavorite={() => void favoriteProject(project)}
                 onFollow={() => void followAuthor(project)}
+                onBuy={() => void buyProject(project)}
                 followed={project.userId ? followedUserIds.has(project.userId) : false}
                 followAnimating={project.userId ? followPulseUserIds.has(project.userId) : false}
                 followable={Boolean(project.userId)}
@@ -387,6 +423,7 @@ function ProjectCard({
   onLike,
   onFavorite,
   onFollow,
+  onBuy,
 }: {
   project: ExplorerProject;
   selected: boolean;
@@ -398,6 +435,7 @@ function ProjectCard({
   onLike: () => void;
   onFavorite: () => void;
   onFollow: () => void;
+  onBuy: () => void;
 }) {
   return (
     <article className={`min-w-0 bg-transparent transition ${selected ? 'opacity-100' : 'opacity-95 hover:opacity-100'}`}>
@@ -417,6 +455,11 @@ function ProjectCard({
         </button>
         <span className="inline-flex items-center gap-1"><CommentIcon />{project.commentsCount}</span>
       </div>
+      {project.projectType === 'paid' ? (
+        <button type="button" onClick={onBuy} className="mt-3 h-9 w-full bg-[#102033] px-3 text-sm font-black text-white transition hover:bg-[#0f8f6b]">
+          Acheter la licence {formatProjectPrice(project.priceCents, project.currency)}
+        </button>
+      ) : null}
       <div className="mt-4 flex items-center gap-2 text-sm text-[#0b1724]">
         <span className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[10px] font-black text-white">
           {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
