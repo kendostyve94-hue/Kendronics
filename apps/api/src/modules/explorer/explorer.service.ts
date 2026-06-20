@@ -180,8 +180,16 @@ export class ExplorerService {
     if (project.summary.length < 24 || project.summary === 'Brouillon en cours de preparation.') errors.push('Ajoutez un resume public.');
     if (!project.description || project.description.trim().length < 80) errors.push('La documentation principale doit contenir au moins 80 caracteres.');
     if (!project.technicalDetails) errors.push('Completez les caracteristiques techniques.');
+    const technicalDetails = objectRecord(project.technicalDetails);
+    if (!stringValue(technicalDetails.dimensions)) errors.push('Ajoutez les dimensions.');
+    if (!stringValue(technicalDetails.mainComponents)) errors.push('Ajoutez les composants principaux.');
+    if (!stringValue(technicalDetails.power)) errors.push("Ajoutez l'alimentation.");
+    if (!stringValue(technicalDetails.interfaces)) errors.push('Ajoutez les interfaces.');
+    if (!stringValue(technicalDetails.software)) errors.push('Ajoutez les logiciels et outils.');
+    if (!stringValue(technicalDetails.maturity)) errors.push('Ajoutez le niveau de maturite.');
     if (!project.documentation) errors.push('Completez les instructions et la documentation.');
     if (project.assets.length === 0) errors.push('Ajoutez au moins un fichier ou media au projet.');
+    if (!project.imageUrl && !project.assets.some((asset) => asset.kind === 'cover')) errors.push('Ajoutez une image de couverture.');
     if (project.projectType === 'paid' && (!project.priceCents || project.priceCents < 100)) errors.push('Definissez un prix valide.');
     if (project.projectType === 'paid' && !project.assets.some((asset) => asset.visibility === 'protected')) {
       errors.push('Un projet payant doit contenir au moins un fichier protege.');
@@ -372,4 +380,12 @@ function clean(value?: string): string {
 
 function emailName(email: string) {
   return email.includes('@') ? email.split('@')[0] : email;
+}
+
+function objectRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function stringValue(recordValue: unknown): string {
+  return typeof recordValue === 'string' ? recordValue.trim() : '';
 }

@@ -216,6 +216,10 @@ export default function NewProjectPage() {
     if (!form.coverPreviewUrl && !assets.some((asset) => asset.kind === 'cover')) missing.push('Image de couverture');
     if (!form.dimensions.trim()) missing.push('Dimensions');
     if (!form.mainComponents.trim()) missing.push('Composants principaux');
+    if (!form.power.trim()) missing.push('Alimentation');
+    if (!form.interfaces.trim()) missing.push('Interfaces');
+    if (!form.software.trim()) missing.push('Logiciels et outils');
+    if (!form.maturity.trim()) missing.push('Niveau de maturite');
     if (!form.buildInstructions.trim()) missing.push('Instructions de fabrication');
     if (!form.tested.trim()) missing.push('Tests realises');
     if (assets.length === 0) missing.push('Au moins un fichier ou media');
@@ -402,23 +406,23 @@ export default function NewProjectPage() {
       <div className="mx-auto max-w-[1180px] px-2 py-6 sm:px-6 sm:py-7 lg:px-8">
         <div className="min-w-0 space-y-6">
           <EditorSection id="step-01" title="Informations publiques" description="Ce que les visiteurs verront en premier dans Explorer.">
-            <Field label="Titre du projet" required>
+            <Field label="Titre du projet" required help="Nom public du projet. Il doit etre clair, court et assez precis pour identifier le produit ou la carte.">
               <input value={form.title} onChange={(event) => update('title', event.target.value)} className={inputClass} maxLength={90} placeholder="Ex. Station meteo solaire ESP32" />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Categorie" required>
+              <Field label="Categorie" required help="Famille principale du projet. Elle sert au classement dans Explorer et a la recherche.">
                 <select value={form.category} onChange={(event) => update('category', event.target.value)} className={inputClass}>
                   {['Prototype', 'PCB', 'IoT', 'Energie', 'Robotique', 'Education', 'Audio', 'Medical', 'Automatisation', 'Open hardware'].map((item) => <option key={item}>{item}</option>)}
                 </select>
               </Field>
-              <Field label="Tags">
+              <Field label="Tags" help="Mots-cles utiles pour retrouver le projet : technologie, composant, usage, outil ou domaine.">
                 <input value={form.tags} onChange={(event) => update('tags', event.target.value)} className={inputClass} maxLength={180} placeholder="ESP32, capteur, solaire, KiCad" />
               </Field>
             </div>
-            <Field label="Resume public" required hint="24 a 360 caracteres">
+            <Field label="Resume public" required hint="24 a 360 caracteres" help="Texte court visible dans les cartes Explorer. Il doit expliquer le besoin, le resultat et l'interet du projet.">
               <textarea value={form.summary} onChange={(event) => update('summary', event.target.value)} className={`${inputClass} min-h-[76px] py-3`} maxLength={360} placeholder="Expliquez le besoin traite, le resultat obtenu et le public concerne." />
             </Field>
-            <Field label="Presentation detaillee" required>
+            <Field label="Presentation detaillee" required help="Description complete : contexte, fonctionnement, choix techniques, limites et cas d'utilisation.">
               <textarea value={form.description} onChange={(event) => update('description', event.target.value)} className={`${inputClass} min-h-[125px] py-3`} maxLength={12000} placeholder="Contexte, architecture, fonctionnement, choix techniques, limites et cas d usage." />
             </Field>
             <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_290px]">
@@ -437,7 +441,7 @@ export default function NewProjectPage() {
                     </label>
                   </div>
                 </div>
-                <Field label="Lien document externe">
+                <Field label="Lien document externe" help="Lien optionnel vers GitHub, EasyEDA, Drive, documentation ou toute ressource externe utile.">
                   <input value={form.repositoryUrl} onChange={(event) => update('repositoryUrl', event.target.value)} className={inputClass} placeholder="GitHub, GitLab, EasyEDA, Drive, documentation..." />
                 </Field>
               </div>
@@ -447,18 +451,18 @@ export default function NewProjectPage() {
 
           <EditorSection id="step-02" title="Caracteristiques techniques" description="Les donnees necessaires pour comprendre et reproduire correctement le materiel.">
             <div className="grid gap-4 sm:grid-cols-3">
-              <Field label="Type de carte" required><select value={form.boardType} onChange={(event) => update('boardType', event.target.value)} className={inputClass}>{['PCB rigide', 'PCB flexible', 'Rigide-flex', 'Module assemble', 'Systeme mecanique', 'Autre'].map((item) => <option key={item}>{item}</option>)}</select></Field>
-              <Field label="Dimensions" required><input value={form.dimensions} onChange={(event) => update('dimensions', event.target.value)} className={inputClass} placeholder="100 x 80 mm" /></Field>
-              <Field label="Nombre de couches" required><select value={form.layers} onChange={(event) => update('layers', event.target.value)} className={inputClass}>{['1', '2', '4', '6', '8', '10+'].map((item) => <option key={item}>{item}</option>)}</select></Field>
+              <Field label="Type de carte" required help="Indique le type de support fabrique : rigide, flexible, rigide-flex, module assemble ou autre."><select value={form.boardType} onChange={(event) => update('boardType', event.target.value)} className={inputClass}>{['PCB rigide', 'PCB flexible', 'Rigide-flex', 'Module assemble', 'Systeme mecanique', 'Autre'].map((item) => <option key={item}>{item}</option>)}</select></Field>
+              <Field label="Dimensions" required help="Taille physique du projet. Elle influence le cout, l'encombrement, le boitier et la fabrication."><input value={form.dimensions} onChange={(event) => update('dimensions', event.target.value)} className={inputClass} placeholder="100 x 80 mm" /></Field>
+              <Field label="Nombre de couches" required help="Nombre de couches cuivre. Plus il augmente, plus le projet peut devenir complexe et couteux."><select value={form.layers} onChange={(event) => update('layers', event.target.value)} className={inputClass}>{['1', '2', '4', '6', '8', '10+'].map((item) => <option key={item}>{item}</option>)}</select></Field>
             </div>
-            <Field label="Composants principaux" required><textarea value={form.mainComponents} onChange={(event) => update('mainComponents', event.target.value)} className={`${inputClass} min-h-[110px] py-3`} placeholder="Microcontroleur, capteurs, convertisseurs, connecteurs et references critiques." /></Field>
+            <Field label="Composants principaux" required help="Liste les composants critiques : microcontroleur, capteurs, connecteurs, alimentation, modules radio ou references importantes."><textarea value={form.mainComponents} onChange={(event) => update('mainComponents', event.target.value)} className={`${inputClass} min-h-[110px] py-3`} placeholder="Microcontroleur, capteurs, convertisseurs, connecteurs et references critiques." /></Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Alimentation"><input value={form.power} onChange={(event) => update('power', event.target.value)} className={inputClass} placeholder="5 V USB-C, batterie 3,7 V..." /></Field>
-              <Field label="Interfaces"><input value={form.interfaces} onChange={(event) => update('interfaces', event.target.value)} className={inputClass} placeholder="USB, UART, I2C, Wi-Fi..." /></Field>
-              <Field label="Logiciels et outils"><input value={form.software} onChange={(event) => update('software', event.target.value)} className={inputClass} placeholder="KiCad 8, PlatformIO, FreeCAD..." /></Field>
-              <Field label="Niveau de maturite"><select value={form.maturity} onChange={(event) => update('maturity', event.target.value)} className={inputClass}>{['Concept', 'Prototype en cours', 'Prototype valide', 'Pre-serie', 'Production'].map((item) => <option key={item}>{item}</option>)}</select></Field>
+              <Field label="Alimentation" required help="Precise les tensions, courants et sources d'energie acceptes : USB-C, batterie, entree 12 V, regulation, etc."><input value={form.power} onChange={(event) => update('power', event.target.value)} className={inputClass} placeholder="5 V USB-C, batterie 3,7 V..." /></Field>
+              <Field label="Interfaces" required help="Decrit les connexions et communications disponibles : USB, UART, I2C, SPI, Wi-Fi, Bluetooth, borniers ou boutons."><input value={form.interfaces} onChange={(event) => update('interfaces', event.target.value)} className={inputClass} placeholder="USB, UART, I2C, Wi-Fi..." /></Field>
+              <Field label="Logiciels et outils" required help="Outils necessaires pour ouvrir, modifier, compiler ou programmer le projet : KiCad, EasyEDA, PlatformIO, Arduino IDE, FreeCAD."><input value={form.software} onChange={(event) => update('software', event.target.value)} className={inputClass} placeholder="KiCad 8, PlatformIO, FreeCAD..." /></Field>
+              <Field label="Niveau de maturite" required help="Indique si le projet est un concept, un prototype, une pre-serie ou un projet deja pret pour production."><select value={form.maturity} onChange={(event) => update('maturity', event.target.value)} className={inputClass}>{['Concept', 'Prototype en cours', 'Prototype valide', 'Pre-serie', 'Production'].map((item) => <option key={item}>{item}</option>)}</select></Field>
             </div>
-            <Field label="Tests realises" required><textarea value={form.tested} onChange={(event) => update('tested', event.target.value)} className={`${inputClass} min-h-[110px] py-3`} placeholder="Tests electriques, fonctionnels, thermiques, radio, autonomie et conditions de validation." /></Field>
+            <Field label="Tests realises" required help="Explique ce qui a vraiment ete verifie : tests electriques, fonctionnels, thermiques, autonomie, assemblage ou communication."><textarea value={form.tested} onChange={(event) => update('tested', event.target.value)} className={`${inputClass} min-h-[110px] py-3`} placeholder="Tests electriques, fonctionnels, thermiques, radio, autonomie et conditions de validation." /></Field>
           </EditorSection>
 
           <EditorSection id="step-03" title="Documentation de reproduction" description="Des instructions suffisamment precises pour eviter les interpretations dangereuses ou couteuses.">
@@ -553,24 +557,50 @@ const inputClass = 'h-11 w-full rounded-[10px] border border-[#cfd8e3] bg-white 
 
 function EditorSection({ id, title, description, children }: { id: string; title: string; description: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="project-editor-section scroll-mt-5 bg-white sm:border sm:border-[#dce8e3]">
-      <header className="border-b border-[#e4ebf2] px-5 py-5 sm:px-7">
-        <div><h2 className="text-xl font-black">{title}</h2><p className="mt-1 text-sm leading-6 text-[#64748b]">{description}</p></div>
+    <section id={id} className="project-editor-section scroll-mt-5">
+      <header className="project-editor-section-title bg-white px-5 py-5 sm:px-7">
+        <p className="label-caps text-[#0f8f6b]">{title}</p>
+        <p className="mt-2 text-sm leading-6 text-[#64748b]">{description}</p>
       </header>
       <div className="grid gap-5 px-5 py-6 sm:px-7">{children}</div>
     </section>
   );
 }
 
-function Field({ label, required = false, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
+function Field({ label, required = false, hint, help, children }: { label: string; required?: boolean; hint?: string; help?: string; children: React.ReactNode }) {
   return (
-    <label className="grid gap-2">
+    <div className="grid gap-2">
       <span className="flex items-center justify-between gap-3 text-sm font-black">
-        <span className="inline-flex items-center gap-1.5">{label}{required ? <span className="text-[#d9485f]">*</span> : null}</span>
+        <span className="inline-flex items-center gap-1.5">
+          {required ? <span className="text-[#d9485f]">*</span> : null}
+          {label}
+          {help ? <HelpHint text={help} /> : null}
+        </span>
         {hint ? <span className="text-xs font-normal text-[#7a8899]">{hint}</span> : null}
       </span>
       {children}
-    </label>
+    </div>
+  );
+}
+
+function HelpHint({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex">
+      <button type="button" className="grid h-5 w-5 place-items-center rounded-full text-[#7a8899] transition hover:text-[#0f8f6b]" aria-label="Voir l'aide">
+        <ProjectHelpIcon />
+      </button>
+      <span className="pointer-events-none absolute left-1/2 top-7 z-20 hidden w-64 -translate-x-1/2 rounded-[10px] bg-[#102033] px-3 py-2 text-xs font-semibold leading-5 text-white group-hover:block group-focus-within:block">
+        {text}
+      </span>
+    </span>
+  );
+}
+
+function ProjectHelpIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
+      <path fill="currentColor" d="M11 18h2v-2h-2v2Zm1-16a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm0-14a3.5 3.5 0 0 0-3.5 3.5h2A1.5 1.5 0 1 1 12 11c-1.7 0-3 1.3-3 3h2c0-.6.4-1 1-1a3.5 3.5 0 0 0 0-7Z" />
+    </svg>
   );
 }
 
