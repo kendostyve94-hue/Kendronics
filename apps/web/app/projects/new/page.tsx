@@ -392,7 +392,9 @@ export default function NewProjectPage() {
         <div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-4 py-7 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
           <div>
             <h1 className="text-3xl font-black sm:text-4xl">{projectType === 'paid' ? 'Creer un nouveau projet' : 'Publier un projet'}</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#64748b]">Constituez un dossier public clair, reproductible et exploitable. Les fichiers proteges restent prives jusqu a l acquisition des droits correspondants.</p>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#64748b]">
+              Constituez un dossier public clair, reproductible et exploitable. Les fichiers proteges ne sont pas exposes publiquement; la vente automatisee et la delivrance apres paiement seront activees dans le module marketplace.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <a href="/profile?view=benefits" className="inline-flex h-11 items-center border border-[#cfd8e3] bg-white px-4 text-sm font-bold">Quitter</a>
@@ -502,6 +504,11 @@ export default function NewProjectPage() {
           </EditorSection>
 
           <EditorSection id="step-05" title="Licence, droits et tarification" description="Les visiteurs doivent comprendre exactement ce qu ils peuvent faire avec le projet.">
+            {projectType === 'paid' ? (
+              <div className="border border-[#f2d5a7] bg-[#fff8ec] px-4 py-3 text-sm leading-6 text-[#8a5a12]">
+                Cette fiche prepare une publication commerciale avec prix, licence et fichiers proteges. Le paiement integre, l'attribution de licence et le telechargement securise apres achat seront finalises dans la phase marketplace.
+              </div>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Licence" required>
                 <select value={form.licenseCode} onChange={(event) => update('licenseCode', event.target.value)} className={inputClass}>

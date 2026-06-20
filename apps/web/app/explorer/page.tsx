@@ -46,70 +46,9 @@ type MobileExplorerFeed = 'reels' | 'forks' | 'following';
 const apiBaseUrl = getApiBaseUrl();
 const actorKeyStorageKey = 'kendronics.explorer.actor';
 const heroBackgroundImage = '/images/explorer-hero-community.webp';
-const fallbackProjects: ExplorerProject[] = [
-  {
-    id: 'fallback-power-monitor',
-    authorName: 'Kendronics Lab',
-    title: 'Moniteur energie modulaire',
-    category: 'Energie',
-    summary: 'Carte de mesure courant et tension pour prototypes terrain, avec bornier, zone capteur et format pret pour revue fabrication.',
-    description: 'Projet de reference pour suivre consommation, tension et etat de charge dans une installation basse tension.',
-    tags: ['FR-4', 'Capteur', 'Prototype', 'Open hardware'],
-    imageUrl: '/images/hero-controller-board.png',
-    attachmentName: 'power-monitor-gerber.zip',
-    attachmentType: 'Gerber',
-    featured: true,
-    viewsCount: 2400,
-    likesCount: 84,
-    favoritesCount: 0,
-    commentsCount: 7,
-    forksCount: 18,
-    createdAt: '2026-01-12T09:00:00.000Z',
-    comments: [{ id: 'c1', authorName: 'MakerLab', body: 'Tres utile pour un kit energie terrain.', createdAt: '2026-01-13T10:00:00.000Z' }],
-  },
-  {
-    id: 'fallback-iot-node',
-    authorName: 'Community',
-    title: 'Noeud IoT basse consommation',
-    category: 'IoT',
-    summary: 'Design compact pour collecte de donnees, alimentation batterie, antenne externe et connecteur de programmation.',
-    tags: ['IoT', 'Batterie', 'RF', 'ESP32'],
-    imageUrl: '/images/hero-pcb-color-variants.png',
-    attachmentName: 'iot-node-docs.pdf',
-    attachmentType: 'Documentation',
-    featured: true,
-    viewsCount: 1600,
-    likesCount: 61,
-    favoritesCount: 0,
-    commentsCount: 5,
-    forksCount: 11,
-    createdAt: '2026-02-04T14:30:00.000Z',
-    comments: [],
-  },
-  {
-    id: 'fallback-solder-kit',
-    authorName: 'MakerLab',
-    title: 'Kit soudure pedagogique',
-    category: 'Education',
-    summary: 'Carte simple pour atelier scolaire avec LED, buzzer, connecteurs traversants et zones de test multimetre.',
-    tags: ['Education', 'THT', 'Atelier'],
-    imageUrl: '/images/quote-product-standard-pcb.png',
-    attachmentName: 'solder-kit-v1.zip',
-    attachmentType: 'Gerber',
-    featured: false,
-    viewsCount: 980,
-    likesCount: 32,
-    favoritesCount: 0,
-    commentsCount: 3,
-    forksCount: 9,
-    createdAt: '2026-03-11T08:20:00.000Z',
-    comments: [],
-  },
-];
-
 export default function ExplorerPage() {
-  const [projects, setProjects] = useState<ExplorerProject[]>(fallbackProjects);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(fallbackProjects[0]?.id ?? null);
+  const [projects, setProjects] = useState<ExplorerProject[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [favoriteProjectIds, setFavoriteProjectIds] = useState<Set<string>>(new Set());
   const [followingProjectIds, setFollowingProjectIds] = useState<Set<string>>(new Set());
@@ -118,6 +57,7 @@ export default function ExplorerPage() {
   const [followPulseUserIds, setFollowPulseUserIds] = useState<Set<string>>(new Set());
   const [mobileFeed, setMobileFeed] = useState<MobileExplorerFeed>('reels');
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+  const [projectLoadStatus, setProjectLoadStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const isSignedIn = Boolean(readAuthSession());
 
   useEffect(() => {
@@ -129,11 +69,14 @@ export default function ExplorerPage() {
         if (!response.ok) throw new Error(`Explorer failed: ${response.status}`);
         const payload = (await response.json()) as ExplorerProject[];
         if (cancelled) return;
-        const nextProjects = payload.length > 0 ? payload : fallbackProjects;
-        setProjects(nextProjects);
-        setSelectedProjectId((current) => current ?? nextProjects[0]?.id ?? null);
+        setProjects(payload);
+        setSelectedProjectId((current) => current ?? payload[0]?.id ?? null);
+        setProjectLoadStatus('ready');
       } catch {
-        if (!cancelled) setProjects(fallbackProjects);
+        if (!cancelled) {
+          setProjects([]);
+          setProjectLoadStatus('error');
+        }
       }
     }
 
@@ -169,7 +112,7 @@ export default function ExplorerPage() {
 
   const filteredProjects = useMemo(() => {
     const sourceProjects = mobileFeed === 'following' && followingProjects.length > 0 ? followingProjects : projects;
-    const categoryFiltered = sourceProjects
+    const categoryFiltered = [...sourceProjects]
       .sort((left, right) => Number(right.featured) - Number(left.featured) || new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 
     if (mobileFeed === 'forks') return categoryFiltered.filter((project) => project.projectType === 'paid');
@@ -324,7 +267,11 @@ export default function ExplorerPage() {
       <section id="feed" className="mx-auto grid max-w-[1368px] gap-6 px-4 py-8 sm:px-6 lg:px-5">
         <div className="min-w-0">
           <div className="grid gap-x-7 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredProjects.length > 0 ? filteredProjects.map((project) => (
+            {projectLoadStatus === 'loading' ? (
+              <ExplorerStateCard title="Chargement des projets" body="Explorer recupere les publications disponibles." />
+            ) : projectLoadStatus === 'error' ? (
+              <ExplorerStateCard title="Explorer est momentanement indisponible" body="Les projets publics n'ont pas pu etre charges. Reessayez dans quelques instants." />
+            ) : filteredProjects.length > 0 ? filteredProjects.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}
@@ -339,14 +286,10 @@ export default function ExplorerPage() {
                 followable={Boolean(project.userId)}
               />
             )) : (
-              <div className="col-span-full grid min-h-[220px] place-items-center bg-white px-5 py-10 text-center ring-1 ring-[#d8e1ea]">
-                <div>
-                  <p className="text-base font-black text-[#0b1724]">Aucun projet dans cette vue.</p>
-                  <p className="mt-2 text-sm leading-6 text-[#64748b]">
-                    {mobileFeed === 'following' ? 'Les nouvelles publications des profils suivis apparaitront ici.' : 'Les projets correspondants apparaitront ici des leur publication.'}
-                  </p>
-                </div>
-              </div>
+              <ExplorerStateCard
+                title="Aucun projet dans cette vue"
+                body={mobileFeed === 'following' ? 'Les nouvelles publications des profils suivis apparaitront ici.' : 'Les projets publies apparaitront ici des qu ils seront disponibles.'}
+              />
             )}
           </div>
         </div>
@@ -386,6 +329,17 @@ function ExplorerFeedNav({ activeFeed, onCreate, onFeedChange }: { activeFeed: M
         </button>
       ))}
     </nav>
+  );
+}
+
+function ExplorerStateCard({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="col-span-full grid min-h-[220px] place-items-center bg-white px-5 py-10 text-center ring-1 ring-[#d8e1ea]">
+      <div>
+        <p className="text-base font-black text-[#0b1724]">{title}</p>
+        <p className="mt-2 max-w-md text-sm leading-6 text-[#64748b]">{body}</p>
+      </div>
+    </div>
   );
 }
 
@@ -636,6 +590,6 @@ function formatCompact(value: number) {
 }
 
 function formatProjectPrice(priceCents?: number, currency = 'EUR') {
-  if (!priceCents) return 'PAYANT';
+  if (!priceCents) return 'Commercial';
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 2 }).format(priceCents / 100);
 }
