@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Footer } from '../../components/layout/Footer';
 import { Navbar } from '../../components/layout/Navbar';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { readAuthSession } from '../../lib/auth-session';
@@ -15,6 +14,7 @@ type ExplorerComment = {
 
 type ExplorerProject = {
   id: string;
+  userId?: string;
   authorName: string;
   authorAvatarUrl?: string;
   title: string;
@@ -46,8 +46,6 @@ type MobileExplorerFeed = 'reels' | 'forks' | 'following';
 const apiBaseUrl = getApiBaseUrl();
 const actorKeyStorageKey = 'kendronics.explorer.actor';
 const heroBackgroundImage = '/images/explorer-hero-community.webp';
-const categoryNav = ['Tous', 'Stars', 'MakerLab', 'Arduino', 'STM32', 'IoT', 'Energie', 'Robotique', 'Education', 'Prototype'];
-
 const fallbackProjects: ExplorerProject[] = [
   {
     id: 'fallback-power-monitor',
@@ -111,13 +109,15 @@ const fallbackProjects: ExplorerProject[] = [
 
 export default function ExplorerPage() {
   const [projects, setProjects] = useState<ExplorerProject[]>(fallbackProjects);
-  const [activeCategory, setActiveCategory] = useState('Tous');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(fallbackProjects[0]?.id ?? null);
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [favoriteProjectIds, setFavoriteProjectIds] = useState<Set<string>>(new Set());
   const [followingProjectIds, setFollowingProjectIds] = useState<Set<string>>(new Set());
   const [followingProjects, setFollowingProjects] = useState<ExplorerProject[]>([]);
+  const [followedUserIds, setFollowedUserIds] = useState<Set<string>>(new Set());
+  const [followPulseUserIds, setFollowPulseUserIds] = useState<Set<string>>(new Set());
   const [mobileFeed, setMobileFeed] = useState<MobileExplorerFeed>('reels');
+  const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const isSignedIn = Boolean(readAuthSession());
 
   useEffect(() => {
@@ -162,30 +162,20 @@ export default function ExplorerPage() {
       .then((payload: ExplorerProject[]) => {
         setFollowingProjectIds(new Set(payload.map((project) => project.id)));
         setFollowingProjects(payload);
+        setFollowedUserIds(new Set(payload.map((project) => project.userId).filter((userId): userId is string => Boolean(userId))));
       })
       .catch(() => undefined);
   }, []);
 
-  const categories = useMemo(() => {
-    const projectCategories = Array.from(new Set(projects.map((project) => project.category))).filter(Boolean);
-    return Array.from(new Set([...categoryNav, ...projectCategories]));
-  }, [projects]);
-
   const filteredProjects = useMemo(() => {
     const sourceProjects = mobileFeed === 'following' && followingProjects.length > 0 ? followingProjects : projects;
     const categoryFiltered = sourceProjects
-      .filter((project) => {
-        if (activeCategory === 'Tous') return true;
-        if (activeCategory === 'Stars') return project.featured;
-        if (activeCategory === 'MakerLab') return project.authorName.toLowerCase().includes('maker');
-        return project.category === activeCategory || project.tags.includes(activeCategory);
-      })
       .sort((left, right) => Number(right.featured) - Number(left.featured) || new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 
     if (mobileFeed === 'forks') return categoryFiltered.filter((project) => project.projectType === 'paid');
     if (mobileFeed === 'following') return categoryFiltered.filter((project) => followingProjectIds.has(project.id));
     return categoryFiltered;
-  }, [activeCategory, followingProjectIds, followingProjects, mobileFeed, projects]);
+  }, [followingProjectIds, followingProjects, mobileFeed, projects]);
 
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? filteredProjects[0] ?? projects[0];
 
@@ -257,22 +247,55 @@ export default function ExplorerPage() {
     }
   }
 
+  async function followAuthor(project: ExplorerProject) {
+    const session = readAuthSession();
+    if (!session) {
+      openAuthRequired('login');
+      return;
+    }
+    if (!project.userId) return;
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/users/${project.userId}/follow`, {
+        method: 'POST',
+        headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+      });
+      if (!response.ok) throw new Error('Follow failed');
+      const payload = await response.json() as { following: boolean };
+      setFollowedUserIds((current) => {
+        const next = new Set(current);
+        if (payload.following) next.add(project.userId as string);
+        else next.delete(project.userId as string);
+        return next;
+      });
+      if (payload.following) {
+        setFollowPulseUserIds((current) => new Set(current).add(project.userId as string));
+        window.setTimeout(() => {
+          setFollowPulseUserIds((current) => {
+            const next = new Set(current);
+            next.delete(project.userId as string);
+            return next;
+          });
+        }, 900);
+      }
+    } catch {
+      // Keep the visible follow state unchanged if the API rejects the action.
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f4f7fb] text-[#172033]">
       <div className="hidden lg:block">
         <Navbar />
       </div>
+      <div className="lg:hidden">
+        <Navbar hideHeader />
+      </div>
 
-      <MobileExplorerTopNav
-        activeFeed={mobileFeed}
-        isSignedIn={isSignedIn}
-        onFeedChange={setMobileFeed}
-      />
-
-      <section className="relative overflow-hidden border-b border-[#d8e1ea] bg-ink pt-[70px] text-white">
+      <section className="relative hidden overflow-hidden border-b border-[#d8e1ea] bg-ink pt-[70px] text-white lg:block">
         <img src={heroBackgroundImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center opacity-100" />
         <div className="absolute inset-0 bg-gradient-to-br from-ink/[0.46] via-ink/[0.30] to-deepblue/[0.18]" aria-hidden="true" />
-        <div className="relative mx-auto max-w-[1368px] px-4 py-8 sm:px-6 sm:py-10 lg:px-5 lg:py-12">
+        <div className="relative mx-auto max-w-[1368px] px-4 py-8 sm:px-6 sm:py-10 lg:px-5 lg:pb-12 lg:pt-24">
           <div className="max-w-2xl">
             <h1 className="text-2xl font-black tracking-tight sm:text-4xl lg:text-5xl">
               Plateforme pour creer et partager des projets hardware.
@@ -280,23 +303,23 @@ export default function ExplorerPage() {
             <p className="mt-3 max-w-xl text-sm leading-6 text-slate-200 sm:text-base sm:leading-7">
               Publiez PCB, prototypes, fichiers, notes de fabrication et retours terrain. Les visiteurs peuvent consulter, aimer, commenter et transformer un projet en devis.
             </p>
-            <div className="mt-5 flex flex-wrap gap-2 sm:gap-3">
-              <a href={isSignedIn ? '/profile?view=benefits&create=1' : '#create'} onClick={(event) => { if (!isSignedIn) { event.preventDefault(); openAuthRequired('login'); } }} className="inline-flex h-10 items-center justify-center bg-[#0f8f6b] px-4 text-sm font-black text-white transition hover:bg-[#0b7558] sm:h-11 sm:px-5">Creer un projet</a>
-              <a href="#feed" className="inline-flex h-10 items-center justify-center border border-white/25 bg-white/10 px-4 text-sm font-black text-white transition hover:bg-white/15 sm:h-11 sm:px-5">Voir les projets</a>
-            </div>
           </div>
         </div>
       </section>
 
-      <section className="sticky top-0 z-40 hidden border-b border-[#d8e1ea] bg-white lg:block">
-        <div className="mx-auto flex max-w-[1368px] gap-2 overflow-x-auto px-4 py-3 sm:px-6 lg:px-5">
-          {categories.map((item) => (
-            <button key={item} type="button" onClick={() => setActiveCategory(item)} className={`h-9 shrink-0 px-3 text-sm font-black transition ${activeCategory === item ? 'bg-[#0f8f6b] text-white' : 'text-[#334155] hover:bg-[#edf3f8]'}`}>
-              {item}
-            </button>
-          ))}
-        </div>
-      </section>
+      <ExplorerFeedNav
+        activeFeed={mobileFeed}
+        onCreate={() => {
+          if (!isSignedIn) {
+            openAuthRequired('login');
+            return;
+          }
+          setIsCreateProjectOpen(true);
+        }}
+        onFeedChange={setMobileFeed}
+      />
+
+      <div className="h-14 lg:hidden" aria-hidden="true" />
 
       <section id="feed" className="mx-auto grid max-w-[1368px] gap-6 px-4 py-8 sm:px-6 lg:px-5">
         <div className="min-w-0">
@@ -310,6 +333,9 @@ export default function ExplorerPage() {
                 onSelect={() => setSelectedProjectId(project.id)}
                 onLike={() => void likeProject(project)}
                 onFavorite={() => void favoriteProject(project)}
+                onFollow={() => void followAuthor(project)}
+                followed={project.userId ? followedUserIds.has(project.userId) : false}
+                followAnimating={project.userId ? followPulseUserIds.has(project.userId) : false}
               />
             )) : (
               <div className="col-span-full grid min-h-[220px] place-items-center bg-white px-5 py-10 text-center ring-1 ring-[#d8e1ea]">
@@ -325,14 +351,12 @@ export default function ExplorerPage() {
         </div>
       </section>
 
-      <div className="hidden lg:block">
-        <Footer />
-      </div>
+      {isCreateProjectOpen ? <CreateProjectModal onClose={() => setIsCreateProjectOpen(false)} /> : null}
     </main>
   );
 }
 
-function MobileExplorerTopNav({ activeFeed, isSignedIn, onFeedChange }: { activeFeed: MobileExplorerFeed; isSignedIn: boolean; onFeedChange: (feed: MobileExplorerFeed) => void }) {
+function ExplorerFeedNav({ activeFeed, onCreate, onFeedChange }: { activeFeed: MobileExplorerFeed; onCreate: () => void; onFeedChange: (feed: MobileExplorerFeed) => void }) {
   const feeds: Array<{ id: MobileExplorerFeed; label: string }> = [
     { id: 'reels', label: 'Reels' },
     { id: 'forks', label: 'Forks' },
@@ -340,19 +364,14 @@ function MobileExplorerTopNav({ activeFeed, isSignedIn, onFeedChange }: { active
   ];
 
   return (
-    <nav className="sticky top-0 z-50 flex h-14 items-center gap-1 overflow-x-auto border-b border-[#d8e1ea] bg-white px-3 lg:hidden" aria-label="Navigation Explorer mobile">
-      <a
-        href={isSignedIn ? '/profile?view=benefits&create=1' : '#create'}
-        onClick={(event) => {
-          if (!isSignedIn) {
-            event.preventDefault();
-            openAuthRequired('login');
-          }
-        }}
+    <nav className="fixed left-0 right-0 top-0 z-[60] flex h-14 items-center gap-1 overflow-x-auto border-b border-[#d8e1ea] bg-white px-3 shadow-[0_1px_2px_rgba(11,23,36,0.04),0_12px_34px_rgba(11,23,36,0.035)] lg:sticky lg:top-[70px] lg:z-40 lg:h-auto lg:px-5 lg:py-3" aria-label="Navigation Explorer">
+      <button
+        type="button"
+        onClick={onCreate}
         className="grid h-9 shrink-0 place-items-center bg-[#0f8f6b] px-4 text-sm font-black text-white"
       >
         Creer
-      </a>
+      </button>
       {feeds.map((feed) => (
         <button
           key={feed.id}
@@ -369,20 +388,59 @@ function MobileExplorerTopNav({ activeFeed, isSignedIn, onFeedChange }: { active
   );
 }
 
+function CreateProjectModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[90] grid place-items-center bg-[#07172a]/45 px-4" role="dialog" aria-modal="true" aria-labelledby="explorer-project-type-title">
+      <div className="w-full max-w-[548px] rounded-[18px] bg-white p-5 shadow-[0_24px_70px_rgba(7,23,42,0.24)] ring-1 ring-white/70 sm:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-[#0f8f6b]">Nouveau projet</p>
+            <h2 id="explorer-project-type-title" className="mt-2 text-2xl font-black text-[#102033]">Choisissez le type de publication</h2>
+            <p className="mt-2 text-sm leading-6 text-[#64748b]">Vous pourrez enregistrer un brouillon et verifier chaque parametre avant la publication.</p>
+          </div>
+          <button type="button" onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#dbe4ee] text-xl text-[#64748b]" aria-label="Fermer">×</button>
+        </div>
+        <div className="mt-6 grid gap-3">
+          <a href="/projects/new?type=paid" className="group flex min-h-[96px] items-center gap-4 rounded-[14px] border border-[#cfd8e3] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,52,0.06)] transition hover:border-[#0f8f6b] hover:bg-[#f4fbf8] sm:p-5">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e5f6f0] text-[#0f8f6b]"><PaidProjectIcon /></span>
+            <span>
+              <strong className="block text-lg text-[#102033]">Creer un nouveau projet</strong>
+              <span className="mt-1 block text-sm leading-5 text-[#64748b]">Publication commerciale avec fichiers proteges, prix, licence et droits d'utilisation.</span>
+            </span>
+          </a>
+          <a href="/projects/new?type=free" className="group flex min-h-[96px] items-center gap-4 rounded-[14px] border border-[#cfd8e3] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,52,0.06)] transition hover:border-[#0877ff] hover:bg-[#f4f8ff] sm:p-5">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eaf2ff] text-[#0877ff]"><OpenProjectIcon /></span>
+            <span>
+              <strong className="block text-lg text-[#102033]">Publier un projet</strong>
+              <span className="mt-1 block text-sm leading-5 text-[#64748b]">Publication ouverte partagee avec la communaute sous une licence libre.</span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProjectCard({
   project,
   selected,
   favorited,
+  followed,
+  followAnimating,
   onSelect,
   onLike,
   onFavorite,
+  onFollow,
 }: {
   project: ExplorerProject;
   selected: boolean;
   favorited: boolean;
+  followed: boolean;
+  followAnimating: boolean;
   onSelect: () => void;
   onLike: () => void;
   onFavorite: () => void;
+  onFollow: () => void;
 }) {
   return (
     <article className={`min-w-0 bg-transparent transition ${selected ? 'opacity-100' : 'opacity-95 hover:opacity-100'}`}>
@@ -390,10 +448,7 @@ function ProjectCard({
         <div className="aspect-[1.45] overflow-hidden bg-[#e8eef5]">
           <img src={project.imageUrl || '/images/quote-product-standard-pcb.png'} alt="" className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]" />
         </div>
-        <div className="mt-3 flex min-w-0 items-center gap-2">
-          <span className={`shrink-0 px-2 py-1 text-xs font-bold leading-none ${project.projectType === 'paid' ? 'bg-[#fff1e6] text-[#c45100]' : 'bg-[#e7f5f0] text-[#0f8f6b]'}`}>
-            {project.projectType === 'paid' ? formatProjectPrice(project.priceCents, project.currency) : 'GRATUIT'}
-          </span>
+        <div className="mt-3 flex min-w-0 items-center">
           <h3 className="min-w-0 truncate text-base font-medium text-[#0b1724]">{project.title}</h3>
         </div>
       </button>
@@ -409,7 +464,19 @@ function ProjectCard({
         <span className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[10px] font-black text-white">
           {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
         </span>
-        <span className="min-w-0 truncate">{project.authorName}</span>
+        <span className="min-w-0 flex-1 truncate">{project.authorName}</span>
+        {project.userId ? (
+          <button
+            type="button"
+            onClick={onFollow}
+            className={`explorer-follow-action grid h-7 w-7 shrink-0 place-items-center rounded-full border transition ${
+              followed ? 'border-[#0f8f6b] bg-[#e7f8f2] text-[#0f8f6b]' : 'border-[#d8e1ea] bg-white text-[#102033] hover:border-[#0f8f6b] hover:text-[#0f8f6b]'
+            } ${followAnimating ? 'explorer-follow-action--done' : ''}`}
+            aria-label={followed ? `Ne plus suivre ${project.authorName}` : `Suivre ${project.authorName}`}
+          >
+            {followed ? <MaterialArrowForwardIcon /> : <MaterialAddIcon />}
+          </button>
+        ) : null}
       </div>
     </article>
   );
@@ -427,9 +494,7 @@ function ProjectDetailPanel({ project, commentValue, onCommentChange, onComment,
       </div>
       <p className="mt-4 text-sm leading-6 text-[#526173]">{project.description || project.summary}</p>
       <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
-        <span className={project.projectType === 'paid' ? 'bg-[#fff1e6] px-2 py-1 text-[#c45100]' : 'bg-[#e7f5f0] px-2 py-1 text-[#0f8f6b]'}>
-          {project.projectType === 'paid' ? formatProjectPrice(project.priceCents, project.currency) : 'Projet gratuit'}
-        </span>
+        {project.projectType === 'paid' ? <span className="bg-[#fff1e6] px-2 py-1 text-[#c45100]">{formatProjectPrice(project.priceCents, project.currency)}</span> : null}
         {project.licenseCode ? <span className="bg-[#eef3f8] px-2 py-1 text-[#526173]">{project.licenseCode}</span> : null}
       </div>
       <div className="mt-4 grid grid-cols-4 border border-[#edf2f7] text-center text-xs">
@@ -504,6 +569,38 @@ function PanelMetric({ label, value }: { label: string; value: string }) {
       <strong className="text-sm text-[#07111f]">{value}</strong>
       <span className="text-[10px] uppercase tracking-[0.12em] text-[#94a3b8]">{label}</span>
     </span>
+  );
+}
+
+function PaidProjectIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+      <path d="M12 2 4 5v6c0 5.1 3.4 9.4 8 11 4.6-1.6 8-5.9 8-11V5l-8-3Zm1 14h-2v-1.2a4.4 4.4 0 0 1-2.4-1.1l1.1-1.5c.8.6 1.5.9 2.3.9.9 0 1.4-.3 1.4-.9 0-.7-.7-.9-1.9-1.2-1.5-.4-2.6-1-2.6-2.5 0-1.3.9-2.3 2.1-2.6V4.7h2V6c.8.2 1.5.5 2.1 1l-1 1.5c-.6-.4-1.2-.7-1.9-.7-.8 0-1.2.3-1.2.8 0 .6.6.8 1.8 1.1 1.6.4 2.7 1 2.7 2.6 0 1.4-1 2.4-2.5 2.7V16Z" />
+    </svg>
+  );
+}
+
+function OpenProjectIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+      <path d="M19.4 10.04A7.5 7.5 0 0 0 4.9 8.5 5.5 5.5 0 0 0 5.5 19H11v-2H5.5a3.5 3.5 0 0 1-.38-6.98l1.24-.13.29-1.22A5.5 5.5 0 0 1 17.5 10.5v1.5H19a2.5 2.5 0 0 1 0 5h-4v2h4a4.5 4.5 0 0 0 .4-8.96ZM13 13.83V22h-2v-8.17l-2.59 2.58L7 15l5-5 5 5-1.41 1.41L13 13.83Z" />
+    </svg>
+  );
+}
+
+function MaterialAddIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
+      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2Z" />
+    </svg>
+  );
+}
+
+function MaterialArrowForwardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
+      <path d="m12 4-1.41 1.41L15.17 10H4v2h11.17l-4.58 4.59L12 18l7-7-7-7Z" />
+    </svg>
   );
 }
 

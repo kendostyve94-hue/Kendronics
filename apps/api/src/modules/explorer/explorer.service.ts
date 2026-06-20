@@ -362,6 +362,7 @@ type ExplorerProjectRecord = Prisma.ExplorerProjectGetPayload<{
 function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
   return {
     id: project.id,
+    userId: project.userId ?? undefined,
     authorName: project.authorName,
     authorAvatarUrl: project.authorAvatarUrl ?? undefined,
     title: project.title,

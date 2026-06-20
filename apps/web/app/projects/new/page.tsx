@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { Navbar } from '../../../components/layout/Navbar';
 import { getApiBaseUrl } from '../../../lib/api-base-url';
 import { readFreshAuthSession } from '../../../lib/auth-session';
 
@@ -386,6 +387,7 @@ export default function NewProjectPage() {
 
   return (
     <main className="min-h-screen bg-[#f4f7fa] text-[#102033]">
+      <Navbar hideHeader />
       <section className="border-b border-[#dbe4ee] bg-white">
         <div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-4 py-7 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
           <div>
@@ -614,7 +616,7 @@ function ProjectPublishPreview({ form, projectType }: { form: EditorForm; projec
         </div>
         <div className="p-4">
           <div className="flex items-center gap-2">
-            <span className={`rounded px-2 py-1 text-[11px] font-black ${projectType === 'paid' ? 'bg-[#fff1e6] text-[#c45100]' : 'bg-[#e7f5f0] text-[#0f8f6b]'}`}>{projectType === 'paid' ? 'PAYANT' : 'GRATUIT'}</span>
+            {projectType === 'paid' ? <span className="rounded bg-[#fff1e6] px-2 py-1 text-[11px] font-black text-[#c45100]">COMMERCIAL</span> : null}
             <span className="truncate text-xs font-semibold text-[#64748b]">{form.category}</span>
           </div>
           <h3 className="mt-2 line-clamp-2 text-base font-black text-[#102033]">{form.title || 'Titre du projet'}</h3>

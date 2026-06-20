@@ -7,6 +7,7 @@ export type ExplorerProjectComment = {
 
 export type ExplorerProject = {
   id: string;
+  userId?: string;
   authorName: string;
   authorAvatarUrl?: string;
   title: string;

@@ -951,3 +951,24 @@ main.mobile-free-page details[class*="border"] {
 .product-catalog-focus-panel {
   border-radius: 10px !important;
 }
+
+.explorer-follow-action--done {
+  animation: explorer-follow-confirm 720ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes explorer-follow-confirm {
+  0% {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0 rgba(15, 143, 107, 0.28);
+  }
+
+  45% {
+    transform: scale(1.13);
+    box-shadow: 0 0 0 8px rgba(15, 143, 107, 0.14);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(15, 143, 107, 0);
+  }
+}
