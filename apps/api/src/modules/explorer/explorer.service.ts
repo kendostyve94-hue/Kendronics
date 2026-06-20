@@ -10,69 +10,11 @@ import {
 } from './dto/create-explorer-project.dto';
 import { ExplorerProject } from './entities/explorer-project.entity';
 
-const defaultProjects: Prisma.ExplorerProjectCreateManyInput[] = [
-  {
-    id: 'kendronics-open-power-monitor',
-    authorName: 'Kendronics Lab',
-    title: 'Moniteur energie modulaire',
-    category: 'Energie',
-    summary: 'Carte de mesure courant et tension pour prototypes terrain, avec bornier, zone capteur et format pret pour revue fabrication.',
-    description: 'Projet de reference pour suivre consommation, tension et etat de charge dans une installation basse tension.',
-    tags: ['FR-4', 'Capteur', 'Prototype', 'Open hardware'],
-    imageUrl: '/images/hero-controller-board.png',
-    attachmentName: 'power-monitor-gerber.zip',
-    attachmentType: 'Gerber',
-    status: 'published',
-    publishedAt: new Date(),
-    featured: true,
-    viewsCount: 2400,
-    likesCount: 84,
-    commentsCount: 7,
-    forksCount: 18,
-  },
-  {
-    id: 'kendronics-iot-node-low-power',
-    authorName: 'Community',
-    title: 'Noeud IoT basse consommation',
-    category: 'IoT',
-    summary: 'Design compact pour collecte de donnees, alimentation batterie, antenne externe et connecteur de programmation.',
-    tags: ['IoT', 'Batterie', 'RF', 'ESP32'],
-    imageUrl: '/images/hero-pcb-color-variants.png',
-    attachmentName: 'iot-node-docs.pdf',
-    attachmentType: 'Documentation',
-    status: 'published',
-    publishedAt: new Date(),
-    featured: true,
-    viewsCount: 1600,
-    likesCount: 61,
-    commentsCount: 5,
-    forksCount: 11,
-  },
-  {
-    id: 'kendronics-education-solder-kit',
-    authorName: 'MakerLab',
-    title: 'Kit soudure pedagogique',
-    category: 'Education',
-    summary: 'Carte simple pour atelier scolaire avec LED, buzzer, connecteurs traversants et zones de test multimetre.',
-    tags: ['Education', 'THT', 'Atelier'],
-    imageUrl: '/images/quote-product-standard-pcb.png',
-    attachmentName: 'solder-kit-v1.zip',
-    attachmentType: 'Gerber',
-    status: 'published',
-    publishedAt: new Date(),
-    viewsCount: 980,
-    likesCount: 32,
-    commentsCount: 3,
-    forksCount: 9,
-  },
-];
-
 @Injectable()
 export class ExplorerService {
   constructor(private readonly prisma: PrismaService) {}
 
   async listProjects(): Promise<ExplorerProject[]> {
-    await this.ensureSeedProjects();
     const projects = await this.prisma.explorerProject.findMany({
       where: { status: 'published' },
       orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
@@ -108,6 +50,56 @@ export class ExplorerService {
 
   async getProjectEditor(user: AuthenticatedUser, projectId: string) {
     return this.ownedProject(user.id, projectId);
+  }
+
+  async getProjectMarketplaceState(userId: string, projectId: string) {
+    const project = await this.prisma.explorerProject.findFirst({
+      where: { id: projectId, status: 'published' },
+      include: {
+        assets: { select: { id: true, visibility: true } },
+      },
+    });
+    if (!project) throw new NotFoundException('Explorer project not found.');
+
+    const [licenseGrant, pendingPurchase] = await Promise.all([
+      this.prisma.projectLicenseGrant.findUnique({
+        where: { projectId_userId: { projectId, userId } },
+      }),
+      this.prisma.projectPurchase.findFirst({
+        where: { projectId, buyerId: userId, status: 'pending' },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    const isOwner = project.userId === userId;
+    const activeLicense = licenseGrant?.status === 'active' && (!licenseGrant.expiresAt || licenseGrant.expiresAt > new Date());
+    const isCommercial = project.projectType === 'paid';
+    const hasProtectedAssets = project.assets.some((asset) => asset.visibility === 'protected');
+
+    return {
+      projectId: project.id,
+      projectType: project.projectType,
+      sellerId: project.userId,
+      priceCents: project.priceCents,
+      currency: project.currency,
+      licenseCode: project.licenseCode,
+      allowedUses: project.allowedUses,
+      protectedAssetsCount: project.assets.filter((asset) => asset.visibility === 'protected').length,
+      isOwner,
+      hasProtectedAssets,
+      hasActiveLicense: isOwner || activeLicense,
+      pendingPurchaseId: pendingPurchase?.id,
+      canStartPurchase: isCommercial && hasProtectedAssets && !isOwner && !activeLicense,
+      nextStep: !isCommercial
+        ? 'open-project'
+        : isOwner || activeLicense
+          ? 'access-granted'
+          : pendingPurchase
+            ? 'complete-pending-payment'
+            : hasProtectedAssets
+              ? 'create-checkout'
+              : 'missing-protected-assets',
+    };
   }
 
   async updateProject(user: AuthenticatedUser, projectId: string, dto: UpdateExplorerProjectDto) {
@@ -263,6 +255,98 @@ export class ExplorerService {
     return projects.map(toExplorerProject);
   }
 
+  async listProjectPurchases(userId: string) {
+    return this.prisma.projectPurchase.findMany({
+      where: { buyerId: userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        project: {
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true,
+            category: true,
+            projectType: true,
+            status: true,
+          },
+        },
+        licenseGrant: true,
+      },
+    });
+  }
+
+  async listProjectLicenseGrants(userId: string) {
+    return this.prisma.projectLicenseGrant.findMany({
+      where: { userId },
+      orderBy: { grantedAt: 'desc' },
+      include: {
+        project: {
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true,
+            category: true,
+            projectType: true,
+            status: true,
+          },
+        },
+        purchase: true,
+      },
+    });
+  }
+
+  async createProjectPurchaseIntent(userId: string, projectId: string) {
+    const project = await this.prisma.explorerProject.findFirst({
+      where: { id: projectId, status: 'published' },
+      include: {
+        assets: { select: { visibility: true } },
+      },
+    });
+    if (!project) throw new NotFoundException('Explorer project not found.');
+    if (project.projectType !== 'paid') throw new BadRequestException('Ce projet ne necessite pas d achat marketplace.');
+    if (project.userId === userId) throw new BadRequestException('Vous possedez deja ce projet.');
+    if (!project.priceCents || project.priceCents < 100) throw new BadRequestException('Ce projet n a pas encore de prix valide.');
+    if (!project.assets.some((asset) => asset.visibility === 'protected')) {
+      throw new BadRequestException('Ce projet ne contient pas encore de fichier protege a licencier.');
+    }
+
+    const activeGrant = await this.prisma.projectLicenseGrant.findUnique({
+      where: { projectId_userId: { projectId, userId } },
+    });
+    if (activeGrant?.status === 'active' && (!activeGrant.expiresAt || activeGrant.expiresAt > new Date())) {
+      throw new BadRequestException('Vous disposez deja d une licence active pour ce projet.');
+    }
+
+    const pendingPurchase = await this.prisma.projectPurchase.findFirst({
+      where: { projectId, buyerId: userId, status: 'pending' },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (pendingPurchase) return pendingPurchase;
+
+    return this.prisma.projectPurchase.create({
+      data: {
+        projectId,
+        buyerId: userId,
+        sellerId: project.userId,
+        status: 'pending',
+        amountCents: project.priceCents,
+        currency: project.currency,
+        priceSnapshot: {
+          projectId: project.id,
+          title: project.title,
+          projectType: project.projectType,
+          amountCents: project.priceCents,
+          currency: project.currency,
+          licenseCode: project.licenseCode,
+          allowedUses: project.allowedUses,
+          sellerId: project.userId,
+          capturedAt: new Date().toISOString(),
+          version: 'project-marketplace-v1',
+        },
+      },
+    });
+  }
+
   async toggleFavorite(projectId: string, userId: string): Promise<{ favorited: boolean; favoritesCount: number }> {
     await this.ensureProject(projectId);
     const existing = await this.prisma.explorerProjectFavorite.findUnique({
@@ -347,12 +431,6 @@ export class ExplorerService {
     return project;
   }
 
-  private async ensureSeedProjects() {
-    const count = await this.prisma.explorerProject.count();
-    if (count === 0) {
-      await this.prisma.explorerProject.createMany({ data: defaultProjects, skipDuplicates: true });
-    }
-  }
 }
 
 type ExplorerProjectRecord = Prisma.ExplorerProjectGetPayload<{

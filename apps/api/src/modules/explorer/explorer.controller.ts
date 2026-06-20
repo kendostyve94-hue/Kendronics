@@ -72,6 +72,18 @@ export class ExplorerController {
     return this.explorerService.getProjectEditor(user, projectId);
   }
 
+  @Get('projects/:projectId/marketplace')
+  @UseGuards(JwtAuthGuard)
+  projectMarketplaceState(@CurrentUser() user: AuthenticatedUser, @Param('projectId') projectId: string) {
+    return this.explorerService.getProjectMarketplaceState(user.id, projectId);
+  }
+
+  @Post('projects/:projectId/purchases')
+  @UseGuards(JwtAuthGuard)
+  createProjectPurchase(@CurrentUser() user: AuthenticatedUser, @Param('projectId') projectId: string) {
+    return this.explorerService.createProjectPurchaseIntent(user.id, projectId);
+  }
+
   @Post('projects/:projectId/likes')
   likeProject(
     @Param('projectId') projectId: string,
@@ -103,6 +115,18 @@ export class ExplorerController {
   @UseGuards(JwtAuthGuard)
   myFollowingProjects(@CurrentUser() user: AuthenticatedUser) {
     return this.explorerService.listFollowingProjects(user.id);
+  }
+
+  @Get('me/purchases')
+  @UseGuards(JwtAuthGuard)
+  myProjectPurchases(@CurrentUser() user: AuthenticatedUser) {
+    return this.explorerService.listProjectPurchases(user.id);
+  }
+
+  @Get('me/licenses')
+  @UseGuards(JwtAuthGuard)
+  myProjectLicenses(@CurrentUser() user: AuthenticatedUser) {
+    return this.explorerService.listProjectLicenseGrants(user.id);
   }
 
   @Post('projects/:projectId/favorites')

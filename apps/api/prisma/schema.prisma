@@ -48,6 +48,9 @@ model User {
   explorerProjectLikes ExplorerProjectLike[]
   explorerProjectFavorites ExplorerProjectFavorite[]
   explorerComments ExplorerComment[]
+  projectPurchasesBought ProjectPurchase[] @relation("ProjectPurchaseBuyer")
+  projectSales ProjectPurchase[] @relation("ProjectPurchaseSeller")
+  projectLicenseGrants ProjectLicenseGrant[]
   followers UserFollow[] @relation("UserFollowers")
   following UserFollow[] @relation("UserFollowing")
   profileVerificationCodes ProfileVerificationCode[]
@@ -811,6 +814,8 @@ model ExplorerProject {
   favorites ExplorerProjectFavorite[]
   comments ExplorerComment[]
   assets ExplorerProjectAsset[]
+  purchases ProjectPurchase[]
+  licenseGrants ProjectLicenseGrant[]
 
   @@index([userId])
   @@index([status])
@@ -842,6 +847,65 @@ model ExplorerProjectAsset {
   @@index([userId])
   @@index([uploadId])
   @@index([visibility])
+}
+
+model ProjectPurchase {
+  id                String    @id @default(uuid())
+  projectId         String
+  buyerId           String
+  sellerId          String?
+  status            String    @default("pending")
+  amountCents       Int
+  currency          String    @default("EUR")
+  provider          String?
+  providerSessionId String?
+  providerPaymentId String?
+  priceSnapshot     Json
+  paidAt            DateTime?
+  canceledAt        DateTime?
+  refundedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  project ExplorerProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  buyer   User            @relation("ProjectPurchaseBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User?           @relation("ProjectPurchaseSeller", fields: [sellerId], references: [id], onDelete: SetNull)
+  licenseGrant ProjectLicenseGrant?
+
+  @@index([projectId])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([providerSessionId])
+  @@index([providerPaymentId])
+  @@index([createdAt])
+}
+
+model ProjectLicenseGrant {
+  id              String    @id @default(uuid())
+  projectId       String
+  userId          String
+  purchaseId      String?   @unique
+  status          String    @default("active")
+  licenseCode     String
+  allowedUses     String[]  @default([])
+  source          String    @default("purchase")
+  grantedAt       DateTime  @default(now())
+  revokedAt       DateTime?
+  expiresAt       DateTime?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  project  ExplorerProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchase ProjectPurchase? @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@index([status])
+  @@index([grantedAt])
 }
 
 model ExplorerProjectLike {
