@@ -398,7 +398,7 @@ export default function NewProjectPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-[1180px] px-4 py-7 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1180px] px-2 py-6 sm:px-6 sm:py-7 lg:px-8">
         <div className="min-w-0 space-y-6">
           <EditorSection id="step-01" icon="public" title="Informations publiques" description="Ce que les visiteurs verront en premier dans Explorer.">
             <Field label="Titre du projet" required>
@@ -415,28 +415,27 @@ export default function NewProjectPage() {
               </Field>
             </div>
             <Field label="Resume public" required hint="24 a 360 caracteres">
-              <textarea value={form.summary} onChange={(event) => update('summary', event.target.value)} className={`${inputClass} min-h-[100px] py-3`} maxLength={360} placeholder="Expliquez le besoin traite, le resultat obtenu et le public concerne." />
+              <textarea value={form.summary} onChange={(event) => update('summary', event.target.value)} className={`${inputClass} min-h-[76px] py-3`} maxLength={360} placeholder="Expliquez le besoin traite, le resultat obtenu et le public concerne." />
             </Field>
             <Field label="Presentation detaillee" required>
-              <textarea value={form.description} onChange={(event) => update('description', event.target.value)} className={`${inputClass} min-h-[190px] py-3`} maxLength={12000} placeholder="Contexte, architecture, fonctionnement, choix techniques, limites et cas d usage." />
+              <textarea value={form.description} onChange={(event) => update('description', event.target.value)} className={`${inputClass} min-h-[125px] py-3`} maxLength={12000} placeholder="Contexte, architecture, fonctionnement, choix techniques, limites et cas d usage." />
             </Field>
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
               <div className="grid gap-4">
-                <Field label="Image de couverture">
-                  <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                    <input value={form.imageUrl} onChange={(event) => { update('imageUrl', event.target.value); update('coverPreviewUrl', event.target.value); }} className={inputClass} placeholder="https://... ou televersez une image" />
-                    <label className="inline-flex h-11 cursor-pointer items-center justify-center border border-[#0f8f6b] px-4 text-sm font-black text-[#0f8f6b]">
-                      Televerser
+                <div>
+                  <p className="text-sm font-black">Médias de présentation</p>
+                  <p className="mt-1 text-xs leading-5 text-[#64748b]">Ajoutez une couverture ou une video pour controler le rendu public avant publication.</p>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <label className="inline-flex h-11 cursor-pointer items-center justify-center rounded-[10px] border border-[#0f8f6b] px-4 text-sm font-black text-[#0f8f6b]">
+                      Téléverser une image
                       <input type="file" className="sr-only" accept=".jpg,.jpeg,.png,.webp" onChange={(event) => previewMedia(event, 'cover')} />
                     </label>
+                    <label className="inline-flex h-11 cursor-pointer items-center justify-center rounded-[10px] border border-[#cfd8e3] px-4 text-sm font-black text-[#102033]">
+                      Ajouter une vidéo
+                      <input type="file" className="sr-only" accept=".mp4,.mov,.webm" onChange={(event) => previewMedia(event, 'video')} />
+                    </label>
                   </div>
-                </Field>
-                <Field label="Video de presentation">
-                  <label className="inline-flex h-11 w-fit cursor-pointer items-center justify-center border border-[#cfd8e3] px-4 text-sm font-black text-[#102033]">
-                    Ajouter une video
-                    <input type="file" className="sr-only" accept=".mp4,.mov,.webm" onChange={(event) => previewMedia(event, 'video')} />
-                  </label>
-                </Field>
+                </div>
                 <Field label="Lien document externe">
                   <input value={form.repositoryUrl} onChange={(event) => update('repositoryUrl', event.target.value)} className={inputClass} placeholder="GitHub, GitLab, EasyEDA, Drive, documentation..." />
                 </Field>
@@ -555,7 +554,7 @@ function EditorSection({ id, icon, title, description, children }: { id: string;
   return (
     <section id={id} className="project-editor-section scroll-mt-5 bg-white sm:border sm:border-[#dce8e3]">
       <header className="flex gap-4 border-b border-[#e4ebf2] px-5 py-5 sm:px-7">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#e7f5f0] text-[#0f8f6b]">
+        <span className="project-editor-title-icon grid h-11 w-11 shrink-0 place-items-center bg-[#e7f5f0] text-[#0f8f6b]">
           <ProjectEditorIcon name={icon} />
         </span>
         <div><h2 className="text-xl font-black">{title}</h2><p className="mt-1 text-sm leading-6 text-[#64748b]">{description}</p></div>
@@ -580,8 +579,7 @@ function Field({ label, required = false, hint, children }: { label: string; req
 function ProjectPublishPreview({ form, projectType }: { form: EditorForm; projectType: ProjectType }) {
   const cover = form.coverPreviewUrl || '/images/quote-product-standard-pcb.png';
   return (
-    <aside className="rounded-[14px] border border-[#dbe4ee] bg-[#f8fafc] p-3">
-      <p className="mb-3 text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">Apercu publication</p>
+    <aside>
       <article className="overflow-hidden rounded-[12px] bg-white ring-1 ring-[#dbe4ee]">
         <div className="relative aspect-video bg-[#dce8e3]">
           {form.videoPreviewUrl ? (

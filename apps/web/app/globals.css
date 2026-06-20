@@ -930,10 +930,14 @@ main.mobile-free-page details[class*="border"] {
 @media (min-width: 640px) {
   .project-editor-section {
     border-radius: 18px;
-    box-shadow: 0 10px 26px rgba(15, 35, 52, 0.09) !important;
     transform: translateY(-2px);
     overflow: hidden;
   }
+}
+
+.project-editor-title-icon {
+  border-radius: 12px;
+  transform: translateY(-1px);
 }
 
 .home-quick-quote-frame {
