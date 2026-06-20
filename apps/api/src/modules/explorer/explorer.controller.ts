@@ -78,6 +78,12 @@ export class ExplorerController {
     return this.explorerService.getProjectMarketplaceState(user.id, projectId);
   }
 
+  @Get('projects/:projectId/assets/downloads')
+  @UseGuards(JwtAuthGuard)
+  projectAssetDownloads(@CurrentUser() user: AuthenticatedUser, @Param('projectId') projectId: string) {
+    return this.explorerService.listProjectAssetDownloads(user, projectId);
+  }
+
   @Post('projects/:projectId/purchases')
   @UseGuards(JwtAuthGuard)
   createProjectPurchase(@CurrentUser() user: AuthenticatedUser, @Param('projectId') projectId: string) {

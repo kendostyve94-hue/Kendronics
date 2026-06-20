@@ -41,6 +41,12 @@ type ExplorerProject = {
   comments: ExplorerComment[];
 };
 
+type ProjectAssetDownload = {
+  id: string;
+  originalName: string;
+  downloadUrl: string;
+};
+
 type MobileExplorerFeed = 'reels' | 'forks' | 'following';
 
 const apiBaseUrl = getApiBaseUrl();
@@ -261,6 +267,32 @@ export default function ExplorerPage() {
     }
   }
 
+  async function downloadProjectAssets(project: ExplorerProject) {
+    const session = readAuthSession();
+    if (!session) {
+      openAuthRequired('login');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}/assets/downloads`, {
+        headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+        cache: 'no-store',
+      });
+      if (response.status === 403 && project.projectType === 'paid') {
+        await buyProject(project);
+        return;
+      }
+      if (!response.ok) throw new Error('Downloads unavailable');
+      const downloads = await response.json() as ProjectAssetDownload[];
+      downloads.slice(0, 4).forEach((asset, index) => {
+        window.setTimeout(() => window.open(asset.downloadUrl, '_blank', 'noopener,noreferrer'), index * 120);
+      });
+    } catch {
+      // Keep the user on the current page if protected assets cannot be opened.
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f4f7fb] text-[#172033]">
       <div className="hidden lg:block">
@@ -317,6 +349,7 @@ export default function ExplorerPage() {
                 onFavorite={() => void favoriteProject(project)}
                 onFollow={() => void followAuthor(project)}
                 onBuy={() => void buyProject(project)}
+                onDownload={() => void downloadProjectAssets(project)}
                 followed={project.userId ? followedUserIds.has(project.userId) : false}
                 followAnimating={project.userId ? followPulseUserIds.has(project.userId) : false}
                 followable={Boolean(project.userId)}
@@ -424,6 +457,7 @@ function ProjectCard({
   onFavorite,
   onFollow,
   onBuy,
+  onDownload,
 }: {
   project: ExplorerProject;
   selected: boolean;
@@ -436,6 +470,7 @@ function ProjectCard({
   onFavorite: () => void;
   onFollow: () => void;
   onBuy: () => void;
+  onDownload: () => void;
 }) {
   return (
     <article className={`min-w-0 bg-transparent transition ${selected ? 'opacity-100' : 'opacity-95 hover:opacity-100'}`}>
@@ -456,9 +491,14 @@ function ProjectCard({
         <span className="inline-flex items-center gap-1"><CommentIcon />{project.commentsCount}</span>
       </div>
       {project.projectType === 'paid' ? (
-        <button type="button" onClick={onBuy} className="mt-3 h-9 w-full bg-[#102033] px-3 text-sm font-black text-white transition hover:bg-[#0f8f6b]">
-          Acheter la licence {formatProjectPrice(project.priceCents, project.currency)}
-        </button>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button type="button" onClick={onBuy} className="h-9 bg-[#102033] px-3 text-sm font-black text-white transition hover:bg-[#0f8f6b]">
+            Acheter
+          </button>
+          <button type="button" onClick={onDownload} className="h-9 border border-[#102033] bg-white px-3 text-sm font-black text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+            Fichiers
+          </button>
+        </div>
       ) : null}
       <div className="mt-4 flex items-center gap-2 text-sm text-[#0b1724]">
         <span className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[10px] font-black text-white">

@@ -2,6 +2,8 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
+import { UserRole } from '../../common/types/user-role.enum';
+import { UploadRepository } from '../uploads/repositories/upload.repository';
 import { CreateExplorerCommentDto } from './dto/create-explorer-comment.dto';
 import {
   AttachExplorerProjectAssetDto,
@@ -12,7 +14,10 @@ import { ExplorerProject } from './entities/explorer-project.entity';
 
 @Injectable()
 export class ExplorerService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadRepository: UploadRepository,
+  ) {}
 
   async listProjects(): Promise<ExplorerProject[]> {
     const projects = await this.prisma.explorerProject.findMany({
@@ -293,6 +298,59 @@ export class ExplorerService {
         purchase: true,
       },
     });
+  }
+
+  async listProjectAssetDownloads(user: AuthenticatedUser, projectId: string) {
+    const project = await this.prisma.explorerProject.findUnique({
+      where: { id: projectId },
+      include: {
+        assets: {
+          orderBy: { createdAt: 'asc' },
+          include: {
+            upload: {
+              select: {
+                storageKey: true,
+                status: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!project) throw new NotFoundException('Explorer project not found.');
+
+    const isOwner = project.userId === user.id;
+    const isAdmin = user.roles.includes(UserRole.Admin);
+    if (project.status !== 'published' && !isOwner && !isAdmin) {
+      throw new NotFoundException('Explorer project not found.');
+    }
+
+    const activeGrant = await this.prisma.projectLicenseGrant.findUnique({
+      where: { projectId_userId: { projectId, userId: user.id } },
+    });
+    const hasActiveLicense = activeGrant?.status === 'active' && (!activeGrant.expiresAt || activeGrant.expiresAt > new Date());
+    const canAccessProtected = isOwner || isAdmin || hasActiveLicense || project.projectType === 'free';
+
+    const downloadableAssets = project.assets.filter((asset) => {
+      if (!['uploaded', 'analyzed'].includes(asset.upload.status)) return false;
+      return asset.visibility !== 'protected' || canAccessProtected;
+    });
+
+    if (!downloadableAssets.length && project.assets.length > 0) {
+      throw new ForbiddenException('Aucune licence active ne permet de telecharger les fichiers proteges de ce projet.');
+    }
+
+    return downloadableAssets.map((asset) => ({
+      id: asset.id,
+      projectId: project.id,
+      kind: asset.kind,
+      visibility: asset.visibility,
+      originalName: asset.originalName,
+      mimeType: asset.mimeType,
+      sizeBytes: asset.sizeBytes,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      downloadUrl: this.uploadRepository.createDownloadUrl(asset.upload.storageKey),
+    }));
   }
 
   async createProjectPurchaseIntent(userId: string, projectId: string) {

@@ -192,6 +192,10 @@ export class UploadRepository {
     );
   }
 
+  createDownloadUrl(storageKey: string): string {
+    return this.createPresignedGetUrl(storageKey);
+  }
+
   private createPresignedPutUrl(storageKey: string): string {
     return this.createPresignedUrl(storageKey, 'PUT');
   }
