@@ -213,6 +213,7 @@ export default function NewProjectPage() {
     if (form.title.trim().length < 4) missing.push('Titre du projet');
     if (form.summary.trim().length < 24) missing.push('Resume public');
     if (form.description.trim().length < 80) missing.push('Presentation detaillee');
+    if (!form.coverPreviewUrl && !assets.some((asset) => asset.kind === 'cover')) missing.push('Image de couverture');
     if (!form.dimensions.trim()) missing.push('Dimensions');
     if (!form.mainComponents.trim()) missing.push('Composants principaux');
     if (!form.buildInstructions.trim()) missing.push('Instructions de fabrication');
@@ -420,17 +421,17 @@ export default function NewProjectPage() {
             <Field label="Presentation detaillee" required>
               <textarea value={form.description} onChange={(event) => update('description', event.target.value)} className={`${inputClass} min-h-[125px] py-3`} maxLength={12000} placeholder="Contexte, architecture, fonctionnement, choix techniques, limites et cas d usage." />
             </Field>
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-              <div className="grid gap-4">
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_290px]">
+              <div className="grid gap-3">
                 <div>
-                  <p className="text-sm font-black">Médias de présentation</p>
+                  <p className="inline-flex items-center gap-1.5 text-sm font-black">Médias de présentation <span className="text-[#d9485f]">*</span></p>
                   <p className="mt-1 text-xs leading-5 text-[#64748b]">Ajoutez une couverture ou une video pour controler le rendu public avant publication.</p>
-                  <div className="mt-3 flex flex-wrap gap-3">
-                    <label className="inline-flex h-11 cursor-pointer items-center justify-center rounded-[10px] border border-[#0f8f6b] px-4 text-sm font-black text-[#0f8f6b]">
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+                    <label className="inline-flex h-11 min-w-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#0f8f6b] px-2 text-center text-[12px] font-black text-[#0f8f6b] sm:px-4 sm:text-sm">
                       Téléverser une image
                       <input type="file" className="sr-only" accept=".jpg,.jpeg,.png,.webp" onChange={(event) => previewMedia(event, 'cover')} />
                     </label>
-                    <label className="inline-flex h-11 cursor-pointer items-center justify-center rounded-[10px] border border-[#cfd8e3] px-4 text-sm font-black text-[#102033]">
+                    <label className="inline-flex h-11 min-w-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#cfd8e3] px-2 text-center text-[12px] font-black text-[#102033] sm:px-4 sm:text-sm">
                       Ajouter une vidéo
                       <input type="file" className="sr-only" accept=".mp4,.mov,.webm" onChange={(event) => previewMedia(event, 'video')} />
                     </label>
@@ -580,7 +581,7 @@ function ProjectPublishPreview({ form, projectType }: { form: EditorForm; projec
   const cover = form.coverPreviewUrl || '/images/quote-product-standard-pcb.png';
   return (
     <aside>
-      <article className="overflow-hidden rounded-[12px] bg-white ring-1 ring-[#dbe4ee]">
+      <article className="overflow-hidden rounded-[10px] bg-white ring-1 ring-[#dbe4ee]">
         <div className="relative aspect-video bg-[#dce8e3]">
           {form.videoPreviewUrl ? (
             <video src={form.videoPreviewUrl} controls className="h-full w-full bg-black object-cover" />
@@ -610,7 +611,7 @@ type ProjectEditorIconName = 'public' | 'memory' | 'article' | 'folder' | 'licen
 
 function ProjectEditorIcon({ name }: { name: ProjectEditorIconName }) {
   const paths: Record<ProjectEditorIconName, string> = {
-    public: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.93 9h-3.02a15.2 15.2 0 0 0-1.12-5.05A8.04 8.04 0 0 1 18.93 11ZM12 4.04c.83 1.2 1.48 3.05 1.71 5.96h-3.42C10.52 7.09 11.17 5.24 12 4.04ZM4.26 13h3.83c.09 1.6.35 3.09.76 4.31A8.02 8.02 0 0 1 4.26 13Zm3.83-2H4.26a8.02 8.02 0 0 1 4.59-4.31A17.3 17.3 0 0 0 8.09 11ZM12 19.96c-.83-1.2-1.48-3.05-1.71-5.96h3.42c-.23 2.91-.88 4.76-1.71 5.96Zm2.85-2.65c.41-1.22.67-2.71.76-4.31h3.83a8.02 8.02 0 0 1-4.59 4.31Z',
+    public: 'M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm0 2v10h16V7H4Zm2 8 3-4 2.2 2.9L14 10l4 5H6Zm2-6.5A1.5 1.5 0 1 1 11 8.5 1.5 1.5 0 0 1 8 8.5Z',
     memory: 'M7 3h10v2h2v2h2v2h-2v2h2v2h-2v2h2v2h-2v2h-2v2H7v-2H5v-2H3v-2h2v-2H3v-2h2V9H3V7h2V5h2V3Zm2 4v10h6V7H9Zm2 2h2v6h-2V9Z',
     article: 'M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 2v4h4l-4-4ZM8 12h8v2H8v-2Zm0 4h8v2H8v-2Zm0-8h4v2H8V8Z',
     folder: 'M10 4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6Zm10 6H4v8h16v-8Z',

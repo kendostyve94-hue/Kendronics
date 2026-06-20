@@ -938,6 +938,7 @@ main.mobile-free-page details[class*="border"] {
 .project-editor-title-icon {
   border-radius: 12px;
   transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(15, 35, 52, 0.06);
 }
 
 .home-quick-quote-frame {
