@@ -401,7 +401,7 @@ export default function NewProjectPage() {
 
       <div className="mx-auto max-w-[1180px] px-2 py-6 sm:px-6 sm:py-7 lg:px-8">
         <div className="min-w-0 space-y-6">
-          <EditorSection id="step-01" icon="public" title="Informations publiques" description="Ce que les visiteurs verront en premier dans Explorer.">
+          <EditorSection id="step-01" title="Informations publiques" description="Ce que les visiteurs verront en premier dans Explorer.">
             <Field label="Titre du projet" required>
               <input value={form.title} onChange={(event) => update('title', event.target.value)} className={inputClass} maxLength={90} placeholder="Ex. Station meteo solaire ESP32" />
             </Field>
@@ -445,7 +445,7 @@ export default function NewProjectPage() {
             </div>
           </EditorSection>
 
-          <EditorSection id="step-02" icon="memory" title="Caracteristiques techniques" description="Les donnees necessaires pour comprendre et reproduire correctement le materiel.">
+          <EditorSection id="step-02" title="Caracteristiques techniques" description="Les donnees necessaires pour comprendre et reproduire correctement le materiel.">
             <div className="grid gap-4 sm:grid-cols-3">
               <Field label="Type de carte" required><select value={form.boardType} onChange={(event) => update('boardType', event.target.value)} className={inputClass}>{['PCB rigide', 'PCB flexible', 'Rigide-flex', 'Module assemble', 'Systeme mecanique', 'Autre'].map((item) => <option key={item}>{item}</option>)}</select></Field>
               <Field label="Dimensions" required><input value={form.dimensions} onChange={(event) => update('dimensions', event.target.value)} className={inputClass} placeholder="100 x 80 mm" /></Field>
@@ -461,14 +461,14 @@ export default function NewProjectPage() {
             <Field label="Tests realises" required><textarea value={form.tested} onChange={(event) => update('tested', event.target.value)} className={`${inputClass} min-h-[110px] py-3`} placeholder="Tests electriques, fonctionnels, thermiques, radio, autonomie et conditions de validation." /></Field>
           </EditorSection>
 
-          <EditorSection id="step-03" icon="article" title="Documentation de reproduction" description="Des instructions suffisamment precises pour eviter les interpretations dangereuses ou couteuses.">
+          <EditorSection id="step-03" title="Documentation de reproduction" description="Des instructions suffisamment precises pour eviter les interpretations dangereuses ou couteuses.">
             <Field label="Fabrication et assemblage" required><textarea value={form.buildInstructions} onChange={(event) => update('buildInstructions', event.target.value)} className={`${inputClass} min-h-[150px] py-3`} placeholder="Preparation des fichiers, contraintes PCB, ordre d assemblage, composants alternatifs et controles." /></Field>
             <Field label="Programmation et mise en service"><textarea value={form.softwareInstructions} onChange={(event) => update('softwareInstructions', event.target.value)} className={`${inputClass} min-h-[130px] py-3`} placeholder="Installation, compilation, flash, configuration et premier demarrage." /></Field>
             <Field label="Securite, limites et avertissements"><textarea value={form.safetyNotes} onChange={(event) => update('safetyNotes', event.target.value)} className={`${inputClass} min-h-[110px] py-3`} placeholder="Tensions dangereuses, courant maximal, environnement, certifications et usages interdits." /></Field>
             <Field label="Historique de version"><textarea value={form.changelog} onChange={(event) => update('changelog', event.target.value)} className={`${inputClass} min-h-[90px] py-3`} /></Field>
           </EditorSection>
 
-          <EditorSection id="step-04" icon="folder" title="Fichiers et medias" description="Chaque fichier est stocke dans l espace prive Kendronics. Vous choisissez ce qui est visible publiquement.">
+          <EditorSection id="step-04" title="Fichiers et medias" description="Chaque fichier est stocke dans l espace prive Kendronics. Vous choisissez ce qui est visible publiquement.">
             <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
               <Field label="Nature du fichier">
                 <select value={assetKind} onChange={(event) => setAssetKind(event.target.value)} className={inputClass}>
@@ -499,7 +499,7 @@ export default function NewProjectPage() {
             </div>
           </EditorSection>
 
-          <EditorSection id="step-05" icon="license" title="Licence, droits et tarification" description="Les visiteurs doivent comprendre exactement ce qu ils peuvent faire avec le projet.">
+          <EditorSection id="step-05" title="Licence, droits et tarification" description="Les visiteurs doivent comprendre exactement ce qu ils peuvent faire avec le projet.">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Licence" required>
                 <select value={form.licenseCode} onChange={(event) => update('licenseCode', event.target.value)} className={inputClass}>
@@ -527,7 +527,7 @@ export default function NewProjectPage() {
             </fieldset>
           </EditorSection>
 
-          <EditorSection id="step-06" icon="publish" title="Controle et publication" description="La publication reste impossible tant que les informations essentielles ne sont pas completes.">
+          <EditorSection id="step-06" title="Controle et publication" description="La publication reste impossible tant que les informations essentielles ne sont pas completes.">
             <label className="flex items-start gap-3 border border-[#dbe4ee] bg-[#f8fafc] p-4 text-sm leading-6">
               <input type="checkbox" checked={form.rightsConfirmed} onChange={(event) => update('rightsConfirmed', event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#0f8f6b]" />
               <span>Je confirme etre l auteur du projet ou disposer des droits necessaires pour publier les textes, medias, fichiers et licences associes.</span>
@@ -551,13 +551,10 @@ export default function NewProjectPage() {
 
 const inputClass = 'h-11 w-full rounded-[10px] border border-[#cfd8e3] bg-white px-3 text-sm text-[#102033] outline-none transition focus:border-[#0f8f6b]';
 
-function EditorSection({ id, icon, title, description, children }: { id: string; icon: ProjectEditorIconName; title: string; description: string; children: React.ReactNode }) {
+function EditorSection({ id, title, description, children }: { id: string; title: string; description: string; children: React.ReactNode }) {
   return (
     <section id={id} className="project-editor-section scroll-mt-5 bg-white sm:border sm:border-[#dce8e3]">
-      <header className="flex gap-4 border-b border-[#e4ebf2] px-5 py-5 sm:px-7">
-        <span className="project-editor-title-icon grid h-11 w-11 shrink-0 place-items-center bg-[#e7f5f0] text-[#0f8f6b]">
-          <ProjectEditorIcon name={icon} />
-        </span>
+      <header className="border-b border-[#e4ebf2] px-5 py-5 sm:px-7">
         <div><h2 className="text-xl font-black">{title}</h2><p className="mt-1 text-sm leading-6 text-[#64748b]">{description}</p></div>
       </header>
       <div className="grid gap-5 px-5 py-6 sm:px-7">{children}</div>

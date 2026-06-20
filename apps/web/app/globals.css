@@ -929,16 +929,10 @@ main.mobile-free-page details[class*="border"] {
 
 @media (min-width: 640px) {
   .project-editor-section {
-    border-radius: 18px;
+    border-radius: 10px;
     transform: translateY(-2px);
     overflow: hidden;
   }
-}
-
-.project-editor-title-icon {
-  border-radius: 12px;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(15, 35, 52, 0.06);
 }
 
 .home-quick-quote-frame {
