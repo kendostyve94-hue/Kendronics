@@ -336,6 +336,7 @@ export default function ExplorerPage() {
                 onFollow={() => void followAuthor(project)}
                 followed={project.userId ? followedUserIds.has(project.userId) : false}
                 followAnimating={project.userId ? followPulseUserIds.has(project.userId) : false}
+                followable={Boolean(project.userId)}
               />
             )) : (
               <div className="col-span-full grid min-h-[220px] place-items-center bg-white px-5 py-10 text-center ring-1 ring-[#d8e1ea]">
@@ -427,6 +428,7 @@ function ProjectCard({
   favorited,
   followed,
   followAnimating,
+  followable,
   onSelect,
   onLike,
   onFavorite,
@@ -437,6 +439,7 @@ function ProjectCard({
   favorited: boolean;
   followed: boolean;
   followAnimating: boolean;
+  followable: boolean;
   onSelect: () => void;
   onLike: () => void;
   onFavorite: () => void;
@@ -465,18 +468,18 @@ function ProjectCard({
           {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
         </span>
         <span className="min-w-0 flex-1 truncate">{project.authorName}</span>
-        {project.userId ? (
-          <button
-            type="button"
-            onClick={onFollow}
-            className={`explorer-follow-action grid h-7 w-7 shrink-0 place-items-center rounded-full border transition ${
-              followed ? 'border-[#0f8f6b] bg-[#e7f8f2] text-[#0f8f6b]' : 'border-[#d8e1ea] bg-white text-[#102033] hover:border-[#0f8f6b] hover:text-[#0f8f6b]'
-            } ${followAnimating ? 'explorer-follow-action--done' : ''}`}
-            aria-label={followed ? `Ne plus suivre ${project.authorName}` : `Suivre ${project.authorName}`}
-          >
-            {followed ? <MaterialArrowForwardIcon /> : <MaterialAddIcon />}
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={onFollow}
+          disabled={!followable}
+          className={`explorer-follow-action grid h-7 w-7 shrink-0 place-items-center rounded-full border transition ${
+            followed ? 'border-[#0f8f6b] bg-[#e7f8f2] text-[#0f8f6b]' : 'border-[#d8e1ea] bg-white text-[#102033] hover:border-[#0f8f6b] hover:text-[#0f8f6b]'
+          } ${followAnimating ? 'explorer-follow-action--done' : ''} ${followable ? '' : 'cursor-not-allowed opacity-55'}`}
+          aria-label={followed ? `Ne plus suivre ${project.authorName}` : `Suivre ${project.authorName}`}
+          title={followable ? undefined : 'Auteur non connecte au suivi'}
+        >
+          {followed ? <MaterialArrowForwardIcon /> : <MaterialAddIcon />}
+        </button>
       </div>
     </article>
   );
