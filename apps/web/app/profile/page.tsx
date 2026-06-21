@@ -2249,9 +2249,12 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         </div>
         {socialStatus === 'error' ? <p className="mt-4 text-sm font-semibold text-red-600">Le profil public n'a pas pu etre charge. Reessayez apres reconnexion.</p> : null}
 
-        <div className="mt-6 grid gap-3">
-          <div className="flex items-center gap-1.5 text-sm font-semibold text-[#102033]">
-            <span>Description du profil</span>
+        <div className="mt-6 rounded-[8px] border border-[#dbe4ee] bg-[#f8fbfd] p-4 shadow-[0_12px_30px_rgba(15,35,52,0.055)] sm:p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#0f8f6b]">Bio publique</p>
+              <h2 className="mt-1 text-sm font-black text-[#102033]">Description du profil</h2>
+            </div>
             <button
               type="button"
               onClick={() => {
@@ -2268,14 +2271,16 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
             <textarea
               value={draftDescription}
               onChange={(event) => setDraftDescription(event.target.value)}
-              className="min-h-[86px] resize-y border border-[#dbe4ee] bg-white px-3 py-2 text-sm font-medium leading-6 text-[#102033] outline-none focus:border-[#0f8f6b]"
+              className="mt-4 min-h-[104px] w-full resize-y rounded-[6px] border border-[#dbe4ee] bg-white px-3 py-2 text-sm font-medium leading-6 text-[#102033] outline-none focus:border-[#0f8f6b]"
               placeholder="Presentez votre profil, vos projets, votre entreprise ou ajoutez vos liens LinkedIn, YouTube, GitHub..."
               maxLength={420}
               autoFocus
             />
           ) : profileDescription ? (
-            <div className="text-sm leading-6 text-[#64748b]">{renderedDescription}</div>
-          ) : null}
+            <div className="mt-3 text-sm leading-6 text-[#4f6175]">{renderedDescription}</div>
+          ) : (
+            <p className="mt-3 text-sm leading-6 text-[#64748b]">Ajoutez une présentation courte pour expliquer votre expertise, vos projets et vos liens publics.</p>
+          )}
           {isDescriptionEditing ? (
             <div className="flex flex-wrap justify-end gap-2">
               <button type="button" onClick={cancelDescriptionEdit} className="h-10 border border-[#dbe4ee] bg-white px-4 text-sm font-black text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
@@ -2340,39 +2345,19 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         ) : null}
 
         {(activeTab === 'projects' ? projects : favorites).length > 0 ? (
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {(activeTab === 'projects' ? projects : favorites).map((project) => (
-              <a key={project.id} href={`/explorer#project-${project.id}`} className="grid min-h-[150px] border border-[#dbe4ee] bg-white p-4 transition hover:border-[#0f8f6b]">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#0f8f6b]">{project.category}</p>
-                    <h3 className="mt-1 truncate text-base font-black text-[#102033]">{project.title}</h3>
-                  </div>
-                  <span className="text-xs text-[#64748b]">{new Date(project.createdAt).toLocaleDateString('fr-FR')}</span>
-                </div>
-                <p className="mt-3 line-clamp-2 text-sm leading-6 text-[#64748b]">{project.summary}</p>
-                <div className="mt-auto flex gap-4 pt-4 text-xs text-[#64748b]">
-                  <span>{project.likesCount} likes</span>
-                  <span>{project.commentsCount} commentaires</span>
-                  <span>{project.forksCount} forks</span>
-                </div>
-              </a>
+              <ProfileProjectPreviewCard key={project.id} project={project} />
             ))}
           </div>
         ) : (
-          <div className="grid min-h-[220px] place-items-center text-center">
-            <div>
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#eefbf6] text-3xl font-black text-[#0f8f6b]">
-              {activeTab === 'projects' ? 'P' : 'F'}
-            </div>
-            <p className="mt-4 text-base font-black text-[#102033]">
-              {activeTab === 'projects' ? 'Aucun projet public pour le moment.' : 'Aucun favori pour le moment.'}
-            </p>
-            <p className="mt-2 text-sm text-[#64748b]">
-              {activeTab === 'projects' ? 'Les projets publics que vous creez apparaitront ici.' : 'Les projets que vous aimez ou sauvegardez apparaitront ici.'}
-            </p>
-            </div>
-          </div>
+          <ProfileEmptySocialState
+            kind={activeTab}
+            onCreate={() => {
+              setActiveTab('projects');
+              setIsCreateProjectOpen(true);
+            }}
+          />
         )}
       </div>
       {isPromoEditorOpen ? (
@@ -2431,6 +2416,67 @@ function ProfileRatingMetric({ rating }: { rating: number }) {
   );
 }
 
+function ProfileProjectPreviewCard({ project }: { project: ProfileExplorerProject }) {
+  return (
+    <a href={`/explorer#project-${project.id}`} className="group grid overflow-hidden rounded-[8px] border border-[#dbe4ee] bg-white shadow-[0_10px_26px_rgba(15,35,52,0.055)] transition hover:-translate-y-0.5 hover:border-[#0f8f6b] hover:shadow-[0_18px_40px_rgba(15,35,52,0.10)]">
+      <div className="aspect-[1.8] overflow-hidden bg-[#edf3f8]">
+        <img src={project.imageUrl || '/images/quote-product-standard-pcb.png'} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]" />
+      </div>
+      <div className="grid min-h-[150px] p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#0f8f6b]">{project.category}</p>
+            <h3 className="mt-1 truncate text-base font-black text-[#102033]">{project.title}</h3>
+          </div>
+          <span className="shrink-0 text-xs text-[#64748b]">{formatProfileProjectDate(project.createdAt)}</span>
+        </div>
+        <p className="mt-3 line-clamp-2 text-sm leading-6 text-[#64748b]">{project.summary}</p>
+        <div className="mt-auto flex flex-wrap gap-3 pt-4 text-xs font-semibold text-[#64748b]">
+          <span>{project.likesCount} likes</span>
+          <span>{project.commentsCount} commentaires</span>
+          <span>{project.forksCount} forks</span>
+        </div>
+      </div>
+    </a>
+  );
+}
+
+function ProfileEmptySocialState({ kind, onCreate }: { kind: 'projects' | 'favorites'; onCreate: () => void }) {
+  const isProjects = kind === 'projects';
+
+  return (
+    <div className="mt-5 overflow-hidden rounded-[8px] border border-[#dbe4ee] bg-[#f8fbfd] shadow-[0_12px_30px_rgba(15,35,52,0.055)]">
+      <div className="grid gap-0 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <div className="relative min-h-[190px] overflow-hidden bg-[#102033]">
+          <img src={isProjects ? '/images/hero-pcb-color-variants.png' : '/images/explorer-hero-community.webp'} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#07172a]/82 via-[#07172a]/42 to-[#0f8f6b]/22" aria-hidden="true" />
+        </div>
+        <div className="grid content-center p-5 text-left sm:p-7">
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#0f8f6b]">{isProjects ? 'Portfolio' : 'Sélection'}</p>
+          <h3 className="mt-2 text-xl font-black leading-tight text-[#102033]">
+            {isProjects ? 'Votre premier projet public peut devenir votre vitrine.' : 'Gardez sous la main les projets qui vous inspirent.'}
+          </h3>
+          <p className="mt-3 text-sm leading-6 text-[#64748b]">
+            {isProjects
+              ? 'Publiez une carte, un prototype ou une documentation technique avec une image claire, une description utile et des fichiers organisés.'
+              : 'Les projets sauvegardés apparaitront ici pour comparer des idées, retrouver des références et suivre les nouvelles publications.'}
+          </p>
+          {isProjects ? (
+            <button type="button" onClick={onCreate} className="mt-5 inline-flex h-10 w-fit items-center justify-center gap-2 rounded-[6px] bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
+              <ProjectTabIcon />
+              Créer un projet
+            </button>
+          ) : (
+            <a href="/explorer" className="mt-5 inline-flex h-10 w-fit items-center justify-center rounded-[6px] border border-[#0f8f6b] bg-white px-5 text-sm font-black text-[#0f8f6b] transition hover:bg-[#eefbf6]">
+              Explorer
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function RatingStarIcon({ filled }: { filled: boolean }) {
   return (
     <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -2446,6 +2492,14 @@ function profileRatingFromPoints(points: number): number {
 
 function formatProfileRating(rating: number): string {
   return rating.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
+function formatProfileProjectDate(value: string): string {
+  try {
+    return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short' }).format(new Date(value));
+  } catch {
+    return '';
+  }
 }
 
 function PencilIcon() {
