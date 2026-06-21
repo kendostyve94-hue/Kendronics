@@ -33,6 +33,68 @@ export class ExplorerService {
     return projects.map(toExplorerProject);
   }
 
+  async getProjectDetail(projectId: string) {
+    const project = await this.prisma.explorerProject.findFirst({
+      where: { id: projectId, status: 'published' },
+      include: {
+        _count: { select: { favorites: true } },
+        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 12 },
+        assets: {
+          where: { visibility: 'public' },
+          orderBy: { createdAt: 'asc' },
+          select: {
+            id: true,
+            kind: true,
+            originalName: true,
+            mimeType: true,
+            sizeBytes: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            avatarDataUrl: true,
+            publicDescription: true,
+            profileDetails: true,
+            verificationLevel: true,
+            verificationStatus: true,
+            _count: {
+              select: {
+                followers: true,
+                following: true,
+                explorerProjects: { where: { status: 'published' } },
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!project) throw new NotFoundException('Explorer project not found.');
+
+    const publicDescription = project.user?.publicDescription ?? '';
+
+    return {
+      ...toExplorerProject(project),
+      technicalDetails: project.technicalDetails,
+      documentation: project.documentation,
+      publicAssets: project.assets,
+      author: {
+        id: project.user?.id ?? project.userId ?? undefined,
+        name: project.user?.fullName || project.authorName,
+        avatarDataUrl: project.user?.avatarDataUrl ?? project.authorAvatarUrl ?? undefined,
+        description: publicDescription,
+        badgeLabel: accountBadgeLabel(project.user?.verificationLevel ?? 0),
+        verificationLevel: project.user?.verificationLevel ?? 0,
+        verificationStatus: project.user?.verificationStatus ?? 'unverified',
+        followersCount: project.user?._count.followers ?? 0,
+        followingCount: project.user?._count.following ?? 0,
+        projectsCount: project.user?._count.explorerProjects ?? 0,
+        links: extractPublicProfileLinks(publicDescription, project.user?.profileDetails),
+      },
+    };
+  }
+
   async createProjectDraft(user: AuthenticatedUser, dto: CreateExplorerProjectDraftDto) {
     const author = await this.prisma.user.findUnique({ where: { id: user.id } });
     return this.prisma.explorerProject.create({
@@ -545,4 +607,58 @@ function objectRecord(value: unknown): Record<string, unknown> {
 
 function stringValue(recordValue: unknown): string {
   return typeof recordValue === 'string' ? recordValue.trim() : '';
+}
+
+function accountBadgeLabel(level: number): string {
+  if (level >= 3) return 'Industriel certifie';
+  if (level >= 2) return 'Professionnel certifie';
+  if (level >= 1) return 'Compte verifie';
+  return 'Compte public';
+}
+
+function extractPublicProfileLinks(description: string, profileDetails: unknown) {
+  const links = new Map<string, { type: string; label: string; href: string; host?: string }>();
+  const text = description || '';
+  const website = stringValue(objectRecord(profileDetails).website);
+  const candidates = [
+    ...text.matchAll(/https?:\/\/[^\s)]+|www\.[^\s)]+/gi),
+  ].map((match) => match[0]);
+  if (website) candidates.push(website);
+
+  for (const rawValue of candidates) {
+    const href = rawValue.startsWith('http') ? rawValue : `https://${rawValue}`;
+    try {
+      const url = new URL(href);
+      const host = url.hostname.replace(/^www\./, '');
+      links.set(url.toString(), {
+        type: linkTypeForHost(host),
+        label: host,
+        href: url.toString(),
+        host,
+      });
+    } catch {
+      // Ignore malformed public links.
+    }
+  }
+
+  for (const match of text.matchAll(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi)) {
+    const email = match[0].toLowerCase();
+    links.set(`mailto:${email}`, {
+      type: 'email',
+      label: email,
+      href: `mailto:${email}`,
+    });
+  }
+
+  return Array.from(links.values()).slice(0, 4);
+}
+
+function linkTypeForHost(host: string): string {
+  if (host.includes('youtube.com') || host.includes('youtu.be')) return 'youtube';
+  if (host.includes('github.com')) return 'github';
+  if (host.includes('linkedin.com')) return 'linkedin';
+  if (host.includes('x.com') || host.includes('twitter.com')) return 'x';
+  if (host.includes('instagram.com')) return 'instagram';
+  if (host.includes('tiktok.com')) return 'tiktok';
+  return 'website';
 }

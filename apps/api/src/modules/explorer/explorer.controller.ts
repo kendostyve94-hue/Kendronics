@@ -24,6 +24,11 @@ export class ExplorerController {
     return this.explorerService.listProjects();
   }
 
+  @Get('projects/:projectId')
+  getProjectDetail(@Param('projectId') projectId: string) {
+    return this.explorerService.getProjectDetail(projectId);
+  }
+
   @Post('projects/drafts')
   @UseGuards(JwtAuthGuard)
   createProjectDraft(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateExplorerProjectDraftDto) {
