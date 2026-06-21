@@ -2207,12 +2207,13 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
     <section className="min-h-[690px] bg-[#f5f7fb] text-[#102033]">
       <div className="overflow-hidden bg-white shadow-sm ring-1 ring-[#e0e7ef]">
         <div className="relative h-[136px] overflow-hidden bg-[#102033] sm:h-[190px]">
-          <img src="/images/explorer-hero-community.webp" alt="" className="h-full w-full object-cover object-center" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#07172a]/80 via-[#07172a]/38 to-[#0f8f6b]/20" aria-hidden="true" />
-          <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-8">
+          <img src="/images/explorer-hero-community.webp" alt="" className="h-full w-full object-cover object-center opacity-95" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#07172a]/88 via-[#07172a]/58 to-[#0f8f6b]/26" aria-hidden="true" />
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#07172a]/70 to-transparent" aria-hidden="true" />
+          <div className="absolute bottom-4 left-4 right-4 max-w-[35rem] sm:bottom-6 sm:left-8">
             <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#b9f3df]">Profil public</p>
-            <p className="mt-1 max-w-[34rem] text-sm font-semibold leading-6 text-white/92 sm:text-base">
-              Projets, favoris et reputation technique de la communaute Kendronics.
+            <p className="mt-1 text-sm font-semibold leading-6 text-white/90 sm:text-base">
+              Projets, favoris et réputation technique de la communauté Kendronics.
             </p>
           </div>
         </div>
