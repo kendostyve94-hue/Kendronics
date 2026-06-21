@@ -424,7 +424,7 @@ function ExplorerFeedNav({ activeFeed, avatarDataUrl, visible, onCreate, onFeedC
         aria-label="Créer un projet"
         title="Créer"
       >
-        <CreateNavIcon />
+        <ProjectNavIcon />
       </button>
       {feeds.map((feed) => (
         <button
@@ -432,7 +432,7 @@ function ExplorerFeedNav({ activeFeed, avatarDataUrl, visible, onCreate, onFeedC
           type="button"
           onClick={() => onFeedChange(feed.id)}
           className={`grid h-10 w-10 shrink-0 place-items-center rounded-full transition ${
-            activeFeed === feed.id ? 'bg-[#102033] text-white' : 'text-[#102033] hover:bg-[#edf3f8]'
+            activeFeed === feed.id ? 'text-[#0f8f6b] lg:bg-[#102033] lg:text-white' : 'text-[#7c8ca0] hover:text-[#0f8f6b] lg:text-[#102033] lg:hover:bg-[#edf3f8]'
           }`}
           aria-label={feed.label}
           title={feed.label}
@@ -447,10 +447,12 @@ function ExplorerFeedNav({ activeFeed, avatarDataUrl, visible, onCreate, onFeedC
   );
 }
 
-function CreateNavIcon() {
+function ProjectNavIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" />
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="5" width="14" height="14" rx="2" />
+      <path d="M9 9h6v6H9z" />
+      <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" />
     </svg>
   );
 }
@@ -559,14 +561,14 @@ function ProjectCard({
 }) {
   return (
     <article className={`min-w-0 bg-transparent transition ${selected ? 'opacity-100' : 'opacity-95 hover:opacity-100'}`}>
-      <button type="button" onClick={onSelect} className="block w-full text-left">
+      <a href={`/explorer/${project.id}`} onClick={onSelect} className="block w-full text-left">
         <div className="aspect-[1.45] overflow-hidden bg-[#e8eef5]">
           <img src={project.imageUrl || '/images/quote-product-standard-pcb.png'} alt="" className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]" />
         </div>
         <div className="mt-3 flex min-w-0 items-center">
           <h3 className="min-w-0 truncate text-base font-medium text-[#0b1724]">{project.title}</h3>
         </div>
-      </button>
+      </a>
       <div className="mt-3 flex items-center gap-4 text-sm text-[#9aa6b2]">
         <span className="inline-flex items-center gap-1"><EyeIcon />{formatCompact(project.viewsCount)}</span>
         <button type="button" onClick={onLike} className="inline-flex items-center gap-1 transition hover:text-[#0f8f6b]"><ThumbIcon />{project.likesCount}</button>
