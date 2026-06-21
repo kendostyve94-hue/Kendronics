@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Navbar } from '../../components/layout/Navbar';
 import { getApiBaseUrl } from '../../lib/api-base-url';
 import { readAuthSession } from '../../lib/auth-session';
+import { readScopedLocalStorage } from '../../lib/user-scoped-storage';
 
 type ExplorerComment = {
   id: string;
@@ -51,6 +52,7 @@ type MobileExplorerFeed = 'reels' | 'forks' | 'following';
 
 const apiBaseUrl = getApiBaseUrl();
 const actorKeyStorageKey = 'kendronics.explorer.actor';
+const avatarStorageKey = 'kendronics.customer.avatar';
 const heroBackgroundImage = '/images/explorer-hero-community.webp';
 export default function ExplorerPage() {
   const [projects, setProjects] = useState<ExplorerProject[]>([]);
@@ -64,6 +66,9 @@ export default function ExplorerPage() {
   const [mobileFeed, setMobileFeed] = useState<MobileExplorerFeed>('reels');
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [projectLoadStatus, setProjectLoadStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [avatarDataUrl, setAvatarDataUrl] = useState('');
+  const [isFeedNavVisible, setIsFeedNavVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
   const isSignedIn = Boolean(readAuthSession());
 
   useEffect(() => {
@@ -90,6 +95,38 @@ export default function ExplorerPage() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    setAvatarDataUrl(readScopedLocalStorage(avatarStorageKey) || '');
+
+    function updateAvatar() {
+      setAvatarDataUrl(readScopedLocalStorage(avatarStorageKey) || '');
+    }
+
+    window.addEventListener('kendronics:avatar-updated', updateAvatar);
+    window.addEventListener('kendronics:auth-updated', updateAvatar);
+    return () => {
+      window.removeEventListener('kendronics:avatar-updated', updateAvatar);
+      window.removeEventListener('kendronics:auth-updated', updateAvatar);
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleScroll() {
+      const currentY = window.scrollY;
+      const lastY = lastScrollYRef.current;
+      if (currentY < 12 || currentY < lastY - 8) {
+        setIsFeedNavVisible(true);
+      } else if (currentY > lastY + 8 && currentY > 72) {
+        setIsFeedNavVisible(false);
+      }
+      lastScrollYRef.current = currentY;
+    }
+
+    lastScrollYRef.current = window.scrollY;
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
@@ -319,6 +356,8 @@ export default function ExplorerPage() {
 
       <ExplorerFeedNav
         activeFeed={mobileFeed}
+        avatarDataUrl={avatarDataUrl}
+        visible={isFeedNavVisible}
         onCreate={() => {
           if (!isSignedIn) {
             openAuthRequired('login');
@@ -369,35 +408,81 @@ export default function ExplorerPage() {
   );
 }
 
-function ExplorerFeedNav({ activeFeed, onCreate, onFeedChange }: { activeFeed: MobileExplorerFeed; onCreate: () => void; onFeedChange: (feed: MobileExplorerFeed) => void }) {
-  const feeds: Array<{ id: MobileExplorerFeed; label: string }> = [
-    { id: 'reels', label: 'Reels' },
-    { id: 'forks', label: 'Forks' },
-    { id: 'following', label: 'Suivis' },
+function ExplorerFeedNav({ activeFeed, avatarDataUrl, visible, onCreate, onFeedChange }: { activeFeed: MobileExplorerFeed; avatarDataUrl: string; visible: boolean; onCreate: () => void; onFeedChange: (feed: MobileExplorerFeed) => void }) {
+  const feeds: Array<{ id: MobileExplorerFeed; label: string; icon: ReactNode }> = [
+    { id: 'reels', label: 'Reels', icon: <ReelsNavIcon /> },
+    { id: 'forks', label: 'Forks', icon: <ForksNavIcon /> },
+    { id: 'following', label: 'Suivis', icon: <FollowingNavIcon /> },
   ];
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-[60] flex h-14 items-center gap-1 overflow-x-auto border-b border-[#d8e1ea] bg-white px-3 shadow-[0_1px_2px_rgba(11,23,36,0.04),0_12px_34px_rgba(11,23,36,0.035)] lg:sticky lg:top-[70px] lg:z-40 lg:h-auto lg:px-5 lg:py-3" aria-label="Navigation Explorer">
+    <nav className={`fixed left-0 right-0 top-0 z-[60] flex h-14 items-center gap-1 overflow-x-auto border-b border-[#d8e1ea] bg-white px-3 shadow-[0_1px_2px_rgba(11,23,36,0.04),0_12px_34px_rgba(11,23,36,0.035)] transition-transform duration-300 lg:sticky lg:top-[70px] lg:z-40 lg:h-auto lg:translate-y-0 lg:px-5 lg:py-3 ${visible ? 'translate-y-0' : '-translate-y-full'}`} aria-label="Navigation Explorer">
       <button
         type="button"
         onClick={onCreate}
-        className="grid h-9 shrink-0 place-items-center bg-[#0f8f6b] px-4 text-sm font-black text-white"
+        className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#0f8f6b] text-white transition hover:bg-[#0b7558]"
+        aria-label="Créer un projet"
+        title="Créer"
       >
-        Creer
+        <CreateNavIcon />
       </button>
       {feeds.map((feed) => (
         <button
           key={feed.id}
           type="button"
           onClick={() => onFeedChange(feed.id)}
-          className={`h-9 shrink-0 px-4 text-sm font-black transition ${
+          className={`grid h-10 w-10 shrink-0 place-items-center rounded-full transition ${
             activeFeed === feed.id ? 'bg-[#102033] text-white' : 'text-[#102033] hover:bg-[#edf3f8]'
           }`}
+          aria-label={feed.label}
+          title={feed.label}
         >
-          {feed.label}
+          {feed.icon}
         </button>
       ))}
+      <a href="/projects/new" className="ml-auto grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#eaf3f7]" aria-label="Ouvrir la page projets" title="Projets">
+        <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="" className="h-full w-full rounded-full object-cover" />
+      </a>
     </nav>
+  );
+}
+
+function CreateNavIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+function ReelsNavIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="5" width="16" height="14" rx="3" />
+      <path d="m9 5 2 4M15 5l2 4M4.5 9h15" />
+      <path d="m10.5 12 4 2.5-4 2.5v-5Z" />
+    </svg>
+  );
+}
+
+function ForksNavIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="6" cy="6" r="2.5" />
+      <circle cx="18" cy="6" r="2.5" />
+      <circle cx="12" cy="18" r="2.5" />
+      <path d="M6 8.5v2.2A3.3 3.3 0 0 0 9.3 14H12M18 8.5v2.2a3.3 3.3 0 0 1-3.3 3.3H12M12 14v1.5" />
+    </svg>
+  );
+}
+
+function FollowingNavIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0Z" />
+      <path d="M4.5 20c.8-3.2 3.5-5 7.5-5 1.3 0 2.5.2 3.5.7" />
+      <path d="m17 18 2 2 3.5-4" />
+    </svg>
   );
 }
 
@@ -504,13 +589,13 @@ function ProjectCard({
         <span className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[10px] font-black text-white">
           {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
         </span>
-        <span className="min-w-0 flex-1 truncate">{project.authorName}</span>
+        <span className="min-w-0 max-w-[calc(100%-3.25rem)] truncate">{project.authorName}</span>
         <button
           type="button"
           onClick={onFollow}
           disabled={!followable}
-          className={`explorer-follow-action grid h-7 w-7 shrink-0 place-items-center rounded-full border transition ${
-            followed ? 'border-[#0f8f6b] bg-[#e7f8f2] text-[#0f8f6b]' : 'border-[#d8e1ea] bg-white text-[#102033] hover:border-[#0f8f6b] hover:text-[#0f8f6b]'
+          className={`explorer-follow-action grid h-6 w-6 shrink-0 place-items-center bg-transparent transition ${
+            followed ? 'text-[#0f8f6b]' : 'text-[#9aa6b2] hover:text-[#0f8f6b]'
           } ${followAnimating ? 'explorer-follow-action--done' : ''} ${followable ? '' : 'cursor-not-allowed opacity-55'}`}
           aria-label={followed ? `Ne plus suivre ${project.authorName}` : `Suivre ${project.authorName}`}
           title={followable ? undefined : 'Auteur non connecte au suivi'}
