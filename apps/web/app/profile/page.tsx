@@ -7,7 +7,6 @@ import { Navbar } from '../../components/layout/Navbar';
 import { CountryFlag } from '../../components/ui/CountryFlag';
 import { africanCountries } from '../../lib/african-countries';
 import { getApiBaseUrl } from '../../lib/api-base-url';
-import type { AuthTokens } from '../../lib/auth-contract';
 import { clearAuthSession, persistAuthSession, readAuthSession, readFreshAuthSession, revokeAuthSession } from '../../lib/auth-session';
 import { purgeLegacySensitiveStorage, readScopedLocalStorage, removeScopedLocalStorage, writeScopedLocalStorage } from '../../lib/user-scoped-storage';
 
@@ -16,8 +15,6 @@ const avatarStorageKey = 'kendronics.customer.avatar';
 const savedShippingAddressesKey = 'kendronics.customer.shipping-addresses';
 const savedBillingAddressesKey = 'kendronics.customer.billing-addresses';
 const siteGreen = '#0f8f6b';
-const googleOAuthUrl = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL;
-const appleOAuthUrl = process.env.NEXT_PUBLIC_APPLE_OAUTH_URL;
 
 type ProfileForm = {
   name: string;
@@ -176,24 +173,6 @@ type DiscoverNewsItem = {
   imageUrl?: string;
 };
 
-type CommunityPost = {
-  id: string;
-  authorId: string;
-  author: string;
-  avatarDataUrl: string;
-  title: string;
-  description: string;
-  kind: 'video' | 'image' | 'document' | 'tutorial';
-  mediaName: string;
-  mediaDataUrl?: string;
-  mediaType?: string;
-  createdAt: string;
-  views: number;
-  likes: number;
-  saves: number;
-  comments: number;
-  commentList?: string[];
-};
 
 type ProfileUser = {
   id: string;
@@ -483,47 +462,6 @@ export default function ProfilePage() {
         </div>
       </div>
     </main>
-  );
-}
-
-function ProfileNavbar({ firstName, avatarDataUrl }: { firstName: string; avatarDataUrl: string }) {
-  return (
-    <header className="sticky top-0 z-40 min-w-[1328px] border-b border-[#d7d7d7] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.16)]">
-      <div className="mx-auto flex h-[70px] max-w-[1368px] items-center gap-3 px-5">
-        <a href="/" className="shrink-0 lg:mr-3" aria-label="Kendronics accueil">
-          <img src="/images/kendronics-logo.png" alt="Kendronics" className="h-12 w-auto" />
-        </a>
-        <nav className="flex min-w-0 flex-1 snap-x items-center justify-between gap-2 text-[15px] text-[#111827]">
-          <ProfileNavLink href="/profile" label="Mon compte" />
-          <ProfileNavLink href="/quote" label="Devis immédiat" />
-          <ProfileNavLink href="/quote" label="Assemblage PCB" />
-          <ProfileNavLink href="/services" label="Impression 3D" />
-          <ProfileNavLink href="/services" label="Conception PCB" />
-          <ProfileNavLink href="/profile" label="Paramètres" />
-        </nav>
-        <a href="/profile?view=orders" className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558]" aria-label="Panier">
-          <CartIcon />
-          <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-none bg-[#14c469] px-1 text-[11px] font-black leading-none text-white">0</span>
-        </a>
-        <a href="/profile" className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-full bg-[#f4f4f4]">
-            {avatarDataUrl ? <img src={avatarDataUrl} alt="Avatar client" className="h-full w-full rounded-full object-cover" /> : null}
-          </span>
-          <span className="text-xs leading-5 text-[#64748b]">
-            Bonjour, {firstName}
-            <strong className="block text-sm font-black text-[#0f8f6b]">Mon Espace</strong>
-          </span>
-        </a>
-      </div>
-    </header>
-  );
-}
-
-function ProfileNavLink({ href, label }: { href: string; label: string }) {
-  return (
-    <a href={href} className="grid min-h-[54px] min-w-[92px] snap-start place-items-center px-2 text-center leading-6 hover:text-[#0f8f6b]">
-      {label}
-    </a>
   );
 }
 
@@ -4336,7 +4274,7 @@ function DashboardPanel({
   return (
     <section className="grid bg-white lg:grid-cols-[230px_minmax(0,1fr)] lg:shadow-sm lg:ring-1 lg:ring-[#dbe4ee]">
       {dataStatus === 'signed-out' ? (
-        <SignedOutMobileAccount />
+        <SignedOutAccountPrompt />
       ) : (
         <MobileAccountCard firstName={firstName} profile={profile} userId={userId} avatarDataUrl={avatarDataUrl} />
       )}
@@ -4427,319 +4365,16 @@ function MobileAccountCard({ firstName, profile, userId, avatarDataUrl }: { firs
   );
 }
 
-function SignedOutMobileAccount() {
-  const [mode, setMode] = useState<'choice' | 'register' | 'login'>('choice');
-  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPhone, setLoginPhone] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [registerMethod, setRegisterMethod] = useState<'email' | 'phone'>('email');
-  const [registerName, setRegisterName] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPhone, setRegisterPhone] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
-  const [registerCountry, setRegisterCountry] = useState('');
-  const [registerAccountType, setRegisterAccountType] = useState<'individual' | 'company'>('individual');
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [authStatus, setAuthStatus] = useState<'idle' | 'submitting' | 'error'>('idle');
-  const [authMessage, setAuthMessage] = useState('');
-
-  async function submitLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAuthStatus('submitting');
-    setAuthMessage('');
-
-    if (loginMethod === 'phone' && !loginPhone.trim()) {
-      setAuthStatus('error');
-      setAuthMessage('Veuillez entrer votre numero de telephone.');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginMethod === 'email' ? { email: loginEmail, password: loginPassword } : { contact: loginPhone, password: loginPassword }),
-      });
-
-      if (!response.ok) throw new Error('Connexion impossible. Verifiez vos identifiants.');
-      const tokens = (await response.json()) as AuthTokens;
-      persistAuthSession(tokens, { remember: true });
-      window.dispatchEvent(new Event('kendronics:auth-updated'));
-      window.location.reload();
-    } catch (error) {
-      setAuthStatus('error');
-      setAuthMessage(error instanceof Error ? error.message : 'Connexion impossible.');
-    }
-  }
-
-  async function submitRegister(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAuthStatus('submitting');
-    setAuthMessage('');
-
-    if (registerPassword !== registerConfirmPassword) {
-      setAuthStatus('error');
-      setAuthMessage('Les mots de passe ne correspondent pas.');
-      return;
-    }
-
-    if (!acceptedTerms) {
-      setAuthStatus('error');
-      setAuthMessage("Veuillez accepter les conditions d'utilisation.");
-      return;
-    }
-
-    if (registerMethod === 'phone' && !registerPhone.trim()) {
-      setAuthStatus('error');
-      setAuthMessage('Veuillez entrer votre numero de telephone.');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${getApiBaseUrl()}/api/auth/register`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: registerName,
-          email: registerMethod === 'email' ? registerEmail : undefined,
-          phone: registerMethod === 'phone' ? registerPhone : undefined,
-          contactMethod: registerMethod,
-          password: registerPassword,
-          fullName: registerName,
-          profile: {
-            username: registerName,
-            country: registerCountry,
-            accountType: registerAccountType,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => null);
-        throw new Error(Array.isArray(error?.message) ? error.message.join(' ') : error?.message ?? 'Creation du compte impossible.');
-      }
-
-      const tokens = (await response.json()) as AuthTokens;
-      persistAuthSession(tokens, { remember: true });
-      window.dispatchEvent(new Event('kendronics:auth-updated'));
-      window.location.reload();
-    } catch (error) {
-      setAuthStatus('error');
-      setAuthMessage(error instanceof Error ? error.message : 'Creation du compte impossible.');
-    }
-  }
-
+function SignedOutAccountPrompt() {
   return (
     <div className="grid gap-3 bg-white py-4 text-[#102033] lg:hidden">
-      {mode === 'choice' ? (
-      <section className="bg-white px-0 py-2 text-ink">
-        <h1 className="text-lg font-bold tracking-normal text-ink">Bienvenue sur Kendronics</h1>
-        <p className="mt-2 text-xs leading-5 text-slate-600">
-          Pour utiliser les fonctionnalites du site, creez d'abord votre compte ou connectez-vous si vous en avez deja un.
-        </p>
-        <div className="mt-3 grid gap-2">
-          <button type="button" onClick={() => setMode('register')} className="flex h-9 items-center justify-center border border-[#0f8f6b] bg-[#0f8f6b] px-4 text-xs font-semibold text-white">
-            Creer un nouveau compte
-          </button>
-          <button type="button" onClick={() => setMode('login')} className="flex h-9 items-center justify-center border border-slate-300 bg-white px-4 text-xs font-semibold text-ink">
-            Se connecter
-          </button>
-        </div>
-        <div className="my-3 flex items-center gap-2 text-[11px] font-medium text-slate-400">
-          <span className="h-px flex-1 bg-slate-200" />
-          <span>ou continuer avec</span>
-          <span className="h-px flex-1 bg-slate-200" />
-        </div>
-        <div className="grid gap-2">
-          <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} provider="google" />
-          <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} provider="apple" />
-        </div>
-        <p className="mt-3 text-[11px] leading-5 text-slate-500">
-          En creant un compte, vous acceptez nos <a href="/terms" className="font-semibold text-[#0f8f6b] underline">conditions d'utilisation</a> et notre{' '}
-          <a href="/privacy" className="font-semibold text-[#0f8f6b] underline">politique de confidentialite</a>.
-        </p>
-      </section>
-      ) : null}
-
-      {mode === 'register' ? (
-      <section className="bg-white text-ink">
-        <div className="px-0 py-2.5">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-lg font-bold tracking-normal text-ink">Rejoindre ou se connecter</h1>
-            <button type="button" onClick={() => setMode('choice')} className="shrink-0 text-xs font-medium text-slate-400">Retour</button>
-          </div>
-        </div>
-        <div className="space-y-2 px-0 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-base font-bold text-ink">Creer un compte</h2>
-            <button type="button" onClick={() => setMode('login')} className="text-xs font-semibold text-[#0f8f6b]">Se connecter</button>
-          </div>
-          <p className="text-xs leading-5 text-slate-600">Utilisez votre e-mail ou votre telephone pour recevoir un code de verification et completer votre espace client.</p>
-          <form onSubmit={submitRegister} className="grid gap-2">
-            <ProfileAuthInput label="Nom d'utilisateur" value={registerName} onChange={setRegisterName} required />
-            <ProfileAuthMethodTabs active={registerMethod} onChange={setRegisterMethod} />
-            {registerMethod === 'email' ? (
-              <ProfileAuthInput label="E-mail" type="email" value={registerEmail} onChange={setRegisterEmail} required hideLabel />
-            ) : (
-              <InternationalPhoneInput value={registerPhone} onChange={(value) => setRegisterPhone(value)} />
-            )}
-            <ProfileAuthInput label="Mot de passe" type="password" value={registerPassword} onChange={setRegisterPassword} required />
-            <ProfileAuthInput label="Confirmer le mot de passe" type="password" value={registerConfirmPassword} onChange={setRegisterConfirmPassword} required />
-            <label className="grid gap-1 text-xs font-semibold text-slate-600">
-              Pays
-              <select value={registerCountry} onChange={(event) => setRegisterCountry(event.target.value)} className="h-9 border border-slate-300 bg-white px-3 text-sm text-ink" required>
-                <option value="">Selectionner un pays</option>
-                {africanCountries.map((country) => (
-                  <option key={country.iso2} value={country.iso2}>{country.name}</option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-1 text-xs font-semibold text-slate-600">
-              Type de compte
-              <select value={registerAccountType} onChange={(event) => setRegisterAccountType(event.target.value as 'individual' | 'company')} className="h-9 border border-slate-300 bg-white px-3 text-sm text-ink">
-                <option value="individual">Compte individuel</option>
-                <option value="company">Societe / professionnel</option>
-              </select>
-            </label>
-            <label className="flex gap-2 text-xs leading-5 text-slate-600">
-              <input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>J'accepte les <a href="/terms" className="font-semibold text-[#0f8f6b] underline">conditions</a> et la <a href="/privacy" className="font-semibold text-[#0f8f6b] underline">politique de confidentialite</a>.</span>
-            </label>
-            {authStatus === 'error' && authMessage ? <p className="text-xs font-semibold text-red-600">{authMessage}</p> : null}
-            <button type="submit" disabled={authStatus === 'submitting'} className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white disabled:opacity-60">
-              {authStatus === 'submitting' ? 'Creation...' : 'Creer mon compte'}
-            </button>
-            <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} provider="google" />
-            <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} provider="apple" />
-          </form>
-        </div>
-      </section>
-      ) : null}
-
-      {mode === 'login' ? (
-      <section className="bg-white text-ink">
-        <div className="px-0 py-2.5">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-lg font-bold tracking-normal text-ink">Rejoindre ou se connecter</h1>
-            <button type="button" onClick={() => setMode('choice')} className="shrink-0 text-xs font-medium text-slate-400">Retour</button>
-          </div>
-        </div>
-        <div className="space-y-2 px-0 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-base font-bold text-ink">Se connecter</h2>
-            <button type="button" onClick={() => setMode('register')} className="text-xs font-semibold text-[#0f8f6b]">Creer un compte</button>
-          </div>
-          <p className="text-xs leading-5 text-slate-600">Connectez-vous pour afficher vos commandes, notifications et adresses.</p>
-          <form onSubmit={submitLogin} className="grid gap-2">
-            <ProfileAuthMethodTabs active={loginMethod} onChange={setLoginMethod} />
-            {loginMethod === 'email' ? (
-              <ProfileAuthInput label="E-mail" type="email" value={loginEmail} onChange={setLoginEmail} required hideLabel />
-            ) : (
-              <InternationalPhoneInput value={loginPhone} onChange={(value) => setLoginPhone(value)} />
-            )}
-            <ProfileAuthInput label="Mot de passe" type="password" value={loginPassword} onChange={setLoginPassword} required />
-            {authStatus === 'error' && authMessage ? <p className="text-xs font-semibold text-red-600">{authMessage}</p> : null}
-            <button type="submit" disabled={authStatus === 'submitting'} className="flex h-9 w-full items-center justify-center bg-[#0f8f6b] px-4 text-sm font-semibold text-white disabled:opacity-60">
-              {authStatus === 'submitting' ? 'Connexion...' : 'Se connecter'}
-            </button>
-            <div className="flex items-center gap-2 text-[11px] font-medium text-slate-400">
-              <span className="h-px flex-1 bg-slate-200" />
-              <span>ou continuer avec</span>
-              <span className="h-px flex-1 bg-slate-200" />
-            </div>
-            <SocialAuthLink label="Continuer avec Google" href={googleOAuthUrl} provider="google" />
-            <SocialAuthLink label="Continuer avec Apple" href={appleOAuthUrl} provider="apple" />
-          </form>
-        </div>
-      </section>
-      ) : null}
+      <h1 className="text-lg font-bold tracking-normal text-ink">Connectez-vous</h1>
+      <p className="text-xs leading-5 text-slate-600">Utilisez les pages de connexion officielles pour afficher votre profil, vos commandes et vos notifications.</p>
+      <div className="grid gap-2">
+        <a href="/login" className="flex h-9 items-center justify-center bg-[#0f8f6b] px-4 text-xs font-semibold text-white">Se connecter</a>
+        <a href="/register" className="flex h-9 items-center justify-center border border-slate-300 bg-white px-4 text-xs font-semibold text-ink">Creer un compte</a>
+      </div>
     </div>
-  );
-}
-
-function ProfileAuthInput({
-  label,
-  value,
-  onChange,
-  type = 'text',
-  required = false,
-  hideLabel = false,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-  required?: boolean;
-  hideLabel?: boolean;
-}) {
-  return (
-    <label className="grid gap-1 text-xs font-semibold text-slate-600">
-      {hideLabel ? <span className="sr-only">{label}</span> : label}
-      <input
-        type={type}
-        value={value}
-        placeholder={hideLabel ? label : undefined}
-        required={required}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-9 border border-slate-300 bg-white px-3 text-sm text-ink outline-none focus:border-[#0f8f6b]"
-      />
-    </label>
-  );
-}
-
-function ProfileAuthMethodTabs({ active, onChange }: { active: 'email' | 'phone'; onChange: (method: 'email' | 'phone') => void }) {
-  return (
-    <div className="flex items-center gap-4 text-xs font-semibold">
-      <button type="button" onClick={() => onChange('email')} className={active === 'email' ? 'text-[#0f8f6b] underline underline-offset-4' : 'text-slate-500'}>
-        E-mail
-      </button>
-      <button type="button" onClick={() => onChange('phone')} className={active === 'phone' ? 'text-[#0f8f6b] underline underline-offset-4' : 'text-slate-500'}>
-        Telephone
-      </button>
-    </div>
-  );
-}
-
-function SocialAuthLink({ label, href, provider = 'google' }: { label: string; href?: string; provider?: 'google' | 'apple' }) {
-  const icon = provider === 'apple' ? <AppleMark /> : <GoogleMark />;
-
-  if (!href) {
-    return (
-      <span className="flex h-9 items-center justify-center gap-2 border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-400">
-        {icon}
-        {label}
-      </span>
-    );
-  }
-
-  return (
-    <a href={href} className="flex h-9 items-center justify-center gap-2 border border-slate-200 bg-white px-4 text-xs font-semibold text-ink">
-      {icon}
-      {label}
-    </a>
-  );
-}
-
-function GoogleMark() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0">
-      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-      <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z" />
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06L5.84 9.9C6.71 7.31 9.14 5.38 12 5.38z" />
-    </svg>
-  );
-}
-
-function AppleMark() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 fill-current text-slate-900">
-      <path d="M16.37 1.43c0 1.16-.43 2.24-1.18 3.07-.8.9-2.12 1.6-3.2 1.5-.14-1.12.45-2.32 1.17-3.1.8-.86 2.2-1.52 3.21-1.47zM20.5 17.38c-.58 1.31-.86 1.9-1.61 3.06-1.05 1.6-2.53 3.59-4.36 3.61-1.63.02-2.05-1.05-4.27-1.04-2.21.01-2.67 1.07-4.3 1.05-1.83-.02-3.23-1.81-4.28-3.42C-1.25 16.14.29 9.52 3.75 8.39c1.7-.56 3.11.93 4.68.93 1.52 0 2.45-.94 4.65-.8.84.03 3.18.34 4.68 2.54-4.12 2.26-3.45 8.06.74 9.32z" />
-    </svg>
   );
 }
 
@@ -4750,18 +4385,6 @@ function SmallInfo({ label, value, action, danger }: { label: string; value: str
       <span className={danger ? 'rounded-none bg-red-500 px-1.5 py-0.5 font-black text-white' : 'font-black text-[#ff5a00]'}>{value}</span>
       {action ? <a href="#" className="text-[#475569]">{action}</a> : null}
     </div>
-  );
-}
-
-function ReferralBanner() {
-  return (
-    <section className="mt-4 flex h-[74px] min-h-[68px] items-center justify-between gap-3 bg-[#fff8e8] px-5 py-0 text-[#1f2937] ring-1 ring-[#f4dfb4]">
-      <div>
-        <p className="text-xl font-black leading-none">Programme de parrainage</p>
-        <p className="mt-2 text-xs">Le parrainage sera active lorsque les regles commerciales seront configurees.</p>
-      </div>
-      <a href="/contact" className="shrink-0 rounded-none bg-white px-6 py-3 text-xs font-black text-[#ff5a00]">Contacter</a>
-    </section>
   );
 }
 
@@ -4782,251 +4405,6 @@ function StatusStrip({ counts }: { counts: ReturnType<typeof orderCounts> }) {
           <p className="mt-2 text-xs leading-4 text-[#475569]">{label}</p>
         </div>
       ))}
-    </section>
-  );
-}
-
-const communityPostsStorageKey = 'kendronics.community.posts';
-const communityLikesStorageKey = 'kendronics.community.likes';
-const communityFollowsStorageKey = 'kendronics.community.follows';
-type CommunityTab = 'reels' | 'following' | 'profile';
-
-function CommunityPublishPanel({ firstName, avatarDataUrl }: { firstName: string; avatarDataUrl: string }) {
-  const [posts, setPosts] = useState<CommunityPost[]>([]);
-  const [activeTab, setActiveTab] = useState<CommunityTab>('reels');
-  const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
-  const [followedAuthorIds, setFollowedAuthorIds] = useState<string[]>([]);
-  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
-  const [openCommentPostId, setOpenCommentPostId] = useState<string | null>(null);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [kind, setKind] = useState<CommunityPost['kind']>('image');
-  const [mediaName, setMediaName] = useState('');
-  const [mediaDataUrl, setMediaDataUrl] = useState('');
-  const [mediaType, setMediaType] = useState('');
-
-  useEffect(() => {
-    setPosts(readCommunityPosts());
-    setLikedPostIds(readCommunityIdList(communityLikesStorageKey));
-    setFollowedAuthorIds(readCommunityIdList(communityFollowsStorageKey));
-  }, []);
-
-  const currentAuthorId = `profile:${firstName.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'client'}`;
-
-  function handleMediaChange(file?: File) {
-    if (!file) {
-      setMediaName('');
-      setMediaDataUrl('');
-      setMediaType('');
-      return;
-    }
-
-    setMediaName(file.name);
-    setMediaType(file.type);
-
-    if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-      const reader = new FileReader();
-      reader.onload = () => setMediaDataUrl(typeof reader.result === 'string' ? reader.result : '');
-      reader.readAsDataURL(file);
-    } else {
-      setMediaDataUrl('');
-    }
-  }
-
-  function publishPost() {
-    if (!title.trim() || !mediaName) return;
-
-    const nextPost: CommunityPost = {
-      id: typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}`,
-      authorId: currentAuthorId,
-      author: firstName,
-      avatarDataUrl,
-      title: title.trim(),
-      description: description.trim(),
-      kind,
-      mediaName,
-      mediaDataUrl,
-      mediaType,
-      createdAt: new Date().toISOString(),
-      views: 0,
-      likes: 0,
-      saves: 0,
-      comments: 0,
-      commentList: [],
-    };
-
-    const nextPosts = [nextPost, ...posts].slice(0, 18);
-    setPosts(nextPosts);
-    persistCommunityPosts(nextPosts);
-    setTitle('');
-    setDescription('');
-    setKind('image');
-    setMediaName('');
-    setMediaDataUrl('');
-    setMediaType('');
-  }
-
-  const canPublish = title.trim().length > 2 && mediaName.length > 0;
-  const profilePosts = posts.filter((post) => post.authorId === currentAuthorId);
-  const visiblePosts = activeTab === 'profile'
-    ? profilePosts
-    : activeTab === 'following'
-      ? posts.filter((post) => followedAuthorIds.includes(post.authorId) && post.authorId !== currentAuthorId)
-      : posts;
-
-  function toggleFollow(authorId: string) {
-    if (authorId === currentAuthorId) return;
-    const nextIds = followedAuthorIds.includes(authorId)
-      ? followedAuthorIds.filter((id) => id !== authorId)
-      : [...followedAuthorIds, authorId];
-    setFollowedAuthorIds(nextIds);
-    persistCommunityIdList(communityFollowsStorageKey, nextIds);
-  }
-
-  function toggleLike(postId: string) {
-    const alreadyLiked = likedPostIds.includes(postId);
-    const nextLikedIds = alreadyLiked ? likedPostIds.filter((id) => id !== postId) : [...likedPostIds, postId];
-    const nextPosts = posts.map((post) => (
-      post.id === postId ? { ...post, likes: Math.max(0, post.likes + (alreadyLiked ? -1 : 1)) } : post
-    ));
-    setLikedPostIds(nextLikedIds);
-    setPosts(nextPosts);
-    persistCommunityIdList(communityLikesStorageKey, nextLikedIds);
-    persistCommunityPosts(nextPosts);
-  }
-
-  function addComment(postId: string) {
-    const value = (commentDrafts[postId] ?? '').trim();
-    if (!value) return;
-
-    const nextPosts = posts.map((post) => (
-      post.id === postId
-        ? { ...post, comments: post.comments + 1, commentList: [...(post.commentList ?? []), value] }
-        : post
-    ));
-    setPosts(nextPosts);
-    persistCommunityPosts(nextPosts);
-    setCommentDrafts((drafts) => ({ ...drafts, [postId]: '' }));
-    setOpenCommentPostId(postId);
-  }
-
-  async function sharePost(post: CommunityPost) {
-    const shareText = `${post.title} - Kendronics`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: post.title, text: shareText, url: window.location.href });
-      } else {
-        await navigator.clipboard.writeText(`${shareText} ${window.location.href}`);
-      }
-    } catch {
-      // Sharing can be cancelled by the user; no UI error needed.
-    }
-  }
-
-  return (
-    <section className="bg-white shadow-sm ring-1 ring-[#dbe4ee]">
-      <div className="border-b border-[#e4ebf2] p-5">
-        <nav className="grid grid-cols-3 gap-2 bg-[#0b1220] p-3 text-white" aria-label="Rubriques publication">
-          {[
-            ['reels', 'Reels', 'Toutes les publications publiques'],
-            ['following', 'Suivis', 'Publications des comptes suivis'],
-            ['profile', 'Profil', 'Vos contenus et commentaires'],
-          ].map(([key, label, detail]) => (
-            <button key={key} type="button" onClick={() => setActiveTab(key as CommunityTab)} className={`flex items-center gap-3 px-3 py-3 text-left transition ${activeTab === key ? 'bg-[#0f8f6b] text-white' : 'hover:bg-white/10'}`}>
-              <span className="grid h-8 w-8 place-items-center border border-white/20 text-xs font-black">{label.slice(0, 1)}</span>
-              <span className="min-w-0">
-                <span className="block text-sm font-black">{label}</span>
-                <span className="block truncate text-[11px] text-white/60">{detail}</span>
-              </span>
-            </button>
-          ))}
-        </nav>
-
-          {activeTab === 'profile' ? (
-            <form className="mt-4 grid gap-3" onSubmit={(event) => { event.preventDefault(); publishPost(); }}>
-              <div className="grid gap-3 md:grid-cols-[1fr_180px]">
-                <input value={title} onChange={(event) => setTitle(event.target.value)} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]" placeholder="Titre du projet, tuto ou document" maxLength={72} />
-                <select value={kind} onChange={(event) => setKind(event.target.value as CommunityPost['kind'])} className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]">
-                  <option value="image">Image</option>
-                  <option value="video">Video short</option>
-                  <option value="document">Document technique</option>
-                  <option value="tutorial">Tutoriel</option>
-                </select>
-              </div>
-              <textarea value={description} onChange={(event) => setDescription(event.target.value)} className="min-h-[78px] resize-y border border-[#cfd8e3] bg-white px-3 py-2 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]" placeholder="Decrivez le montage, les fichiers, les composants ou l'objectif du prototype." maxLength={220} />
-              <div className="grid gap-3 md:grid-cols-[1fr_150px]">
-                <label className="flex h-11 cursor-pointer items-center justify-between border border-dashed border-[#9fb3c8] bg-[#f8fafc] px-3 text-sm font-semibold text-[#475569] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
-                  <span className="truncate">{mediaName || 'Ajouter video, image, PDF, ZIP ou fichier technique'}</span>
-                  <input type="file" accept="image/*,video/*,.pdf,.zip,.rar,.7z,.doc,.docx,.ppt,.pptx" className="hidden" onChange={(event) => handleMediaChange(event.target.files?.[0])} />
-                </label>
-                <button type="submit" disabled={!canPublish} className="h-11 bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
-                  Publier
-                </button>
-              </div>
-            </form>
-          ) : null}
-      </div>
-
-      {visiblePosts.length > 0 ? (
-        <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
-          {visiblePosts.map((post) => (
-            <article key={post.id} className="overflow-hidden border border-[#dbe4ee] bg-white">
-              <div className="relative aspect-[4/3] overflow-hidden bg-[#eef4f8]">
-                {post.mediaDataUrl && post.mediaType?.startsWith('video/') ? (
-                  <video src={post.mediaDataUrl} className="h-full w-full object-cover" controls muted />
-                ) : post.mediaDataUrl ? (
-                  <img src={post.mediaDataUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="grid h-full place-items-center bg-[linear-gradient(135deg,#e9f8f3,#f8fbff)] p-6 text-center text-sm font-black text-[#0f8f6b]">
-                    {post.mediaName}
-                  </div>
-                )}
-                <span className="absolute left-2 top-2 bg-[#fff2e5] px-2 py-1 text-[10px] font-black uppercase text-[#ff6a00]">{communityKindLabel(post.kind)}</span>
-                {post.authorId !== currentAuthorId ? (
-                  <button type="button" onClick={() => toggleFollow(post.authorId)} className="absolute right-2 top-2 bg-black/70 px-2 py-1 text-[10px] font-black text-white transition hover:bg-[#0f8f6b]">
-                    {followedAuthorIds.includes(post.authorId) ? 'Unfollow' : 'Follow'}
-                  </button>
-                ) : null}
-              </div>
-              <div className="p-3">
-                <h3 className="line-clamp-1 text-base font-black text-[#102033]">{post.title}</h3>
-                <p className="mt-1 line-clamp-2 min-h-[38px] text-xs leading-5 text-[#64748b]">{post.description || post.mediaName}</p>
-                <div className="mt-3 flex items-center justify-between text-[11px] text-[#94a3b8]">
-                  <span>{formatCompactNumber(post.views)} vues</span>
-                  <button type="button" onClick={() => toggleLike(post.id)} className={likedPostIds.includes(post.id) ? 'font-black text-[#0f8f6b]' : 'hover:text-[#0f8f6b]'}>{post.likes} likes</button>
-                  <button type="button" onClick={() => setOpenCommentPostId(openCommentPostId === post.id ? null : post.id)} className="hover:text-[#0f8f6b]">{post.comments} avis</button>
-                  <button type="button" onClick={() => void sharePost(post)} className="hover:text-[#0f8f6b]">Partager</button>
-                </div>
-                <div className="mt-3 flex items-center gap-2 border-t border-[#edf2f7] pt-3">
-                  <Avatar avatarDataUrl={post.avatarDataUrl} size="small" />
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-black text-[#102033]">{post.author}</p>
-                    <p className="text-[11px] text-[#94a3b8]">{formatDate(post.createdAt)}</p>
-                  </div>
-                </div>
-                {openCommentPostId === post.id || activeTab === 'profile' ? (
-                  <div className="mt-3 border-t border-[#edf2f7] pt-3">
-                    {(post.commentList ?? []).slice(-3).map((comment, index) => (
-                      <p key={`${post.id}-comment-${index}`} className="mb-2 bg-[#f8fafc] px-2 py-1 text-[11px] leading-4 text-[#475569]">{comment}</p>
-                    ))}
-                    <div className="grid grid-cols-[1fr_64px] gap-2">
-                      <input value={commentDrafts[post.id] ?? ''} onChange={(event) => setCommentDrafts((drafts) => ({ ...drafts, [post.id]: event.target.value }))} className="h-8 border border-[#dbe4ee] px-2 text-xs outline-none focus:border-[#0f8f6b]" placeholder="Commenter..." />
-                      <button type="button" onClick={() => addComment(post.id)} className="h-8 bg-[#102033] text-xs font-black text-white">OK</button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </article>
-          ))}
-        </div>
-      ) : (
-        <div className="grid min-h-[180px] place-items-center p-5 text-center">
-          <div>
-            <p className="text-base font-black text-[#102033]">{communityEmptyTitle(activeTab)}</p>
-            <p className="mt-2 text-sm text-[#64748b]">{communityEmptyDescription(activeTab)}</p>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
@@ -5194,16 +4572,6 @@ function Avatar({ avatarDataUrl, size }: { avatarDataUrl: string; size: 'small' 
   );
 }
 
-function CartIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="9" cy="20" r="1.4" />
-      <circle cx="18" cy="20" r="1.4" />
-      <path d="M3 4h2l2.3 11.2a2 2 0 0 0 2 1.6h8.5a2 2 0 0 0 1.9-1.4L21 8H6.2" />
-    </svg>
-  );
-}
-
 async function authenticatedFetch<T>(path: string, accessToken: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
@@ -5348,85 +4716,6 @@ function formatDateTime(value: Date) {
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
-}
-
-function readCommunityPosts() {
-  try {
-    const parsed = JSON.parse(readScopedLocalStorage(communityPostsStorageKey) ?? '[]') as Partial<CommunityPost>[];
-    return parsed
-      .filter((post) => post.id && post.title)
-      .map((post) => ({
-        id: post.id ?? `${Date.now()}`,
-        authorId: post.authorId ?? `profile:${(post.author ?? 'client').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-        author: post.author ?? 'Client Kendronics',
-        avatarDataUrl: post.avatarDataUrl ?? '',
-        title: post.title ?? 'Publication',
-        description: post.description ?? '',
-        kind: post.kind ?? 'image',
-        mediaName: post.mediaName ?? 'Media technique',
-        mediaDataUrl: post.mediaDataUrl,
-        mediaType: post.mediaType,
-        createdAt: post.createdAt ?? new Date().toISOString(),
-        views: post.views ?? 0,
-        likes: post.likes ?? 0,
-        saves: post.saves ?? 0,
-        comments: post.comments ?? post.commentList?.length ?? 0,
-        commentList: post.commentList ?? [],
-      }));
-  } catch {
-    return [];
-  }
-}
-
-function persistCommunityPosts(posts: CommunityPost[]) {
-  try {
-    writeScopedLocalStorage(communityPostsStorageKey, JSON.stringify(posts));
-  } catch {
-    // Large media previews can exceed browser storage; keep the UI responsive even when persistence fails.
-  }
-}
-
-function readCommunityIdList(storageKey: string) {
-  try {
-    const parsed = JSON.parse(readScopedLocalStorage(storageKey) ?? '[]') as string[];
-    return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistCommunityIdList(storageKey: string, ids: string[]) {
-  try {
-    writeScopedLocalStorage(storageKey, JSON.stringify(Array.from(new Set(ids))));
-  } catch {
-    // Keep interactions usable even if browser storage is unavailable.
-  }
-}
-
-function communityEmptyTitle(tab: CommunityTab) {
-  if (tab === 'following') return 'Aucune publication suivie.';
-  if (tab === 'profile') return 'Aucune publication sur votre profil.';
-  return 'Aucune publication publique pour le moment.';
-}
-
-function communityEmptyDescription(tab: CommunityTab) {
-  if (tab === 'following') return 'Suivez des createurs depuis Reels pour voir leurs prochaines publications ici.';
-  if (tab === 'profile') return 'Publiez un media technique pour alimenter votre profil public.';
-  return 'Les prochaines publications publiques apparaitront dans ce flux.';
-}
-
-function communityKindLabel(kind: CommunityPost['kind']) {
-  const labels: Record<CommunityPost['kind'], string> = {
-    image: 'Image',
-    video: 'Video',
-    document: 'Doc technique',
-    tutorial: 'Tuto',
-  };
-  return labels[kind];
-}
-
-function formatCompactNumber(value: number) {
-  return new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
 }
 
 function statusMessage(status: 'loading' | 'ready' | 'signed-out' | 'error', emptyText: string) {
