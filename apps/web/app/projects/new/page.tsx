@@ -288,7 +288,11 @@ export default function NewProjectPage() {
   async function uploadAsset(event: ChangeEvent<HTMLInputElement>, overrideKind?: string, overrideVisibility?: AssetVisibility) {
     const file = event.target.files?.[0];
     event.target.value = '';
-    if (!file || !projectId) return;
+    if (!file) return;
+    if (!projectId) {
+      setStatus('Le brouillon projet est encore en preparation. Reessayez dans quelques secondes.');
+      return;
+    }
     setIsUploading(true);
     setStatus(`Televersement securise de ${file.name}...`);
     const session = await readFreshAuthSession();
@@ -333,7 +337,8 @@ export default function NewProjectPage() {
     });
     setIsUploading(false);
     if (!attachResponse.ok) {
-      setStatus('Le fichier a ete stocke, mais son rattachement au projet a echoue.');
+      const error = await attachResponse.json().catch(() => ({})) as { message?: string | string[] };
+      setStatus(messageFromError(error, 'Le fichier a ete stocke, mais son rattachement au projet a echoue.'));
       return;
     }
     const attached = await attachResponse.json() as ProjectAsset;
@@ -485,9 +490,9 @@ export default function NewProjectPage() {
                   <option value="protected">Protege</option>
                 </select>
               </Field>
-              <label className={`inline-flex h-11 cursor-pointer items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white ${isUploading ? 'pointer-events-none opacity-60' : ''}`}>
-                {isUploading ? 'Televersement...' : 'Ajouter un fichier'}
-                <input type="file" className="sr-only" onChange={(event) => void uploadAsset(event)} accept=".zip,.pdf,.txt,.csv,.json,.jpg,.jpeg,.png,.webp,.mp4,.mov,.bin,.hex" />
+              <label className={`inline-flex h-11 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white ${isUploading || !projectId ? 'pointer-events-none opacity-60' : 'cursor-pointer'}`}>
+                {isUploading ? 'Televersement...' : projectId ? 'Ajouter un fichier' : 'Preparation...'}
+                <input disabled={isUploading || !projectId} type="file" className="sr-only" onChange={(event) => void uploadAsset(event)} accept=".zip,.pdf,.txt,.csv,.json,.jpg,.jpeg,.png,.webp,.mp4,.mov,.bin,.hex" />
               </label>
             </div>
             <p className="text-xs leading-5 text-[#7a8899]">50 Mo maximum par fichier. Les fichiers proteges ne sont jamais exposes par une URL publique.</p>

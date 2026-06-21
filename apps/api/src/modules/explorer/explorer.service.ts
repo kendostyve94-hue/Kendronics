@@ -97,6 +97,47 @@ export class ExplorerService {
     };
   }
 
+  async getPublicAuthorProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        fullName: true,
+        avatarDataUrl: true,
+        profileBannerDataUrl: true,
+        publicDescription: true,
+        profileDetails: true,
+        verificationLevel: true,
+        verificationStatus: true,
+        _count: {
+          select: {
+            followers: true,
+            following: true,
+            explorerProjects: { where: { status: 'published' } },
+          },
+        },
+      },
+    });
+    if (!user) throw new NotFoundException('Author profile not found.');
+
+    const projects = await this.listUserProjects(user.id);
+    return {
+      id: user.id,
+      name: user.fullName || 'Createur Kendronics',
+      avatarDataUrl: user.avatarDataUrl ?? undefined,
+      bannerDataUrl: user.profileBannerDataUrl ?? undefined,
+      description: user.publicDescription ?? '',
+      badgeLabel: accountBadgeLabel(user.verificationLevel),
+      verificationLevel: user.verificationLevel,
+      verificationStatus: user.verificationStatus,
+      followersCount: user._count.followers,
+      followingCount: user._count.following,
+      projectsCount: user._count.explorerProjects,
+      links: extractPublicProfileLinks(user.publicDescription ?? '', user.profileDetails),
+      projects,
+    };
+  }
+
   async createProjectDraft(user: AuthenticatedUser, dto: CreateExplorerProjectDraftDto) {
     const author = await this.prisma.user.findUnique({ where: { id: user.id } });
     return this.prisma.explorerProject.create({

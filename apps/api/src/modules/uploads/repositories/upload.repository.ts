@@ -17,7 +17,7 @@ export class UploadRepository {
   ): Promise<PresignedUpload> {
     const uploadId = randomUUID();
     const storageKey = `uploads/${userId}/${uploadId}/${sanitizedFilename}`;
-    const uploadUrl = this.createPresignedPutUrl(storageKey);
+    const uploadUrl = this.createPresignedPutUrl(storageKey, dto.mimeType);
 
     await this.prisma.gerberUpload.create({
       data: {
@@ -196,8 +196,8 @@ export class UploadRepository {
     return this.createPresignedGetUrl(storageKey);
   }
 
-  private createPresignedPutUrl(storageKey: string): string {
-    return this.createPresignedUrl(storageKey, 'PUT');
+  private createPresignedPutUrl(storageKey: string, contentType: string): string {
+    return this.createPresignedUrl(storageKey, 'PUT', contentType);
   }
 
   private createPresignedGetUrl(storageKey: string): string {
@@ -208,7 +208,7 @@ export class UploadRepository {
     return this.createPresignedUrl(storageKey, 'DELETE');
   }
 
-  private createPresignedUrl(storageKey: string, method: 'GET' | 'PUT' | 'DELETE'): string {
+  private createPresignedUrl(storageKey: string, method: 'GET' | 'PUT' | 'DELETE', contentType = 'application/octet-stream'): string {
     const bucket = this.configValue('S3_BUCKET');
     const region = this.configValue('S3_REGION');
     const accessKeyId = this.configValue('S3_ACCESS_KEY_ID');
@@ -219,7 +219,7 @@ export class UploadRepository {
         throw new ServiceUnavailableException('Production file uploads require S3 storage configuration.');
       }
 
-      return `https://storage.example.com/private/${storageKey}?signature=placeholder`;
+      throw new ServiceUnavailableException('Private file storage is not configured.');
     }
 
     const now = new Date();
@@ -245,7 +245,7 @@ export class UploadRepository {
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
       .join('&');
-    const canonicalHeaders = method === 'PUT' ? `content-type:application/zip\nhost:${url.host}\n` : `host:${url.host}\n`;
+    const canonicalHeaders = method === 'PUT' ? `content-type:${contentType}\nhost:${url.host}\n` : `host:${url.host}\n`;
     const canonicalRequest = [
       method,
       url.pathname,

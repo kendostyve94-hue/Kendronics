@@ -5505,7 +5505,7 @@ async function prepareProfileBannerDataUrl(file: File): Promise<string> {
       img.onerror = () => reject(new Error('Image load failed'));
       img.src = objectUrl;
     });
-    const maxWidth = 1920;
+    const maxWidth = 1600;
     const scale = Math.min(1, maxWidth / image.width);
     const width = Math.max(1, Math.round(image.width * scale));
     const height = Math.max(1, Math.round(image.height * scale));
@@ -5515,8 +5515,14 @@ async function prepareProfileBannerDataUrl(file: File): Promise<string> {
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Canvas unavailable');
     context.drawImage(image, 0, 0, width, height);
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.84));
+    let quality = 0.82;
+    let blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+    while (blob && blob.size > 3_500_000 && quality > 0.56) {
+      quality -= 0.08;
+      blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+    }
     if (!blob) throw new Error('Image compression failed');
+    if (blob.size > 4_500_000) throw new Error('Banner image is too large');
     return await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => (typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Invalid image data')));

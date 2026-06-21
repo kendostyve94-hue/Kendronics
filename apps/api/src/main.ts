@@ -5,11 +5,18 @@ import { AppModule } from './app.module';
 import { SecurityMiddleware } from './common/middleware/security.middleware';
 import { validateProductionConfig } from './config/production-config';
 
+const expressParser = require('express') as {
+  json(options: { limit: string }): unknown;
+  urlencoded(options: { extended: boolean; limit: string }): unknown;
+};
+
 async function bootstrap() {
   validateProductionConfig();
 
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
+  app.use(expressParser.json({ limit: '6mb' }));
+  app.use(expressParser.urlencoded({ extended: true, limit: '6mb' }));
   app.setGlobalPrefix('api');
   app.enableCors({
     origin: process.env.FRONTEND_ORIGIN?.split(',') ?? ['http://localhost:3000'],

@@ -27,6 +27,15 @@ type ExplorerProject = {
   commentsCount: number;
   forksCount: number;
   createdAt: string;
+  technicalDetails?: Record<string, unknown>;
+  documentation?: Record<string, unknown>;
+  publicAssets?: Array<{
+    id: string;
+    kind: string;
+    originalName: string;
+    mimeType: string;
+    sizeBytes: number;
+  }>;
   author: {
     id?: string;
     name: string;
@@ -85,11 +94,11 @@ export default function ExplorerProjectDetailPage() {
           <>
             <header className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
-                <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-[#102033] text-sm font-black text-white">
+                <a href={project.author.id ? `/profile/${project.author.id}` : '/explorer'} className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-[#102033] text-sm font-black text-white" aria-label={`Voir le profil de ${project.author.name}`}>
                   {project.author.avatarDataUrl ? <img src={project.author.avatarDataUrl} alt="" className="h-full w-full object-cover" /> : project.author.name.slice(0, 1).toUpperCase()}
-                </span>
+                </a>
                 <div className="min-w-0">
-                  <h1 className="truncate text-base font-black text-[#0b1724] sm:text-lg">{project.author.name}</h1>
+                  <a href={project.author.id ? `/profile/${project.author.id}` : '/explorer'} className="block truncate text-base font-black text-[#0b1724] transition hover:text-[#0f8f6b] sm:text-lg">{project.author.name}</a>
                   <div className="mt-1 flex flex-wrap items-center gap-3 text-xs font-semibold">
                     <span className="text-[#0f8f6b]">{project.author.badgeLabel}</span>
                     <button type="button" className="inline-flex items-center gap-1 text-[#334155] transition hover:text-[#0f8f6b]">
@@ -149,10 +158,75 @@ export default function ExplorerProjectDetailPage() {
                 <span>{project.commentsCount} commentaires</span>
               </div>
             </section>
+
+            <section className="mx-auto mt-12 grid max-w-5xl gap-8 lg:grid-cols-2">
+              <ProjectInfoBlock
+                title="Caracteristiques techniques"
+                items={[
+                  ['Type', detailValue(project.technicalDetails, 'boardType')],
+                  ['Dimensions', detailValue(project.technicalDetails, 'dimensions')],
+                  ['Couches', detailValue(project.technicalDetails, 'layers')],
+                  ['Composants', detailValue(project.technicalDetails, 'mainComponents')],
+                  ['Alimentation', detailValue(project.technicalDetails, 'power')],
+                  ['Interfaces', detailValue(project.technicalDetails, 'interfaces')],
+                  ['Logiciels', detailValue(project.technicalDetails, 'software')],
+                  ['Maturite', detailValue(project.technicalDetails, 'maturity')],
+                  ['Tests', detailValue(project.technicalDetails, 'tested')],
+                ]}
+              />
+              <ProjectInfoBlock
+                title="Documentation"
+                items={[
+                  ['Fabrication', detailValue(project.documentation, 'buildInstructions')],
+                  ['Programmation', detailValue(project.documentation, 'softwareInstructions')],
+                  ['Securite', detailValue(project.documentation, 'safetyNotes')],
+                  ['Version', detailValue(project.documentation, 'changelog')],
+                ]}
+              />
+            </section>
+
+            <section className="mx-auto mt-10 max-w-5xl">
+              <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#dbe4ee] pb-3">
+                <h2 className="text-lg font-black text-[#0b1724]">Fichiers publics</h2>
+                <span className="text-sm font-semibold text-[#64748b]">{project.publicAssets?.length ?? 0} fichier(s)</span>
+              </div>
+              <div className="divide-y divide-[#e4ebf2]">
+                {project.publicAssets && project.publicAssets.length > 0 ? project.publicAssets.map((asset) => (
+                  <div key={asset.id} className="grid gap-2 py-4 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+                    <p className="min-w-0 truncate text-sm font-black text-[#102033]">{asset.originalName}</p>
+                    <span className="text-xs font-bold uppercase text-[#64748b]">{asset.kind}</span>
+                    <span className="text-xs font-semibold text-[#94a3b8]">{formatBytes(asset.sizeBytes)}</span>
+                  </div>
+                )) : (
+                  <p className="py-4 text-sm text-[#64748b]">Aucun fichier public. Les fichiers proteges sont disponibles uniquement apres licence ou achat.</p>
+                )}
+              </div>
+            </section>
           </>
         )}
       </div>
     </main>
+  );
+}
+
+function ProjectInfoBlock({ title, items }: { title: string; items: Array<[string, string]> }) {
+  const visibleItems = items.filter(([, value]) => value);
+  return (
+    <div>
+      <h2 className="border-b border-[#dbe4ee] pb-3 text-lg font-black text-[#0b1724]">{title}</h2>
+      {visibleItems.length > 0 ? (
+        <dl className="divide-y divide-[#e4ebf2]">
+          {visibleItems.map(([label, value]) => (
+            <div key={label} className="grid gap-1 py-3 text-sm sm:grid-cols-[130px_1fr]">
+              <dt className="font-black text-[#64748b]">{label}</dt>
+              <dd className="leading-6 text-[#102033]">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <p className="py-4 text-sm text-[#64748b]">Non renseigne.</p>
+      )}
+    </div>
   );
 }
 
@@ -248,4 +322,19 @@ function PublicLinkIcon({ type }: { type: string }) {
 
 function formatCompact(value: number) {
   return new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+}
+
+function formatBytes(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return '0 o';
+  const units = ['o', 'Ko', 'Mo', 'Go'];
+  const index = Math.min(units.length - 1, Math.floor(Math.log(value) / Math.log(1024)));
+  return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: index === 0 ? 0 : 1 }).format(value / 1024 ** index)} ${units[index]}`;
+}
+
+function detailValue(record: Record<string, unknown> | undefined, key: string) {
+  const value = record?.[key];
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).join(', ');
+  return '';
 }

@@ -29,6 +29,11 @@ export class ExplorerController {
     return this.explorerService.getProjectDetail(projectId);
   }
 
+  @Get('users/:userId/profile')
+  getPublicAuthorProfile(@Param('userId') userId: string) {
+    return this.explorerService.getPublicAuthorProfile(userId);
+  }
+
   @Post('projects/drafts')
   @UseGuards(JwtAuthGuard)
   createProjectDraft(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateExplorerProjectDraftDto) {
