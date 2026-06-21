@@ -57,9 +57,16 @@ type ExplorerProject = {
       host?: string;
     }>;
   };
+  socialState?: {
+    liked: boolean;
+    favorited: boolean;
+    followingAuthor: boolean;
+    isOwner: boolean;
+  };
 };
 
 const apiBaseUrl = getApiBaseUrl();
+const defaultSocialState = { liked: false, favorited: false, followingAuthor: false, isOwner: false };
 
 export default function ExplorerProjectDetailPage() {
   const params = useParams<{ projectId: string }>();
@@ -75,12 +82,19 @@ export default function ExplorerProjectDetailPage() {
 
     async function loadProject() {
       try {
-        const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${projectId}`, { cache: 'no-store' });
+        const session = readAuthSession();
+        const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${projectId}`, {
+          headers: session ? { Authorization: `${session.tokenType} ${session.accessToken}` } : undefined,
+          cache: 'no-store',
+        });
         if (!response.ok) throw new Error(`Explorer project failed: ${response.status}`);
         const payload = await response.json() as ExplorerProject;
         if (cancelled) return;
         setProject(payload);
+        setFavorited(Boolean(payload.socialState?.favorited));
+        setFollowed(Boolean(payload.socialState?.followingAuthor));
         setStatus('ready');
+        void recordView(payload.id);
       } catch {
         if (!cancelled) setStatus('error');
       }
@@ -101,11 +115,26 @@ export default function ExplorerProjectDetailPage() {
         'Content-Type': 'application/json',
         ...(session ? { Authorization: `${session.tokenType} ${session.accessToken}` } : {}),
       },
-      body: JSON.stringify({ actorKey: session ? `user:${session.accessToken.slice(-18)}` : readAnonymousActorKey() }),
+      body: JSON.stringify({ actorKey: session ? `user:${currentSessionUserId()}` : readAnonymousActorKey() }),
     });
     if (!response.ok) return;
-    const payload = await response.json() as { likesCount: number };
-    setProject((current) => current ? { ...current, likesCount: payload.likesCount } : current);
+    const payload = await response.json() as { liked: boolean; likesCount: number };
+    setProject((current) => current ? { ...current, likesCount: payload.likesCount, socialState: { ...(current.socialState ?? defaultSocialState), liked: payload.liked } } : current);
+  }
+
+  async function recordView(nextProjectId: string) {
+    const session = readAuthSession();
+    const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${nextProjectId}/views`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session ? { Authorization: `${session.tokenType} ${session.accessToken}` } : {}),
+      },
+      body: JSON.stringify({ actorKey: session ? `user:${currentSessionUserId()}` : readAnonymousActorKey() }),
+    });
+    if (!response.ok) return;
+    const payload = await response.json() as { viewsCount: number };
+    setProject((current) => current ? { ...current, viewsCount: payload.viewsCount } : current);
   }
 
   async function favoriteProject() {
@@ -119,7 +148,7 @@ export default function ExplorerProjectDetailPage() {
     if (!response.ok) return;
     const payload = await response.json() as { favorited: boolean; favoritesCount: number };
     setFavorited(payload.favorited);
-    setProject((current) => current ? { ...current, favoritesCount: payload.favoritesCount } : current);
+    setProject((current) => current ? { ...current, favoritesCount: payload.favoritesCount, socialState: { ...(current.socialState ?? defaultSocialState), favorited: payload.favorited } } : current);
   }
 
   async function followAuthor() {
@@ -133,7 +162,7 @@ export default function ExplorerProjectDetailPage() {
     if (!response.ok) return;
     const payload = await response.json() as { following: boolean; followersCount: number };
     setFollowed(payload.following);
-    setProject((current) => current ? { ...current, author: { ...current.author, followersCount: payload.followersCount } } : current);
+    setProject((current) => current ? { ...current, author: { ...current.author, followersCount: payload.followersCount }, socialState: { ...(current.socialState ?? defaultSocialState), followingAuthor: payload.following } } : current);
   }
 
   async function postComment() {
@@ -165,17 +194,17 @@ export default function ExplorerProjectDetailPage() {
           <>
             <header className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
-                <a href={project.author.id ? `/profile/${project.author.id}` : '/explorer'} className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-[#102033] text-sm font-black text-white" aria-label={`Voir le profil de ${project.author.name}`}>
+                <a href={project.socialState?.isOwner ? '/profile?view=benefits' : project.author.id ? `/profile/${project.author.id}` : '/explorer'} className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-[#102033] text-sm font-black text-white" aria-label={`Voir le profil de ${project.author.name}`}>
                   {project.author.avatarDataUrl ? <img src={project.author.avatarDataUrl} alt="" className="h-full w-full object-cover" /> : project.author.name.slice(0, 1).toUpperCase()}
                 </a>
                 <div className="min-w-0">
-                  <a href={project.author.id ? `/profile/${project.author.id}` : '/explorer'} className="block truncate text-base font-black text-[#0b1724] transition hover:text-[#0f8f6b] sm:text-lg">{project.author.name}</a>
+                  <a href={project.socialState?.isOwner ? '/profile?view=benefits' : project.author.id ? `/profile/${project.author.id}` : '/explorer'} className="block truncate text-base font-black text-[#0b1724] transition hover:text-[#0f8f6b] sm:text-lg">{project.author.name}</a>
                   <div className="mt-1 flex flex-wrap items-center gap-3 text-xs font-semibold">
                     <AuthorBadge label={project.author.badgeLabel} />
-                    <button type="button" onClick={() => void followAuthor()} className={`inline-flex items-center gap-1 text-[#334155] transition hover:text-[#0f8f6b] ${followed ? 'text-[#0f8f6b]' : ''}`}>
+                    {!project.socialState?.isOwner ? <button type="button" onClick={() => void followAuthor()} className={`inline-flex items-center gap-1 text-[#334155] transition hover:text-[#0f8f6b] ${followed ? 'text-[#0f8f6b]' : ''}`}>
                       <FollowTinyIcon />
-                      {followed ? 'Suivi' : 'Follow'}
-                    </button>
+                      {followed ? 'Unfollow' : 'Follow'}
+                    </button> : null}
                   </div>
                   {project.author.links.length > 0 ? (
                     <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold text-[#334155]">
@@ -194,12 +223,12 @@ export default function ExplorerProjectDetailPage() {
                   <DetailEyeIcon />
                   {formatCompact(project.viewsCount)}
                 </span>
-                <button type="button" onClick={() => void likeProject()} className="inline-flex items-center gap-1.5 transition hover:text-[#0f8f6b]" aria-label="Aimer">
-                  <DetailThumbIcon />
+                <button type="button" onClick={() => void likeProject()} className={`inline-flex items-center gap-1.5 transition hover:text-[#0f8f6b] ${project.socialState?.liked ? 'text-[#0f8f6b]' : ''}`} aria-label="Aimer">
+                  <DetailThumbIcon filled={Boolean(project.socialState?.liked)} />
                   {formatCompact(project.likesCount)}
                 </button>
                 <button type="button" onClick={() => void favoriteProject()} className={`inline-flex items-center gap-1.5 transition hover:text-[#0f8f6b] ${favorited ? 'text-[#0f8f6b]' : ''}`} aria-label="Ajouter aux favoris">
-                  <DetailStarIcon />
+                  <DetailStarIcon filled={favorited} />
                   {formatCompact(project.favoritesCount)}
                 </button>
                 <span className="inline-flex items-center gap-1.5" title="Commentaires">
@@ -359,18 +388,18 @@ function DetailEyeIcon() {
   );
 }
 
-function DetailThumbIcon() {
+function DetailThumbIcon({ filled = false }: { filled?: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3Z" />
       <path d="M7 10 11 2a3 3 0 0 1 3 3v3h5a2 2 0 0 1 2 2l-1 8a3 3 0 0 1-3 3H7" />
     </svg>
   );
 }
 
-function DetailStarIcon() {
+function DetailStarIcon({ filled = false }: { filled?: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z" />
     </svg>
   );
@@ -458,4 +487,15 @@ function readAnonymousActorKey() {
 
 function openAuthRequired() {
   window.dispatchEvent(new CustomEvent('kendronics:open-auth-required', { detail: { panel: 'login', step: 'choice' } }));
+}
+
+function currentSessionUserId() {
+  const session = readAuthSession();
+  if (!session?.accessToken) return '';
+  try {
+    const payload = JSON.parse(window.atob(session.accessToken.split('.')[1] ?? '')) as { sub?: string; userId?: string };
+    return payload.sub ?? payload.userId ?? '';
+  } catch {
+    return '';
+  }
 }

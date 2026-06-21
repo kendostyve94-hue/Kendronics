@@ -28,6 +28,7 @@ export type ExplorerProject = {
   currency: string;
   licenseCode: string;
   allowedUses: string[];
+  visibility: string;
   featured: boolean;
   viewsCount: number;
   likesCount: number;

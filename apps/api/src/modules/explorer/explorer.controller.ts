@@ -25,13 +25,13 @@ export class ExplorerController {
   }
 
   @Get('projects/:projectId')
-  getProjectDetail(@Param('projectId') projectId: string) {
-    return this.explorerService.getProjectDetail(projectId);
+  getProjectDetail(@Param('projectId') projectId: string, @Req() request: { headers: Record<string, string> }) {
+    return this.explorerService.getProjectDetail(projectId, this.readOptionalUser(request));
   }
 
   @Get('users/:userId/profile')
-  getPublicAuthorProfile(@Param('userId') userId: string) {
-    return this.explorerService.getPublicAuthorProfile(userId);
+  getPublicAuthorProfile(@Param('userId') userId: string, @Req() request: { headers: Record<string, string> }) {
+    return this.explorerService.getPublicAuthorProfile(userId, this.readOptionalUser(request));
   }
 
   @Post('projects/drafts')
@@ -74,6 +74,27 @@ export class ExplorerController {
   @UseGuards(JwtAuthGuard)
   publishProject(@CurrentUser() user: AuthenticatedUser, @Param('projectId') projectId: string) {
     return this.explorerService.publishProject(user, projectId);
+  }
+
+  @Post('projects/:projectId/views')
+  recordProjectView(
+    @Param('projectId') projectId: string,
+    @Body() dto: LikeExplorerProjectDto,
+    @Req() request: { headers: Record<string, string> },
+  ) {
+    return this.explorerService.recordProjectView(projectId, dto.actorKey, this.readOptionalUser(request));
+  }
+
+  @Post('projects/:projectId/visibility')
+  @UseGuards(JwtAuthGuard)
+  toggleProjectVisibility(@CurrentUser() user: AuthenticatedUser, @Param('projectId') projectId: string) {
+    return this.explorerService.toggleProjectVisibility(user, projectId);
+  }
+
+  @Delete('projects/:projectId')
+  @UseGuards(JwtAuthGuard)
+  deleteProject(@CurrentUser() user: AuthenticatedUser, @Param('projectId') projectId: string) {
+    return this.explorerService.deleteProject(user, projectId);
   }
 
   @Get('projects/:projectId/editor')

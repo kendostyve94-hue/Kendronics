@@ -12,6 +12,13 @@ import {
 } from './dto/create-explorer-project.dto';
 import { ExplorerProject } from './entities/explorer-project.entity';
 
+const defaultProjectSocialState = {
+  liked: false,
+  favorited: false,
+  followingAuthor: false,
+  isOwner: false,
+};
+
 @Injectable()
 export class ExplorerService {
   constructor(
@@ -21,7 +28,7 @@ export class ExplorerService {
 
   async listProjects(): Promise<ExplorerProject[]> {
     const projects = await this.prisma.explorerProject.findMany({
-      where: { status: 'published', userId: { not: null } },
+      where: { status: 'published', visibility: 'public', userId: { not: null } },
       orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
       take: 80,
       include: {
@@ -40,9 +47,14 @@ export class ExplorerService {
     return projects.map(toExplorerProject);
   }
 
-  async getProjectDetail(projectId: string) {
+  async getProjectDetail(projectId: string, viewer?: AuthenticatedUser) {
     const project = await this.prisma.explorerProject.findFirst({
-      where: { id: projectId, status: 'published', userId: { not: null } },
+      where: {
+        id: projectId,
+        status: 'published',
+        userId: { not: null },
+        OR: [{ visibility: 'public' }, ...(viewer ? [{ userId: viewer.id }] : [])],
+      },
       include: {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 12 },
@@ -81,15 +93,12 @@ export class ExplorerService {
     if (!project) throw new NotFoundException('Explorer project not found.');
 
     const publicDescription = project.user?.publicDescription ?? '';
-    await this.prisma.explorerProject.update({
-      where: { id: project.id },
-      data: { viewsCount: { increment: 1 } },
-    });
     const explorerProject = toExplorerProject(project);
-    explorerProject.viewsCount += 1;
+    const socialState = viewer ? await this.projectSocialState(project.id, project.user?.id, viewer.id) : defaultProjectSocialState;
 
     return {
       ...explorerProject,
+      socialState,
       technicalDetails: project.technicalDetails,
       documentation: project.documentation,
       publicAssets: project.assets,
@@ -110,7 +119,7 @@ export class ExplorerService {
     };
   }
 
-  async getPublicAuthorProfile(userId: string) {
+  async getPublicAuthorProfile(userId: string, viewer?: AuthenticatedUser) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -133,7 +142,11 @@ export class ExplorerService {
     });
     if (!user) throw new NotFoundException('Author profile not found.');
 
-    const projects = await this.listUserProjects(user.id);
+    const isOwner = viewer?.id === user.id;
+    const projects = await this.listUserProjects(user.id, { includeHidden: isOwner });
+    const isFollowing = viewer && !isOwner ? Boolean(await this.prisma.userFollow.findUnique({
+      where: { followerId_followingId: { followerId: viewer.id, followingId: user.id } },
+    })) : false;
     const likesCount = projects.reduce((total, project) => total + project.likesCount, 0);
     const forksCount = projects.reduce((total, project) => total + project.forksCount, 0);
     const commentsCount = projects.reduce((total, project) => total + project.commentsCount, 0);
@@ -149,6 +162,8 @@ export class ExplorerService {
       followersCount: user._count.followers,
       followingCount: user._count.following,
       projectsCount: user._count.explorerProjects,
+      isOwner,
+      isFollowing,
       likesCount,
       forksCount,
       points: projects.length * 10 + likesCount * 2 + commentsCount * 3 + forksCount * 5,
@@ -294,6 +309,33 @@ export class ExplorerService {
     return { removed: true };
   }
 
+  async deleteProject(user: AuthenticatedUser, projectId: string) {
+    const project = await this.ownedProject(user.id, projectId);
+    await this.prisma.explorerProject.delete({ where: { id: project.id } });
+    return { deleted: true };
+  }
+
+  async toggleProjectVisibility(user: AuthenticatedUser, projectId: string): Promise<ExplorerProject> {
+    const project = await this.ownedProject(user.id, projectId);
+    const nextVisibility = project.visibility === 'public' ? 'unlisted' : 'public';
+    const updated = await this.prisma.explorerProject.update({
+      where: { id: project.id },
+      data: { visibility: nextVisibility },
+      include: {
+        _count: { select: { favorites: true } },
+        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+        assets: {
+          where: { kind: { in: ['cover', 'video', 'gallery'] }, visibility: 'public' },
+          orderBy: { createdAt: 'asc' },
+          take: 1,
+          select: { id: true, kind: true, mimeType: true },
+        },
+        user: { select: { verificationLevel: true } },
+      },
+    });
+    return toExplorerProject(updated);
+  }
+
   async publishProject(user: AuthenticatedUser, projectId: string): Promise<ExplorerProject> {
     const project = await this.ownedProject(user.id, projectId);
     const errors: string[] = [];
@@ -332,9 +374,30 @@ export class ExplorerService {
     return toExplorerProject(updated);
   }
 
-  async listUserProjects(userId: string): Promise<ExplorerProject[]> {
+  async recordProjectView(projectId: string, actorKey: string, user?: AuthenticatedUser): Promise<{ counted: boolean; viewsCount: number; userViewCount: number }> {
+    await this.ensureProject(projectId);
+    const resolvedActorKey = user ? `user:${user.id}` : clean(actorKey) || 'anonymous';
+    const current = await this.prisma.explorerProjectView.findUnique({
+      where: { projectId_actorKey: { projectId, actorKey: resolvedActorKey } },
+    });
+    if (current && current.count >= 5) {
+      const project = await this.prisma.explorerProject.findUnique({ where: { id: projectId }, select: { viewsCount: true } });
+      return { counted: false, viewsCount: project?.viewsCount ?? 0, userViewCount: current.count };
+    }
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const nextView = current
+        ? await tx.explorerProjectView.update({ where: { id: current.id }, data: { count: { increment: 1 }, userId: user?.id } })
+        : await tx.explorerProjectView.create({ data: { projectId, userId: user?.id, actorKey: resolvedActorKey, count: 1 } });
+      const nextProject = await tx.explorerProject.update({ where: { id: projectId }, data: { viewsCount: { increment: 1 } }, select: { viewsCount: true } });
+      return { nextView, nextProject };
+    });
+    return { counted: true, viewsCount: result.nextProject.viewsCount, userViewCount: result.nextView.count };
+  }
+
+  async listUserProjects(userId: string, options: { includeHidden?: boolean } = {}): Promise<ExplorerProject[]> {
     const projects = await this.prisma.explorerProject.findMany({
-      where: { userId, status: 'published' },
+      where: { userId, status: 'published', ...(options.includeHidden ? {} : { visibility: 'public' }) },
       orderBy: { createdAt: 'desc' },
       include: {
         _count: { select: { favorites: true } },
@@ -650,6 +713,20 @@ export class ExplorerService {
     if (!project) throw new NotFoundException('Explorer project not found.');
   }
 
+  private async projectSocialState(projectId: string, authorId: string | undefined, viewerId: string) {
+    const [like, favorite, follow] = await Promise.all([
+      this.prisma.explorerProjectLike.findUnique({ where: { projectId_actorKey: { projectId, actorKey: `user:${viewerId}` } } }),
+      this.prisma.explorerProjectFavorite.findUnique({ where: { projectId_userId: { projectId, userId: viewerId } } }),
+      authorId && authorId !== viewerId ? this.prisma.userFollow.findUnique({ where: { followerId_followingId: { followerId: viewerId, followingId: authorId } } }) : null,
+    ]);
+    return {
+      liked: Boolean(like),
+      favorited: Boolean(favorite),
+      followingAuthor: Boolean(follow),
+      isOwner: authorId === viewerId,
+    };
+  }
+
   private async ownedProject(userId: string, projectId: string) {
     const project = await this.prisma.explorerProject.findUnique({
       where: { id: projectId },
@@ -691,6 +768,7 @@ function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
     currency: project.currency,
     licenseCode: project.licenseCode,
     allowedUses: project.allowedUses,
+    visibility: project.visibility,
     featured: project.featured,
     viewsCount: project.viewsCount,
     likesCount: project.likesCount,
@@ -727,7 +805,7 @@ function accountBadgeLabel(level: number): string {
   if (level >= 3) return 'Industriel certifie';
   if (level >= 2) return 'Professionnel certifie';
   if (level >= 1) return 'Compte verifie';
-  return 'Niveau decouverte';
+  return 'Nouveau compte';
 }
 
 function publicCoverUrl(projectId: string, assetId: string | undefined): string | undefined {

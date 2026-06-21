@@ -32,6 +32,7 @@ type ExplorerProject = {
   attachmentType?: string;
   repositoryUrl?: string;
   projectType?: 'free' | 'paid';
+  visibility?: string;
   priceCents?: number;
   currency?: string;
   licenseCode?: string;
@@ -63,6 +64,7 @@ export default function ExplorerPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [favoriteProjectIds, setFavoriteProjectIds] = useState<Set<string>>(new Set());
+  const [likedProjectIds, setLikedProjectIds] = useState<Set<string>>(new Set());
   const [followingProjectIds, setFollowingProjectIds] = useState<Set<string>>(new Set());
   const [followingProjects, setFollowingProjects] = useState<ExplorerProject[]>([]);
   const [followedUserIds, setFollowedUserIds] = useState<Set<string>>(new Set());
@@ -74,6 +76,7 @@ export default function ExplorerPage() {
   const [isFeedNavVisible, setIsFeedNavVisible] = useState(true);
   const lastScrollYRef = useRef(0);
   const isSignedIn = Boolean(readAuthSession());
+  const currentUserId = currentSessionUserId();
 
   useEffect(() => {
     let cancelled = false;
@@ -183,6 +186,12 @@ export default function ExplorerPage() {
       });
       if (!response.ok) throw new Error('Like failed');
       const payload = (await response.json()) as { liked: boolean; likesCount: number };
+      setLikedProjectIds((current) => {
+        const next = new Set(current);
+        if (payload.liked) next.add(project.id);
+        else next.delete(project.id);
+        return next;
+      });
       setProjects((current) => current.map((item) => (item.id === project.id ? { ...item, likesCount: payload.likesCount } : item)));
     } catch {
       // Keep the persisted server state if the request fails.
@@ -387,6 +396,7 @@ export default function ExplorerPage() {
                 project={project}
                 selected={selectedProject?.id === project.id}
                 favorited={favoriteProjectIds.has(project.id)}
+                liked={likedProjectIds.has(project.id)}
                 onSelect={() => setSelectedProjectId(project.id)}
                 onLike={() => void likeProject(project)}
                 onFavorite={() => void favoriteProject(project)}
@@ -396,6 +406,7 @@ export default function ExplorerPage() {
                 followed={project.userId ? followedUserIds.has(project.userId) : false}
                 followAnimating={project.userId ? followPulseUserIds.has(project.userId) : false}
                 followable={Boolean(project.userId)}
+                profileHref={project.userId && project.userId === currentUserId ? '/profile?view=benefits' : project.userId ? `/profile/${project.userId}` : '/explorer'}
               />
             )) : (
               <ExplorerStateCard
@@ -539,6 +550,7 @@ function ProjectCard({
   project,
   selected,
   favorited,
+  liked,
   followed,
   followAnimating,
   followable,
@@ -548,10 +560,12 @@ function ProjectCard({
   onFollow,
   onBuy,
   onDownload,
+  profileHref,
 }: {
   project: ExplorerProject;
   selected: boolean;
   favorited: boolean;
+  liked: boolean;
   followed: boolean;
   followAnimating: boolean;
   followable: boolean;
@@ -561,6 +575,7 @@ function ProjectCard({
   onFollow: () => void;
   onBuy: () => void;
   onDownload: () => void;
+  profileHref: string;
 }) {
   return (
     <article className={`min-w-0 bg-transparent transition ${selected ? 'opacity-100' : 'opacity-95 hover:opacity-100'}`}>
@@ -578,7 +593,7 @@ function ProjectCard({
       </a>
       <div className="mt-3 flex items-center gap-4 text-sm text-[#9aa6b2]">
         <span className="inline-flex items-center gap-1"><EyeIcon />{formatCompact(project.viewsCount)}</span>
-        <button type="button" onClick={onLike} className="inline-flex items-center gap-1 transition hover:text-[#0f8f6b]"><ThumbIcon />{project.likesCount}</button>
+        <button type="button" onClick={onLike} className={`inline-flex items-center gap-1 transition hover:text-[#0f8f6b] ${liked ? 'text-[#0f8f6b]' : ''}`}><ThumbIcon filled={liked} />{project.likesCount}</button>
         <button type="button" onClick={onFavorite} className={`inline-flex items-center gap-1 transition hover:text-[#0f8f6b] ${favorited ? 'text-[#0f8f6b]' : ''}`} aria-label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
           <StarIcon filled={favorited} />{project.favoritesCount}
         </button>
@@ -595,12 +610,12 @@ function ProjectCard({
         </div>
       ) : null}
       <div className="mt-4 flex items-center gap-2 text-sm text-[#0b1724]">
-        <span className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[10px] font-black text-white">
+        <a href={profileHref} className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[10px] font-black text-white" aria-label={`Voir le profil de ${project.authorName}`}>
           {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
-        </span>
-        <span className="min-w-0 max-w-[calc(100%-3.25rem)] truncate">{project.authorName}</span>
+        </a>
+        <a href={profileHref} className="min-w-0 max-w-[calc(100%-3.25rem)] truncate transition hover:text-[#0f8f6b]">{project.authorName}</a>
         {project.authorBadgeLabel ? <AuthorBadge label={project.authorBadgeLabel} /> : null}
-        <button
+        {followed && !followAnimating ? null : <button
           type="button"
           onClick={onFollow}
           disabled={!followable}
@@ -610,8 +625,8 @@ function ProjectCard({
           aria-label={followed ? `Ne plus suivre ${project.authorName}` : `Suivre ${project.authorName}`}
           title={followable ? undefined : 'Auteur non connecte au suivi'}
         >
-          {followed ? <MaterialArrowForwardIcon /> : <MaterialAddIcon />}
-        </button>
+          {followed ? <MaterialCheckIcon /> : <MaterialAddIcon />}
+        </button>}
       </div>
     </article>
   );
@@ -684,9 +699,9 @@ function EyeIcon() {
   );
 }
 
-function ThumbIcon() {
+function ThumbIcon({ filled = false }: { filled?: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M7 10v10" />
       <path d="M7 10 11 3a2 2 0 0 1 3 2l-1 4h5a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 16.8 20H7" />
       <path d="M3 10h4v10H3z" />
@@ -745,10 +760,10 @@ function MaterialAddIcon() {
   );
 }
 
-function MaterialArrowForwardIcon() {
+function MaterialCheckIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
-      <path d="m12 4-1.41 1.41L15.17 10H4v2h11.17l-4.58 4.59L12 18l7-7-7-7Z" />
+      <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17Z" />
     </svg>
   );
 }
@@ -788,4 +803,15 @@ function mediaUrl(value: string) {
 function formatProjectPrice(priceCents?: number, currency = 'EUR') {
   if (!priceCents) return 'Commercial';
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 2 }).format(priceCents / 100);
+}
+
+function currentSessionUserId() {
+  const session = readAuthSession();
+  if (!session?.accessToken) return '';
+  try {
+    const payload = JSON.parse(window.atob(session.accessToken.split('.')[1] ?? '')) as { sub?: string; userId?: string };
+    return payload.sub ?? payload.userId ?? '';
+  } catch {
+    return '';
+  }
 }

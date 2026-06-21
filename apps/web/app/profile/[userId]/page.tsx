@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Navbar } from '../../../components/layout/Navbar';
 import { getApiBaseUrl } from '../../../lib/api-base-url';
+import { readAuthSession } from '../../../lib/auth-session';
 
 type PublicAuthorProject = {
   id: string;
@@ -13,6 +14,7 @@ type PublicAuthorProject = {
   imageUrl?: string;
   mediaKind?: string;
   mediaMimeType?: string;
+  visibility?: string;
   viewsCount: number;
   likesCount: number;
   favoritesCount: number;
@@ -32,6 +34,8 @@ type PublicAuthorProfile = {
   forksCount: number;
   points: number;
   projectsCount: number;
+  isOwner?: boolean;
+  isFollowing?: boolean;
   links: Array<{ type: string; label: string; href: string }>;
   projects: PublicAuthorProject[];
 };
@@ -44,17 +48,23 @@ export default function PublicAuthorProfilePage() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [activeTab, setActiveTab] = useState<'reels' | 'forks'>('reels');
   const [followed, setFollowed] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'visibility'; project: PublicAuthorProject } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadProfile() {
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/explorer/users/${params.userId}/profile`, { cache: 'no-store' });
+        const session = readAuthSession();
+        const response = await fetch(`${getApiBaseUrl()}/api/explorer/users/${params.userId}/profile`, {
+          headers: session ? { Authorization: `${session.tokenType} ${session.accessToken}` } : undefined,
+          cache: 'no-store',
+        });
         if (!response.ok) throw new Error(`Public profile failed: ${response.status}`);
         const payload = await response.json() as PublicAuthorProfile;
         if (cancelled) return;
         setProfile(payload);
+        setFollowed(Boolean(payload.isFollowing));
         setStatus('ready');
       } catch {
         if (!cancelled) setStatus('error');
@@ -69,7 +79,7 @@ export default function PublicAuthorProfilePage() {
 
   async function followAuthor() {
     if (!profile) return;
-    const session = await import('../../../lib/auth-session').then((module) => module.readAuthSession());
+    const session = readAuthSession();
     if (!session) {
       window.dispatchEvent(new CustomEvent('kendronics:open-auth-required', { detail: { panel: 'login', step: 'choice' } }));
       return;
@@ -84,10 +94,29 @@ export default function PublicAuthorProfilePage() {
     setProfile((current) => current ? { ...current, followersCount: payload.followersCount } : current);
   }
 
+  async function confirmProjectAction() {
+    if (!confirmAction || !profile?.isOwner) return;
+    const session = readAuthSession();
+    if (!session) return;
+    const { project, type } = confirmAction;
+    const response = await fetch(`${getApiBaseUrl()}/api/explorer/projects/${project.id}${type === 'visibility' ? '/visibility' : ''}`, {
+      method: type === 'delete' ? 'DELETE' : 'POST',
+      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+    });
+    if (!response.ok) return;
+    if (type === 'delete') {
+      setProfile((current) => current ? { ...current, projects: current.projects.filter((item) => item.id !== project.id), projectsCount: Math.max(0, current.projectsCount - 1) } : current);
+    } else {
+      const updated = await response.json() as PublicAuthorProject;
+      setProfile((current) => current ? { ...current, projects: current.projects.map((item) => item.id === updated.id ? { ...item, visibility: updated.visibility } : item) } : current);
+    }
+    setConfirmAction(null);
+  }
+
   return (
     <main className="min-h-screen bg-white text-[#0b1724]">
       <Navbar />
-      <div className="mx-auto w-full max-w-[1180px] px-4 pb-20 pt-[86px] sm:px-6 lg:px-5">
+      <div className="mx-auto w-full max-w-[1180px] px-0 pb-20 pt-[86px] sm:px-6 lg:px-5">
         {status === 'loading' ? (
           <ProfileState title="Chargement du profil" body="Kendronics recupere les informations publiques de l'auteur." />
         ) : status === 'error' || !profile ? (
@@ -97,7 +126,7 @@ export default function PublicAuthorProfilePage() {
             <div className="aspect-[16/5] max-h-[220px] min-h-[128px] overflow-hidden bg-[#edf3f8] sm:aspect-[6/1]">
               <img src={profile.bannerDataUrl || defaultBannerUrl} alt="" className="h-full w-full object-cover object-center" />
             </div>
-            <header className="-mt-10 grid grid-cols-[5.75rem_minmax(0,1fr)] items-end gap-3 px-2 sm:-mt-16 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-5">
+            <header className="-mt-10 grid grid-cols-[5.75rem_minmax(0,1fr)] items-end gap-3 px-4 sm:-mt-16 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-5 sm:px-2">
               <span className="relative z-10 grid h-[88px] w-[88px] shrink-0 place-items-center overflow-hidden rounded-full bg-[#102033] text-2xl font-black text-white sm:h-32 sm:w-32">
                   {profile.avatarDataUrl ? <img src={profile.avatarDataUrl} alt="" className="h-full w-full object-cover" /> : profile.name.slice(0, 1).toUpperCase()}
               </span>
@@ -105,9 +134,9 @@ export default function PublicAuthorProfilePage() {
                 <h1 className="flex min-w-0 flex-wrap items-center gap-2 text-xl font-black leading-tight text-[#1f2f43] sm:text-2xl">
                   <span className="min-w-0 truncate">{profile.name}</span>
                   <AuthorBadge label={profile.badgeLabel} />
-                  <button type="button" onClick={() => void followAuthor()} className={`text-xs font-semibold transition hover:text-[#0f8f6b] ${followed ? 'text-[#0f8f6b]' : 'text-[#334155]'}`}>
-                    {followed ? 'Suivi' : 'Follow'}
-                  </button>
+                  {!profile.isOwner ? <button type="button" onClick={() => void followAuthor()} className={`text-xs font-semibold transition hover:text-[#0f8f6b] ${followed ? 'text-[#0f8f6b]' : 'text-[#334155]'}`}>
+                    {followed ? 'Unfollow' : 'Follow'}
+                  </button> : null}
                 </h1>
                 <div className="mt-4 hidden max-w-[34rem] grid-cols-4 text-center sm:grid sm:divide-x sm:divide-[#dbe4ee]">
                   <ProfileMetric label="Suivi" value={formatCompact(profile.followingCount)} />
@@ -117,7 +146,7 @@ export default function PublicAuthorProfilePage() {
                 </div>
               </div>
             </header>
-            <div className="mt-4 grid grid-cols-4 text-center sm:hidden">
+            <div className="mt-4 grid grid-cols-4 px-4 text-center sm:hidden">
               <ProfileMetric label="Suivi" value={formatCompact(profile.followingCount)} />
               <ProfileMetric label="Abonnés" value={formatCompact(profile.followersCount)} />
               <ProfileMetric label="Likes" value={formatCompact(profile.likesCount)} />
@@ -144,7 +173,7 @@ export default function PublicAuthorProfilePage() {
                   Forks
                 </button>
               </nav>
-              <div className="mt-5 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-5 grid gap-7 px-4 sm:grid-cols-2 sm:px-0 lg:grid-cols-3">
                 {profile.projects.filter((project) => activeTab === 'forks' ? project.projectType === 'paid' : true).map((project) => (
                   <a key={project.id} href={`/explorer/${project.id}`} className="group block">
                     <div className="aspect-[4/3] overflow-hidden bg-[#edf3f8]">
@@ -155,17 +184,40 @@ export default function PublicAuthorProfilePage() {
                       )}
                     </div>
                     <h3 className="mt-3 line-clamp-2 text-base font-black text-[#0b1724] group-hover:text-[#0f8f6b]">{project.title}</h3>
+                    {profile.isOwner && project.visibility !== 'public' ? <p className="mt-1 text-xs font-black text-[#b45309]">Cache du grand public</p> : null}
                     <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#64748b]">{project.summary}</p>
                     <div className="mt-2 flex items-center gap-4 text-sm text-[#91a0af]">
-                      <span className="inline-flex items-center gap-1"><EyeIcon />{formatCompact(project.viewsCount)}</span>
+                      <button type="button" onClick={(event) => { event.preventDefault(); if (profile.isOwner) setConfirmAction({ type: 'visibility', project }); }} className={`inline-flex items-center gap-1 ${profile.isOwner ? 'hover:text-[#0f8f6b]' : ''}`} title={profile.isOwner ? (project.visibility === 'public' ? 'Cacher du grand public' : 'Reactiver publiquement') : undefined}><EyeIcon />{formatCompact(project.viewsCount)}</button>
                       <span className="inline-flex items-center gap-1"><ThumbIcon />{formatCompact(project.likesCount)}</span>
                       <span className="inline-flex items-center gap-1"><StarIcon />{formatCompact(project.favoritesCount)}</span>
                       <span className="inline-flex items-center gap-1"><CommentIcon />{formatCompact(project.commentsCount)}</span>
+                      {profile.isOwner ? (
+                        <>
+                          <button type="button" onClick={(event) => { event.preventDefault(); window.location.href = `/projects/new?type=${project.projectType ?? 'free'}&id=${project.id}`; }} className="ml-auto inline-flex items-center gap-1 text-[#64748b] transition hover:text-[#0f8f6b]" aria-label="Modifier">
+                            <EditIcon />
+                          </button>
+                          <button type="button" onClick={(event) => { event.preventDefault(); setConfirmAction({ type: 'delete', project }); }} className="inline-flex items-center gap-1 text-[#64748b] transition hover:text-red-600" aria-label="Supprimer">
+                            <DeleteIcon />
+                          </button>
+                        </>
+                      ) : null}
                     </div>
                   </a>
                 ))}
               </div>
             </section>
+            {confirmAction ? (
+              <div className="fixed inset-0 z-[90] grid place-items-center bg-[#07172a]/45 px-4">
+                <div className="w-full max-w-sm bg-white p-5 text-[#102033] shadow-[0_24px_70px_rgba(7,23,42,0.22)]">
+                  <h2 className="text-lg font-black">{confirmAction.type === 'delete' ? 'Supprimer ce poste ?' : confirmAction.project.visibility === 'public' ? 'Cacher ce poste ?' : 'Reactiver ce poste ?'}</h2>
+                  <p className="mt-2 text-sm leading-6 text-[#64748b]">{confirmAction.type === 'delete' ? 'Cette action supprimera definitivement la publication.' : 'Le poste reste visible dans votre profil, mais son affichage grand public change.'}</p>
+                  <div className="mt-5 flex justify-end gap-2">
+                    <button type="button" onClick={() => setConfirmAction(null)} className="h-10 border border-[#dbe4ee] px-4 text-sm font-black">Annuler</button>
+                    <button type="button" onClick={() => void confirmProjectAction()} className="h-10 bg-[#102033] px-4 text-sm font-black text-white">Confirmer</button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </>
         )}
       </div>
@@ -267,6 +319,26 @@ function CommentIcon() {
       <path d="M5 5h14v10H8l-3 3V5Z" />
       <path d="M8 9h8" />
       <path d="M8 12h5" />
+    </svg>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z" />
+      <path d="m14 7 3 3" />
+    </svg>
+  );
+}
+
+function DeleteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7h16" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M6 7l1 14h10l1-14" />
+      <path d="M9 7V4h6v3" />
     </svg>
   );
 }

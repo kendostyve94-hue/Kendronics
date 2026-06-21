@@ -47,6 +47,7 @@ model User {
   notifications Notification[]
   explorerProjects ExplorerProject[]
   explorerProjectLikes ExplorerProjectLike[]
+  explorerProjectViews ExplorerProjectView[]
   explorerProjectFavorites ExplorerProjectFavorite[]
   explorerComments ExplorerComment[]
   projectPurchasesBought ProjectPurchase[] @relation("ProjectPurchaseBuyer")
@@ -812,6 +813,7 @@ model ExplorerProject {
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   likes ExplorerProjectLike[]
+  views ExplorerProjectView[]
   favorites ExplorerProjectFavorite[]
   comments ExplorerComment[]
   assets ExplorerProjectAsset[]
@@ -915,6 +917,23 @@ model ExplorerProjectLike {
   userId    String?
   actorKey  String
   createdAt DateTime @default(now())
+
+  project ExplorerProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, actorKey])
+  @@index([projectId])
+  @@index([userId])
+}
+
+model ExplorerProjectView {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String?
+  actorKey  String
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   project ExplorerProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
