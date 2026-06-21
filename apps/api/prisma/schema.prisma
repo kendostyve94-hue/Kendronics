@@ -17,6 +17,7 @@ model User {
   phoneVerifiedAt DateTime?
   country         String?
   avatarDataUrl   String?
+  profileBannerDataUrl String?
   promoCode       String?   @unique
   publicDescription String?
   profileDetails  Json?

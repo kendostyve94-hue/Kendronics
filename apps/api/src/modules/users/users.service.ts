@@ -178,8 +178,8 @@ export class UsersService {
         id: true,
         email: true,
         fullName: true,
-        promoCode: true,
         publicDescription: true,
+        profileBannerDataUrl: true,
         _count: {
           select: {
             explorerProjects: { where: { status: 'published' } },
@@ -196,15 +196,14 @@ export class UsersService {
     });
     if (!user) throw new NotFoundException('User not found.');
 
-    const promoCode = user.promoCode || await this.ensurePromoCode(user.id, user.fullName || user.email);
     const receivedLikes = user.explorerProjects.reduce((total, project) => total + project.likesCount, 0);
     const receivedComments = user.explorerProjects.reduce((total, project) => total + project.commentsCount, 0);
     const receivedForks = user.explorerProjects.reduce((total, project) => total + project.forksCount, 0);
 
     return {
       userId: user.id,
-      promoCode,
       description: user.publicDescription ?? '',
+      bannerDataUrl: user.profileBannerDataUrl ?? '',
       followingCount: user._count.following,
       followersCount: user._count.followers,
       likesCount: receivedLikes,
@@ -215,18 +214,13 @@ export class UsersService {
   }
 
   async updatePublicProfile(userId: string, dto: UpdatePublicProfileDto) {
-    const data: { promoCode?: string; publicDescription?: string } = {};
-    if (dto.promoCode !== undefined) data.promoCode = normalizePromoCode(dto.promoCode);
+    const data: { publicDescription?: string; profileBannerDataUrl?: string | null } = {};
     if (dto.description !== undefined) data.publicDescription = dto.description.trim();
-
-    try {
-      await this.prisma.user.update({ where: { id: userId }, data });
-    } catch (error) {
-      if (isUniqueConstraintError(error)) {
-        throw new ConflictException('Ce code promo est deja utilise par un autre utilisateur.');
-      }
-      throw error;
+    if (dto.bannerDataUrl !== undefined) {
+      data.profileBannerDataUrl = validBannerDataUrl(dto.bannerDataUrl) ? dto.bannerDataUrl : null;
     }
+
+    await this.prisma.user.update({ where: { id: userId }, data });
     return this.getPublicProfile(userId);
   }
 
@@ -247,21 +241,6 @@ export class UsersService {
       this.prisma.userFollow.count({ where: { followerId } }),
     ]);
     return { following: !existing, followersCount, followingCount };
-  }
-
-  private async ensurePromoCode(userId: string, seed: string): Promise<string> {
-    const base = normalizePromoCode(seed).slice(0, 10) || 'CLIENT';
-    for (let attempt = 0; attempt < 12; attempt += 1) {
-      const suffix = createHash('sha256').update(`${userId}:${attempt}`).digest('hex').slice(0, 6).toUpperCase();
-      const promoCode = `${base}${suffix}`.slice(0, 18);
-      try {
-        await this.prisma.user.update({ where: { id: userId }, data: { promoCode } });
-        return promoCode;
-      } catch (error) {
-        if (!isUniqueConstraintError(error)) throw error;
-      }
-    }
-    throw new ServiceUnavailableException('Impossible de generer un code promo unique.');
   }
 
   updateAddress(userId: string, kind: 'shippingAddress' | 'billingAddress', dto: UpdateAccountAddressDto): Promise<User> {
@@ -456,12 +435,13 @@ function validAvatarDataUrl(value: string | undefined): boolean {
   return /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(value) && value.length <= 3000000;
 }
 
-function uniqueRoles(roles: UserRole[]): UserRole[] {
-  return Array.from(new Set(roles));
+function validBannerDataUrl(value: string | undefined): boolean {
+  if (!value) return false;
+  return /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(value) && value.length <= 5000000;
 }
 
-function normalizePromoCode(value: string): string {
-  return value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 18);
+function uniqueRoles(roles: UserRole[]): UserRole[] {
+  return Array.from(new Set(roles));
 }
 
 function isUniqueConstraintError(error: unknown): boolean {

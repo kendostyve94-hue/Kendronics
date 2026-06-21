@@ -13,7 +13,6 @@ import { purgeLegacySensitiveStorage, readScopedLocalStorage, removeScopedLocalS
 
 const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
-const profileBannerStorageKey = 'kendronics.customer.profile-banner';
 const savedShippingAddressesKey = 'kendronics.customer.shipping-addresses';
 const savedBillingAddressesKey = 'kendronics.customer.billing-addresses';
 const siteGreen = '#0f8f6b';
@@ -250,6 +249,7 @@ type SidebarItem = {
 type PublicSocialProfile = {
   userId: string;
   description: string;
+  bannerDataUrl?: string;
   followingCount: number;
   followersCount: number;
   likesCount: number;
@@ -2076,6 +2076,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   const [socialProfile, setSocialProfile] = useState<PublicSocialProfile>({
     userId,
     description: '',
+    bannerDataUrl: '',
     followingCount: 0,
     followersCount: 0,
     likesCount: 0,
@@ -2089,7 +2090,6 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
   useEffect(() => {
     setIsCreateProjectOpen(new URLSearchParams(window.location.search).get('create') === '1');
-    setBannerDataUrl(readScopedLocalStorage(profileBannerStorageKey) || defaultBannerUrl);
     let cancelled = false;
 
     async function loadSocialProfile() {
@@ -2113,6 +2113,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         setSocialProfile(nextProfile);
         setProfileDescription(nextProfile.description);
         setDraftDescription(nextProfile.description);
+        setBannerDataUrl(nextProfile.bannerDataUrl || defaultBannerUrl);
         setProjects(nextProjects);
         setFavorites(nextFavorites);
         setSocialStatus('ready');
@@ -2135,11 +2136,24 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
     const file = event.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const value = typeof reader.result === 'string' ? reader.result : '';
       if (!value) return;
       setBannerDataUrl(value);
-      writeScopedLocalStorage(profileBannerStorageKey, value);
+      const session = await readFreshAuthSession();
+      if (!session) return;
+      const response = await fetch(`${getApiBaseUrl()}/api/users/me/public-profile`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `${session.tokenType} ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bannerDataUrl: value }),
+      });
+      if (!response.ok) return;
+      const nextProfile = await response.json() as PublicSocialProfile;
+      setSocialProfile(nextProfile);
+      setBannerDataUrl(nextProfile.bannerDataUrl || defaultBannerUrl);
     };
     reader.readAsDataURL(file);
   }
