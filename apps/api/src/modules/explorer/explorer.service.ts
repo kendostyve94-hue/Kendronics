@@ -615,7 +615,7 @@ function accountBadgeLabel(level: number): string {
   if (level >= 3) return 'Industriel certifie';
   if (level >= 2) return 'Professionnel certifie';
   if (level >= 1) return 'Compte verifie';
-  return 'Compte public';
+  return 'Createur hardware';
 }
 
 function extractPublicProfileLinks(description: string, profileDetails: unknown) {

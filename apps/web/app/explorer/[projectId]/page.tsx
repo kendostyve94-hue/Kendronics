@@ -89,9 +89,13 @@ export default function ExplorerProjectDetailPage() {
                   {project.author.avatarDataUrl ? <img src={project.author.avatarDataUrl} alt="" className="h-full w-full object-cover" /> : project.author.name.slice(0, 1).toUpperCase()}
                 </span>
                 <div className="min-w-0">
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
-                    <h1 className="truncate text-base font-black text-[#0b1724] sm:text-lg">{project.author.name}</h1>
-                    <span className="text-xs font-semibold text-[#0f8f6b]">{project.author.badgeLabel}</span>
+                  <h1 className="truncate text-base font-black text-[#0b1724] sm:text-lg">{project.author.name}</h1>
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs font-semibold">
+                    <span className="text-[#0f8f6b]">{project.author.badgeLabel}</span>
+                    <button type="button" className="inline-flex items-center gap-1 text-[#334155] transition hover:text-[#0f8f6b]">
+                      <FollowTinyIcon />
+                      Follow
+                    </button>
                   </div>
                   {project.author.links.length > 0 ? (
                     <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold text-[#334155]">
@@ -105,13 +109,23 @@ export default function ExplorerProjectDetailPage() {
                   ) : null}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button type="button" className="grid h-10 w-10 place-items-center rounded-full border border-[#dbe4ee] text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]" aria-label="Ajouter aux favoris">
-                  <DetailHeartIcon />
+              <div className="flex flex-wrap items-center justify-end gap-4 text-sm font-semibold text-[#94a3b8]">
+                <span className="inline-flex items-center gap-1.5" title="Vues">
+                  <DetailEyeIcon />
+                  {formatCompact(project.viewsCount)}
+                </span>
+                <button type="button" className="inline-flex items-center gap-1.5 transition hover:text-[#0f8f6b]" aria-label="Aimer">
+                  <DetailThumbIcon />
+                  {formatCompact(project.likesCount)}
                 </button>
-                <button type="button" className="grid h-10 w-10 place-items-center rounded-full border border-[#dbe4ee] text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]" aria-label="Sauvegarder">
-                  <DetailBookmarkIcon />
+                <button type="button" className="inline-flex items-center gap-1.5 transition hover:text-[#0f8f6b]" aria-label="Ajouter aux favoris">
+                  <DetailStarIcon />
+                  {formatCompact(project.favoritesCount)}
                 </button>
+                <span className="inline-flex items-center gap-1.5" title="Commentaires">
+                  <DetailCommentIcon />
+                  {formatCompact(project.commentsCount)}
+                </span>
                 {project.projectType === 'paid' ? (
                   <a href={`/explorer?fork=${project.id}`} className="grid h-10 place-items-center rounded-full bg-[#08071b] px-6 text-sm font-black text-white transition hover:bg-[#0f8f6b]">
                     Forks
@@ -153,18 +167,47 @@ function ProjectDetailState({ title, body }: { title: string; body: string }) {
   );
 }
 
-function DetailHeartIcon() {
+function FollowTinyIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20.8 5.6a5.2 5.2 0 0 0-7.4 0L12 7l-1.4-1.4a5.2 5.2 0 1 0-7.4 7.4L12 21l8.8-8a5.2 5.2 0 0 0 0-7.4Z" />
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M19 8v6" />
+      <path d="M22 11h-6" />
     </svg>
   );
 }
 
-function DetailBookmarkIcon() {
+function DetailEyeIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M6 4h12v17l-6-3-6 3V4Z" />
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" />
+      <circle cx="12" cy="12" r="2.5" />
+    </svg>
+  );
+}
+
+function DetailThumbIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3Z" />
+      <path d="M7 10 11 2a3 3 0 0 1 3 3v3h5a2 2 0 0 1 2 2l-1 8a3 3 0 0 1-3 3H7" />
+    </svg>
+  );
+}
+
+function DetailStarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z" />
+    </svg>
+  );
+}
+
+function DetailCommentIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" />
     </svg>
   );
 }

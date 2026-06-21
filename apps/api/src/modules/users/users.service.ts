@@ -217,7 +217,13 @@ export class UsersService {
     const data: { publicDescription?: string; profileBannerDataUrl?: string | null } = {};
     if (dto.description !== undefined) data.publicDescription = dto.description.trim();
     if (dto.bannerDataUrl !== undefined) {
-      data.profileBannerDataUrl = validBannerDataUrl(dto.bannerDataUrl) ? dto.bannerDataUrl : null;
+      if (dto.bannerDataUrl === '') {
+        data.profileBannerDataUrl = null;
+      } else if (validBannerDataUrl(dto.bannerDataUrl)) {
+        data.profileBannerDataUrl = dto.bannerDataUrl;
+      } else {
+        throw new BadRequestException('La banniere doit etre une image PNG, JPG ou WebP de moins de 5 Mo.');
+      }
     }
 
     await this.prisma.user.update({ where: { id: userId }, data });

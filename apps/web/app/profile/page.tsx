@@ -2132,16 +2132,21 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   const descriptionChanged = draftDescription.trim() !== profileDescription;
   const profileRating = profileRatingFromPoints(socialProfile.points);
 
-  function updateBanner(event: ChangeEvent<HTMLInputElement>) {
+  async function updateBanner(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const value = typeof reader.result === 'string' ? reader.result : '';
+    const previousBanner = bannerDataUrl;
+    event.target.value = '';
+
+    try {
+      const value = await prepareProfileBannerDataUrl(file);
       if (!value) return;
       setBannerDataUrl(value);
       const session = await readFreshAuthSession();
-      if (!session) return;
+      if (!session) {
+        setBannerDataUrl(previousBanner);
+        return;
+      }
       const response = await fetch(`${getApiBaseUrl()}/api/users/me/public-profile`, {
         method: 'PUT',
         headers: {
@@ -2150,12 +2155,16 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         },
         body: JSON.stringify({ bannerDataUrl: value }),
       });
-      if (!response.ok) return;
+      if (!response.ok) {
+        setBannerDataUrl(previousBanner);
+        return;
+      }
       const nextProfile = await response.json() as PublicSocialProfile;
       setSocialProfile(nextProfile);
       setBannerDataUrl(nextProfile.bannerDataUrl || defaultBannerUrl);
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      setBannerDataUrl(previousBanner);
+    }
   }
 
   async function saveDescription() {
@@ -5475,6 +5484,38 @@ async function resizeProfileImage(file: File): Promise<string> {
     if (!context) throw new Error('Canvas unavailable');
     context.drawImage(image, 0, 0, width, height);
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.86));
+    if (!blob) throw new Error('Image compression failed');
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => (typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Invalid image data')));
+      reader.onerror = () => reject(new Error('File read failed'));
+      reader.readAsDataURL(blob);
+    });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+async function prepareProfileBannerDataUrl(file: File): Promise<string> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Image load failed'));
+      img.src = objectUrl;
+    });
+    const maxWidth = 1920;
+    const scale = Math.min(1, maxWidth / image.width);
+    const width = Math.max(1, Math.round(image.width * scale));
+    const height = Math.max(1, Math.round(image.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas unavailable');
+    context.drawImage(image, 0, 0, width, height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.84));
     if (!blob) throw new Error('Image compression failed');
     return await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
