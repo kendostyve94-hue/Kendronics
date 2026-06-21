@@ -18,12 +18,16 @@ type ExplorerProject = {
   userId?: string;
   authorName: string;
   authorAvatarUrl?: string;
+  authorBadgeLabel?: string;
+  authorVerificationLevel?: number;
   title: string;
   category: string;
   summary: string;
   description?: string;
   tags: string[];
   imageUrl?: string;
+  mediaKind?: string;
+  mediaMimeType?: string;
   attachmentName?: string;
   attachmentType?: string;
   repositoryUrl?: string;
@@ -563,7 +567,7 @@ function ProjectCard({
       <a href={`/explorer/${project.id}`} onClick={onSelect} className="block w-full text-left">
         <div className="aspect-[1.45] overflow-hidden bg-[#e8eef5]">
           {project.imageUrl ? (
-            <img src={mediaUrl(project.imageUrl)} alt="" className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]" />
+            <ProjectMedia project={project} className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]" />
           ) : (
             <div className="grid h-full w-full place-items-center bg-[#edf3f8] px-4 text-center text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">{project.category}</div>
           )}
@@ -595,6 +599,7 @@ function ProjectCard({
           {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
         </span>
         <span className="min-w-0 max-w-[calc(100%-3.25rem)] truncate">{project.authorName}</span>
+        {project.authorBadgeLabel ? <AuthorBadge label={project.authorBadgeLabel} /> : null}
         <button
           type="button"
           onClick={onFollow}
@@ -654,6 +659,20 @@ function ProjectDetailPanel({ project, commentValue, onCommentChange, onComment,
       </div>
     </section>
   );
+}
+
+function AuthorBadge({ label }: { label: string }) {
+  return (
+    <span className="shrink-0 rounded-full bg-[#eefbf6] px-1.5 py-0.5 text-[10px] font-black leading-none text-[#0f8f6b]" title={label}>
+      {label}
+    </span>
+  );
+}
+
+function ProjectMedia({ project, className }: { project: ExplorerProject; className: string }) {
+  const src = project.imageUrl ? mediaUrl(project.imageUrl) : '';
+  const isVideo = project.mediaMimeType?.startsWith('video/') || project.mediaKind === 'video';
+  return isVideo ? <video src={src} className={className} muted playsInline controls /> : <img src={src} alt="" className={className} />;
 }
 
 function EyeIcon() {

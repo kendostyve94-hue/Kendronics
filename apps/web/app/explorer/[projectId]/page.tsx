@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Navbar } from '../../../components/layout/Navbar';
 import { getApiBaseUrl } from '../../../lib/api-base-url';
+import { readAuthSession } from '../../../lib/auth-session';
 
 type ExplorerProject = {
   id: string;
@@ -16,6 +17,8 @@ type ExplorerProject = {
   description?: string;
   tags: string[];
   imageUrl?: string;
+  mediaKind?: string;
+  mediaMimeType?: string;
   projectType?: 'free' | 'paid';
   priceCents?: number;
   currency?: string;
@@ -27,6 +30,7 @@ type ExplorerProject = {
   commentsCount: number;
   forksCount: number;
   createdAt: string;
+  comments: Array<{ id: string; authorName: string; body: string; createdAt: string }>;
   technicalDetails?: Record<string, unknown>;
   documentation?: Record<string, unknown>;
   publicAssets?: Array<{
@@ -43,6 +47,9 @@ type ExplorerProject = {
     description?: string;
     badgeLabel: string;
     verificationLevel: number;
+    followersCount: number;
+    followingCount: number;
+    projectsCount: number;
     links: Array<{
       type: string;
       label: string;
@@ -59,6 +66,9 @@ export default function ExplorerProjectDetailPage() {
   const projectId = params.projectId;
   const [project, setProject] = useState<ExplorerProject | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [favorited, setFavorited] = useState(false);
+  const [followed, setFollowed] = useState(false);
+  const [commentDraft, setCommentDraft] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -82,6 +92,67 @@ export default function ExplorerProjectDetailPage() {
     };
   }, [projectId]);
 
+  async function likeProject() {
+    if (!project) return;
+    const session = readAuthSession();
+    const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}/likes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session ? { Authorization: `${session.tokenType} ${session.accessToken}` } : {}),
+      },
+      body: JSON.stringify({ actorKey: session ? `user:${session.accessToken.slice(-18)}` : readAnonymousActorKey() }),
+    });
+    if (!response.ok) return;
+    const payload = await response.json() as { likesCount: number };
+    setProject((current) => current ? { ...current, likesCount: payload.likesCount } : current);
+  }
+
+  async function favoriteProject() {
+    if (!project) return;
+    const session = readAuthSession();
+    if (!session) return openAuthRequired();
+    const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}/favorites`, {
+      method: 'POST',
+      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+    });
+    if (!response.ok) return;
+    const payload = await response.json() as { favorited: boolean; favoritesCount: number };
+    setFavorited(payload.favorited);
+    setProject((current) => current ? { ...current, favoritesCount: payload.favoritesCount } : current);
+  }
+
+  async function followAuthor() {
+    if (!project?.author.id) return;
+    const session = readAuthSession();
+    if (!session) return openAuthRequired();
+    const response = await fetch(`${apiBaseUrl}/api/users/${project.author.id}/follow`, {
+      method: 'POST',
+      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+    });
+    if (!response.ok) return;
+    const payload = await response.json() as { following: boolean; followersCount: number };
+    setFollowed(payload.following);
+    setProject((current) => current ? { ...current, author: { ...current.author, followersCount: payload.followersCount } } : current);
+  }
+
+  async function postComment() {
+    if (!project || !commentDraft.trim()) return;
+    const session = readAuthSession();
+    const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}/comments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session ? { Authorization: `${session.tokenType} ${session.accessToken}` } : {}),
+      },
+      body: JSON.stringify({ body: commentDraft.trim() }),
+    });
+    if (!response.ok) return;
+    const updated = await response.json() as ExplorerProject;
+    setProject((current) => current ? { ...current, comments: updated.comments, commentsCount: updated.commentsCount } : current);
+    setCommentDraft('');
+  }
+
   return (
     <main className="project-detail-page min-h-screen bg-white text-[#0b1724]">
       <Navbar />
@@ -100,10 +171,10 @@ export default function ExplorerProjectDetailPage() {
                 <div className="min-w-0">
                   <a href={project.author.id ? `/profile/${project.author.id}` : '/explorer'} className="block truncate text-base font-black text-[#0b1724] transition hover:text-[#0f8f6b] sm:text-lg">{project.author.name}</a>
                   <div className="mt-1 flex flex-wrap items-center gap-3 text-xs font-semibold">
-                    <span className="text-[#0f8f6b]">{project.author.badgeLabel}</span>
-                    <button type="button" className="inline-flex items-center gap-1 text-[#334155] transition hover:text-[#0f8f6b]">
+                    <AuthorBadge label={project.author.badgeLabel} />
+                    <button type="button" onClick={() => void followAuthor()} className={`inline-flex items-center gap-1 text-[#334155] transition hover:text-[#0f8f6b] ${followed ? 'text-[#0f8f6b]' : ''}`}>
                       <FollowTinyIcon />
-                      Follow
+                      {followed ? 'Suivi' : 'Follow'}
                     </button>
                   </div>
                   {project.author.links.length > 0 ? (
@@ -123,11 +194,11 @@ export default function ExplorerProjectDetailPage() {
                   <DetailEyeIcon />
                   {formatCompact(project.viewsCount)}
                 </span>
-                <button type="button" className="inline-flex items-center gap-1.5 transition hover:text-[#0f8f6b]" aria-label="Aimer">
+                <button type="button" onClick={() => void likeProject()} className="inline-flex items-center gap-1.5 transition hover:text-[#0f8f6b]" aria-label="Aimer">
                   <DetailThumbIcon />
                   {formatCompact(project.likesCount)}
                 </button>
-                <button type="button" className="inline-flex items-center gap-1.5 transition hover:text-[#0f8f6b]" aria-label="Ajouter aux favoris">
+                <button type="button" onClick={() => void favoriteProject()} className={`inline-flex items-center gap-1.5 transition hover:text-[#0f8f6b] ${favorited ? 'text-[#0f8f6b]' : ''}`} aria-label="Ajouter aux favoris">
                   <DetailStarIcon />
                   {formatCompact(project.favoritesCount)}
                 </button>
@@ -145,7 +216,7 @@ export default function ExplorerProjectDetailPage() {
 
             <div className="mt-8 overflow-hidden bg-[#edf3f8]">
               {project.imageUrl ? (
-                <img src={mediaUrl(project.imageUrl)} alt="" className="max-h-[620px] w-full object-cover" />
+                <ProjectMedia project={project} className="max-h-[620px] w-full object-cover" />
               ) : (
                 <div className="grid min-h-[280px] place-items-center text-sm font-black uppercase tracking-[0.16em] text-[#64748b]">{project.category}</div>
               )}
@@ -155,12 +226,6 @@ export default function ExplorerProjectDetailPage() {
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0f8f6b]">#{project.category}</p>
               <h2 className="mt-3 text-3xl font-black leading-tight text-[#0b1724] sm:text-4xl">{project.title}</h2>
               <p className="mt-6 text-lg leading-8 text-[#334155]">{project.description || project.summary}</p>
-              <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm font-semibold text-[#64748b]">
-                <span>{formatCompact(project.viewsCount)} vues</span>
-                <span>{project.likesCount} likes</span>
-                <span>{project.favoritesCount} favoris</span>
-                <span>{project.commentsCount} commentaires</span>
-              </div>
             </section>
 
             <section className="mx-auto mt-12 grid max-w-5xl gap-8 lg:grid-cols-2">
@@ -204,6 +269,21 @@ export default function ExplorerProjectDetailPage() {
                 )) : (
                   <p className="py-4 text-sm text-[#64748b]">Aucun fichier public. Les fichiers proteges sont disponibles uniquement apres licence ou achat.</p>
                 )}
+              </div>
+            </section>
+
+            <section className="mx-auto mt-10 max-w-5xl">
+              <h2 className="border-b border-[#dbe4ee] pb-3 text-lg font-black text-[#0b1724]">Commentaires</h2>
+              <div className="mt-4 grid gap-3">
+                {project.comments.length > 0 ? project.comments.map((comment) => (
+                  <div key={comment.id} className="bg-[#f7fafc] px-3 py-2 text-sm leading-6 text-[#334155]">
+                    <strong className="text-[#0b1724]">{comment.authorName}</strong> {comment.body}
+                  </div>
+                )) : <p className="text-sm text-[#64748b]">Aucun commentaire pour le moment.</p>}
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_110px]">
+                <input value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} className="h-11 border border-[#dbe4ee] px-3 text-sm outline-none transition focus:border-[#0f8f6b]" placeholder="Ajouter un commentaire..." />
+                <button type="button" onClick={() => void postComment()} className="h-11 bg-[#102033] px-4 text-sm font-black text-white transition hover:bg-[#0f8f6b]">Publier</button>
               </div>
             </section>
           </>
@@ -256,6 +336,20 @@ function FollowTinyIcon() {
   );
 }
 
+function AuthorBadge({ label }: { label: string }) {
+  return (
+    <span className="rounded-full bg-[#eefbf6] px-1.5 py-0.5 text-[10px] font-black leading-none text-[#0f8f6b]">
+      {label}
+    </span>
+  );
+}
+
+function ProjectMedia({ project, className }: { project: ExplorerProject; className: string }) {
+  const src = project.imageUrl ? mediaUrl(project.imageUrl) : '';
+  const isVideo = project.mediaMimeType?.startsWith('video/') || project.mediaKind === 'video';
+  return isVideo ? <video src={src} className={className} controls playsInline /> : <img src={src} alt="" className={className} />;
+}
+
 function DetailEyeIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -285,7 +379,9 @@ function DetailStarIcon() {
 function DetailCommentIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z" />
+      <path d="M5 5h14v10H8l-3 3V5Z" />
+      <path d="M8 9h8" />
+      <path d="M8 12h5" />
     </svg>
   );
 }
@@ -345,4 +441,21 @@ function detailValue(record: Record<string, unknown> | undefined, key: string) {
 
 function mediaUrl(value: string) {
   return value.startsWith('/api/') ? `${apiBaseUrl}${value}` : value;
+}
+
+function readAnonymousActorKey() {
+  try {
+    const key = 'kendronics.explorer.actor';
+    const current = window.localStorage.getItem(key);
+    if (current) return current;
+    const next = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+    window.localStorage.setItem(key, next);
+    return next;
+  } catch {
+    return 'anonymous-reader';
+  }
+}
+
+function openAuthRequired() {
+  window.dispatchEvent(new CustomEvent('kendronics:open-auth-required', { detail: { panel: 'login', step: 'choice' } }));
 }

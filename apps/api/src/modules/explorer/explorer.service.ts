@@ -28,11 +28,12 @@ export class ExplorerService {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
         assets: {
-          where: { kind: 'cover', visibility: 'public' },
+          where: { kind: { in: ['cover', 'video', 'gallery'] }, visibility: 'public' },
           orderBy: { createdAt: 'asc' },
           take: 1,
-          select: { id: true },
+          select: { id: true, kind: true, mimeType: true },
         },
+        user: { select: { verificationLevel: true } },
       },
     });
 
@@ -80,9 +81,15 @@ export class ExplorerService {
     if (!project) throw new NotFoundException('Explorer project not found.');
 
     const publicDescription = project.user?.publicDescription ?? '';
+    await this.prisma.explorerProject.update({
+      where: { id: project.id },
+      data: { viewsCount: { increment: 1 } },
+    });
+    const explorerProject = toExplorerProject(project);
+    explorerProject.viewsCount += 1;
 
     return {
-      ...toExplorerProject(project),
+      ...explorerProject,
       technicalDetails: project.technicalDetails,
       documentation: project.documentation,
       publicAssets: project.assets,
@@ -127,6 +134,9 @@ export class ExplorerService {
     if (!user) throw new NotFoundException('Author profile not found.');
 
     const projects = await this.listUserProjects(user.id);
+    const likesCount = projects.reduce((total, project) => total + project.likesCount, 0);
+    const forksCount = projects.reduce((total, project) => total + project.forksCount, 0);
+    const commentsCount = projects.reduce((total, project) => total + project.commentsCount, 0);
     return {
       id: user.id,
       name: user.fullName || 'Createur Kendronics',
@@ -139,6 +149,9 @@ export class ExplorerService {
       followersCount: user._count.followers,
       followingCount: user._count.following,
       projectsCount: user._count.explorerProjects,
+      likesCount,
+      forksCount,
+      points: projects.length * 10 + likesCount * 2 + commentsCount * 3 + forksCount * 5,
       links: extractPublicProfileLinks(user.publicDescription ?? '', user.profileDetails),
       projects,
     };
@@ -286,7 +299,8 @@ export class ExplorerService {
     const errors: string[] = [];
     if (project.title.length < 4 || project.title === 'Projet sans titre') errors.push('Ajoutez un titre explicite.');
     if (project.summary.length < 24 || project.summary === 'Brouillon en cours de preparation.') errors.push('Ajoutez un resume public.');
-    if (!project.imageUrl && !project.assets.some((asset) => asset.kind === 'cover')) errors.push('Ajoutez une image de couverture.');
+    const hasPublicMedia = project.assets.some((asset) => asset.visibility === 'public' && ['cover', 'video', 'gallery'].includes(asset.kind));
+    if (!project.imageUrl && !hasPublicMedia) errors.push('Ajoutez une image ou une video de presentation.');
 
     if (project.projectType === 'paid') {
       if (!project.description || project.description.trim().length < 80) errors.push('La documentation principale doit contenir au moins 80 caracteres.');
@@ -326,11 +340,12 @@ export class ExplorerService {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
         assets: {
-          where: { kind: 'cover', visibility: 'public' },
+          where: { kind: { in: ['cover', 'video', 'gallery'] }, visibility: 'public' },
           orderBy: { createdAt: 'asc' },
           take: 1,
-          select: { id: true },
+          select: { id: true, kind: true, mimeType: true },
         },
+        user: { select: { verificationLevel: true } },
       },
     });
     return projects.map(toExplorerProject);
@@ -354,11 +369,12 @@ export class ExplorerService {
             _count: { select: { favorites: true } },
             comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
             assets: {
-              where: { kind: 'cover', visibility: 'public' },
+              where: { kind: { in: ['cover', 'video', 'gallery'] }, visibility: 'public' },
               orderBy: { createdAt: 'asc' },
               take: 1,
-              select: { id: true },
+              select: { id: true, kind: true, mimeType: true },
             },
+            user: { select: { verificationLevel: true } },
           },
         },
       },
@@ -383,11 +399,12 @@ export class ExplorerService {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
         assets: {
-          where: { kind: 'cover', visibility: 'public' },
+          where: { kind: { in: ['cover', 'video', 'gallery'] }, visibility: 'public' },
           orderBy: { createdAt: 'asc' },
           take: 1,
-          select: { id: true },
+          select: { id: true, kind: true, mimeType: true },
         },
+        user: { select: { verificationLevel: true } },
       },
     });
     return projects.map(toExplorerProject);
@@ -647,20 +664,25 @@ export class ExplorerService {
 
 type ExplorerProjectRecord = Prisma.ExplorerProjectGetPayload<{
   include: { _count: { select: { favorites: true } }; comments: true };
-}> & { assets?: Array<{ id: string }> };
+}> & { assets?: Array<{ id: string; kind?: string; mimeType?: string }>; user?: { verificationLevel: number } | null };
 
 function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
+  const previewAsset = project.assets?.find((asset) => ['cover', 'video', 'gallery'].includes(asset.kind ?? ''));
   return {
     id: project.id,
     userId: project.userId ?? undefined,
     authorName: project.authorName,
     authorAvatarUrl: project.authorAvatarUrl ?? undefined,
+    authorBadgeLabel: accountBadgeLabel(project.user?.verificationLevel ?? 0),
+    authorVerificationLevel: project.user?.verificationLevel ?? 0,
     title: project.title,
     category: project.category,
     summary: project.summary,
     description: project.description ?? undefined,
     tags: project.tags,
-    imageUrl: project.imageUrl ?? publicCoverUrl(project.id, project.assets?.[0]?.id),
+    imageUrl: publicCoverUrl(project.id, previewAsset?.id) ?? safeStoredImageUrl(project.imageUrl),
+    mediaKind: previewAsset?.kind,
+    mediaMimeType: previewAsset?.mimeType,
     attachmentName: project.attachmentName ?? undefined,
     attachmentType: project.attachmentType ?? undefined,
     repositoryUrl: project.repositoryUrl ?? undefined,
@@ -705,11 +727,18 @@ function accountBadgeLabel(level: number): string {
   if (level >= 3) return 'Industriel certifie';
   if (level >= 2) return 'Professionnel certifie';
   if (level >= 1) return 'Compte verifie';
-  return 'Createur hardware';
+  return 'Niveau decouverte';
 }
 
 function publicCoverUrl(projectId: string, assetId: string | undefined): string | undefined {
   return assetId ? `/api/explorer/projects/${projectId}/assets/${assetId}/public` : undefined;
+}
+
+function safeStoredImageUrl(value: string | null): string | undefined {
+  if (!value) return undefined;
+  if (value.startsWith('blob:')) return undefined;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i.test(value)) return undefined;
+  return value;
 }
 
 function extractPublicProfileLinks(description: string, profileDetails: unknown) {

@@ -211,7 +211,7 @@ export default function NewProjectPage() {
     const missing: string[] = [];
     if (form.title.trim().length < 4) missing.push('Titre du projet');
     if (form.summary.trim().length < 24) missing.push('Resume public');
-    if (!form.coverPreviewUrl && !assets.some((asset) => asset.kind === 'cover')) missing.push('Image de couverture');
+    if (!form.coverPreviewUrl && !form.videoPreviewUrl && !assets.some((asset) => ['cover', 'video', 'gallery'].includes(asset.kind))) missing.push('Image ou video de presentation');
     if (projectType === 'paid') {
       if (form.description.trim().length < 80) missing.push('Presentation detaillee');
       if (!form.dimensions.trim()) missing.push('Dimensions');

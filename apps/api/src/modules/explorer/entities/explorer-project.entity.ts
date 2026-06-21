@@ -10,12 +10,16 @@ export type ExplorerProject = {
   userId?: string;
   authorName: string;
   authorAvatarUrl?: string;
+  authorBadgeLabel?: string;
+  authorVerificationLevel?: number;
   title: string;
   category: string;
   summary: string;
   description?: string;
   tags: string[];
   imageUrl?: string;
+  mediaKind?: string;
+  mediaMimeType?: string;
   attachmentName?: string;
   attachmentType?: string;
   repositoryUrl?: string;
