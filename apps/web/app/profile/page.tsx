@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type MouseEvent } from 'react';
 import { Footer } from '../../components/layout/Footer';
 import { InternationalPhoneInput } from '../../components/account/InternationalPhoneInput';
 import { Navbar } from '../../components/layout/Navbar';
@@ -13,6 +13,7 @@ import { purgeLegacySensitiveStorage, readScopedLocalStorage, removeScopedLocalS
 
 const profileStorageKey = 'kendronics.customer.profile';
 const avatarStorageKey = 'kendronics.customer.avatar';
+const profileBannerStorageKey = 'kendronics.customer.profile-banner';
 const savedShippingAddressesKey = 'kendronics.customer.shipping-addresses';
 const savedBillingAddressesKey = 'kendronics.customer.billing-addresses';
 const siteGreen = '#0f8f6b';
@@ -248,7 +249,6 @@ type SidebarItem = {
 
 type PublicSocialProfile = {
   userId: string;
-  promoCode: string;
   description: string;
   followingCount: number;
   followersCount: number;
@@ -260,6 +260,9 @@ type PublicSocialProfile = {
 
 type ProfileExplorerProject = {
   id: string;
+  userId?: string;
+  authorName?: string;
+  authorAvatarUrl?: string;
   title: string;
   category: string;
   summary: string;
@@ -455,7 +458,7 @@ export default function ProfilePage() {
               <>
                 <div className="grid min-w-0 gap-4">
                   <div className="lg:hidden">
-                    <LivePromoFlash />
+                    <LiveOfferFlash />
                   </div>
                   <ProductQuickGrid />
                   <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -2063,11 +2066,8 @@ function SupportHubSection({ orders, dataStatus }: { orders: ProfileOrder[]; dat
 
 function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: ProfileForm; userId: string; avatarDataUrl: string }) {
   const displayName = profile.name || profile.profileDetails?.firstName || emailName(profile.email) || 'Client Kendronics';
-  const fallbackCode = makeDefaultPromoCode(userId, profile.email || displayName);
-  const [promoCode, setPromoCode] = useState(fallbackCode);
-  const [draftPromoCode, setDraftPromoCode] = useState(fallbackCode);
-  const [promoStatus, setPromoStatus] = useState('');
-  const [isPromoEditorOpen, setIsPromoEditorOpen] = useState(false);
+  const defaultBannerUrl = '/images/explorer-hero-community.webp';
+  const [bannerDataUrl, setBannerDataUrl] = useState(defaultBannerUrl);
   const [profileDescription, setProfileDescription] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
   const [isDescriptionEditing, setIsDescriptionEditing] = useState(false);
@@ -2075,7 +2075,6 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [socialProfile, setSocialProfile] = useState<PublicSocialProfile>({
     userId,
-    promoCode: fallbackCode,
     description: '',
     followingCount: 0,
     followersCount: 0,
@@ -2090,6 +2089,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
   useEffect(() => {
     setIsCreateProjectOpen(new URLSearchParams(window.location.search).get('create') === '1');
+    setBannerDataUrl(readScopedLocalStorage(profileBannerStorageKey) || defaultBannerUrl);
     let cancelled = false;
 
     async function loadSocialProfile() {
@@ -2111,8 +2111,6 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         const nextFavorites = await favoritesResponse.json() as ProfileExplorerProject[];
         if (cancelled) return;
         setSocialProfile(nextProfile);
-        setPromoCode(nextProfile.promoCode);
-        setDraftPromoCode(nextProfile.promoCode);
         setProfileDescription(nextProfile.description);
         setDraftDescription(nextProfile.description);
         setProjects(nextProjects);
@@ -2127,55 +2125,23 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
     return () => {
       cancelled = true;
     };
-  }, [fallbackCode, userId]);
+  }, [defaultBannerUrl, userId]);
 
   const renderedDescription = useMemo(() => linkifyText(profileDescription), [profileDescription]);
   const descriptionChanged = draftDescription.trim() !== profileDescription;
   const profileRating = profileRatingFromPoints(socialProfile.points);
 
-  async function savePromoCode() {
-    const normalized = normalizePromoCode(draftPromoCode);
-    if (normalized.length < 4) {
-      setPromoStatus('Le code doit contenir au moins 4 caracteres.');
-      return;
-    }
-
-    const session = await readFreshAuthSession();
-    if (!session) {
-      setPromoStatus('Session expiree. Reconnectez-vous.');
-      return;
-    }
-    const response = await fetch(`${getApiBaseUrl()}/api/users/me/public-profile`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `${session.tokenType} ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ promoCode: normalized }),
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({})) as { message?: string | string[] };
-      setPromoStatus(Array.isArray(error.message) ? error.message.join(' ') : error.message || 'Impossible de modifier le code promo.');
-      return;
-    }
-    const nextProfile = await response.json() as PublicSocialProfile;
-    setSocialProfile(nextProfile);
-    setPromoCode(nextProfile.promoCode);
-    setDraftPromoCode(nextProfile.promoCode);
-    setPromoStatus('Code promo mis a jour.');
-    setIsPromoEditorOpen(false);
-  }
-
-  function openPromoEditor() {
-    setDraftPromoCode(promoCode);
-    setPromoStatus('');
-    setIsPromoEditorOpen(true);
-  }
-
-  function cancelPromoEditor() {
-    setDraftPromoCode(promoCode);
-    setPromoStatus('');
-    setIsPromoEditorOpen(false);
+  function updateBanner(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = typeof reader.result === 'string' ? reader.result : '';
+      if (!value) return;
+      setBannerDataUrl(value);
+      writeScopedLocalStorage(profileBannerStorageKey, value);
+    };
+    reader.readAsDataURL(file);
   }
 
   async function saveDescription() {
@@ -2205,40 +2171,45 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
   return (
     <section className="min-h-[690px] bg-[#f5f7fb] text-[#102033]">
-      <div className="overflow-hidden bg-white shadow-sm ring-1 ring-[#e0e7ef]">
-        <div className="relative h-[136px] overflow-hidden bg-[#102033] sm:h-[190px]">
-          <img src="/images/explorer-hero-community.webp" alt="" className="h-full w-full object-cover object-center opacity-95" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#07172a]/88 via-[#07172a]/58 to-[#0f8f6b]/26" aria-hidden="true" />
-          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#07172a]/70 to-transparent" aria-hidden="true" />
-          <div className="absolute bottom-4 left-4 right-4 max-w-[35rem] sm:bottom-6 sm:left-8">
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#b9f3df]">Profil public</p>
-            <p className="mt-1 text-sm font-semibold leading-6 text-white/90 sm:text-base">
-              Projets, favoris et réputation technique de la communauté Kendronics.
-            </p>
+      <div className="bg-white">
+        <div className="relative aspect-[16/5] max-h-[220px] min-h-[118px] overflow-hidden bg-[#e8eef5] sm:aspect-[6/1]">
+          <img src={bannerDataUrl} alt="" className="h-full w-full object-cover object-center" />
+          <div className="absolute bottom-3 right-3 flex items-center gap-2">
+            <label className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-white/90 text-[#102033] shadow-[0_4px_16px_rgba(15,35,52,0.12)] backdrop-blur transition hover:bg-white hover:text-[#0f8f6b]" aria-label="Modifier la photo de banniere">
+              <CameraIcon />
+              <input type="file" accept="image/*" onChange={updateBanner} className="sr-only" />
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                setDraftDescription(profileDescription);
+                setIsDescriptionEditing(true);
+              }}
+              className="grid h-8 w-8 place-items-center rounded-full bg-white/90 text-[#102033] shadow-[0_4px_16px_rgba(15,35,52,0.12)] backdrop-blur transition hover:bg-white hover:text-[#0f8f6b]"
+              aria-label="Modifier la description du profil"
+            >
+              <PencilIcon compact />
+            </button>
           </div>
         </div>
 
         <div className="px-4 pb-7 pt-0 sm:px-8">
-        <div className="-mt-11 grid grid-cols-[5.75rem_minmax(0,1fr)] items-end gap-3 sm:-mt-16 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4 lg:gap-6">
-          <div className="grid h-[88px] w-[88px] place-items-center overflow-hidden rounded-full border-4 border-white bg-[#eaf3f7] shadow-[0_16px_40px_rgba(15,35,52,0.16)] sm:h-32 sm:w-32">
+        <div className="-mt-8 grid grid-cols-[5.75rem_minmax(0,1fr)] items-end gap-3 sm:-mt-10 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4 lg:gap-6">
+          <div className="grid h-[88px] w-[88px] place-items-center overflow-hidden rounded-full bg-[#eaf3f7] sm:h-32 sm:w-32">
             <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full rounded-full object-cover" />
           </div>
 
-          <div className="min-w-0 max-w-[42rem] pb-1 pt-12 sm:pt-16">
+          <div className="min-w-0 max-w-[42rem] pb-1 pt-9 sm:pt-11">
             <h1 className="flex w-full min-w-0 flex-nowrap items-center gap-2 text-xl font-black leading-tight text-[#1f2f43] sm:inline-flex sm:w-auto sm:max-w-full sm:flex-wrap sm:break-words sm:text-2xl">
               <span className="min-w-0 truncate sm:overflow-visible sm:whitespace-normal">{displayName}</span>
               <AccountTypeBadge profile={profile} />
             </h1>
-            <button type="button" onClick={openPromoEditor} className="mt-2 block max-w-full truncate whitespace-nowrap text-left text-[11px] leading-4 text-[#64748b] transition hover:text-[#0f8f6b] sm:mt-4 sm:text-sm" aria-label="Modifier le code promo">
-              Code promo: <span className="font-semibold text-[#102033]">{promoCode}</span>
-            </button>
             <div className="mt-4 hidden max-w-[34rem] grid-cols-4 text-center sm:grid sm:divide-x sm:divide-[#dbe4ee]">
               <ProfilePublicMetric label="Suivi" value={String(socialProfile.followingCount)} />
               <ProfilePublicMetric label="Abonnés" value={String(socialProfile.followersCount)} />
               <ProfilePublicMetric label="Likes" value={String(socialProfile.likesCount)} />
               <ProfileRatingMetric rating={profileRating} />
             </div>
-            {promoStatus ? <p className={`mt-2 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
           </div>
         </div>
         <div className="mt-4 grid grid-cols-4 text-center sm:hidden">
@@ -2249,49 +2220,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         </div>
         {socialStatus === 'error' ? <p className="mt-4 text-sm font-semibold text-red-600">Le profil public n'a pas pu etre charge. Reessayez apres reconnexion.</p> : null}
 
-        <div className="mt-6 rounded-[8px] border border-[#dbe4ee] bg-[#f8fbfd] p-4 shadow-[0_12px_30px_rgba(15,35,52,0.055)] sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#0f8f6b]">Bio publique</p>
-              <h2 className="mt-1 text-sm font-black text-[#102033]">Description du profil</h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setDraftDescription(profileDescription);
-                setIsDescriptionEditing(true);
-              }}
-              className="grid h-7 w-7 place-items-center text-[#0f8f6b] transition hover:text-[#0b7558]"
-              aria-label="Modifier la description du profil"
-            >
-              <PencilIcon />
-            </button>
-          </div>
-          {isDescriptionEditing ? (
-            <textarea
-              value={draftDescription}
-              onChange={(event) => setDraftDescription(event.target.value)}
-              className="mt-4 min-h-[104px] w-full resize-y rounded-[6px] border border-[#dbe4ee] bg-white px-3 py-2 text-sm font-medium leading-6 text-[#102033] outline-none focus:border-[#0f8f6b]"
-              placeholder="Presentez votre profil, vos projets, votre entreprise ou ajoutez vos liens LinkedIn, YouTube, GitHub..."
-              maxLength={420}
-              autoFocus
-            />
-          ) : profileDescription ? (
-            <div className="mt-3 text-sm leading-6 text-[#4f6175]">{renderedDescription}</div>
-          ) : (
-            <p className="mt-3 text-sm leading-6 text-[#64748b]">Ajoutez une présentation courte pour expliquer votre expertise, vos projets et vos liens publics.</p>
-          )}
-          {isDescriptionEditing ? (
-            <div className="flex flex-wrap justify-end gap-2">
-              <button type="button" onClick={cancelDescriptionEdit} className="h-10 border border-[#dbe4ee] bg-white px-4 text-sm font-black text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
-                Annuler
-              </button>
-              <button type="button" onClick={saveDescription} disabled={!descriptionChanged} className="h-10 bg-[#102033] px-4 text-sm font-black text-white transition hover:bg-[#0f8f6b] disabled:cursor-not-allowed disabled:opacity-40">
-                Enregistrer
-              </button>
-            </div>
-          ) : null}
-        </div>
+        {profileDescription ? <div className="mt-5 max-w-[46rem] text-sm leading-6 text-[#4f6175]">{renderedDescription}</div> : null}
       </div>
       </div>
 
@@ -2345,9 +2274,9 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         ) : null}
 
         {(activeTab === 'projects' ? projects : favorites).length > 0 ? (
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div className="mt-5 grid gap-x-6 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
             {(activeTab === 'projects' ? projects : favorites).map((project) => (
-              <ProfileProjectPreviewCard key={project.id} project={project} />
+              <ProfileProjectPreviewCard key={project.id} project={project} showAuthor={activeTab === 'favorites'} />
             ))}
           </div>
         ) : (
@@ -2360,30 +2289,26 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
           />
         )}
       </div>
-      {isPromoEditorOpen ? (
+      {isDescriptionEditing ? (
         <div className="fixed inset-0 z-[80] grid place-items-center bg-[#102033]/40 px-4">
-          <div className="w-full max-w-sm bg-white p-5 text-[#102033] ring-1 ring-[#dbe4ee]">
-            <h2 className="text-lg font-black">Modifier le code promo</h2>
-            <p className="mt-2 text-sm leading-6 text-[#64748b]">Choisissez un code unique, lisible et facile a partager.</p>
-            <label className="mt-4 grid gap-2 text-sm font-semibold" htmlFor="profile-promo-code-modal">
-              Code promo
-              <input
-                id="profile-promo-code-modal"
-                value={draftPromoCode}
-                onChange={(event) => {
-                  setDraftPromoCode(normalizePromoCode(event.target.value));
-                  setPromoStatus('');
-                }}
-                className="h-11 min-w-0 border border-[#dbe4ee] bg-white px-3 text-sm font-semibold text-[#102033] outline-none focus:border-[#0f8f6b]"
-                autoFocus
-              />
-            </label>
-            {promoStatus ? <p className={`mt-3 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              <button type="button" onClick={cancelPromoEditor} className="h-10 border border-[#dbe4ee] bg-white text-sm font-black text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
+          <div className="w-full max-w-lg rounded-[8px] bg-white p-5 text-[#102033] shadow-[0_24px_70px_rgba(7,23,42,0.22)] ring-1 ring-[#dbe4ee]">
+            <div className="flex items-start justify-between gap-4">
+              <h2 className="text-lg font-black">Modifier la description</h2>
+              <button type="button" onClick={cancelDescriptionEdit} className="grid h-8 w-8 place-items-center rounded-full text-xl text-[#64748b] transition hover:bg-[#f1f5f9] hover:text-[#102033]" aria-label="Fermer">×</button>
+            </div>
+            <textarea
+              value={draftDescription}
+              onChange={(event) => setDraftDescription(event.target.value)}
+              className="mt-4 min-h-[150px] w-full resize-y rounded-[6px] border border-[#dbe4ee] bg-white px-3 py-2 text-sm font-medium leading-6 text-[#102033] outline-none focus:border-[#0f8f6b]"
+              placeholder="Presentez votre profil, vos projets, votre entreprise ou ajoutez vos liens LinkedIn, YouTube, GitHub..."
+              maxLength={420}
+              autoFocus
+            />
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={cancelDescriptionEdit} className="h-10 rounded-[6px] border border-[#dbe4ee] bg-white px-4 text-sm font-black text-[#102033] transition hover:border-[#0f8f6b] hover:text-[#0f8f6b]">
                 Annuler
               </button>
-              <button type="button" onClick={savePromoCode} className="h-10 bg-[#0f8f6b] text-sm font-black text-white transition hover:bg-[#0b7558]">
+              <button type="button" onClick={saveDescription} disabled={!descriptionChanged} className="h-10 rounded-[6px] bg-[#102033] px-4 text-sm font-black text-white transition hover:bg-[#0f8f6b] disabled:cursor-not-allowed disabled:opacity-40">
                 Enregistrer
               </button>
             </div>
@@ -2416,27 +2341,53 @@ function ProfileRatingMetric({ rating }: { rating: number }) {
   );
 }
 
-function ProfileProjectPreviewCard({ project }: { project: ProfileExplorerProject }) {
+function ProfileProjectPreviewCard({ project, showAuthor }: { project: ProfileExplorerProject; showAuthor?: boolean }) {
+  const [following, setFollowing] = useState(false);
+
+  async function followAuthor(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!project.userId) return;
+    const session = await readFreshAuthSession();
+    if (!session) {
+      window.dispatchEvent(new CustomEvent('kendronics:open-auth-required', { detail: { panel: 'login', step: 'choice' } }));
+      return;
+    }
+    const response = await fetch(`${getApiBaseUrl()}/api/users/${project.userId}/follow`, {
+      method: 'POST',
+      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+    });
+    if (!response.ok) return;
+    const payload = await response.json() as { following: boolean };
+    setFollowing(payload.following);
+  }
+
   return (
-    <a href={`/explorer#project-${project.id}`} className="group grid overflow-hidden rounded-[8px] border border-[#dbe4ee] bg-white shadow-[0_10px_26px_rgba(15,35,52,0.055)] transition hover:-translate-y-0.5 hover:border-[#0f8f6b] hover:shadow-[0_18px_40px_rgba(15,35,52,0.10)]">
-      <div className="aspect-[1.8] overflow-hidden bg-[#edf3f8]">
+    <a href={`/explorer#project-${project.id}`} className="group block min-w-0 bg-transparent">
+      <div className="aspect-[1.28] overflow-hidden bg-[#edf3f8]">
         <img src={project.imageUrl || '/images/quote-product-standard-pcb.png'} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]" />
       </div>
-      <div className="grid min-h-[150px] p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#0f8f6b]">{project.category}</p>
-            <h3 className="mt-1 truncate text-base font-black text-[#102033]">{project.title}</h3>
-          </div>
-          <span className="shrink-0 text-xs text-[#64748b]">{formatProfileProjectDate(project.createdAt)}</span>
-        </div>
-        <p className="mt-3 line-clamp-2 text-sm leading-6 text-[#64748b]">{project.summary}</p>
-        <div className="mt-auto flex flex-wrap gap-3 pt-4 text-xs font-semibold text-[#64748b]">
-          <span>{project.likesCount} likes</span>
-          <span>{project.commentsCount} commentaires</span>
-          <span>{project.forksCount} forks</span>
-        </div>
+      <h3 className="mt-3 truncate text-base font-medium text-[#0b1724]">{project.title}</h3>
+      {project.summary ? <p className="mt-1 line-clamp-1 text-xs leading-5 text-[#64748b]">{project.summary}</p> : null}
+      <div className="mt-2 flex items-center gap-4 text-sm text-[#91a0af]">
+        <span className="inline-flex items-center gap-1"><ProfileViewIcon />{formatCompactProfileMetric(project.likesCount * 18 + project.commentsCount * 22 + 120)}</span>
+        <span className="inline-flex items-center gap-1"><ProfileThumbIcon />{project.likesCount}</span>
+        <span className="inline-flex items-center gap-1"><ProfileStarMiniIcon />0</span>
+        <span className="inline-flex items-center gap-1"><ProfileCommentMiniIcon />{project.commentsCount}</span>
       </div>
+      {showAuthor ? (
+        <div className="mt-4 flex items-center gap-2 text-sm text-[#102033]">
+          <span className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-[#102033] text-[10px] font-black text-white">
+            {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : (project.authorName || 'K').slice(0, 1).toUpperCase()}
+          </span>
+          <span className="min-w-0 truncate">{project.authorName || 'Kendronics Lab'}</span>
+          {project.userId ? (
+            <button type="button" onClick={(event) => void followAuthor(event)} className={`ml-1 grid h-6 w-6 shrink-0 place-items-center text-lg leading-none transition ${following ? 'text-[#0f8f6b]' : 'text-[#94a3b8] hover:text-[#0f8f6b]'}`} aria-label={following ? 'Auteur suivi' : 'Suivre cet auteur'}>
+              {following ? <FollowedMiniIcon /> : '+'}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </a>
   );
 }
@@ -2485,6 +2436,15 @@ function RatingStarIcon({ filled }: { filled: boolean }) {
   );
 }
 
+function CameraIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6.5 7.5 8.2 5h7.6l1.7 2.5H20a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9.5a2 2 0 0 1 2-2h2.5Z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </svg>
+  );
+}
+
 function profileRatingFromPoints(points: number): number {
   if (!Number.isFinite(points) || points <= 0) return 0;
   return Math.min(5, Math.round((3.6 + Math.log10(points + 1) * 0.7) * 10) / 10);
@@ -2494,17 +2454,9 @@ function formatProfileRating(rating: number): string {
   return rating.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
-function formatProfileProjectDate(value: string): string {
-  try {
-    return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short' }).format(new Date(value));
-  } catch {
-    return '';
-  }
-}
-
-function PencilIcon() {
+function PencilIcon({ compact = false }: { compact?: boolean }) {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={compact ? 'h-4 w-4' : 'h-5 w-5'} fill="currentColor" aria-hidden="true">
       <path d="M4 17.25V21h3.75L18.8 9.95l-3.75-3.75L4 17.25Zm17.7-10.2a1 1 0 0 0 0-1.42l-2.33-2.33a1 1 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" />
     </svg>
   );
@@ -2512,11 +2464,59 @@ function PencilIcon() {
 
 function ProjectTabIcon() {
   return (
-    <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 4h12v12H4z" />
-      <path d="M7 7h6M7 10h4M7 13h5" />
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="5" y="5" width="14" height="14" rx="2" />
+      <path d="M9 9h6v6H9z" />
+      <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" />
     </svg>
   );
+}
+
+function ProfileViewIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2.5 12s3.5-5.5 9.5-5.5S21.5 12 21.5 12s-3.5 5.5-9.5 5.5S2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="2.3" />
+    </svg>
+  );
+}
+
+function ProfileThumbIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 10v10" />
+      <path d="M7 10 11 3a2 2 0 0 1 3 2l-1 4h5a2 2 0 0 1 2 2.3l-1.1 6.4A2 2 0 0 1 16.9 20H7" />
+      <path d="M3 10h4v10H3z" />
+    </svg>
+  );
+}
+
+function ProfileStarMiniIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z" />
+    </svg>
+  );
+}
+
+function ProfileCommentMiniIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 5h14v10H8l-3 3V5Z" />
+    </svg>
+  );
+}
+
+function FollowedMiniIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m5 12 4 4L19 6" />
+    </svg>
+  );
+}
+
+function formatCompactProfileMetric(value: number) {
+  return new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
 }
 
 function PaidProjectIcon() {
@@ -2562,16 +2562,6 @@ function HubMetric({ label, value }: { label: string; value: string }) {
       <p className="mt-2 text-2xl font-black text-[#102033]">{value}</p>
     </div>
   );
-}
-
-function normalizePromoCode(value: string) {
-  return value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 18);
-}
-
-function makeDefaultPromoCode(userId: string, seed: string) {
-  const base = normalizePromoCode(seed || userId).slice(0, 10) || 'CLIENT';
-  const suffix = normalizePromoCode(userId).slice(-4) || '0000';
-  return `${base}${suffix}`.slice(0, 18);
 }
 
 function linkifyText(text: string) {
@@ -4226,7 +4216,7 @@ function ProductQuickGrid() {
           ))}
         </div>
       </section>
-      <LivePromoFlash />
+      <LiveOfferFlash />
     </div>
   );
 }
@@ -4256,15 +4246,15 @@ function shouldShowProfileRightRail(view: ProfileView): boolean {
 function ProfileRightRail() {
   return (
     <div className="hidden min-w-0 space-y-4 lg:block">
-      <LivePromoFlash />
+      <LiveOfferFlash />
       <DiscoverNewsRail />
     </div>
   );
 }
 
-function LivePromoFlash() {
+function LiveOfferFlash() {
   return (
-    <aside className="grid min-h-[154px] overflow-hidden bg-white shadow-sm ring-1 ring-[#dbe4ee]" aria-label="Promotions Kendronics">
+    <aside className="grid min-h-[154px] overflow-hidden bg-white shadow-sm ring-1 ring-[#dbe4ee]" aria-label="Offres Kendronics">
       <a href="/quote" className="relative min-h-[76px] overflow-hidden bg-[#07143a] px-3 py-3 text-white">
         <img src="/images/quote-product-assembly.png" alt="" className="absolute -right-4 bottom-0 h-[88px] w-[138px] object-cover" />
         <span className="relative z-10 block text-[16px] leading-5">Assemblage PCB pour 1-20 pieces</span>
