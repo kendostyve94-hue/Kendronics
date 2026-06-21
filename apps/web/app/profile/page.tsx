@@ -2131,6 +2131,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
   const renderedDescription = useMemo(() => linkifyText(profileDescription), [profileDescription]);
   const descriptionChanged = draftDescription.trim() !== profileDescription;
+  const profileRating = profileRatingFromPoints(socialProfile.points);
 
   async function savePromoCode() {
     const normalized = normalizePromoCode(draftPromoCode);
@@ -2204,13 +2205,25 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
   return (
     <section className="min-h-[690px] bg-[#f5f7fb] text-[#102033]">
-      <div className="bg-white px-4 pb-7 pt-6 sm:px-8">
-        <div className="grid grid-cols-[5.75rem_minmax(0,1fr)] items-start gap-3 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4 lg:gap-6">
-          <div className="grid h-[88px] w-[88px] place-items-center overflow-hidden rounded-full bg-[#eaf3f7] sm:h-32 sm:w-32">
+      <div className="overflow-hidden bg-white shadow-sm ring-1 ring-[#e0e7ef]">
+        <div className="relative h-[136px] overflow-hidden bg-[#102033] sm:h-[190px]">
+          <img src="/images/explorer-hero-community.webp" alt="" className="h-full w-full object-cover object-center" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#07172a]/80 via-[#07172a]/38 to-[#0f8f6b]/20" aria-hidden="true" />
+          <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-8">
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#b9f3df]">Profil public</p>
+            <p className="mt-1 max-w-[34rem] text-sm font-semibold leading-6 text-white/92 sm:text-base">
+              Projets, favoris et reputation technique de la communaute Kendronics.
+            </p>
+          </div>
+        </div>
+
+        <div className="px-4 pb-7 pt-0 sm:px-8">
+        <div className="-mt-11 grid grid-cols-[5.75rem_minmax(0,1fr)] items-end gap-3 sm:-mt-16 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4 lg:gap-6">
+          <div className="grid h-[88px] w-[88px] place-items-center overflow-hidden rounded-full border-4 border-white bg-[#eaf3f7] shadow-[0_16px_40px_rgba(15,35,52,0.16)] sm:h-32 sm:w-32">
             <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full rounded-full object-cover" />
           </div>
 
-          <div className="min-w-0 max-w-[42rem]">
+          <div className="min-w-0 max-w-[42rem] pb-1 pt-12 sm:pt-16">
             <h1 className="flex w-full min-w-0 flex-nowrap items-center gap-2 text-xl font-black leading-tight text-[#1f2f43] sm:inline-flex sm:w-auto sm:max-w-full sm:flex-wrap sm:break-words sm:text-2xl">
               <span className="min-w-0 truncate sm:overflow-visible sm:whitespace-normal">{displayName}</span>
               <AccountTypeBadge profile={profile} />
@@ -2222,7 +2235,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
               <ProfilePublicMetric label="Suivi" value={String(socialProfile.followingCount)} />
               <ProfilePublicMetric label="Abonnés" value={String(socialProfile.followersCount)} />
               <ProfilePublicMetric label="Likes" value={String(socialProfile.likesCount)} />
-              <ProfilePublicMetric label="Points" value={String(socialProfile.points)} />
+              <ProfileRatingMetric rating={profileRating} />
             </div>
             {promoStatus ? <p className={`mt-2 text-xs font-semibold ${promoStatus.includes('deja') || promoStatus.includes('moins') ? 'text-red-600' : 'text-[#0f8f6b]'}`}>{promoStatus}</p> : null}
           </div>
@@ -2231,7 +2244,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
           <ProfilePublicMetric label="Suivi" value={String(socialProfile.followingCount)} />
           <ProfilePublicMetric label="Abonnés" value={String(socialProfile.followersCount)} />
           <ProfilePublicMetric label="Likes" value={String(socialProfile.likesCount)} />
-          <ProfilePublicMetric label="Points" value={String(socialProfile.points)} />
+          <ProfileRatingMetric rating={profileRating} />
         </div>
         {socialStatus === 'error' ? <p className="mt-4 text-sm font-semibold text-red-600">Le profil public n'a pas pu etre charge. Reessayez apres reconnexion.</p> : null}
 
@@ -2273,6 +2286,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
             </div>
           ) : null}
         </div>
+      </div>
       </div>
 
       <div className="mt-4 bg-white px-4 py-5 sm:px-8">
@@ -2401,6 +2415,36 @@ function ProfilePublicMetric({ label, value }: { label: string; value: string })
       <p className="mt-1 break-words text-[11px] leading-4 text-[#7c8795] sm:mt-2 sm:text-sm">{label}</p>
     </div>
   );
+}
+
+function ProfileRatingMetric({ rating }: { rating: number }) {
+  return (
+    <div className="min-w-0 px-2 sm:px-3" aria-label={`Evaluation ${rating.toFixed(1)} sur 5`}>
+      <p className="text-lg font-black text-[#1f2f43] sm:text-xl">{formatProfileRating(rating)}</p>
+      <div className="mt-1 flex justify-center gap-0.5 text-[#0f8f6b] sm:mt-2">
+        {[0, 1, 2, 3, 4].map((index) => (
+          <RatingStarIcon key={index} filled={rating >= index + 0.75} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RatingStarIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
+    </svg>
+  );
+}
+
+function profileRatingFromPoints(points: number): number {
+  if (!Number.isFinite(points) || points <= 0) return 0;
+  return Math.min(5, Math.round((3.6 + Math.log10(points + 1) * 0.7) * 10) / 10);
+}
+
+function formatProfileRating(rating: number): string {
+  return rating.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
 function PencilIcon() {
