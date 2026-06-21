@@ -181,7 +181,6 @@ function mobileProfileMenuGroups(unreadNotifications: number): MobileProfileMenu
         { label: 'Paiement', href: '/profile?view=payment-pending', icon: 'payment' },
         { label: 'Production', href: '/profile?view=production', icon: 'production' },
         { label: 'Livraison', href: '/profile?view=delivery', icon: 'delivery' },
-        { label: 'Commentaires', href: '/profile?view=comments', icon: 'comments' },
       ],
     },
     {

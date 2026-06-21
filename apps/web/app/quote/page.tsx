@@ -860,19 +860,21 @@ export default function QuotePage() {
             onToggle={() => undefined}
             showToggle={false}
           >
-            <CardOptions
-              value={config.baseMaterial}
-              onChange={(value) => update('baseMaterial', value as QuoteConfig['baseMaterial'])}
-              options={[
-                ['FR4', 'Jusqu a 20 couches, impedance controlee, cout contenu.'],
-                ['Flex', 'Film polymere flexible fin, poids reduit.'],
-                ['Aluminium', 'Meilleure conductivite thermique pour LED et puissance.'],
-                ['Copper Core', 'Forte dissipation thermique pour designs haute puissance.'],
-                ['Rogers', 'Dielectrique haute frequence et faible perte.'],
-                ['PTFE Teflon', 'Applications haute frequence et haute temperature.'],
-              ]}
-            />
             <PanelGrid>
+              <MobileSheetRow label="Selection des specifications PCB" help="Choisissez le materiau principal adapte a la carte et a son usage." summary={config.baseMaterial} sheetId="baseMaterial" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice} mobileWide>
+                <CardOptions
+                  value={config.baseMaterial}
+                  onChange={(value) => update('baseMaterial', value as QuoteConfig['baseMaterial'])}
+                  options={[
+                    ['FR4', 'Jusqu a 20 couches, impedance controlee, cout contenu.'],
+                    ['Flex', 'Film polymere flexible fin, poids reduit.'],
+                    ['Aluminium', 'Meilleure conductivite thermique pour LED et puissance.'],
+                    ['Copper Core', 'Forte dissipation thermique pour designs haute puissance.'],
+                    ['Rogers', 'Dielectrique haute frequence et faible perte.'],
+                    ['PTFE Teflon', 'Applications haute frequence et haute temperature.'],
+                  ]}
+                />
+              </MobileSheetRow>
               <MobileSheetRow label="Couches" help="Les nombres impairs sont souvent ajustes au nombre pair superieur par les fabricants." summary={`${config.layers} couches`} sheetId="layers" openSheet={mobileSheet} onOpenSheet={setMobileSheet} estimatedPcbPrice={mobilePcbPrice}>
                 <Pills value={config.layers} onChange={(value) => update('layers', Number(value))} options={[1, 2, 4, 6, 8, 10, 12, 14, 16]} />
               </MobileSheetRow>

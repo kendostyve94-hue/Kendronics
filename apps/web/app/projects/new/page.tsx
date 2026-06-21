@@ -211,20 +211,22 @@ export default function NewProjectPage() {
     const missing: string[] = [];
     if (form.title.trim().length < 4) missing.push('Titre du projet');
     if (form.summary.trim().length < 24) missing.push('Resume public');
-    if (form.description.trim().length < 80) missing.push('Presentation detaillee');
     if (!form.coverPreviewUrl && !assets.some((asset) => asset.kind === 'cover')) missing.push('Image de couverture');
-    if (!form.dimensions.trim()) missing.push('Dimensions');
-    if (!form.mainComponents.trim()) missing.push('Composants principaux');
-    if (!form.power.trim()) missing.push('Alimentation');
-    if (!form.interfaces.trim()) missing.push('Interfaces');
-    if (!form.software.trim()) missing.push('Logiciels et outils');
-    if (!form.maturity.trim()) missing.push('Niveau de maturite');
-    if (!form.buildInstructions.trim()) missing.push('Instructions de fabrication');
-    if (!form.tested.trim()) missing.push('Tests realises');
-    if (assets.length === 0) missing.push('Au moins un fichier ou media');
-    if (projectType === 'paid' && !assets.some((asset) => asset.visibility === 'protected')) missing.push('Un fichier protege');
-    if (projectType === 'paid' && Number(form.price) < 1) missing.push('Prix valide');
-    if (!form.rightsConfirmed) missing.push('Declaration de droits');
+    if (projectType === 'paid') {
+      if (form.description.trim().length < 80) missing.push('Presentation detaillee');
+      if (!form.dimensions.trim()) missing.push('Dimensions');
+      if (!form.mainComponents.trim()) missing.push('Composants principaux');
+      if (!form.power.trim()) missing.push('Alimentation');
+      if (!form.interfaces.trim()) missing.push('Interfaces');
+      if (!form.software.trim()) missing.push('Logiciels et outils');
+      if (!form.maturity.trim()) missing.push('Niveau de maturite');
+      if (!form.buildInstructions.trim()) missing.push('Instructions de fabrication');
+      if (!form.tested.trim()) missing.push('Tests realises');
+      if (assets.length === 0) missing.push('Au moins un fichier ou media');
+      if (!assets.some((asset) => asset.visibility === 'protected')) missing.push('Un fichier protege');
+      if (Number(form.price) < 1) missing.push('Prix valide');
+      if (!form.rightsConfirmed) missing.push('Declaration de droits');
+    }
     return missing;
   }, [assets, form, projectType]);
 
@@ -402,7 +404,9 @@ export default function NewProjectPage() {
           <div>
             <h1 className="text-3xl font-black sm:text-4xl">{projectType === 'paid' ? 'Creer un nouveau projet' : 'Publier un projet'}</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#64748b]">
-              Constituez un dossier public clair, reproductible et exploitable. Les fichiers proteges ne sont pas exposes publiquement; la vente automatisee et la delivrance apres paiement seront activees dans le module marketplace.
+              {projectType === 'paid'
+                ? 'Preparez un dossier commercial complet avec description, fichiers proteges, licence, prix et droits d utilisation.'
+                : 'Publiez un post public simple avec un titre, une categorie, une image et un resume clair pour Explorer.'}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -458,6 +462,7 @@ export default function NewProjectPage() {
             </div>
           </EditorSection>
 
+          {projectType === 'paid' ? (
           <EditorSection id="step-02" title="Caracteristiques techniques" description="Les donnees necessaires pour comprendre et reproduire correctement le materiel.">
             <div className="grid gap-4 sm:grid-cols-3">
               <Field label="Type de carte" required><select value={form.boardType} onChange={(event) => update('boardType', event.target.value)} className={inputClass}>{['PCB rigide', 'PCB flexible', 'Rigide-flex', 'Module assemble', 'Systeme mecanique', 'Autre'].map((item) => <option key={item}>{item}</option>)}</select></Field>
@@ -473,14 +478,18 @@ export default function NewProjectPage() {
             </div>
             <Field label="Tests realises" required help="Indiquez uniquement les validations reellement effectuees : controles electriques, tests fonctionnels, contraintes thermiques, autonomie, assemblage, communication radio ou conditions de mesure."><textarea value={form.tested} onChange={(event) => update('tested', event.target.value)} className={`${inputClass} min-h-[110px] py-3`} placeholder="Tests electriques, fonctionnels, thermiques, radio, autonomie et conditions de validation." /></Field>
           </EditorSection>
+          ) : null}
 
+          {projectType === 'paid' ? (
           <EditorSection id="step-03" title="Documentation de reproduction" description="Des instructions suffisamment precises pour eviter les interpretations dangereuses ou couteuses.">
             <Field label="Fabrication et assemblage" required><textarea value={form.buildInstructions} onChange={(event) => update('buildInstructions', event.target.value)} className={`${inputClass} min-h-[150px] py-3`} placeholder="Preparation des fichiers, contraintes PCB, ordre d assemblage, composants alternatifs et controles." /></Field>
             <Field label="Programmation et mise en service"><textarea value={form.softwareInstructions} onChange={(event) => update('softwareInstructions', event.target.value)} className={`${inputClass} min-h-[130px] py-3`} placeholder="Installation, compilation, flash, configuration et premier demarrage." /></Field>
             <Field label="Securite, limites et avertissements"><textarea value={form.safetyNotes} onChange={(event) => update('safetyNotes', event.target.value)} className={`${inputClass} min-h-[110px] py-3`} placeholder="Tensions dangereuses, courant maximal, environnement, certifications et usages interdits." /></Field>
             <Field label="Historique de version"><textarea value={form.changelog} onChange={(event) => update('changelog', event.target.value)} className={`${inputClass} min-h-[90px] py-3`} /></Field>
           </EditorSection>
+          ) : null}
 
+          {projectType === 'paid' ? (
           <EditorSection id="step-04" title="Fichiers et medias" description="Chaque fichier est stocke dans l espace prive Kendronics. Vous choisissez ce qui est visible publiquement.">
             <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
               <Field label="Nature du fichier">
@@ -511,7 +520,9 @@ export default function NewProjectPage() {
               ))}
             </div>
           </EditorSection>
+          ) : null}
 
+          {projectType === 'paid' ? (
           <EditorSection id="step-05" title="Licence, droits et tarification" description="Les visiteurs doivent comprendre exactement ce qu ils peuvent faire avec le projet.">
             {projectType === 'paid' ? (
               <div className="border border-[#f2d5a7] bg-[#fff8ec] px-4 py-3 text-sm leading-6 text-[#8a5a12]">
@@ -544,12 +555,15 @@ export default function NewProjectPage() {
               </div>
             </fieldset>
           </EditorSection>
+          ) : null}
 
-          <EditorSection id="step-06" title="Controle et publication" description="La publication reste impossible tant que les informations essentielles ne sont pas completes.">
-            <label className="flex items-start gap-3 border border-[#dbe4ee] bg-[#f8fafc] p-4 text-sm leading-6">
-              <input type="checkbox" checked={form.rightsConfirmed} onChange={(event) => update('rightsConfirmed', event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#0f8f6b]" />
-              <span>Je confirme etre l auteur du projet ou disposer des droits necessaires pour publier les textes, medias, fichiers et licences associes.</span>
-            </label>
+          <EditorSection id="step-06" title={projectType === 'paid' ? 'Controle et publication' : 'Publication'} description={projectType === 'paid' ? 'La publication reste impossible tant que les informations essentielles ne sont pas completes.' : 'Verifiez le rendu public avant de publier votre post dans Explorer.'}>
+            {projectType === 'paid' ? (
+              <label className="flex items-start gap-3 border border-[#dbe4ee] bg-[#f8fafc] p-4 text-sm leading-6">
+                <input type="checkbox" checked={form.rightsConfirmed} onChange={(event) => update('rightsConfirmed', event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#0f8f6b]" />
+                <span>Je confirme etre l auteur du projet ou disposer des droits necessaires pour publier les textes, medias, fichiers et licences associes.</span>
+              </label>
+            ) : null}
             <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
               <div>
                 <p className="text-sm font-black">{validation.length === 0 ? 'Le dossier est pret pour publication.' : `${validation.length} element(s) restent a completer.`}</p>

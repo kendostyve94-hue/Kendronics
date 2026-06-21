@@ -385,11 +385,13 @@ export function PricingSummary({
           <div className="flex items-center gap-3">
             <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setPriceDetailsOpen((open) => !open)} aria-label="Afficher le detail du prix" aria-expanded={priceDetailsOpen}>
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Cout PCB</p>
-              <p className={`mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] ${
-                pricingPreview.status === 'direct' ? 'text-[#0f8f6b]' : pricingPreview.status === 'error' ? 'text-[#c45100]' : 'text-slate-500'
-              }`}>
-                {pricingPreview.status === 'direct' ? 'Prix direct' : pricingPreview.status === 'loading' ? 'Calcul...' : pricingPreview.status === 'error' ? 'A verifier' : 'Estime'}
-              </p>
+              {pricingPreview.status !== 'direct' ? (
+                <p className={`mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] ${
+                  pricingPreview.status === 'error' ? 'text-[#c45100]' : 'text-slate-500'
+                }`}>
+                  {pricingPreview.status === 'loading' ? 'Calcul...' : pricingPreview.status === 'error' ? 'A verifier' : 'Estime'}
+                </p>
+              ) : null}
               <p className="mt-0.5 flex items-baseline gap-1.5 text-lg font-semibold text-[#ff7a00]">
                 <span>{hasPreviewPrice ? `$${pcbClientPrice.toFixed(2)}` : 'Calcul...'}</span>
                 <span className="text-[10px] font-medium text-[#c45100]">voir total</span>

@@ -505,9 +505,8 @@ function CreateProjectModal({ onClose }: { onClose: () => void }) {
       <div className="w-full max-w-[548px] rounded-[18px] bg-white p-5 shadow-[0_24px_70px_rgba(7,23,42,0.24)] ring-1 ring-white/70 sm:p-7">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-[#0f8f6b]">Nouveau projet</p>
             <h2 id="explorer-project-type-title" className="mt-2 text-2xl font-black text-[#102033]">Choisissez le type de publication</h2>
-            <p className="mt-2 text-sm leading-6 text-[#64748b]">Vous pourrez enregistrer un brouillon et verifier chaque parametre avant la publication.</p>
+            <p className="mt-2 text-sm leading-6 text-[#64748b]">Selectionnez le format adapte : dossier commercial complet ou post public rapide pour partager une idee avec la communaute.</p>
           </div>
           <button type="button" onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#dbe4ee] text-xl text-[#64748b]" aria-label="Fermer">×</button>
         </div>
@@ -516,14 +515,14 @@ function CreateProjectModal({ onClose }: { onClose: () => void }) {
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e5f6f0] text-[#0f8f6b]"><PaidProjectIcon /></span>
             <span>
               <strong className="block text-lg text-[#102033]">Creer un nouveau projet</strong>
-              <span className="mt-1 block text-sm leading-5 text-[#64748b]">Publication commerciale avec fichiers proteges, prix, licence et droits d'utilisation.</span>
+              <span className="mt-1 block text-sm leading-5 text-[#64748b]">Dossier payant avec documentation technique, fichiers proteges, prix, licence et droits d'utilisation.</span>
             </span>
           </a>
           <a href="/projects/new?type=free" className="group flex min-h-[96px] items-center gap-4 rounded-[14px] border border-[#cfd8e3] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,52,0.06)] transition hover:border-[#0877ff] hover:bg-[#f4f8ff] sm:p-5">
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eaf2ff] text-[#0877ff]"><OpenProjectIcon /></span>
             <span>
               <strong className="block text-lg text-[#102033]">Publier un projet</strong>
-              <span className="mt-1 block text-sm leading-5 text-[#64748b]">Publication ouverte partagee avec la communaute sous une licence libre.</span>
+              <span className="mt-1 block text-sm leading-5 text-[#64748b]">Post gratuit de type reseau social : titre, image, categorie et resume public suffisent.</span>
             </span>
           </a>
         </div>

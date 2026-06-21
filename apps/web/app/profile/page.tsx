@@ -564,7 +564,6 @@ function profileSidebarGroups(counts: ReturnType<typeof orderCounts>, unread: nu
         { label: 'Paiement', view: 'payment-pending', count: counts.paymentPending, icon: 'payment' },
         { label: 'Production', view: 'production', count: counts.production, icon: 'production' },
         { label: 'Livraison', view: 'delivery', count: counts.delivery, icon: 'delivery' },
-        { label: 'Commentaires', view: 'comments', count: counts.comments, icon: 'comments' },
       ],
     },
     {
@@ -659,7 +658,6 @@ const orderStatuses: Array<{ key: Extract<OrderStatusKey, 'verification' | 'paym
   { key: 'payment-pending', label: 'Paiement effectue' },
   { key: 'production', label: 'Production' },
   { key: 'delivery', label: 'Livraison' },
-  { key: 'comments', label: 'Commentaires' },
 ];
 
 const orderServiceFilters: Array<{ key: OrderServiceFilter; label: string }> = [
@@ -767,12 +765,12 @@ function OrderReviewSection({
 function OrderStatusHeader({ activeKey, counts }: { activeKey: OrderStatusKey; counts: ReturnType<typeof orderCounts> }) {
   return (
     <div className="px-3 pt-4 sm:px-6">
-      <div className="flex snap-x gap-2 overflow-x-auto px-0 sm:grid sm:h-[112px] sm:grid-cols-5 sm:gap-0 sm:overflow-hidden sm:px-1 sm:pt-2">
+      <div className="grid grid-cols-4 gap-2 px-0 sm:h-[112px] sm:gap-0 sm:px-1 sm:pt-2">
         {orderStatuses.map((status) => {
           const active = status.key === activeKey;
 
           return (
-            <div key={status.key} className="grid min-h-[64px] min-w-[82px] snap-start place-items-center border border-[#e5e7eb] px-1 text-center sm:min-h-[72px] sm:min-w-0 sm:border-y-0 sm:border-l-0 sm:px-3 sm:last:border-r-0">
+            <div key={status.key} className="grid min-h-[64px] min-w-0 place-items-center border border-[#e5e7eb] px-1 text-center sm:min-h-[72px] sm:border-y-0 sm:border-l-0 sm:px-3 sm:last:border-r-0">
               <span className={`text-[22px] font-black leading-6 sm:text-[28px] sm:leading-7 ${active ? 'text-[#ff5a00]' : 'text-[#1f2937]'}`}>
                 {countForStatus(status.key, counts)}
               </span>
@@ -2003,9 +2001,8 @@ function SupportHubSection({ orders, dataStatus }: { orders: ProfileOrder[]; dat
 }
 
 function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: ProfileForm; userId: string; avatarDataUrl: string }) {
-  const displayName = profile.name || profile.profileDetails?.firstName || emailName(profile.email) || 'Client Kendronics';
   const defaultBannerUrl = '/images/explorer-hero-community.webp';
-  const [bannerDataUrl, setBannerDataUrl] = useState(defaultBannerUrl);
+  const [bannerDataUrl, setBannerDataUrl] = useState('');
   const [profileDescription, setProfileDescription] = useState('');
   const [draftDescription, setDraftDescription] = useState('');
   const [isDescriptionEditing, setIsDescriptionEditing] = useState(false);
@@ -2069,6 +2066,8 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   const renderedDescription = useMemo(() => linkifyText(profileDescription), [profileDescription]);
   const descriptionChanged = draftDescription.trim() !== profileDescription;
   const profileRating = profileRatingFromPoints(socialProfile.points);
+  const isSocialReady = socialStatus === 'ready';
+  const displayName = isSocialReady ? profile.name || profile.profileDetails?.firstName || emailName(profile.email) || 'Client Kendronics' : '';
 
   async function updateBanner(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -2145,7 +2144,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
     <section className="profile-public-section min-h-[690px] bg-[#f5f7fb] text-[#102033]">
       <div className="bg-white">
         <div className="relative aspect-[16/5] max-h-[220px] min-h-[118px] overflow-hidden bg-[#e8eef5] sm:aspect-[6/1]">
-          <img src={bannerDataUrl} alt="" className="h-full w-full object-cover object-center" />
+          {isSocialReady ? <img src={bannerDataUrl || defaultBannerUrl} alt="" className="h-full w-full object-cover object-center" /> : <div className="h-full w-full animate-pulse bg-[#e8eef5]" />}
           <div className="absolute bottom-3 right-3 flex items-center gap-2">
             <label className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-white/90 text-[#102033] shadow-[0_4px_16px_rgba(15,35,52,0.12)] backdrop-blur transition hover:bg-white hover:text-[#0f8f6b]" aria-label="Modifier la photo de banniere">
               <CameraIcon />
@@ -2172,27 +2171,31 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
           </div>
 
           <div className="min-w-0 max-w-[42rem] pb-1 pt-12 sm:pt-16">
-            <h1 className="flex w-full min-w-0 flex-nowrap items-center gap-2 text-xl font-black leading-tight text-[#1f2f43] sm:inline-flex sm:w-auto sm:max-w-full sm:flex-wrap sm:break-words sm:text-2xl">
-              <span className="min-w-0 truncate sm:overflow-visible sm:whitespace-normal">{displayName}</span>
-              <AccountTypeBadge profile={profile} />
-            </h1>
+            {isSocialReady ? (
+              <h1 className="flex w-full min-w-0 flex-nowrap items-center gap-2 text-xl font-black leading-tight text-[#1f2f43] sm:inline-flex sm:w-auto sm:max-w-full sm:flex-wrap sm:break-words sm:text-2xl">
+                <span className="min-w-0 truncate sm:overflow-visible sm:whitespace-normal">{displayName}</span>
+                <AccountTypeBadge profile={profile} />
+              </h1>
+            ) : (
+              <div className="h-7 w-56 max-w-full animate-pulse rounded bg-[#e8eef5]" />
+            )}
             <div className="mt-4 hidden max-w-[34rem] grid-cols-4 text-center sm:grid sm:divide-x sm:divide-[#dbe4ee]">
-              <ProfilePublicMetric label="Suivi" value={String(socialProfile.followingCount)} />
-              <ProfilePublicMetric label="Abonnés" value={String(socialProfile.followersCount)} />
-              <ProfilePublicMetric label="Likes" value={String(socialProfile.likesCount)} />
-              <ProfileRatingMetric rating={profileRating} />
+              <ProfilePublicMetric label="Suivi" value={isSocialReady ? String(socialProfile.followingCount) : '-'} />
+              <ProfilePublicMetric label="Abonnés" value={isSocialReady ? String(socialProfile.followersCount) : '-'} />
+              <ProfilePublicMetric label="Likes" value={isSocialReady ? String(socialProfile.likesCount) : '-'} />
+              <ProfileRatingMetric rating={isSocialReady ? profileRating : 0} />
             </div>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-4 text-center sm:hidden">
-          <ProfilePublicMetric label="Suivi" value={String(socialProfile.followingCount)} />
-          <ProfilePublicMetric label="Abonnés" value={String(socialProfile.followersCount)} />
-          <ProfilePublicMetric label="Likes" value={String(socialProfile.likesCount)} />
-          <ProfileRatingMetric rating={profileRating} />
+          <ProfilePublicMetric label="Suivi" value={isSocialReady ? String(socialProfile.followingCount) : '-'} />
+          <ProfilePublicMetric label="Abonnés" value={isSocialReady ? String(socialProfile.followersCount) : '-'} />
+          <ProfilePublicMetric label="Likes" value={isSocialReady ? String(socialProfile.likesCount) : '-'} />
+          <ProfileRatingMetric rating={isSocialReady ? profileRating : 0} />
         </div>
         {socialStatus === 'error' ? <p className="mt-4 text-sm font-semibold text-red-600">Le profil public n'a pas pu etre charge. Reessayez apres reconnexion.</p> : null}
 
-        {profileDescription ? <div className="mt-5 max-w-[46rem] text-sm leading-6 text-[#4f6175]">{renderedDescription}</div> : null}
+        {isSocialReady && profileDescription ? <div className="mt-5 max-w-[46rem] text-sm leading-6 text-[#4f6175]">{renderedDescription}</div> : null}
       </div>
       </div>
 
@@ -2219,9 +2222,8 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
             <div className="w-full max-w-[548px] rounded-[18px] bg-white p-5 shadow-[0_24px_70px_rgba(7,23,42,0.24)] ring-1 ring-white/70 sm:p-7">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.14em] text-[#0f8f6b]">Nouveau projet</p>
                   <h2 id="project-type-title" className="mt-2 text-2xl font-black text-[#102033]">Choisissez le type de publication</h2>
-                  <p className="mt-2 text-sm leading-6 text-[#64748b]">Vous pourrez enregistrer un brouillon et verifier chaque parametre avant la publication.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#64748b]">Selectionnez le format adapte : dossier commercial complet ou post public rapide pour partager une idee avec la communaute.</p>
                 </div>
                 <button type="button" onClick={() => setIsCreateProjectOpen(false)} className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#dbe4ee] text-xl text-[#64748b]" aria-label="Fermer">×</button>
               </div>
@@ -2230,14 +2232,14 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
                   <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e5f6f0] text-[#0f8f6b]"><PaidProjectIcon /></span>
                   <span>
                     <strong className="block text-lg text-[#102033]">Creer un nouveau projet</strong>
-                    <span className="mt-1 block text-sm leading-5 text-[#64748b]">Publication commerciale avec fichiers proteges, prix, licence et droits d'utilisation.</span>
+                    <span className="mt-1 block text-sm leading-5 text-[#64748b]">Dossier payant avec documentation technique, fichiers proteges, prix, licence et droits d'utilisation.</span>
                   </span>
                 </a>
                 <a href="/projects/new?type=free" className="group flex min-h-[96px] items-center gap-4 rounded-[14px] border border-[#cfd8e3] bg-white p-4 shadow-[0_8px_22px_rgba(15,35,52,0.06)] transition hover:border-[#0877ff] hover:bg-[#f4f8ff] sm:p-5">
                   <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#eaf2ff] text-[#0877ff]"><OpenProjectIcon /></span>
                   <span>
                     <strong className="block text-lg text-[#102033]">Publier un projet</strong>
-                    <span className="mt-1 block text-sm leading-5 text-[#64748b]">Projet gratuit partage avec la communaute sous une licence ouverte.</span>
+                    <span className="mt-1 block text-sm leading-5 text-[#64748b]">Post gratuit de type reseau social : titre, image, categorie et resume public suffisent.</span>
                   </span>
                 </a>
               </div>
@@ -4394,7 +4396,6 @@ function StatusStrip({ counts }: { counts: ReturnType<typeof orderCounts> }) {
     [counts.paymentPending, 'Paiement en attente'],
     [counts.production, 'Production terminée'],
     [counts.delivery, 'Livraison'],
-    [counts.comments, 'Commentaires'],
   ];
 
   return (
