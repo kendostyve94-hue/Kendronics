@@ -440,7 +440,7 @@ function ExplorerFeedNav({ activeFeed, avatarDataUrl, visible, onCreate, onFeedC
           {feed.icon}
         </button>
       ))}
-      <a href="/projects/new" className="ml-auto grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#eaf3f7]" aria-label="Ouvrir la page projets" title="Projets">
+      <a href="/profile?view=benefits" className="ml-auto grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-transparent" aria-label="Ouvrir mon profil" title="Mon profil">
         <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="" className="h-full w-full rounded-full object-cover" />
       </a>
     </nav>
