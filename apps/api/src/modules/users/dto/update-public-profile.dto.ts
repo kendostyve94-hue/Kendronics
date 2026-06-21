@@ -8,6 +8,6 @@ export class UpdatePublicProfileDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(5000000)
+  @MaxLength(1800000)
   bannerDataUrl?: string;
 }

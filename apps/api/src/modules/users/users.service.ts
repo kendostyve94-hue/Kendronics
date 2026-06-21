@@ -222,7 +222,7 @@ export class UsersService {
       } else if (validBannerDataUrl(dto.bannerDataUrl)) {
         data.profileBannerDataUrl = dto.bannerDataUrl;
       } else {
-        throw new BadRequestException('La banniere doit etre une image PNG, JPG ou WebP de moins de 5 Mo.');
+        throw new BadRequestException('La banniere doit etre une image PNG, JPG ou WebP optimisee de moins de 1,8 Mo.');
       }
     }
 
@@ -443,7 +443,7 @@ function validAvatarDataUrl(value: string | undefined): boolean {
 
 function validBannerDataUrl(value: string | undefined): boolean {
   if (!value) return false;
-  return /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(value) && value.length <= 5000000;
+  return /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(value) && value.length <= 1800000;
 }
 
 function uniqueRoles(roles: UserRole[]): UserRole[] {

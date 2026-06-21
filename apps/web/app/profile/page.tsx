@@ -2169,8 +2169,16 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
   async function saveDescription() {
     const nextDescription = draftDescription.trim();
+    const previousDescription = profileDescription;
+    setProfileDescription(nextDescription);
+    setDraftDescription(nextDescription);
+    setIsDescriptionEditing(false);
     const session = await readFreshAuthSession();
-    if (!session) return;
+    if (!session) {
+      setProfileDescription(previousDescription);
+      setDraftDescription(previousDescription);
+      return;
+    }
     const response = await fetch(`${getApiBaseUrl()}/api/users/me/public-profile`, {
       method: 'PUT',
       headers: {
@@ -2179,12 +2187,15 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
       },
       body: JSON.stringify({ description: nextDescription }),
     });
-    if (!response.ok) return;
+    if (!response.ok) {
+      setProfileDescription(previousDescription);
+      setDraftDescription(previousDescription);
+      return;
+    }
     const nextProfile = await response.json() as PublicSocialProfile;
     setSocialProfile(nextProfile);
     setProfileDescription(nextProfile.description);
     setDraftDescription(nextProfile.description);
-    setIsDescriptionEditing(false);
   }
 
   function cancelDescriptionEdit() {
@@ -5509,7 +5520,7 @@ async function prepareProfileBannerDataUrl(file: File): Promise<string> {
       img.onerror = () => reject(new Error('Image load failed'));
       img.src = objectUrl;
     });
-    const maxWidth = 1600;
+    const maxWidth = 1180;
     const scale = Math.min(1, maxWidth / image.width);
     const width = Math.max(1, Math.round(image.width * scale));
     const height = Math.max(1, Math.round(image.height * scale));
@@ -5519,14 +5530,14 @@ async function prepareProfileBannerDataUrl(file: File): Promise<string> {
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Canvas unavailable');
     context.drawImage(image, 0, 0, width, height);
-    let quality = 0.82;
+    let quality = 0.74;
     let blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
-    while (blob && blob.size > 3_500_000 && quality > 0.56) {
+    while (blob && blob.size > 950_000 && quality > 0.46) {
       quality -= 0.08;
       blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
     }
     if (!blob) throw new Error('Image compression failed');
-    if (blob.size > 4_500_000) throw new Error('Banner image is too large');
+    if (blob.size > 1_350_000) throw new Error('Banner image is too large');
     return await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => (typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Invalid image data')));
