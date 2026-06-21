@@ -563,7 +563,11 @@ function ProjectCard({
     <article className={`min-w-0 bg-transparent transition ${selected ? 'opacity-100' : 'opacity-95 hover:opacity-100'}`}>
       <a href={`/explorer/${project.id}`} onClick={onSelect} className="block w-full text-left">
         <div className="aspect-[1.45] overflow-hidden bg-[#e8eef5]">
-          <img src={project.imageUrl || '/images/quote-product-standard-pcb.png'} alt="" className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]" />
+          {project.imageUrl ? (
+            <img src={mediaUrl(project.imageUrl)} alt="" className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]" />
+          ) : (
+            <div className="grid h-full w-full place-items-center bg-[#edf3f8] px-4 text-center text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">{project.category}</div>
+          )}
         </div>
         <div className="mt-3 flex min-w-0 items-center">
           <h3 className="min-w-0 truncate text-base font-medium text-[#0b1724]">{project.title}</h3>
@@ -757,6 +761,10 @@ function formatDate(value: string) {
 
 function formatCompact(value: number) {
   return new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+}
+
+function mediaUrl(value: string) {
+  return value.startsWith('/api/') ? `${apiBaseUrl}${value}` : value;
 }
 
 function formatProjectPrice(priceCents?: number, currency = 'EUR') {

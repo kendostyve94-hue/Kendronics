@@ -83,7 +83,7 @@ export default function ExplorerProjectDetailPage() {
   }, [projectId]);
 
   return (
-    <main className="min-h-screen bg-white text-[#0b1724]">
+    <main className="project-detail-page min-h-screen bg-white text-[#0b1724]">
       <Navbar />
       <div className="mx-auto w-full max-w-[1180px] px-4 pb-16 pt-[92px] sm:px-6 lg:px-5">
         {status === 'loading' ? (
@@ -143,8 +143,12 @@ export default function ExplorerProjectDetailPage() {
               </div>
             </header>
 
-            <div className="mt-8 overflow-hidden rounded-[8px] bg-[#edf3f8]">
-              <img src={project.imageUrl || '/images/quote-product-standard-pcb.png'} alt="" className="max-h-[620px] w-full object-cover" />
+            <div className="mt-8 overflow-hidden bg-[#edf3f8]">
+              {project.imageUrl ? (
+                <img src={mediaUrl(project.imageUrl)} alt="" className="max-h-[620px] w-full object-cover" />
+              ) : (
+                <div className="grid min-h-[280px] place-items-center text-sm font-black uppercase tracking-[0.16em] text-[#64748b]">{project.category}</div>
+              )}
             </div>
 
             <section className="mx-auto mt-10 max-w-3xl text-center">
@@ -337,4 +341,8 @@ function detailValue(record: Record<string, unknown> | undefined, key: string) {
   if (typeof value === 'number' && Number.isFinite(value)) return String(value);
   if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).join(', ');
   return '';
+}
+
+function mediaUrl(value: string) {
+  return value.startsWith('/api/') ? `${apiBaseUrl}${value}` : value;
 }

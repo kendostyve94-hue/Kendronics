@@ -106,7 +106,11 @@ export default function PublicAuthorProfilePage() {
                 {profile.projects.map((project) => (
                   <a key={project.id} href={`/explorer/${project.id}`} className="group block">
                     <div className="aspect-[4/3] overflow-hidden bg-[#edf3f8]">
-                      <img src={project.imageUrl || '/images/quote-product-standard-pcb.png'} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                      {project.imageUrl ? (
+                        <img src={mediaUrl(project.imageUrl)} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                      ) : (
+                        <div className="grid h-full w-full place-items-center bg-[#edf3f8] px-4 text-center text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">Projet</div>
+                      )}
                     </div>
                     <h3 className="mt-3 line-clamp-2 text-base font-black text-[#0b1724] group-hover:text-[#0f8f6b]">{project.title}</h3>
                     <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#64748b]">{project.summary}</p>
@@ -139,4 +143,8 @@ function ProfileState({ title, body }: { title: string; body: string }) {
 
 function formatCompact(value: number) {
   return new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+}
+
+function mediaUrl(value: string) {
+  return value.startsWith('/api/') ? `${getApiBaseUrl()}${value}` : value;
 }

@@ -343,6 +343,10 @@ export default function NewProjectPage() {
     }
     const attached = await attachResponse.json() as ProjectAsset;
     setAssets((current) => [...current.filter((item) => item.uploadId !== attached.uploadId), attached]);
+    if ((overrideKind ?? assetKind) === 'cover') {
+      const coverUrl = `${getApiBaseUrl()}/api/explorer/projects/${projectId}/assets/${attached.id}/public`;
+      setForm((current) => ({ ...current, imageUrl: coverUrl, coverPreviewUrl: coverUrl }));
+    }
     setStatus(`${file.name} est maintenant rattache au brouillon.`);
   }
 

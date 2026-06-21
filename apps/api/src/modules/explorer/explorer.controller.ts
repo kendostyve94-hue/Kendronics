@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthTokenService } from '../auth/auth-token.service';
@@ -92,6 +92,12 @@ export class ExplorerController {
   @UseGuards(JwtAuthGuard)
   projectAssetDownloads(@CurrentUser() user: AuthenticatedUser, @Param('projectId') projectId: string) {
     return this.explorerService.listProjectAssetDownloads(user, projectId);
+  }
+
+  @Get('projects/:projectId/assets/:assetId/public')
+  async publicProjectAsset(@Param('projectId') projectId: string, @Param('assetId') assetId: string, @Res() response: { redirect(statusCode: number, url: string): void }) {
+    const payload = await this.explorerService.getPublicAssetUrl(projectId, assetId);
+    return response.redirect(302, payload.url);
   }
 
   @Post('projects/:projectId/purchases')

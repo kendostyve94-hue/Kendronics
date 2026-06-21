@@ -963,6 +963,14 @@ main.mobile-free-page details[class*="border"] {
   animation: explorer-follow-confirm 720ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.project-detail-page header > div,
+.project-detail-page header a,
+.project-detail-page header button,
+.project-detail-page header span {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
 @keyframes explorer-follow-confirm {
   0% {
     transform: scale(0.92);

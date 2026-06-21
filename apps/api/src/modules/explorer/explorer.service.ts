@@ -21,12 +21,18 @@ export class ExplorerService {
 
   async listProjects(): Promise<ExplorerProject[]> {
     const projects = await this.prisma.explorerProject.findMany({
-      where: { status: 'published' },
+      where: { status: 'published', userId: { not: null } },
       orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
       take: 80,
       include: {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+        assets: {
+          where: { kind: 'cover', visibility: 'public' },
+          orderBy: { createdAt: 'asc' },
+          take: 1,
+          select: { id: true },
+        },
       },
     });
 
@@ -35,7 +41,7 @@ export class ExplorerService {
 
   async getProjectDetail(projectId: string) {
     const project = await this.prisma.explorerProject.findFirst({
-      where: { id: projectId, status: 'published' },
+      where: { id: projectId, status: 'published', userId: { not: null } },
       include: {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 12 },
@@ -164,7 +170,7 @@ export class ExplorerService {
 
   async getProjectMarketplaceState(userId: string, projectId: string) {
     const project = await this.prisma.explorerProject.findFirst({
-      where: { id: projectId, status: 'published' },
+      where: { id: projectId, status: 'published', userId: { not: null } },
       include: {
         assets: { select: { id: true, visibility: true } },
       },
@@ -316,6 +322,12 @@ export class ExplorerService {
       include: {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+        assets: {
+          where: { kind: 'cover', visibility: 'public' },
+          orderBy: { createdAt: 'asc' },
+          take: 1,
+          select: { id: true },
+        },
       },
     });
     return projects.map(toExplorerProject);
@@ -338,6 +350,12 @@ export class ExplorerService {
           include: {
             _count: { select: { favorites: true } },
             comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+            assets: {
+              where: { kind: 'cover', visibility: 'public' },
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+              select: { id: true },
+            },
           },
         },
       },
@@ -349,6 +367,7 @@ export class ExplorerService {
     const projects = await this.prisma.explorerProject.findMany({
       where: {
         status: 'published',
+        userId: { not: null },
         user: {
           followers: {
             some: { followerId: userId },
@@ -360,6 +379,12 @@ export class ExplorerService {
       include: {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+        assets: {
+          where: { kind: 'cover', visibility: 'public' },
+          orderBy: { createdAt: 'asc' },
+          take: 1,
+          select: { id: true },
+        },
       },
     });
     return projects.map(toExplorerProject);
@@ -456,6 +481,27 @@ export class ExplorerService {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
       downloadUrl: this.uploadRepository.createDownloadUrl(asset.upload.storageKey),
     }));
+  }
+
+  async getPublicAssetUrl(projectId: string, assetId: string) {
+    const asset = await this.prisma.explorerProjectAsset.findFirst({
+      where: {
+        id: assetId,
+        projectId,
+        visibility: 'public',
+        project: { status: 'published', userId: { not: null } },
+      },
+      include: {
+        upload: {
+          select: {
+            storageKey: true,
+            status: true,
+          },
+        },
+      },
+    });
+    if (!asset || !['uploaded', 'analyzed'].includes(asset.upload.status)) throw new NotFoundException('Public project file not found.');
+    return { url: this.uploadRepository.createDownloadUrl(asset.upload.storageKey) };
   }
 
   async createProjectPurchaseIntent(userId: string, projectId: string) {
@@ -580,7 +626,7 @@ export class ExplorerService {
   }
 
   private async ensureProject(projectId: string) {
-    const project = await this.prisma.explorerProject.findFirst({ where: { id: projectId, status: 'published' } });
+    const project = await this.prisma.explorerProject.findFirst({ where: { id: projectId, status: 'published', userId: { not: null } } });
     if (!project) throw new NotFoundException('Explorer project not found.');
   }
 
@@ -598,7 +644,7 @@ export class ExplorerService {
 
 type ExplorerProjectRecord = Prisma.ExplorerProjectGetPayload<{
   include: { _count: { select: { favorites: true } }; comments: true };
-}>;
+}> & { assets?: Array<{ id: string }> };
 
 function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
   return {
@@ -611,7 +657,7 @@ function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
     summary: project.summary,
     description: project.description ?? undefined,
     tags: project.tags,
-    imageUrl: project.imageUrl ?? undefined,
+    imageUrl: project.imageUrl ?? publicCoverUrl(project.id, project.assets?.[0]?.id),
     attachmentName: project.attachmentName ?? undefined,
     attachmentType: project.attachmentType ?? undefined,
     repositoryUrl: project.repositoryUrl ?? undefined,
@@ -657,6 +703,10 @@ function accountBadgeLabel(level: number): string {
   if (level >= 2) return 'Professionnel certifie';
   if (level >= 1) return 'Compte verifie';
   return 'Createur hardware';
+}
+
+function publicCoverUrl(projectId: string, assetId: string | undefined): string | undefined {
+  return assetId ? `/api/explorer/projects/${projectId}/assets/${assetId}/public` : undefined;
 }
 
 function extractPublicProfileLinks(description: string, profileDetails: unknown) {

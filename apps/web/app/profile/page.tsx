@@ -2388,7 +2388,11 @@ function ProfileProjectPreviewCard({ project, showAuthor }: { project: ProfileEx
   return (
     <a href={`/explorer#project-${project.id}`} className="group block min-w-0 bg-transparent">
       <div className="aspect-[1.28] overflow-hidden bg-[#edf3f8]">
-        <img src={project.imageUrl || '/images/quote-product-standard-pcb.png'} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]" />
+        {project.imageUrl ? (
+          <img src={profileMediaUrl(project.imageUrl)} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]" />
+        ) : (
+          <div className="grid h-full w-full place-items-center bg-[#edf3f8] px-4 text-center text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">{project.category}</div>
+        )}
       </div>
       <h3 className="mt-3 truncate text-base font-medium text-[#0b1724]">{project.title}</h3>
       {project.summary ? <p className="mt-1 line-clamp-1 text-xs leading-5 text-[#64748b]">{project.summary}</p> : null}
@@ -5651,6 +5655,10 @@ function formatUserId(seed: string) {
   }
 
   return `KD-${hash.toString(16).toUpperCase().padStart(7, '0').slice(0, 7)}`;
+}
+
+function profileMediaUrl(value: string) {
+  return value.startsWith('/api/') ? `${getApiBaseUrl()}${value}` : value;
 }
 
 async function logout() {
