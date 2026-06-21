@@ -904,6 +904,13 @@ button {
   main.mobile-free-page a[class*="rounded-full"] {
     border-radius: var(--control-radius) !important;
   }
+
+  main.mobile-free-page .profile-public-section {
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    width: 100vw;
+    max-width: 100vw;
+  }
 }
 
 main.mobile-free-page section[class*="ring-1"],

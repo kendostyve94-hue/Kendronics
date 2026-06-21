@@ -2170,7 +2170,7 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   }
 
   return (
-    <section className="min-h-[690px] bg-[#f5f7fb] text-[#102033]">
+    <section className="profile-public-section min-h-[690px] bg-[#f5f7fb] text-[#102033]">
       <div className="bg-white">
         <div className="relative aspect-[16/5] max-h-[220px] min-h-[118px] overflow-hidden bg-[#e8eef5] sm:aspect-[6/1]">
           <img src={bannerDataUrl} alt="" className="h-full w-full object-cover object-center" />
@@ -2194,12 +2194,12 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         </div>
 
         <div className="px-4 pb-7 pt-0 sm:px-8">
-        <div className="-mt-8 grid grid-cols-[5.75rem_minmax(0,1fr)] items-end gap-3 sm:-mt-10 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4 lg:gap-6">
-          <div className="grid h-[88px] w-[88px] place-items-center overflow-hidden rounded-full bg-[#eaf3f7] sm:h-32 sm:w-32">
+        <div className="-mt-11 grid grid-cols-[5.75rem_minmax(0,1fr)] items-end gap-3 sm:-mt-16 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4 lg:gap-6">
+          <div className="relative z-10 grid h-[88px] w-[88px] place-items-center overflow-hidden rounded-full bg-[#eaf3f7] sm:h-32 sm:w-32">
             <img src={avatarDataUrl || '/images/kendronics-icon.jpeg'} alt="Avatar client" className="h-full w-full rounded-full object-cover" />
           </div>
 
-          <div className="min-w-0 max-w-[42rem] pb-1 pt-9 sm:pt-11">
+          <div className="min-w-0 max-w-[42rem] pb-1 pt-12 sm:pt-16">
             <h1 className="flex w-full min-w-0 flex-nowrap items-center gap-2 text-xl font-black leading-tight text-[#1f2f43] sm:inline-flex sm:w-auto sm:max-w-full sm:flex-wrap sm:break-words sm:text-2xl">
               <span className="min-w-0 truncate sm:overflow-visible sm:whitespace-normal">{displayName}</span>
               <AccountTypeBadge profile={profile} />
