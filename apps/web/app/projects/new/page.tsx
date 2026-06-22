@@ -476,7 +476,7 @@ export default function NewProjectPage() {
               <div className="grid gap-3">
                 <div>
                   <p className="inline-flex items-center gap-1.5 text-sm font-black">Médias de présentation <span className="text-[#d9485f]">*</span></p>
-                  <p className="mt-1 text-xs leading-5 text-[#64748b]">Ajoutez une couverture ou une video MP4/WebM pour controler le rendu public avant publication.</p>
+                  <p className="mt-1 text-xs leading-5 text-[#64748b]">Ajoutez une couverture ou une video MP4, WebM ou MOV pour controler le rendu public avant publication.</p>
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
                     <label className="inline-flex h-11 min-w-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#0f8f6b] px-2 text-center text-[12px] font-black text-[#0f8f6b] sm:px-4 sm:text-sm">
                       Téléverser une image
@@ -484,7 +484,7 @@ export default function NewProjectPage() {
                     </label>
                     <label className="inline-flex h-11 min-w-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#cfd8e3] px-2 text-center text-[12px] font-black text-[#102033] sm:px-4 sm:text-sm">
                       Ajouter une vidéo
-                      <input type="file" className="sr-only" accept=".mp4,.webm" onChange={(event) => previewMedia(event, 'video')} />
+                      <input type="file" className="sr-only" accept=".mp4,.mov,.webm" onChange={(event) => previewMedia(event, 'video')} />
                     </label>
                   </div>
                 </div>

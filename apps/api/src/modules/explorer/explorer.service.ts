@@ -272,7 +272,7 @@ export class ExplorerService {
       where: { id: dto.uploadId, userId: user.id, status: { in: ['uploaded', 'analyzed'] } },
     });
     if (!upload) throw new BadRequestException('Uploaded file was not found or is not ready.');
-    return this.prisma.explorerProjectAsset.upsert({
+    const asset = await this.prisma.explorerProjectAsset.upsert({
       where: { projectId_uploadId: { projectId, uploadId: upload.id } },
       create: {
         projectId,
@@ -292,6 +292,26 @@ export class ExplorerService {
         sizeBytes: dto.sizeBytes,
       },
     });
+    if (asset.visibility === 'public' && (asset.kind === 'video' || asset.mimeType.startsWith('video/'))) {
+      await this.prisma.projectMediaProcessingJob.upsert({
+        where: { assetId_jobType: { assetId: asset.id, jobType: 'video_16x9' } },
+        create: {
+          projectId,
+          assetId: asset.id,
+          userId: user.id,
+          jobType: 'video_16x9',
+          status: 'pending',
+        },
+        update: {
+          status: 'pending',
+          attempts: 0,
+          lastError: null,
+          lockedAt: null,
+          completedAt: null,
+        },
+      });
+    }
+    return asset;
   }
 
   async removeAsset(user: AuthenticatedUser, projectId: string, assetId: string) {

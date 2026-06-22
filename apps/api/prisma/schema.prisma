@@ -40,6 +40,7 @@ model User {
   payments Payment[]
   gerberUploads GerberUpload[]
   explorerProjectAssets ExplorerProjectAsset[]
+  projectMediaProcessingJobs ProjectMediaProcessingJob[]
   cookieConsents CookieConsent[]
   supportTickets SupportTicket[]
   adminAuditLogs AdminAuditLog[]
@@ -817,6 +818,7 @@ model ExplorerProject {
   favorites ExplorerProjectFavorite[]
   comments ExplorerComment[]
   assets ExplorerProjectAsset[]
+  mediaProcessingJobs ProjectMediaProcessingJob[]
   purchases ProjectPurchase[]
   licenseGrants ProjectLicenseGrant[]
 
@@ -844,12 +846,37 @@ model ExplorerProjectAsset {
   project ExplorerProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   upload  GerberUpload    @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+  processingJobs ProjectMediaProcessingJob[]
 
   @@unique([projectId, uploadId])
   @@index([projectId])
   @@index([userId])
   @@index([uploadId])
   @@index([visibility])
+}
+
+model ProjectMediaProcessingJob {
+  id           String    @id @default(uuid())
+  projectId    String
+  assetId      String
+  userId       String
+  jobType      String    @default("video_16x9")
+  status       String    @default("pending")
+  attempts     Int       @default(0)
+  lastError    String?
+  lockedAt     DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  project ExplorerProject      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  asset   ExplorerProjectAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  user    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assetId, jobType])
+  @@index([status, createdAt])
+  @@index([projectId])
+  @@index([userId])
 }
 
 model ProjectPurchase {
