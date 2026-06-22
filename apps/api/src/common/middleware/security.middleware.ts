@@ -30,20 +30,24 @@ const uploadLimit = 20;
 @Injectable()
 export class SecurityMiddleware implements NestMiddleware {
   use(request: RequestLike, response: ResponseLike, next: NextFunction) {
-    applySecurityHeaders(response);
+    applySecurityHeaders(request, response);
     if (!enforceRateLimit(request, response)) return;
     next();
   }
 }
 
-function applySecurityHeaders(response: ResponseLike) {
+function applySecurityHeaders(request: RequestLike, response: ResponseLike) {
   response.setHeader('X-Content-Type-Options', 'nosniff');
   response.setHeader('X-Frame-Options', 'DENY');
   response.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  response.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+  response.setHeader('Cross-Origin-Resource-Policy', isPublicProjectAssetPath(request.path) ? 'cross-origin' : 'same-site');
   response.setHeader('X-DNS-Prefetch-Control', 'off');
   response.setHeader('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
+}
+
+function isPublicProjectAssetPath(path: string) {
+  return /^\/api\/explorer\/projects\/[^/]+\/assets\/[^/]+\/public$/.test(path);
 }
 
 function enforceRateLimit(request: RequestLike, response: ResponseLike): boolean {
