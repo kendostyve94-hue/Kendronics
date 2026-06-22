@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Kendronics",
+    "slug": "kendronics-mobile",
+    "scheme": "kendronics",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.kendronics.mobile",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.kendronics.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "extra": {
+      "apiBaseUrl": "https://kendronics-api.onrender.com"
+    }
+  }
+}
