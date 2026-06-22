@@ -143,7 +143,7 @@ export class ExplorerService {
     if (!user) throw new NotFoundException('Author profile not found.');
 
     const isOwner = viewer?.id === user.id;
-    const projects = await this.listUserProjects(user.id, { includeHidden: isOwner });
+    const projects = await this.listUserProjects(user.id);
     const isFollowing = viewer && !isOwner ? Boolean(await this.prisma.userFollow.findUnique({
       where: { followerId_followingId: { followerId: viewer.id, followingId: user.id } },
     })) : false;

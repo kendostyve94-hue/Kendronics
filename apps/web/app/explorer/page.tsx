@@ -246,40 +246,6 @@ export default function ExplorerPage() {
     }
   }
 
-  async function toggleProjectVisibility(project: ExplorerProject) {
-    if (!project.userId || project.userId !== currentUserId) return;
-    const session = readAuthSession();
-    if (!session) return openAuthRequired('login');
-    const nextLabel = project.visibility === 'public' ? 'cacher ce poste du grand public' : 'reactiver ce poste publiquement';
-    if (!window.confirm(`Confirmer : ${nextLabel} ?`)) return;
-    const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}/visibility`, {
-      method: 'POST',
-      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
-    });
-    if (!response.ok) return;
-    const updated = await response.json() as ExplorerProject;
-    if (updated.visibility === 'public') {
-      setProjects((current) => current.map((item) => item.id === updated.id ? { ...item, visibility: updated.visibility } : item));
-    } else {
-      setProjects((current) => current.filter((item) => item.id !== project.id));
-      setFollowingProjects((current) => current.filter((item) => item.id !== project.id));
-    }
-  }
-
-  async function deleteProject(project: ExplorerProject) {
-    if (!project.userId || project.userId !== currentUserId) return;
-    const session = readAuthSession();
-    if (!session) return openAuthRequired('login');
-    if (!window.confirm('Supprimer definitivement ce poste ?')) return;
-    const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
-    });
-    if (!response.ok) return;
-    setProjects((current) => current.filter((item) => item.id !== project.id));
-    setFollowingProjects((current) => current.filter((item) => item.id !== project.id));
-  }
-
   async function followAuthor(project: ExplorerProject) {
     const session = readAuthSession();
     if (!session) {
@@ -437,10 +403,6 @@ export default function ExplorerPage() {
                 onFollow={() => void followAuthor(project)}
                 onBuy={() => void buyProject(project)}
                 onDownload={() => void downloadProjectAssets(project)}
-                onToggleVisibility={() => void toggleProjectVisibility(project)}
-                onEdit={() => { window.location.href = `/projects/new?type=${project.projectType ?? 'free'}&id=${project.id}`; }}
-                onDelete={() => void deleteProject(project)}
-                isOwner={Boolean(project.userId && project.userId === currentUserId)}
                 followed={project.userId ? followedUserIds.has(project.userId) : false}
                 followAnimating={project.userId ? followPulseUserIds.has(project.userId) : false}
                 followable={Boolean(project.userId)}
@@ -598,10 +560,6 @@ function ProjectCard({
   onFollow,
   onBuy,
   onDownload,
-  onToggleVisibility,
-  onEdit,
-  onDelete,
-  isOwner,
   profileHref,
 }: {
   project: ExplorerProject;
@@ -617,10 +575,6 @@ function ProjectCard({
   onFollow: () => void;
   onBuy: () => void;
   onDownload: () => void;
-  onToggleVisibility: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  isOwner: boolean;
   profileHref: string;
 }) {
   return (
@@ -638,18 +592,12 @@ function ProjectCard({
         </div>
       </a>
       <div className="mt-3 flex items-center gap-4 text-sm text-[#9aa6b2]">
-        <button type="button" onClick={isOwner ? onToggleVisibility : undefined} className={`inline-flex items-center gap-1 ${isOwner ? 'transition hover:text-[#0f8f6b]' : ''}`} title={isOwner ? (project.visibility === 'public' ? 'Cacher du grand public' : 'Reactiver publiquement') : 'Vues'}><EyeIcon />{formatCompact(project.viewsCount)}</button>
+        <span className="inline-flex items-center gap-1" title="Vues"><EyeIcon />{formatCompact(project.viewsCount)}</span>
         <button type="button" onClick={onLike} className={`inline-flex items-center gap-1 transition hover:text-[#0f8f6b] ${liked ? 'text-[#0f8f6b]' : ''}`}><ThumbIcon filled={liked} />{project.likesCount}</button>
         <button type="button" onClick={onFavorite} className={`inline-flex items-center gap-1 transition hover:text-[#0f8f6b] ${favorited ? 'text-[#0f8f6b]' : ''}`} aria-label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
           <StarIcon filled={favorited} />{project.favoritesCount}
         </button>
         <span className="inline-flex items-center gap-1"><CommentIcon />{project.commentsCount}</span>
-        {isOwner ? (
-          <>
-            <button type="button" onClick={onEdit} className="ml-auto inline-flex items-center gap-1 transition hover:text-[#0f8f6b]" aria-label="Modifier ce poste"><EditMiniIcon /></button>
-            <button type="button" onClick={onDelete} className="inline-flex items-center gap-1 transition hover:text-red-600" aria-label="Supprimer ce poste"><DeleteMiniIcon /></button>
-          </>
-        ) : null}
       </div>
       {project.projectType === 'paid' ? (
         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -665,8 +613,8 @@ function ProjectCard({
         <a href={profileHref} className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[10px] font-black text-white" aria-label={`Voir le profil de ${project.authorName}`}>
           {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
         </a>
-        {project.authorBadgeLabel ? <AuthorBadge label={project.authorBadgeLabel} /> : null}
         <a href={profileHref} className="min-w-0 max-w-[calc(100%-3.25rem)] truncate transition hover:text-[#0f8f6b]">{project.authorName}</a>
+        <CertificationBadge level={project.authorVerificationLevel ?? 0} />
         {followed && !followAnimating ? null : <button
           type="button"
           onClick={onFollow}
@@ -728,10 +676,13 @@ function ProjectDetailPanel({ project, commentValue, onCommentChange, onComment,
   );
 }
 
-function AuthorBadge({ label }: { label: string }) {
+function CertificationBadge({ level }: { level: number }) {
+  if (level <= 0) return null;
   return (
-    <span className="shrink-0 rounded-full bg-[#eefbf6] px-1.5 py-0.5 text-[10px] font-black leading-none text-[#0f8f6b]" title={label}>
-      {label}
+    <span className="inline-grid h-4 w-4 shrink-0 place-items-center text-[#91a0af]" title="Compte certifie" aria-label="Compte certifie">
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+        <path d="m23 12-2.44-2.79.34-3.69-3.61-.82L15.4 1.5 12 2.96 8.6 1.5 6.71 4.69l-3.61.82.34 3.69L1 12l2.44 2.79-.34 3.7 3.61.81 1.89 3.2 3.4-1.47 3.4 1.47 1.89-3.19 3.61-.82-.34-3.69L23 12Zm-12.91 4.72-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35Z" />
+      </svg>
     </span>
   );
 }
@@ -775,26 +726,6 @@ function CommentIcon() {
       <path d="M5 5h14v10H8l-3 3V5Z" />
       <path d="M8 9h8" />
       <path d="M8 12h5" />
-    </svg>
-  );
-}
-
-function EditMiniIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z" />
-      <path d="m14 7 3 3" />
-    </svg>
-  );
-}
-
-function DeleteMiniIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 7h16" />
-      <path d="M10 11v6M14 11v6" />
-      <path d="M6 7l1 14h10l1-14" />
-      <path d="M9 7V4h6v3" />
     </svg>
   );
 }

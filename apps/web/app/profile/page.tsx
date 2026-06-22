@@ -2171,8 +2171,8 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
   }
 
   return (
-    <section className="profile-public-section min-h-[690px] bg-[#f5f7fb] text-[#102033]">
-      <div className="bg-white">
+    <section className="profile-public-section min-h-[690px] bg-white text-[#102033]">
+      <div>
         <div className="relative aspect-[16/5] max-h-[220px] min-h-[118px] overflow-hidden bg-[#e8eef5] sm:aspect-[6/1]">
           {isSocialReady ? <img src={bannerDataUrl || defaultBannerUrl} alt="" className="h-full w-full object-cover object-center" /> : <div className="h-full w-full animate-pulse bg-[#e8eef5]" />}
           <div className="absolute bottom-3 right-3 flex items-center gap-2">

@@ -291,6 +291,8 @@ export default function NewProjectPage() {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
+    const previewKind = overrideKind ?? assetKind;
+    const localPreviewUrl = ['cover', 'video', 'gallery'].includes(previewKind) ? URL.createObjectURL(file) : '';
     if (!projectId) {
       setStatus('Le brouillon projet est encore en preparation. Reessayez dans quelques secondes.');
       return;
@@ -345,15 +347,15 @@ export default function NewProjectPage() {
     }
     const attached = await attachResponse.json() as ProjectAsset;
     setAssets((current) => [...current.filter((item) => item.uploadId !== attached.uploadId), attached]);
-    const nextKind = overrideKind ?? assetKind;
+    const nextKind = previewKind;
     const nextVisibility = overrideVisibility ?? assetVisibility;
     if (nextVisibility === 'public' && ['cover', 'video', 'gallery'].includes(nextKind)) {
       const publicUrl = `${getApiBaseUrl()}/api/explorer/projects/${projectId}/assets/${attached.id}/public`;
       const nextForm: EditorForm = {
         ...form,
         imageUrl: publicUrl,
-        coverPreviewUrl: upload.mimeType.startsWith('video/') ? form.coverPreviewUrl : publicUrl,
-        videoPreviewUrl: upload.mimeType.startsWith('video/') ? publicUrl : form.videoPreviewUrl,
+        coverPreviewUrl: upload.mimeType.startsWith('video/') ? form.coverPreviewUrl : (form.coverPreviewUrl || localPreviewUrl),
+        videoPreviewUrl: upload.mimeType.startsWith('video/') ? (form.videoPreviewUrl || localPreviewUrl) : form.videoPreviewUrl,
       };
       setForm(nextForm);
       void saveDraft(false, nextForm);

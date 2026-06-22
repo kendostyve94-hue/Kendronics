@@ -139,7 +139,7 @@ export class ExplorerController {
   @Get('me/projects')
   @UseGuards(JwtAuthGuard)
   myProjects(@CurrentUser() user: AuthenticatedUser) {
-    return this.explorerService.listUserProjects(user.id);
+    return this.explorerService.listUserProjects(user.id, { includeHidden: true });
   }
 
   @Get('me/drafts')
