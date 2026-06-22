@@ -1,7 +1,9 @@
 import Constants from 'expo-constants';
 
+declare const process: { env?: Record<string, string | undefined> };
+
 const configuredBaseUrl =
-  process.env.EXPO_PUBLIC_API_BASE_URL ||
+  process.env?.EXPO_PUBLIC_API_BASE_URL ||
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined);
 
 export const apiBaseUrl = (configuredBaseUrl || 'https://kendronics-api.onrender.com').replace(/\/+$/, '');
