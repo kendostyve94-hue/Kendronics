@@ -49,6 +49,7 @@ export default function PublicAuthorProfilePage() {
   const [activeTab, setActiveTab] = useState<'reels' | 'forks'>('reels');
   const [followed, setFollowed] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'visibility'; project: PublicAuthorProject } | null>(null);
+  const isOwnProfile = Boolean(profile?.isOwner || (profile?.id && profile.id === currentSessionUserId()));
 
   useEffect(() => {
     let cancelled = false;
@@ -95,7 +96,7 @@ export default function PublicAuthorProfilePage() {
   }
 
   async function confirmProjectAction() {
-    if (!confirmAction || !profile?.isOwner) return;
+    if (!confirmAction || !isOwnProfile) return;
     const session = readAuthSession();
     if (!session) return;
     const { project, type } = confirmAction;
@@ -116,7 +117,7 @@ export default function PublicAuthorProfilePage() {
   return (
     <main className="min-h-screen bg-white text-[#0b1724]">
       <Navbar />
-      <div className="mx-auto w-full max-w-[1180px] px-0 pb-20 pt-[86px] sm:px-6 lg:px-5">
+      <div className="mx-auto w-full max-w-[1180px] overflow-x-hidden px-0 pb-20 pt-[86px] sm:px-6 lg:px-5">
         {status === 'loading' ? (
           <ProfileState title="Chargement du profil" body="Kendronics recupere les informations publiques de l'auteur." />
         ) : status === 'error' || !profile ? (
@@ -131,10 +132,10 @@ export default function PublicAuthorProfilePage() {
                   {profile.avatarDataUrl ? <img src={profile.avatarDataUrl} alt="" className="h-full w-full object-cover" /> : profile.name.slice(0, 1).toUpperCase()}
               </span>
               <div className="min-w-0 pb-1 pt-12 sm:pt-16">
-                <h1 className="flex min-w-0 flex-wrap items-center gap-2 text-xl font-black leading-tight text-[#1f2f43] sm:text-2xl">
+                <h1 className="flex min-w-0 flex-wrap items-center gap-2 bg-transparent text-xl font-black leading-tight text-[#1f2f43] shadow-none ring-0 sm:text-2xl">
                   <span className="min-w-0 truncate">{profile.name}</span>
                   <AuthorBadge label={profile.badgeLabel} />
-                  {!profile.isOwner ? <button type="button" onClick={() => void followAuthor()} className={`text-xs font-semibold transition hover:text-[#0f8f6b] ${followed ? 'text-[#0f8f6b]' : 'text-[#334155]'}`}>
+                  {!isOwnProfile ? <button type="button" onClick={() => void followAuthor()} className={`text-xs font-semibold transition hover:text-[#0f8f6b] ${followed ? 'text-[#0f8f6b]' : 'text-[#334155]'}`}>
                     {followed ? 'Unfollow' : 'Follow'}
                   </button> : null}
                 </h1>
@@ -153,6 +154,7 @@ export default function PublicAuthorProfilePage() {
               <RatingMetric rating={ratingFromPoints(profile.points)} />
             </div>
 
+            <div className="px-4 sm:px-2">
             {profile.links.length > 0 ? (
               <div className="mt-6 flex flex-wrap gap-4 text-sm font-semibold text-[#334155]">
                 {profile.links.map((link) => (
@@ -160,10 +162,11 @@ export default function PublicAuthorProfilePage() {
                 ))}
               </div>
             ) : null}
-            {profile.description ? <p className="mt-6 max-w-3xl whitespace-pre-line text-sm leading-7 text-[#334155]">{profile.description}</p> : null}
+            {profile.description ? <p className="mt-6 max-w-[48rem] whitespace-pre-line text-left text-sm leading-7 text-[#334155]">{profile.description}</p> : null}
+            </div>
 
             <section className="mt-10">
-              <nav className="flex gap-5 border-b border-[#dbe4ee] text-sm font-semibold text-[#64748b]" aria-label="Publications">
+              <nav className="mx-4 inline-flex w-fit gap-5 border-b border-[#dbe4ee] text-sm font-semibold text-[#64748b] sm:mx-0" aria-label="Publications">
                 <button type="button" onClick={() => setActiveTab('reels')} className={`inline-flex items-center gap-2 border-b-2 pb-3 ${activeTab === 'reels' ? 'border-[#0f8f6b] text-[#0f8f6b]' : 'border-transparent'}`}>
                   <ReelsIcon />
                   Reels
@@ -184,24 +187,26 @@ export default function PublicAuthorProfilePage() {
                       )}
                     </div>
                     <h3 className="mt-3 line-clamp-2 text-base font-black text-[#0b1724] group-hover:text-[#0f8f6b]">{project.title}</h3>
-                    {profile.isOwner && project.visibility !== 'public' ? <p className="mt-1 text-xs font-black text-[#b45309]">Cache du grand public</p> : null}
+                    {isOwnProfile && project.visibility !== 'public' ? <p className="mt-1 text-xs font-black text-[#b45309]">Cache du grand public</p> : null}
                     <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#64748b]">{project.summary}</p>
                     <div className="mt-2 flex items-center gap-4 text-sm text-[#91a0af]">
-                      <button type="button" onClick={(event) => { event.preventDefault(); if (profile.isOwner) setConfirmAction({ type: 'visibility', project }); }} className={`inline-flex items-center gap-1 ${profile.isOwner ? 'hover:text-[#0f8f6b]' : ''}`} title={profile.isOwner ? (project.visibility === 'public' ? 'Cacher du grand public' : 'Reactiver publiquement') : undefined}><EyeIcon />{formatCompact(project.viewsCount)}</button>
+                      <button type="button" onClick={(event) => { event.preventDefault(); if (isOwnProfile) setConfirmAction({ type: 'visibility', project }); }} className={`inline-flex items-center gap-1 ${isOwnProfile ? 'hover:text-[#0f8f6b]' : ''}`} title={isOwnProfile ? (project.visibility === 'public' ? 'Cacher du grand public' : 'Reactiver publiquement') : undefined}><EyeIcon />{formatCompact(project.viewsCount)}</button>
                       <span className="inline-flex items-center gap-1"><ThumbIcon />{formatCompact(project.likesCount)}</span>
                       <span className="inline-flex items-center gap-1"><StarIcon />{formatCompact(project.favoritesCount)}</span>
                       <span className="inline-flex items-center gap-1"><CommentIcon />{formatCompact(project.commentsCount)}</span>
-                      {profile.isOwner ? (
-                        <>
-                          <button type="button" onClick={(event) => { event.preventDefault(); window.location.href = `/projects/new?type=${project.projectType ?? 'free'}&id=${project.id}`; }} className="ml-auto inline-flex items-center gap-1 text-[#64748b] transition hover:text-[#0f8f6b]" aria-label="Modifier">
-                            <EditIcon />
-                          </button>
-                          <button type="button" onClick={(event) => { event.preventDefault(); setConfirmAction({ type: 'delete', project }); }} className="inline-flex items-center gap-1 text-[#64748b] transition hover:text-red-600" aria-label="Supprimer">
-                            <DeleteIcon />
-                          </button>
-                        </>
-                      ) : null}
                     </div>
+                    {isOwnProfile ? (
+                      <div className="mt-3 flex items-center gap-3 text-sm text-[#64748b]">
+                        <button type="button" onClick={(event) => { event.preventDefault(); window.location.href = `/projects/new?type=${project.projectType ?? 'free'}&id=${project.id}`; }} className="inline-flex items-center gap-1 transition hover:text-[#0f8f6b]" aria-label="Modifier ce poste">
+                          <EditIcon />
+                          Modifier
+                        </button>
+                        <button type="button" onClick={(event) => { event.preventDefault(); setConfirmAction({ type: 'delete', project }); }} className="inline-flex items-center gap-1 transition hover:text-red-600" aria-label="Supprimer ce poste">
+                          <DeleteIcon />
+                          Supprimer
+                        </button>
+                      </div>
+                    ) : null}
                   </a>
                 ))}
               </div>
@@ -355,4 +360,15 @@ function formatCompact(value: number) {
 
 function mediaUrl(value: string) {
   return value.startsWith('/api/') ? `${getApiBaseUrl()}${value}` : value;
+}
+
+function currentSessionUserId() {
+  const session = readAuthSession();
+  if (!session?.accessToken || typeof window === 'undefined') return '';
+  try {
+    const payload = JSON.parse(window.atob(session.accessToken.split('.')[1] ?? '')) as { sub?: string; userId?: string };
+    return payload.sub ?? payload.userId ?? '';
+  } catch {
+    return '';
+  }
 }

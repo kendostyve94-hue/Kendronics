@@ -259,7 +259,7 @@ export default function NewProjectPage() {
     }));
   }
 
-  async function saveDraft(showConfirmation = true) {
+  async function saveDraft(showConfirmation = true, formOverride?: EditorForm) {
     if (!projectId) return false;
     setIsSaving(true);
     setStatus('Enregistrement du brouillon...');
@@ -275,7 +275,7 @@ export default function NewProjectPage() {
         Authorization: `${session.tokenType} ${session.accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(buildPayload(form, projectType)),
+      body: JSON.stringify(buildPayload(formOverride ?? form, projectType)),
     });
     setIsSaving(false);
     if (!response.ok) {
@@ -345,9 +345,21 @@ export default function NewProjectPage() {
     }
     const attached = await attachResponse.json() as ProjectAsset;
     setAssets((current) => [...current.filter((item) => item.uploadId !== attached.uploadId), attached]);
-    if ((overrideKind ?? assetKind) === 'cover') {
-      const coverUrl = `${getApiBaseUrl()}/api/explorer/projects/${projectId}/assets/${attached.id}/public`;
-      setForm((current) => ({ ...current, imageUrl: coverUrl, coverPreviewUrl: coverUrl }));
+    const nextKind = overrideKind ?? assetKind;
+    const nextVisibility = overrideVisibility ?? assetVisibility;
+    if (nextVisibility === 'public' && ['cover', 'video', 'gallery'].includes(nextKind)) {
+      const publicUrl = `${getApiBaseUrl()}/api/explorer/projects/${projectId}/assets/${attached.id}/public`;
+      let nextForm: EditorForm | null = null;
+      setForm((current) => {
+        nextForm = {
+          ...current,
+          imageUrl: publicUrl,
+          coverPreviewUrl: upload.mimeType.startsWith('video/') ? current.coverPreviewUrl : publicUrl,
+          videoPreviewUrl: upload.mimeType.startsWith('video/') ? publicUrl : current.videoPreviewUrl,
+        };
+        return nextForm;
+      });
+      if (nextForm) void saveDraft(false, nextForm);
     }
     setStatus(`${file.name} est maintenant rattache au brouillon.`);
   }
@@ -632,28 +644,30 @@ function ProjectHelpIcon() {
 }
 
 function ProjectPublishPreview({ form, projectType }: { form: EditorForm; projectType: ProjectType }) {
-  const cover = form.coverPreviewUrl || '/images/quote-product-standard-pcb.png';
+  const hasMedia = Boolean(form.coverPreviewUrl || form.videoPreviewUrl);
   return (
     <aside>
       <article className="overflow-hidden rounded-[10px] bg-white ring-1 ring-[#dbe4ee]">
         <div className="relative aspect-video bg-[#dce8e3]">
           {form.videoPreviewUrl ? (
             <video src={form.videoPreviewUrl} controls className="h-full w-full bg-black object-cover" />
+          ) : form.coverPreviewUrl ? (
+            <img src={form.coverPreviewUrl} alt="" className="h-full w-full object-cover" />
           ) : (
-            <img src={cover} alt="" className="h-full w-full object-cover" />
+            <div className="grid h-full w-full place-items-center bg-[#edf3f8] text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">Media public</div>
           )}
-          {!form.videoPreviewUrl ? <span className="absolute inset-0 grid place-items-center"><span className="grid h-12 w-12 place-items-center rounded-full bg-black/65 text-white"><ProjectEditorIcon name="play" /></span></span> : null}
+          {hasMedia && !form.videoPreviewUrl ? <span className="absolute inset-0 grid place-items-center"><span className="grid h-12 w-12 place-items-center rounded-full bg-black/65 text-white"><ProjectEditorIcon name="play" /></span></span> : null}
         </div>
         <div className="p-4">
           <div className="flex items-center gap-2">
             {projectType === 'paid' ? <span className="rounded bg-[#fff1e6] px-2 py-1 text-[11px] font-black text-[#c45100]">COMMERCIAL</span> : null}
             <span className="truncate text-xs font-semibold text-[#64748b]">{form.category}</span>
           </div>
-          <h3 className="mt-2 line-clamp-2 text-base font-black text-[#102033]">{form.title || 'Titre du projet'}</h3>
-          <p className="mt-2 line-clamp-2 text-sm leading-5 text-[#64748b]">{form.summary || 'Le resume public apparaitra ici pour aider les visiteurs a comprendre le projet.'}</p>
+          <h3 className="mt-2 line-clamp-2 text-base font-black text-[#102033]">{form.title || 'Titre de la publication'}</h3>
+          <p className="mt-2 line-clamp-2 text-sm leading-5 text-[#64748b]">{form.summary || 'Ajoutez un resume clair avant publication.'}</p>
           <div className="mt-3 flex items-center gap-2 text-xs text-[#64748b]">
             <span className="grid h-6 w-6 place-items-center rounded-full bg-[#102033] font-black text-white">K</span>
-            <span>Kendronics Creator</span>
+            <span>Auteur connecte</span>
           </div>
         </div>
       </article>

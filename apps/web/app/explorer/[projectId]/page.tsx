@@ -251,10 +251,10 @@ export default function ExplorerProjectDetailPage() {
               )}
             </div>
 
-            <section className="mx-auto mt-10 max-w-3xl text-center">
+            <section className="mt-10 max-w-4xl text-left">
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[#0f8f6b]">#{project.category}</p>
               <h2 className="mt-3 text-3xl font-black leading-tight text-[#0b1724] sm:text-4xl">{project.title}</h2>
-              <p className="mt-6 text-lg leading-8 text-[#334155]">{project.description || project.summary}</p>
+              <p className="mt-6 whitespace-pre-line text-base leading-8 text-[#334155] sm:text-lg">{project.description || project.summary}</p>
             </section>
 
             <section className="mx-auto mt-12 grid max-w-5xl gap-8 lg:grid-cols-2">
