@@ -2398,7 +2398,7 @@ function ProfileProjectPreviewCard({
 
   return (
     <a href={`/explorer/${project.id}`} className="group block min-w-0 bg-transparent">
-      <div className="aspect-video overflow-hidden bg-[#edf3f8]">
+      <div className="aspect-video w-full overflow-hidden bg-[#edf3f8]">
         {project.imageUrl ? (
           <ProfileProjectMedia project={project} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]" />
         ) : (

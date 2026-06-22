@@ -587,11 +587,11 @@ function ProjectCard({
           ) : (
             <div className="grid h-full w-full place-items-center bg-[#edf3f8] px-4 text-center text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">{project.category}</div>
           )}
-          <div className="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full bg-white/92 px-2 py-1 text-xs font-semibold text-[#0b1724] backdrop-blur">
+          <div className="group/author absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full bg-white/92 px-2 py-1 text-xs font-semibold text-[#0b1724] backdrop-blur transition-all duration-500 hover:max-w-[calc(100%-1.5rem)] sm:max-w-[2.75rem] sm:hover:max-w-[calc(100%-1.5rem)]">
             <span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[11px] font-black text-white">
               {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
             </span>
-            <span className="min-w-0 truncate">{project.authorName}</span>
+            <span className="min-w-0 max-w-[12rem] truncate opacity-100 transition-all duration-500 sm:max-w-0 sm:opacity-0 sm:group-hover/author:max-w-[12rem] sm:group-hover/author:opacity-100">{project.authorName}</span>
             <CertificationBadge level={project.authorVerificationLevel ?? 0} />
           </div>
         </div>
@@ -606,6 +606,19 @@ function ProjectCard({
           <StarIcon filled={favorited} />{project.favoritesCount}
         </button>
         <span className="inline-flex items-center gap-1"><CommentIcon />{project.commentsCount}</span>
+        {followed && !followAnimating ? null : <button
+          type="button"
+          onClick={onFollow}
+          disabled={!followable}
+          className={`explorer-follow-action inline-flex h-6 shrink-0 items-center gap-1 bg-transparent text-sm font-semibold transition ${
+            followed ? 'text-[#0f8f6b]' : 'text-[#9aa6b2] hover:text-[#0f8f6b]'
+          } ${followAnimating ? 'explorer-follow-action--done' : ''} ${followable ? '' : 'cursor-not-allowed opacity-55'}`}
+          aria-label={followed ? `Ne plus suivre ${project.authorName}` : `Suivre ${project.authorName}`}
+          title={followable ? undefined : 'Auteur non connecte au suivi'}
+        >
+          {followed ? <MaterialCheckIcon /> : null}
+          Follow
+        </button>}
       </div>
       {project.projectType === 'paid' ? (
         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -617,21 +630,7 @@ function ProjectCard({
           </button>
         </div>
       ) : null}
-      <div className="mt-4 flex items-center gap-2 text-sm text-[#0b1724]">
-        <a href={profileHref} className="sr-only">Voir le profil de {project.authorName}</a>
-        {followed && !followAnimating ? null : <button
-          type="button"
-          onClick={onFollow}
-          disabled={!followable}
-          className={`explorer-follow-action grid h-6 w-6 shrink-0 place-items-center bg-transparent transition ${
-            followed ? 'text-[#0f8f6b]' : 'text-[#9aa6b2] hover:text-[#0f8f6b]'
-          } ${followAnimating ? 'explorer-follow-action--done' : ''} ${followable ? '' : 'cursor-not-allowed opacity-55'}`}
-          aria-label={followed ? `Ne plus suivre ${project.authorName}` : `Suivre ${project.authorName}`}
-          title={followable ? undefined : 'Auteur non connecte au suivi'}
-        >
-          {followed ? <MaterialCheckIcon /> : <MaterialAddIcon />}
-        </button>}
-      </div>
+      <a href={profileHref} className="sr-only">Voir le profil de {project.authorName}</a>
     </article>
   );
 }
@@ -694,7 +693,7 @@ function ProjectMedia({ project, className, autoPlayVideo = false }: { project: 
   const src = project.imageUrl ? mediaUrl(project.imageUrl) : '';
   const poster = project.thumbnailUrl ? mediaUrl(project.thumbnailUrl) : undefined;
   const isVideo = project.mediaMimeType?.startsWith('video/') || project.mediaKind === 'video';
-  return isVideo ? <video src={src} poster={poster} className={className} autoPlay={autoPlayVideo} playsInline controls preload="metadata" /> : <img src={src} alt="" className={className} />;
+  return isVideo ? <video src={src} poster={poster} className={className} autoPlay={autoPlayVideo} muted={autoPlayVideo} playsInline controls preload="metadata" /> : <img src={src} alt="" className={className} />;
 }
 
 function EyeIcon() {
