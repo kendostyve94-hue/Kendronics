@@ -38,7 +38,7 @@ export class UploadsController {
   }
 
   @Post('project-direct')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 50 * 1024 * 1024 } }))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 250 * 1024 * 1024 } }))
   uploadProjectFile(
     @CurrentUser() user: AuthenticatedUser,
     @UploadedFile()
