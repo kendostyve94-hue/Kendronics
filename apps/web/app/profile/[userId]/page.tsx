@@ -252,9 +252,8 @@ function AuthorBadge({ label }: { label: string }) {
 
 function CertificationBadge({ level, status }: { level: number; status?: string }) {
   const certified = status === 'verified' || level > 0;
-  if (!certified) return null;
   return (
-    <span className="inline-grid h-5 w-5 shrink-0 place-items-center text-[#91a0af]" title="Compte certifie" aria-label="Compte certifie">
+    <span className={`inline-grid h-5 w-5 shrink-0 place-items-center ${certified ? 'text-[#91a0af]' : 'text-[#a8b4c2]'}`} title={certified ? 'Compte certifie' : 'Nouveau compte'} aria-label={certified ? 'Compte certifie' : 'Nouveau compte'}>
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
         <path d="m23 12-2.44-2.79.34-3.69-3.61-.82L15.4 1.5 12 2.96 8.6 1.5 6.71 4.69l-3.61.82.34 3.7L1 12l2.44 2.79-.34 3.7 3.61.81 1.89 3.2 3.4-1.47 3.4 1.47 1.89-3.19 3.61-.82-.34-3.69L23 12Zm-12.91 4.72-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35Z" />
       </svg>
