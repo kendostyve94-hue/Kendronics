@@ -20,6 +20,7 @@ type ExplorerProject = {
   mediaKind?: string;
   mediaMimeType?: string;
   projectType?: 'free' | 'paid';
+  visibility?: string;
   priceCents?: number;
   currency?: string;
   licenseCode?: string;
@@ -165,6 +166,34 @@ export default function ExplorerProjectDetailPage() {
     setProject((current) => current ? { ...current, author: { ...current.author, followersCount: payload.followersCount }, socialState: { ...(current.socialState ?? defaultSocialState), followingAuthor: payload.following } } : current);
   }
 
+  async function toggleProjectVisibility() {
+    if (!project?.socialState?.isOwner) return;
+    const session = readAuthSession();
+    if (!session) return openAuthRequired();
+    const nextLabel = project.visibility === 'public' ? 'cacher ce poste du grand public' : 'reactiver ce poste publiquement';
+    if (!window.confirm(`Confirmer : ${nextLabel} ?`)) return;
+    const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}/visibility`, {
+      method: 'POST',
+      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+    });
+    if (!response.ok) return;
+    const updated = await response.json() as ExplorerProject;
+    setProject((current) => current ? { ...current, visibility: updated.visibility } : current);
+  }
+
+  async function deleteProject() {
+    if (!project?.socialState?.isOwner) return;
+    const session = readAuthSession();
+    if (!session) return openAuthRequired();
+    if (!window.confirm('Supprimer definitivement ce poste ?')) return;
+    const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+    });
+    if (!response.ok) return;
+    window.location.href = '/profile?view=benefits';
+  }
+
   async function postComment() {
     if (!project || !commentDraft.trim()) return;
     const session = readAuthSession();
@@ -198,9 +227,11 @@ export default function ExplorerProjectDetailPage() {
                   {project.author.avatarDataUrl ? <img src={project.author.avatarDataUrl} alt="" className="h-full w-full object-cover" /> : project.author.name.slice(0, 1).toUpperCase()}
                 </a>
                 <div className="min-w-0">
-                  <a href={project.socialState?.isOwner ? '/profile?view=benefits' : project.author.id ? `/profile/${project.author.id}` : '/explorer'} className="block truncate text-base font-black text-[#0b1724] transition hover:text-[#0f8f6b] sm:text-lg">{project.author.name}</a>
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs font-semibold">
+                  <div className="flex min-w-0 items-center gap-2">
                     <AuthorBadge label={project.author.badgeLabel} />
+                    <a href={project.socialState?.isOwner ? '/profile?view=benefits' : project.author.id ? `/profile/${project.author.id}` : '/explorer'} className="block truncate text-base font-black text-[#0b1724] transition hover:text-[#0f8f6b] sm:text-lg">{project.author.name}</a>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs font-semibold">
                     {!project.socialState?.isOwner ? <button type="button" onClick={() => void followAuthor()} className={`inline-flex items-center gap-1 text-[#334155] transition hover:text-[#0f8f6b] ${followed ? 'text-[#0f8f6b]' : ''}`}>
                       <FollowTinyIcon />
                       {followed ? 'Unfollow' : 'Follow'}
@@ -235,6 +266,19 @@ export default function ExplorerProjectDetailPage() {
                   <DetailCommentIcon />
                   {formatCompact(project.commentsCount)}
                 </span>
+                {project.socialState?.isOwner ? (
+                  <>
+                    <button type="button" onClick={() => void toggleProjectVisibility()} className="inline-flex items-center gap-1.5 transition hover:text-[#0f8f6b]" aria-label={project.visibility === 'public' ? 'Cacher du grand public' : 'Reactiver publiquement'}>
+                      <DetailEyeIcon />
+                    </button>
+                    <button type="button" onClick={() => { window.location.href = `/projects/new?type=${project.projectType ?? 'free'}&id=${project.id}`; }} className="inline-flex items-center gap-1.5 transition hover:text-[#0f8f6b]" aria-label="Modifier ce poste">
+                      <DetailEditIcon />
+                    </button>
+                    <button type="button" onClick={() => void deleteProject()} className="inline-flex items-center gap-1.5 transition hover:text-red-600" aria-label="Supprimer ce poste">
+                      <DetailDeleteIcon />
+                    </button>
+                  </>
+                ) : null}
                 {project.projectType === 'paid' ? (
                   <a href={`/explorer?fork=${project.id}`} className="grid h-10 place-items-center rounded-full bg-[#08071b] px-6 text-sm font-black text-white transition hover:bg-[#0f8f6b]">
                     Forks
@@ -411,6 +455,26 @@ function DetailCommentIcon() {
       <path d="M5 5h14v10H8l-3 3V5Z" />
       <path d="M8 9h8" />
       <path d="M8 12h5" />
+    </svg>
+  );
+}
+
+function DetailEditIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z" />
+      <path d="m14 7 3 3" />
+    </svg>
+  );
+}
+
+function DetailDeleteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7h16" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M6 7l1 14h10l1-14" />
+      <path d="M9 7V4h6v3" />
     </svg>
   );
 }

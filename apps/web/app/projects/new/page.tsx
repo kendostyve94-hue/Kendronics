@@ -349,17 +349,14 @@ export default function NewProjectPage() {
     const nextVisibility = overrideVisibility ?? assetVisibility;
     if (nextVisibility === 'public' && ['cover', 'video', 'gallery'].includes(nextKind)) {
       const publicUrl = `${getApiBaseUrl()}/api/explorer/projects/${projectId}/assets/${attached.id}/public`;
-      let nextForm: EditorForm | null = null;
-      setForm((current) => {
-        nextForm = {
-          ...current,
-          imageUrl: publicUrl,
-          coverPreviewUrl: upload.mimeType.startsWith('video/') ? current.coverPreviewUrl : publicUrl,
-          videoPreviewUrl: upload.mimeType.startsWith('video/') ? publicUrl : current.videoPreviewUrl,
-        };
-        return nextForm;
-      });
-      if (nextForm) void saveDraft(false, nextForm);
+      const nextForm: EditorForm = {
+        ...form,
+        imageUrl: publicUrl,
+        coverPreviewUrl: upload.mimeType.startsWith('video/') ? form.coverPreviewUrl : publicUrl,
+        videoPreviewUrl: upload.mimeType.startsWith('video/') ? publicUrl : form.videoPreviewUrl,
+      };
+      setForm(nextForm);
+      void saveDraft(false, nextForm);
     }
     setStatus(`${file.name} est maintenant rattache au brouillon.`);
   }

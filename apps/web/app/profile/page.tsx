@@ -240,6 +240,8 @@ type PublicSocialProfile = {
 type ProfileExplorerProject = {
   id: string;
   userId?: string;
+  projectType?: 'free' | 'paid';
+  visibility?: string;
   authorName?: string;
   authorAvatarUrl?: string;
   title: string;
@@ -247,7 +249,9 @@ type ProfileExplorerProject = {
   summary: string;
   tags: string[];
   imageUrl?: string;
+  viewsCount?: number;
   likesCount: number;
+  favoritesCount?: number;
   commentsCount: number;
   forksCount: number;
   createdAt: string;
@@ -2135,6 +2139,32 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
     setDraftDescription(nextProfile.description);
   }
 
+  async function toggleProfileProjectVisibility(project: ProfileExplorerProject) {
+    const session = await readFreshAuthSession();
+    if (!session) return;
+    const nextLabel = project.visibility === 'public' ? 'cacher ce poste du grand public' : 'reactiver ce poste publiquement';
+    if (!window.confirm(`Confirmer : ${nextLabel} ?`)) return;
+    const response = await fetch(`${getApiBaseUrl()}/api/explorer/projects/${project.id}/visibility`, {
+      method: 'POST',
+      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+    });
+    if (!response.ok) return;
+    const updated = await response.json() as ProfileExplorerProject;
+    setProjects((current) => current.map((item) => item.id === updated.id ? { ...item, visibility: updated.visibility } : item));
+  }
+
+  async function deleteProfileProject(project: ProfileExplorerProject) {
+    const session = await readFreshAuthSession();
+    if (!session) return;
+    if (!window.confirm('Supprimer definitivement ce poste ?')) return;
+    const response = await fetch(`${getApiBaseUrl()}/api/explorer/projects/${project.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+    });
+    if (!response.ok) return;
+    setProjects((current) => current.filter((item) => item.id !== project.id));
+  }
+
   function cancelDescriptionEdit() {
     setDraftDescription(profileDescription);
     setIsDescriptionEditing(false);
@@ -2172,10 +2202,15 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
 
           <div className="min-w-0 max-w-[42rem] pb-1 pt-12 sm:pt-16">
             {isSocialReady ? (
+              <>
               <h1 className="flex w-full min-w-0 flex-nowrap items-center gap-2 text-xl font-black leading-tight text-[#1f2f43] sm:inline-flex sm:w-auto sm:max-w-full sm:flex-wrap sm:break-words sm:text-2xl">
                 <span className="min-w-0 truncate sm:overflow-visible sm:whitespace-normal">{displayName}</span>
                 <AccountTypeBadge profile={profile} />
               </h1>
+              <div className="mt-1 inline-flex rounded-full bg-[#eefbf6] px-1.5 py-0.5 text-[10px] font-black leading-none text-[#0f8f6b]">
+                {publicAccountLabel(profile)}
+              </div>
+              </>
             ) : (
               <div className="h-7 w-56 max-w-full animate-pulse rounded bg-[#e8eef5]" />
             )}
@@ -2250,7 +2285,15 @@ function BenefitsHubSection({ profile, userId, avatarDataUrl }: { profile: Profi
         {(activeTab === 'projects' ? projects : favorites).length > 0 ? (
           <div className="mt-5 grid gap-x-6 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
             {(activeTab === 'projects' ? projects : favorites).map((project) => (
-              <ProfileProjectPreviewCard key={project.id} project={project} showAuthor={activeTab === 'favorites'} />
+              <ProfileProjectPreviewCard
+                key={project.id}
+                project={project}
+                showAuthor={activeTab === 'favorites'}
+                editable={activeTab === 'projects'}
+                onToggleVisibility={() => void toggleProfileProjectVisibility(project)}
+                onEdit={() => { window.location.href = `/projects/new?type=${project.projectType ?? 'free'}&id=${project.id}`; }}
+                onDelete={() => void deleteProfileProject(project)}
+              />
             ))}
           </div>
         ) : (
@@ -2315,7 +2358,21 @@ function ProfileRatingMetric({ rating }: { rating: number }) {
   );
 }
 
-function ProfileProjectPreviewCard({ project, showAuthor }: { project: ProfileExplorerProject; showAuthor?: boolean }) {
+function ProfileProjectPreviewCard({
+  project,
+  showAuthor,
+  editable = false,
+  onToggleVisibility,
+  onEdit,
+  onDelete,
+}: {
+  project: ProfileExplorerProject;
+  showAuthor?: boolean;
+  editable?: boolean;
+  onToggleVisibility?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+}) {
   const [following, setFollowing] = useState(false);
 
   async function followAuthor(event: MouseEvent<HTMLButtonElement>) {
@@ -2337,7 +2394,7 @@ function ProfileProjectPreviewCard({ project, showAuthor }: { project: ProfileEx
   }
 
   return (
-    <a href={`/explorer#project-${project.id}`} className="group block min-w-0 bg-transparent">
+    <a href={`/explorer/${project.id}`} className="group block min-w-0 bg-transparent">
       <div className="aspect-[1.28] overflow-hidden bg-[#edf3f8]">
         {project.imageUrl ? (
           <img src={profileMediaUrl(project.imageUrl)} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]" />
@@ -2348,10 +2405,22 @@ function ProfileProjectPreviewCard({ project, showAuthor }: { project: ProfileEx
       <h3 className="mt-3 truncate text-base font-medium text-[#0b1724]">{project.title}</h3>
       {project.summary ? <p className="mt-1 line-clamp-1 text-xs leading-5 text-[#64748b]">{project.summary}</p> : null}
       <div className="mt-2 flex items-center gap-4 text-sm text-[#91a0af]">
-        <span className="inline-flex items-center gap-1"><ProfileViewIcon />{formatCompactProfileMetric(project.likesCount * 18 + project.commentsCount * 22 + 120)}</span>
+        <button type="button" onClick={(event) => { event.preventDefault(); onToggleVisibility?.(); }} className={`inline-flex items-center gap-1 ${editable ? 'transition hover:text-[#0f8f6b]' : ''}`} title={editable ? (project.visibility === 'public' ? 'Cacher du grand public' : 'Reactiver publiquement') : 'Vues'}>
+          <ProfileViewIcon />{formatCompactProfileMetric(project.viewsCount ?? 0)}
+        </button>
         <span className="inline-flex items-center gap-1"><ProfileThumbIcon />{project.likesCount}</span>
-        <span className="inline-flex items-center gap-1"><ProfileStarMiniIcon />0</span>
+        <span className="inline-flex items-center gap-1"><ProfileStarMiniIcon />{project.favoritesCount ?? 0}</span>
         <span className="inline-flex items-center gap-1"><ProfileCommentMiniIcon />{project.commentsCount}</span>
+        {editable ? (
+          <>
+            <button type="button" onClick={(event) => { event.preventDefault(); onEdit?.(); }} className="ml-auto inline-flex items-center gap-1 transition hover:text-[#0f8f6b]" aria-label="Modifier ce poste">
+              <ProfileEditMiniIcon />
+            </button>
+            <button type="button" onClick={(event) => { event.preventDefault(); onDelete?.(); }} className="inline-flex items-center gap-1 transition hover:text-red-600" aria-label="Supprimer ce poste">
+              <ProfileDeleteMiniIcon />
+            </button>
+          </>
+        ) : null}
       </div>
       {showAuthor ? (
         <div className="mt-4 flex items-center gap-2 text-sm text-[#102033]">
@@ -2374,34 +2443,18 @@ function ProfileEmptySocialState({ kind, onCreate }: { kind: 'projects' | 'favor
   const isProjects = kind === 'projects';
 
   return (
-    <div className="mt-5 overflow-hidden rounded-[8px] border border-[#dbe4ee] bg-[#f8fbfd] shadow-[0_12px_30px_rgba(15,35,52,0.055)]">
-      <div className="grid gap-0 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <div className="relative min-h-[190px] overflow-hidden bg-[#102033]">
-          <img src={isProjects ? '/images/hero-pcb-color-variants.png' : '/images/explorer-hero-community.webp'} alt="" className="absolute inset-0 h-full w-full object-cover opacity-90" />
-          <div className="absolute inset-0 bg-gradient-to-br from-[#07172a]/82 via-[#07172a]/42 to-[#0f8f6b]/22" aria-hidden="true" />
-        </div>
-        <div className="grid content-center p-5 text-left sm:p-7">
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#0f8f6b]">{isProjects ? 'Portfolio' : 'Sélection'}</p>
-          <h3 className="mt-2 text-xl font-black leading-tight text-[#102033]">
-            {isProjects ? 'Votre premier projet public peut devenir votre vitrine.' : 'Gardez sous la main les projets qui vous inspirent.'}
-          </h3>
-          <p className="mt-3 text-sm leading-6 text-[#64748b]">
-            {isProjects
-              ? 'Publiez une carte, un prototype ou une documentation technique avec une image claire, une description utile et des fichiers organisés.'
-              : 'Les projets sauvegardés apparaitront ici pour comparer des idées, retrouver des références et suivre les nouvelles publications.'}
-          </p>
-          {isProjects ? (
-            <button type="button" onClick={onCreate} className="mt-5 inline-flex h-10 w-fit items-center justify-center gap-2 rounded-[6px] bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
-              <ProjectTabIcon />
-              Créer un projet
-            </button>
-          ) : (
-            <a href="/explorer" className="mt-5 inline-flex h-10 w-fit items-center justify-center rounded-[6px] border border-[#0f8f6b] bg-white px-5 text-sm font-black text-[#0f8f6b] transition hover:bg-[#eefbf6]">
-              Explorer
-            </a>
-          )}
-        </div>
-      </div>
+    <div className="mt-5 border border-[#dbe4ee] bg-white p-6 text-sm leading-6 text-[#64748b]">
+      <p>{isProjects ? 'Aucun projet publie pour le moment.' : 'Aucun favori pour le moment.'}</p>
+      {isProjects ? (
+        <button type="button" onClick={onCreate} className="mt-4 inline-flex h-10 w-fit items-center justify-center gap-2 rounded-[6px] bg-[#0f8f6b] px-5 text-sm font-black text-white transition hover:bg-[#0b7558]">
+          <ProjectTabIcon />
+          Creer un projet
+        </button>
+      ) : (
+        <a href="/explorer" className="mt-4 inline-flex h-10 w-fit items-center justify-center rounded-[6px] border border-[#0f8f6b] bg-white px-5 text-sm font-black text-[#0f8f6b] transition hover:bg-[#eefbf6]">
+          Explorer
+        </a>
+      )}
     </div>
   );
 }
@@ -2481,6 +2534,26 @@ function ProfileCommentMiniIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M5 5h14v10H8l-3 3V5Z" />
+    </svg>
+  );
+}
+
+function ProfileEditMiniIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z" />
+      <path d="m14 7 3 3" />
+    </svg>
+  );
+}
+
+function ProfileDeleteMiniIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7h16" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M6 7l1 14h10l1-14" />
+      <path d="M9 7V4h6v3" />
     </svg>
   );
 }
@@ -4157,6 +4230,11 @@ function accountBadge(profile: ProfileForm): { label: string; color: string; lev
   if ((profile.verificationLevel ?? 0) >= 1) return { label: 'Individuel verifie', color: '#f59e0b', level: 1 };
   if (!isAccountLevelOne(profile)) return { label: 'Individuel', color: '#94a3b8', level: 0 };
   return { label: 'Individuel verifie', color: '#f59e0b', level: 1 };
+}
+
+function publicAccountLabel(profile: ProfileForm): string {
+  const badge = accountBadge(profile);
+  return badge.level > 0 ? badge.label : 'Nouveau compte';
 }
 
 function maskPhone(phone: string): string {
