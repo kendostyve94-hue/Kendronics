@@ -1,9 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
-import { spawn } from 'child_process';
-import { randomUUID } from 'crypto';
-import { mkdtemp, readFile, rm, writeFile } from 'fs/promises';
-import { tmpdir } from 'os';
-import { extname, join } from 'path';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PresignUploadDto } from './dto/presign-upload.dto';
 import { PresignedUpload } from './entities/presigned-upload.entity';
@@ -97,31 +92,20 @@ export class UploadsService {
     if (file.size > maxSizeBytes) {
       throw new BadRequestException(sourceMimeType.startsWith('video/') ? 'Project video exceeds the 250MB limit.' : 'Project file exceeds the 50MB limit.');
     }
-    const normalizedFile = sourceMimeType.startsWith('video/')
-      ? await normalizeVideoForPublicFeed(file, sourceMimeType)
-      : {
-          originalname: file.originalname,
-          mimetype: sourceMimeType,
-          size: file.size,
-          buffer: file.buffer,
-        };
-    if (normalizedFile.size > maxSizeBytes) {
-      throw new BadRequestException(sourceMimeType.startsWith('video/') ? 'Converted project video exceeds the 250MB limit.' : 'Project file exceeds the 50MB limit.');
-    }
-    const sanitizedFilename = normalizedFile.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const sanitizedFilename = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
     const dto = {
-      filename: normalizedFile.originalname,
-      mimeType: normalizedFile.mimetype,
-      fileSizeBytes: normalizedFile.size,
+      filename: file.originalname,
+      mimeType: sourceMimeType,
+      fileSizeBytes: file.size,
     } as PresignUploadDto;
-    const uploaded = await this.uploadRepository.uploadFile(userId, sanitizedFilename, dto, normalizedFile.buffer);
+    const uploaded = await this.uploadRepository.uploadFile(userId, sanitizedFilename, dto, file.buffer);
     const recorded = await this.uploadRepository.markUploaded(uploaded.uploadId, userId);
     if (!recorded) throw new NotFoundException('Uploaded project file was not recorded.');
     return {
       ...recorded,
-      originalName: normalizedFile.originalname,
-      mimeType: normalizedFile.mimetype,
-      sizeBytes: normalizedFile.size,
+      originalName: file.originalname,
+      mimeType: sourceMimeType,
+      sizeBytes: file.size,
     };
   }
 
@@ -189,108 +173,4 @@ function projectFileMimeType(filename: string, fallback = '') {
     if (lowerName.endsWith('.webp')) return 'image/webp';
   }
   return current;
-}
-
-async function normalizeVideoForPublicFeed(
-  file: { originalname: string; size: number; buffer: Buffer },
-  sourceMimeType: string,
-) {
-  const ffmpegPath = process.env.FFMPEG_PATH || optionalFfmpegStaticPath() || 'ffmpeg';
-  const workdir = await mkdtemp(join(tmpdir(), 'kendronics-video-'));
-  const sourceExt = videoExtensionForMimeType(sourceMimeType) || extname(file.originalname) || '.mp4';
-  const inputPath = join(workdir, `source-${randomUUID()}${sourceExt}`);
-  const outputPath = join(workdir, `public-${randomUUID()}.mp4`);
-
-  try {
-    await writeFile(inputPath, file.buffer);
-    await runFfmpeg(ffmpegPath, [
-      '-y',
-      '-i',
-      inputPath,
-      '-map',
-      '0:v:0',
-      '-map',
-      '0:a?',
-      '-vf',
-      'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1',
-      '-r',
-      '30',
-      '-c:v',
-      'libx264',
-      '-preset',
-      'ultrafast',
-      '-crf',
-      '28',
-      '-pix_fmt',
-      'yuv420p',
-      '-c:a',
-      'aac',
-      '-b:a',
-      '128k',
-      '-movflags',
-      '+faststart',
-      outputPath,
-    ], 180_000);
-    const buffer = await readFile(outputPath);
-    return {
-      originalname: `${file.originalname.replace(/\.[^.]+$/, '') || 'kendronics-video'}-16x9.mp4`,
-      mimetype: 'video/mp4',
-      size: buffer.length,
-      buffer,
-    };
-  } catch (error) {
-    throw new ServiceUnavailableException(`Video normalization is unavailable: ${error instanceof Error ? error.message : String(error)}`);
-  } finally {
-    await rm(workdir, { recursive: true, force: true }).catch(() => undefined);
-  }
-}
-
-function runFfmpeg(ffmpegPath: string, args: string[], timeoutMs: number) {
-  return new Promise<void>((resolve, reject) => {
-    const child = spawn(ffmpegPath, args, { windowsHide: true });
-    let settled = false;
-    const timeout = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      child.kill('SIGKILL');
-      reject(new Error('Video conversion timed out. Try a shorter MP4 video.'));
-    }, timeoutMs);
-    let stderr = '';
-    child.stderr.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString();
-      if (stderr.length > 2000) stderr = stderr.slice(-2000);
-    });
-    child.on('error', (error) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      reject(error);
-    });
-    child.on('close', (code) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      if (code === 0) {
-        resolve();
-        return;
-      }
-      reject(new Error(stderr.trim() || `FFmpeg exited with code ${code}`));
-    });
-  });
-}
-
-function videoExtensionForMimeType(mimeType: string) {
-  if (mimeType === 'video/mp4') return '.mp4';
-  if (mimeType === 'video/quicktime') return '.mov';
-  if (mimeType === 'video/webm') return '.webm';
-  return '';
-}
-
-function optionalFfmpegStaticPath() {
-  try {
-    const ffmpegStaticPath = require('ffmpeg-static') as string | null;
-    return ffmpegStaticPath || undefined;
-  } catch {
-    return undefined;
-  }
 }

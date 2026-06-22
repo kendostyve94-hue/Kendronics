@@ -297,9 +297,8 @@ export default function NewProjectPage() {
       setStatus('Le brouillon projet est encore en preparation. Reessayez dans quelques secondes.');
       return;
     }
-    const isVideoUpload = (overrideKind ?? assetKind) === 'video' || file.type.startsWith('video/');
     setIsUploading(true);
-    setStatus(isVideoUpload ? `Televersement et conversion 16:9 de ${file.name}...` : `Televersement securise de ${file.name}...`);
+    setStatus(`Televersement securise de ${file.name}...`);
     const session = await readFreshAuthSession();
     if (!session) {
       setStatus('Votre session a expire.');
@@ -308,24 +307,17 @@ export default function NewProjectPage() {
     }
     const body = new FormData();
     body.append('file', file);
-    const uploadController = new AbortController();
-    const uploadTimeout = window.setTimeout(() => uploadController.abort(), isVideoUpload ? 210_000 : 90_000);
     let uploadResponse: Response;
     try {
       uploadResponse = await fetch(`${getApiBaseUrl()}/api/uploads/project-direct`, {
         method: 'POST',
         headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
         body,
-        signal: uploadController.signal,
       });
     } catch (error) {
-      setStatus(error instanceof DOMException && error.name === 'AbortError'
-        ? 'La conversion video prend trop de temps. Essayez une video plus courte en MP4.'
-        : 'Le televersement a ete interrompu. Reessayez dans quelques instants.');
+      setStatus('Le televersement a ete interrompu. Reessayez dans quelques instants.');
       setIsUploading(false);
       return;
-    } finally {
-      window.clearTimeout(uploadTimeout);
     }
     if (!uploadResponse.ok) {
       const error = await uploadResponse.json().catch(() => ({})) as { message?: string | string[] };
@@ -484,7 +476,7 @@ export default function NewProjectPage() {
               <div className="grid gap-3">
                 <div>
                   <p className="inline-flex items-center gap-1.5 text-sm font-black">Médias de présentation <span className="text-[#d9485f]">*</span></p>
-                  <p className="mt-1 text-xs leading-5 text-[#64748b]">Ajoutez une couverture ou une video pour controler le rendu public avant publication.</p>
+                  <p className="mt-1 text-xs leading-5 text-[#64748b]">Ajoutez une couverture ou une video MP4/WebM pour controler le rendu public avant publication.</p>
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
                     <label className="inline-flex h-11 min-w-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#0f8f6b] px-2 text-center text-[12px] font-black text-[#0f8f6b] sm:px-4 sm:text-sm">
                       Téléverser une image
@@ -492,7 +484,7 @@ export default function NewProjectPage() {
                     </label>
                     <label className="inline-flex h-11 min-w-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#cfd8e3] px-2 text-center text-[12px] font-black text-[#102033] sm:px-4 sm:text-sm">
                       Ajouter une vidéo
-                      <input type="file" className="sr-only" accept=".mp4,.mov,.webm" onChange={(event) => previewMedia(event, 'video')} />
+                      <input type="file" className="sr-only" accept=".mp4,.webm" onChange={(event) => previewMedia(event, 'video')} />
                     </label>
                   </div>
                 </div>
