@@ -297,8 +297,9 @@ export default function NewProjectPage() {
       setStatus('Le brouillon projet est encore en preparation. Reessayez dans quelques secondes.');
       return;
     }
+    const isVideoUpload = (overrideKind ?? assetKind) === 'video' || file.type.startsWith('video/');
     setIsUploading(true);
-    setStatus(`Televersement securise de ${file.name}...`);
+    setStatus(isVideoUpload ? `Televersement et conversion 16:9 de ${file.name}...` : `Televersement securise de ${file.name}...`);
     const session = await readFreshAuthSession();
     if (!session) {
       setStatus('Votre session a expire.');
@@ -307,11 +308,25 @@ export default function NewProjectPage() {
     }
     const body = new FormData();
     body.append('file', file);
-    const uploadResponse = await fetch(`${getApiBaseUrl()}/api/uploads/project-direct`, {
-      method: 'POST',
-      headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
-      body,
-    });
+    const uploadController = new AbortController();
+    const uploadTimeout = window.setTimeout(() => uploadController.abort(), isVideoUpload ? 210_000 : 90_000);
+    let uploadResponse: Response;
+    try {
+      uploadResponse = await fetch(`${getApiBaseUrl()}/api/uploads/project-direct`, {
+        method: 'POST',
+        headers: { Authorization: `${session.tokenType} ${session.accessToken}` },
+        body,
+        signal: uploadController.signal,
+      });
+    } catch (error) {
+      setStatus(error instanceof DOMException && error.name === 'AbortError'
+        ? 'La conversion video prend trop de temps. Essayez une video plus courte en MP4.'
+        : 'Le televersement a ete interrompu. Reessayez dans quelques instants.');
+      setIsUploading(false);
+      return;
+    } finally {
+      window.clearTimeout(uploadTimeout);
+    }
     if (!uploadResponse.ok) {
       const error = await uploadResponse.json().catch(() => ({})) as { message?: string | string[] };
       setStatus(messageFromError(error, 'Le televersement a echoue.'));

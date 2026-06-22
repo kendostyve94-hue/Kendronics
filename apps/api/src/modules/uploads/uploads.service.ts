@@ -218,9 +218,9 @@ async function normalizeVideoForPublicFeed(
       '-c:v',
       'libx264',
       '-preset',
-      'veryfast',
+      'ultrafast',
       '-crf',
-      '23',
+      '28',
       '-pix_fmt',
       'yuv420p',
       '-c:a',
@@ -230,7 +230,7 @@ async function normalizeVideoForPublicFeed(
       '-movflags',
       '+faststart',
       outputPath,
-    ]);
+    ], 180_000);
     const buffer = await readFile(outputPath);
     return {
       originalname: `${file.originalname.replace(/\.[^.]+$/, '') || 'kendronics-video'}-16x9.mp4`,
@@ -245,16 +245,31 @@ async function normalizeVideoForPublicFeed(
   }
 }
 
-function runFfmpeg(ffmpegPath: string, args: string[]) {
+function runFfmpeg(ffmpegPath: string, args: string[], timeoutMs: number) {
   return new Promise<void>((resolve, reject) => {
     const child = spawn(ffmpegPath, args, { windowsHide: true });
+    let settled = false;
+    const timeout = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      child.kill('SIGKILL');
+      reject(new Error('Video conversion timed out. Try a shorter MP4 video.'));
+    }, timeoutMs);
     let stderr = '';
     child.stderr.on('data', (chunk: Buffer) => {
       stderr += chunk.toString();
       if (stderr.length > 2000) stderr = stderr.slice(-2000);
     });
-    child.on('error', (error) => reject(error));
+    child.on('error', (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      reject(error);
+    });
     child.on('close', (code) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
       if (code === 0) {
         resolve();
         return;
