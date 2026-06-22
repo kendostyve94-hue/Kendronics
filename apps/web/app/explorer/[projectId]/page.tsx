@@ -17,6 +17,7 @@ type ExplorerProject = {
   description?: string;
   tags: string[];
   imageUrl?: string;
+  thumbnailUrl?: string;
   mediaKind?: string;
   mediaMimeType?: string;
   projectType?: 'free' | 'paid';
@@ -248,11 +249,11 @@ export default function ExplorerProjectDetailPage() {
               </div>
             </header>
 
-            <div className="mt-8 overflow-hidden bg-[#edf3f8]">
+            <div className="mt-8 aspect-video overflow-hidden bg-[#edf3f8]">
               {project.imageUrl ? (
-                <ProjectMedia project={project} className="max-h-[620px] w-full object-cover" />
+                <ProjectMedia project={project} className="h-full w-full object-cover" />
               ) : (
-                <div className="grid min-h-[280px] place-items-center text-sm font-black uppercase tracking-[0.16em] text-[#64748b]">{project.category}</div>
+                <div className="grid h-full w-full place-items-center text-sm font-black uppercase tracking-[0.16em] text-[#64748b]">{project.category}</div>
               )}
             </div>
 
@@ -262,7 +263,7 @@ export default function ExplorerProjectDetailPage() {
               <p className="mt-6 whitespace-pre-line text-base leading-8 text-[#334155] sm:text-lg">{project.description || project.summary}</p>
             </section>
 
-            <section className="mx-auto mt-12 grid max-w-5xl gap-8 lg:grid-cols-2">
+            {project.projectType === 'paid' ? <section className="mx-auto mt-12 grid max-w-5xl gap-8 lg:grid-cols-2">
               <ProjectInfoBlock
                 title="Caracteristiques techniques"
                 items={[
@@ -286,9 +287,9 @@ export default function ExplorerProjectDetailPage() {
                   ['Version', detailValue(project.documentation, 'changelog')],
                 ]}
               />
-            </section>
+            </section> : null}
 
-            <section className="mx-auto mt-10 max-w-5xl">
+            {project.projectType === 'paid' ? <section className="mx-auto mt-10 max-w-5xl">
               <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#dbe4ee] pb-3">
                 <h2 className="text-lg font-black text-[#0b1724]">Fichiers publics</h2>
                 <span className="text-sm font-semibold text-[#64748b]">{project.publicAssets?.length ?? 0} fichier(s)</span>
@@ -304,7 +305,7 @@ export default function ExplorerProjectDetailPage() {
                   <p className="py-4 text-sm text-[#64748b]">Aucun fichier public. Les fichiers proteges sont disponibles uniquement apres licence ou achat.</p>
                 )}
               </div>
-            </section>
+            </section> : null}
 
             <section className="mx-auto mt-10 max-w-5xl">
               <h2 className="border-b border-[#dbe4ee] pb-3 text-lg font-black text-[#0b1724]">Commentaires</h2>
@@ -383,8 +384,9 @@ function CertificationBadge({ level, status }: { level: number; status?: string 
 
 function ProjectMedia({ project, className }: { project: ExplorerProject; className: string }) {
   const src = project.imageUrl ? mediaUrl(project.imageUrl) : '';
+  const poster = project.thumbnailUrl ? mediaUrl(project.thumbnailUrl) : undefined;
   const isVideo = project.mediaMimeType?.startsWith('video/') || project.mediaKind === 'video';
-  return isVideo ? <video src={src} className={className} controls playsInline /> : <img src={src} alt="" className={className} />;
+  return isVideo ? <video src={src} poster={poster} className={className} autoPlay playsInline controls preload="metadata" /> : <img src={src} alt="" className={className} />;
 }
 
 function DetailEyeIcon() {

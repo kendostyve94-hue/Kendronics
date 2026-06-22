@@ -249,6 +249,9 @@ type ProfileExplorerProject = {
   summary: string;
   tags: string[];
   imageUrl?: string;
+  thumbnailUrl?: string;
+  mediaKind?: string;
+  mediaMimeType?: string;
   viewsCount?: number;
   likesCount: number;
   favoritesCount?: number;
@@ -2395,9 +2398,9 @@ function ProfileProjectPreviewCard({
 
   return (
     <a href={`/explorer/${project.id}`} className="group block min-w-0 bg-transparent">
-      <div className="aspect-[1.28] overflow-hidden bg-[#edf3f8]">
+      <div className="aspect-video overflow-hidden bg-[#edf3f8]">
         {project.imageUrl ? (
-          <img src={profileMediaUrl(project.imageUrl)} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]" />
+          <ProfileProjectMedia project={project} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]" />
         ) : (
           <div className="grid h-full w-full place-items-center bg-[#edf3f8] px-4 text-center text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">{project.category}</div>
         )}
@@ -2511,6 +2514,13 @@ function ProfileViewIcon({ hidden = false }: { hidden?: boolean }) {
       {hidden ? <path d="M4 4l16 16" /> : null}
     </svg>
   );
+}
+
+function ProfileProjectMedia({ project, className }: { project: ProfileExplorerProject; className: string }) {
+  const src = project.imageUrl ? profileMediaUrl(project.imageUrl) : '';
+  const poster = project.thumbnailUrl ? profileMediaUrl(project.thumbnailUrl) : undefined;
+  const isVideo = project.mediaMimeType?.startsWith('video/') || project.mediaKind === 'video';
+  return isVideo ? <video src={src} poster={poster} className={className} controls playsInline preload="metadata" /> : <img src={src} alt="" className={className} />;
 }
 
 function ProfileThumbIcon() {

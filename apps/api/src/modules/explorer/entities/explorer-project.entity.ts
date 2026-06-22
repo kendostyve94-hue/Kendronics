@@ -18,6 +18,7 @@ export type ExplorerProject = {
   description?: string;
   tags: string[];
   imageUrl?: string;
+  thumbnailUrl?: string;
   mediaKind?: string;
   mediaMimeType?: string;
   attachmentName?: string;

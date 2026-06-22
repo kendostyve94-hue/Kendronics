@@ -34,12 +34,7 @@ export class ExplorerService {
       include: {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
-        assets: {
-          where: { kind: { in: ['cover', 'video', 'gallery'] }, visibility: 'public' },
-          orderBy: { createdAt: 'asc' },
-          take: 1,
-          select: { id: true, kind: true, mimeType: true },
-        },
+        assets: publicPreviewAssetSelect(),
         user: { select: { verificationLevel: true } },
       },
     });
@@ -324,12 +319,7 @@ export class ExplorerService {
       include: {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
-        assets: {
-          where: { kind: { in: ['cover', 'video', 'gallery'] }, visibility: 'public' },
-          orderBy: { createdAt: 'asc' },
-          take: 1,
-          select: { id: true, kind: true, mimeType: true },
-        },
+        assets: publicPreviewAssetSelect(),
         user: { select: { verificationLevel: true } },
       },
     });
@@ -402,12 +392,7 @@ export class ExplorerService {
       include: {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
-        assets: {
-          where: { kind: { in: ['cover', 'video', 'gallery'] }, visibility: 'public' },
-          orderBy: { createdAt: 'asc' },
-          take: 1,
-          select: { id: true, kind: true, mimeType: true },
-        },
+        assets: publicPreviewAssetSelect(),
         user: { select: { verificationLevel: true } },
       },
     });
@@ -431,12 +416,7 @@ export class ExplorerService {
           include: {
             _count: { select: { favorites: true } },
             comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
-            assets: {
-              where: { kind: { in: ['cover', 'video', 'gallery'] }, visibility: 'public' },
-              orderBy: { createdAt: 'asc' },
-              take: 1,
-              select: { id: true, kind: true, mimeType: true },
-            },
+            assets: publicPreviewAssetSelect(),
             user: { select: { verificationLevel: true } },
           },
         },
@@ -461,12 +441,7 @@ export class ExplorerService {
       include: {
         _count: { select: { favorites: true } },
         comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
-        assets: {
-          where: { kind: { in: ['cover', 'video', 'gallery'] }, visibility: 'public' },
-          orderBy: { createdAt: 'asc' },
-          take: 1,
-          select: { id: true, kind: true, mimeType: true },
-        },
+        assets: publicPreviewAssetSelect(),
         user: { select: { verificationLevel: true } },
       },
     });
@@ -748,7 +723,12 @@ type ExplorerProjectRecord = Prisma.ExplorerProjectGetPayload<{
 }> & { assets?: Array<{ id: string; kind?: string; mimeType?: string }>; user?: { verificationLevel: number } | null };
 
 function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
-  const previewAsset = project.assets?.find((asset) => ['cover', 'video', 'gallery'].includes(asset.kind ?? ''));
+  const publicAssets = project.assets?.filter((asset) => ['cover', 'video', 'gallery'].includes(asset.kind ?? '')) ?? [];
+  const videoAsset = publicAssets.find((asset) => asset.kind === 'video' || asset.mimeType?.startsWith('video/'));
+  const coverAsset = publicAssets.find((asset) => asset.kind === 'cover' && !asset.mimeType?.startsWith('video/'))
+    ?? publicAssets.find((asset) => asset.mimeType?.startsWith('image/'))
+    ?? publicAssets.find((asset) => asset.kind === 'gallery');
+  const previewAsset = videoAsset ?? coverAsset;
   return {
     id: project.id,
     userId: project.userId ?? undefined,
@@ -762,6 +742,7 @@ function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
     description: project.description ?? undefined,
     tags: project.tags,
     imageUrl: publicCoverUrl(project.id, previewAsset?.id) ?? safeStoredImageUrl(project.imageUrl),
+    thumbnailUrl: videoAsset && coverAsset ? publicCoverUrl(project.id, coverAsset.id) : undefined,
     mediaKind: previewAsset?.kind,
     mediaMimeType: previewAsset?.mimeType,
     attachmentName: project.attachmentName ?? undefined,
@@ -786,6 +767,15 @@ function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
       body: comment.body,
       createdAt: comment.createdAt,
     })),
+  };
+}
+
+function publicPreviewAssetSelect() {
+  return {
+    where: { kind: { in: ['cover', 'video', 'gallery'] }, visibility: 'public' },
+    orderBy: { createdAt: 'asc' as const },
+    take: 6,
+    select: { id: true, kind: true, mimeType: true },
   };
 }
 

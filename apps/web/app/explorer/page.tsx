@@ -26,6 +26,7 @@ type ExplorerProject = {
   description?: string;
   tags: string[];
   imageUrl?: string;
+  thumbnailUrl?: string;
   mediaKind?: string;
   mediaMimeType?: string;
   attachmentName?: string;
@@ -580,12 +581,19 @@ function ProjectCard({
   return (
     <article className={`min-w-0 bg-transparent transition ${selected ? 'opacity-100' : 'opacity-95 hover:opacity-100'}`}>
       <a href={`/explorer/${project.id}`} onClick={onSelect} className="block w-full text-left">
-        <div className="aspect-[1.45] overflow-hidden bg-[#e8eef5]">
+        <div className="relative left-1/2 aspect-video w-screen -translate-x-1/2 overflow-hidden bg-[#e8eef5] sm:left-auto sm:w-full sm:translate-x-0">
           {project.imageUrl ? (
-            <ProjectMedia project={project} className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]" />
+            <ProjectMedia project={project} className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]" autoPlayVideo />
           ) : (
             <div className="grid h-full w-full place-items-center bg-[#edf3f8] px-4 text-center text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">{project.category}</div>
           )}
+          <div className="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full bg-white/92 px-2 py-1 text-xs font-semibold text-[#0b1724] backdrop-blur">
+            <span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[11px] font-black text-white">
+              {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="min-w-0 truncate">{project.authorName}</span>
+            <CertificationBadge level={project.authorVerificationLevel ?? 0} />
+          </div>
         </div>
         <div className="mt-3 flex min-w-0 items-center">
           <h3 className="min-w-0 truncate text-base font-medium text-[#0b1724]">{project.title}</h3>
@@ -610,11 +618,7 @@ function ProjectCard({
         </div>
       ) : null}
       <div className="mt-4 flex items-center gap-2 text-sm text-[#0b1724]">
-        <a href={profileHref} className="grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[10px] font-black text-white" aria-label={`Voir le profil de ${project.authorName}`}>
-          {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
-        </a>
-        <a href={profileHref} className="min-w-0 max-w-[calc(100%-3.25rem)] truncate transition hover:text-[#0f8f6b]">{project.authorName}</a>
-        <CertificationBadge level={project.authorVerificationLevel ?? 0} />
+        <a href={profileHref} className="sr-only">Voir le profil de {project.authorName}</a>
         {followed && !followAnimating ? null : <button
           type="button"
           onClick={onFollow}
@@ -686,10 +690,11 @@ function CertificationBadge({ level }: { level: number }) {
   );
 }
 
-function ProjectMedia({ project, className }: { project: ExplorerProject; className: string }) {
+function ProjectMedia({ project, className, autoPlayVideo = false }: { project: ExplorerProject; className: string; autoPlayVideo?: boolean }) {
   const src = project.imageUrl ? mediaUrl(project.imageUrl) : '';
+  const poster = project.thumbnailUrl ? mediaUrl(project.thumbnailUrl) : undefined;
   const isVideo = project.mediaMimeType?.startsWith('video/') || project.mediaKind === 'video';
-  return isVideo ? <video src={src} className={className} muted playsInline controls /> : <img src={src} alt="" className={className} />;
+  return isVideo ? <video src={src} poster={poster} className={className} autoPlay={autoPlayVideo} playsInline controls preload="metadata" /> : <img src={src} alt="" className={className} />;
 }
 
 function EyeIcon() {
