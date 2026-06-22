@@ -205,6 +205,7 @@ export default function ExplorerProjectDetailPage() {
                     <CertificationBadge level={project.author.verificationLevel} status={project.author.verificationStatus} />
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-3 text-xs font-semibold">
+                    <span className="rounded-full bg-[#eefbf6] px-1.5 py-0.5 text-[10px] font-black leading-none text-[#0f8f6b]">{project.author.badgeLabel}</span>
                     {!project.socialState?.isOwner ? <button type="button" onClick={() => void followAuthor()} className={`inline-flex items-center gap-1 text-[#334155] transition hover:text-[#0f8f6b] ${followed ? 'text-[#0f8f6b]' : ''}`}>
                       <FollowTinyIcon />
                       {followed ? 'Unfollow' : 'Follow'}

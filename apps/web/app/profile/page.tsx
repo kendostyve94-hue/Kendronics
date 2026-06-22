@@ -2405,8 +2405,8 @@ function ProfileProjectPreviewCard({
       <h3 className="mt-3 truncate text-base font-medium text-[#0b1724]">{project.title}</h3>
       {project.summary ? <p className="mt-1 line-clamp-1 text-xs leading-5 text-[#64748b]">{project.summary}</p> : null}
       <div className="mt-2 flex items-center gap-4 text-sm text-[#91a0af]">
-        <button type="button" onClick={(event) => { event.preventDefault(); onToggleVisibility?.(); }} className={`inline-flex items-center gap-1 ${editable ? 'transition hover:text-[#0f8f6b]' : ''}`} title={editable ? (project.visibility === 'public' ? 'Cacher du grand public' : 'Reactiver publiquement') : 'Vues'}>
-          <ProfileViewIcon />{formatCompactProfileMetric(project.viewsCount ?? 0)}
+        <button type="button" onClick={(event) => { event.preventDefault(); onToggleVisibility?.(); }} className={`inline-flex items-center gap-1 ${project.visibility !== 'public' ? 'text-[#b45309]' : ''} ${editable ? 'transition hover:text-[#0f8f6b]' : ''}`} title={editable ? (project.visibility === 'public' ? 'Cacher du grand public' : 'Reactiver publiquement') : 'Vues'}>
+          <ProfileViewIcon hidden={project.visibility !== 'public'} />{formatCompactProfileMetric(project.viewsCount ?? 0)}
         </button>
         <span className="inline-flex items-center gap-1"><ProfileThumbIcon />{project.likesCount}</span>
         <span className="inline-flex items-center gap-1"><ProfileStarMiniIcon />{project.favoritesCount ?? 0}</span>
@@ -2503,11 +2503,12 @@ function ProjectTabIcon() {
   );
 }
 
-function ProfileViewIcon() {
+function ProfileViewIcon({ hidden = false }: { hidden?: boolean }) {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M2.5 12s3.5-5.5 9.5-5.5S21.5 12 21.5 12s-3.5 5.5-9.5 5.5S2.5 12 2.5 12Z" />
       <circle cx="12" cy="12" r="2.3" />
+      {hidden ? <path d="M4 4l16 16" /> : null}
     </svg>
   );
 }

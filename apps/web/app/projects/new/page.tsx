@@ -351,14 +351,23 @@ export default function NewProjectPage() {
     const nextVisibility = overrideVisibility ?? assetVisibility;
     if (nextVisibility === 'public' && ['cover', 'video', 'gallery'].includes(nextKind)) {
       const publicUrl = `${getApiBaseUrl()}/api/explorer/projects/${projectId}/assets/${attached.id}/public`;
-      const nextForm: EditorForm = {
-        ...form,
-        imageUrl: publicUrl,
-        coverPreviewUrl: upload.mimeType.startsWith('video/') ? form.coverPreviewUrl : (form.coverPreviewUrl || localPreviewUrl),
-        videoPreviewUrl: upload.mimeType.startsWith('video/') ? (form.videoPreviewUrl || localPreviewUrl) : form.videoPreviewUrl,
-      };
-      setForm(nextForm);
-      void saveDraft(false, nextForm);
+      let nextForm: EditorForm | null = null;
+      setForm((current) => {
+        nextForm = {
+          ...current,
+          imageUrl: publicUrl,
+          coverPreviewUrl: upload.mimeType.startsWith('video/') ? current.coverPreviewUrl : (current.coverPreviewUrl || localPreviewUrl),
+          videoPreviewUrl: upload.mimeType.startsWith('video/') ? (current.videoPreviewUrl || localPreviewUrl) : current.videoPreviewUrl,
+        };
+        return nextForm;
+      });
+      if (nextForm) {
+        const saved = await saveDraft(false, nextForm);
+        if (!saved) {
+          setStatus(`${file.name} est rattache, mais l'enregistrement du media public a echoue. Reessayez avant publication.`);
+          return;
+        }
+      }
     }
     setStatus(`${file.name} est maintenant rattache au brouillon.`);
   }
