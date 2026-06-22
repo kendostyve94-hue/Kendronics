@@ -340,10 +340,10 @@ export default function NewProjectPage() {
         sizeBytes: upload.sizeBytes,
       }),
     });
-    setIsUploading(false);
     if (!attachResponse.ok) {
       const error = await attachResponse.json().catch(() => ({})) as { message?: string | string[] };
       setStatus(messageFromError(error, 'Le fichier a ete stocke, mais son rattachement au projet a echoue.'));
+      setIsUploading(false);
       return;
     }
     const attached = await attachResponse.json() as ProjectAsset;
@@ -366,10 +366,12 @@ export default function NewProjectPage() {
         const saved = await saveDraft(false, nextForm);
         if (!saved) {
           setStatus(`${file.name} est rattache, mais l'enregistrement du media public a echoue. Reessayez avant publication.`);
+          setIsUploading(false);
           return;
         }
       }
     }
+    setIsUploading(false);
     setStatus(`${file.name} est maintenant rattache au brouillon.`);
   }
 
@@ -389,6 +391,10 @@ export default function NewProjectPage() {
   }
 
   async function publish() {
+    if (isUploading || isSaving) {
+      setStatus('Patientez jusqu a la fin du televersement et de l enregistrement avant de publier.');
+      return;
+    }
     if (validation.length > 0) {
       setStatus(`Publication incomplete : ${validation.join(', ')}.`);
       return;
@@ -526,10 +532,10 @@ export default function NewProjectPage() {
               </Field>
               <label className={`inline-flex h-11 items-center justify-center bg-[#0f8f6b] px-5 text-sm font-black text-white ${isUploading || !projectId ? 'pointer-events-none opacity-60' : 'cursor-pointer'}`}>
                 {isUploading ? 'Televersement...' : projectId ? 'Ajouter un fichier' : 'Preparation...'}
-                <input disabled={isUploading || !projectId} type="file" className="sr-only" onChange={(event) => void uploadAsset(event)} accept=".zip,.pdf,.txt,.csv,.json,.jpg,.jpeg,.png,.webp,.mp4,.mov,.bin,.hex" />
+                <input disabled={isUploading || !projectId} type="file" className="sr-only" onChange={(event) => void uploadAsset(event)} accept=".zip,.pdf,.txt,.csv,.json,.jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.bin,.hex" />
               </label>
             </div>
-            <p className="text-xs leading-5 text-[#7a8899]">50 Mo maximum par fichier. Les fichiers proteges ne sont jamais exposes par une URL publique.</p>
+            <p className="text-xs leading-5 text-[#7a8899]">50 Mo maximum par fichier, 250 Mo pour les videos. Les fichiers proteges ne sont jamais exposes par une URL publique.</p>
             <div className="divide-y divide-[#e4ebf2] border border-[#dbe4ee]">
               {assets.length === 0 ? <p className="px-4 py-6 text-sm text-[#64748b]">Aucun fichier rattache au projet.</p> : assets.map((asset) => (
                 <div key={asset.id} className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_100px_110px_36px] sm:items-center">
@@ -590,7 +596,7 @@ export default function NewProjectPage() {
                 <p className="text-sm font-black">{validation.length === 0 ? 'Le dossier est pret pour publication.' : `${validation.length} element(s) restent a completer.`}</p>
                 {validation.length > 0 ? <p className="mt-2 text-sm leading-6 text-[#b45309]">{validation.join(' · ')}</p> : <p className="mt-2 text-sm text-[#0f8f6b]">Le projet pourra etre consulte par le grand public selon la visibilite choisie.</p>}
               </div>
-              <button type="button" onClick={() => void publish()} disabled={isPublishing || !projectId} className="h-12 bg-[#0f8f6b] px-7 text-sm font-black text-white transition hover:bg-[#0b7558] disabled:cursor-not-allowed disabled:opacity-50">{isPublishing ? 'Publication...' : 'Publier le projet'}</button>
+              <button type="button" onClick={() => void publish()} disabled={isPublishing || isUploading || isSaving || !projectId} className="h-12 bg-[#0f8f6b] px-7 text-sm font-black text-white transition hover:bg-[#0b7558] disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Televersement...' : isPublishing ? 'Publication...' : 'Publier le projet'}</button>
             </div>
           </EditorSection>
 

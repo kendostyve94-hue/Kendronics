@@ -353,12 +353,16 @@ export class ExplorerService {
     }
     if (errors.length) throw new BadRequestException(errors);
 
+    const previewAsset = selectPreviewAsset(project.assets);
+    const nextImageUrl = publicCoverUrl(project.id, previewAsset?.id) ?? safeStoredImageUrl(project.imageUrl) ?? project.imageUrl;
     const updated = await this.prisma.explorerProject.update({
       where: { id: projectId },
-      data: { status: 'published', publishedAt: new Date() },
+      data: { status: 'published', publishedAt: new Date(), imageUrl: nextImageUrl },
       include: {
         _count: { select: { favorites: true } },
-        comments: true,
+        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+        assets: publicPreviewAssetSelect(),
+        user: { select: { verificationLevel: true } },
       },
     });
     return toExplorerProject(updated);
@@ -718,17 +722,19 @@ export class ExplorerService {
 
 }
 
+type ExplorerProjectAssetRecord = {
+  id: string;
+  kind?: string | null;
+  mimeType?: string | null;
+  visibility?: string | null;
+};
+
 type ExplorerProjectRecord = Prisma.ExplorerProjectGetPayload<{
   include: { _count: { select: { favorites: true } }; comments: true };
-}> & { assets?: Array<{ id: string; kind?: string; mimeType?: string }>; user?: { verificationLevel: number } | null };
+}> & { assets?: ExplorerProjectAssetRecord[]; user?: { verificationLevel: number } | null };
 
 function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
-  const publicAssets = project.assets?.filter((asset) => ['cover', 'video', 'gallery'].includes(asset.kind ?? '')) ?? [];
-  const videoAsset = publicAssets.find((asset) => asset.kind === 'video' || asset.mimeType?.startsWith('video/'));
-  const coverAsset = publicAssets.find((asset) => asset.kind === 'cover' && !asset.mimeType?.startsWith('video/'))
-    ?? publicAssets.find((asset) => asset.mimeType?.startsWith('image/'))
-    ?? publicAssets.find((asset) => asset.kind === 'gallery');
-  const previewAsset = videoAsset ?? coverAsset;
+  const { videoAsset, coverAsset, previewAsset } = selectProjectMediaAssets(project.assets ?? []);
   return {
     id: project.id,
     userId: project.userId ?? undefined,
@@ -743,8 +749,8 @@ function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
     tags: project.tags,
     imageUrl: publicCoverUrl(project.id, previewAsset?.id) ?? safeStoredImageUrl(project.imageUrl),
     thumbnailUrl: videoAsset && coverAsset ? publicCoverUrl(project.id, coverAsset.id) : undefined,
-    mediaKind: previewAsset?.kind,
-    mediaMimeType: previewAsset?.mimeType,
+    mediaKind: previewAsset?.kind ?? undefined,
+    mediaMimeType: previewAsset?.mimeType ?? undefined,
     attachmentName: project.attachmentName ?? undefined,
     attachmentType: project.attachmentType ?? undefined,
     repositoryUrl: project.repositoryUrl ?? undefined,
@@ -777,6 +783,22 @@ function publicPreviewAssetSelect() {
     take: 6,
     select: { id: true, kind: true, mimeType: true },
   };
+}
+
+function selectProjectMediaAssets(assets: ExplorerProjectAssetRecord[]) {
+  const publicAssets = assets.filter((asset) => {
+    const kind = asset.kind ?? '';
+    return ['cover', 'video', 'gallery'].includes(kind) && (!asset.visibility || asset.visibility === 'public');
+  });
+  const videoAsset = publicAssets.find((asset) => asset.kind === 'video' || asset.mimeType?.startsWith('video/'));
+  const coverAsset = publicAssets.find((asset) => asset.kind === 'cover' && !asset.mimeType?.startsWith('video/'))
+    ?? publicAssets.find((asset) => asset.mimeType?.startsWith('image/'))
+    ?? publicAssets.find((asset) => asset.kind === 'gallery');
+  return { videoAsset, coverAsset, previewAsset: videoAsset ?? coverAsset };
+}
+
+function selectPreviewAsset(assets: ExplorerProjectAssetRecord[]) {
+  return selectProjectMediaAssets(assets).previewAsset;
 }
 
 function clean(value?: string): string {

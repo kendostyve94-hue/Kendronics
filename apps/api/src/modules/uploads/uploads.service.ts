@@ -88,8 +88,9 @@ export class UploadsService {
     if (!allowedMimeTypes.has(mimeType)) {
       throw new BadRequestException('Unsupported project file type.');
     }
-    if (file.size > 50 * 1024 * 1024) {
-      throw new BadRequestException('Project file exceeds the 50MB limit.');
+    const maxSizeBytes = mimeType.startsWith('video/') ? 250 * 1024 * 1024 : 50 * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      throw new BadRequestException(mimeType.startsWith('video/') ? 'Project video exceeds the 250MB limit.' : 'Project file exceeds the 50MB limit.');
     }
     const sanitizedFilename = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
     const dto = {

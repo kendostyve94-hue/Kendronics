@@ -47,7 +47,7 @@ function applySecurityHeaders(request: RequestLike, response: ResponseLike) {
 }
 
 function isPublicProjectAssetPath(path: string) {
-  return /^\/api\/explorer\/projects\/[^/]+\/assets\/[^/]+\/public$/.test(path);
+  return /^\/(?:api\/)?explorer\/projects\/[^/]+\/assets\/[^/]+\/public$/.test(path);
 }
 
 function enforceRateLimit(request: RequestLike, response: ResponseLike): boolean {
