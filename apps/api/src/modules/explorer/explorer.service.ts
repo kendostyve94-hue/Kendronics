@@ -566,7 +566,7 @@ export class ExplorerService {
     }));
   }
 
-  async getPublicAssetUrl(projectId: string, assetId: string) {
+  async getPublicAssetFile(projectId: string, assetId: string) {
     const asset = await this.prisma.explorerProjectAsset.findFirst({
       where: {
         id: assetId,
@@ -584,7 +584,11 @@ export class ExplorerService {
       },
     });
     if (!asset || !['uploaded', 'analyzed'].includes(asset.upload.status)) throw new NotFoundException('Public project file not found.');
-    return { url: this.uploadRepository.createDownloadUrl(asset.upload.storageKey) };
+    return {
+      buffer: await this.uploadRepository.downloadStorageKey(asset.upload.storageKey),
+      mimeType: asset.mimeType,
+      originalName: asset.originalName,
+    };
   }
 
   async createProjectPurchaseIntent(userId: string, projectId: string) {

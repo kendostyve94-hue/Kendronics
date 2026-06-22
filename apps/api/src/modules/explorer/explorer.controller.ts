@@ -116,9 +116,20 @@ export class ExplorerController {
   }
 
   @Get('projects/:projectId/assets/:assetId/public')
-  async publicProjectAsset(@Param('projectId') projectId: string, @Param('assetId') assetId: string, @Res() response: { redirect(statusCode: number, url: string): void }) {
-    const payload = await this.explorerService.getPublicAssetUrl(projectId, assetId);
-    return response.redirect(302, payload.url);
+  async publicProjectAsset(
+    @Param('projectId') projectId: string,
+    @Param('assetId') assetId: string,
+    @Res() response: {
+      setHeader(name: string, value: string | number): void;
+      send(body: Buffer): void;
+    },
+  ) {
+    const payload = await this.explorerService.getPublicAssetFile(projectId, assetId);
+    response.setHeader('Content-Type', payload.mimeType);
+    response.setHeader('Content-Length', payload.buffer.length);
+    response.setHeader('Cache-Control', 'public, max-age=300');
+    response.setHeader('Content-Disposition', `inline; filename="${payload.originalName.replace(/"/g, '')}"`);
+    return response.send(payload.buffer);
   }
 
   @Post('projects/:projectId/purchases')

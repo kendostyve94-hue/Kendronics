@@ -98,6 +98,14 @@ export class UploadRepository {
     };
   }
 
+  async downloadStorageKey(storageKey: string): Promise<Buffer> {
+    const response = await fetch(this.createPresignedGetUrl(storageKey));
+    if (!response.ok) {
+      throw new ServiceUnavailableException(`Private storage rejected the download (${response.status}).`);
+    }
+    return Buffer.from(await response.arrayBuffer());
+  }
+
   async recordAnalysisForUpload(
     userId: string,
     uploadId: string,
