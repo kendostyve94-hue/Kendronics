@@ -81,9 +81,11 @@ export class UploadsService {
       'image/webp',
       'video/mp4',
       'video/quicktime',
+      'video/webm',
       'application/octet-stream',
     ]);
-    if (!allowedMimeTypes.has(file.mimetype || 'application/octet-stream')) {
+    const mimeType = projectFileMimeType(file.originalname, file.mimetype);
+    if (!allowedMimeTypes.has(mimeType)) {
       throw new BadRequestException('Unsupported project file type.');
     }
     if (file.size > 50 * 1024 * 1024) {
@@ -92,7 +94,7 @@ export class UploadsService {
     const sanitizedFilename = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
     const dto = {
       filename: file.originalname,
-      mimeType: file.mimetype || 'application/octet-stream',
+      mimeType,
       fileSizeBytes: file.size,
     } as PresignUploadDto;
     const uploaded = await this.uploadRepository.uploadFile(userId, sanitizedFilename, dto, file.buffer);
@@ -101,7 +103,7 @@ export class UploadsService {
     return {
       ...recorded,
       originalName: file.originalname,
-      mimeType: dto.mimeType,
+      mimeType,
       sizeBytes: file.size,
     };
   }
@@ -156,4 +158,18 @@ function gerberAnalysisSummary(analysis: {
   const layers = analysis.detectedLayers ? ` ${analysis.detectedLayers} couche(s) detectee(s).` : '';
   const warnings = analysis.warnings.length > 0 ? ` ${analysis.warnings.length} point(s) a verifier.` : '';
   return `Votre fichier Gerber a ete analyse.${layers}${dimensions} Complexite : ${analysis.complexity}.${warnings}`;
+}
+
+function projectFileMimeType(filename: string, fallback = '') {
+  const current = fallback || 'application/octet-stream';
+  const lowerName = filename.toLowerCase();
+  if (current === 'application/octet-stream' || !current.includes('/')) {
+    if (lowerName.endsWith('.mp4')) return 'video/mp4';
+    if (lowerName.endsWith('.mov')) return 'video/quicktime';
+    if (lowerName.endsWith('.webm')) return 'video/webm';
+    if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) return 'image/jpeg';
+    if (lowerName.endsWith('.png')) return 'image/png';
+    if (lowerName.endsWith('.webp')) return 'image/webp';
+  }
+  return current;
 }

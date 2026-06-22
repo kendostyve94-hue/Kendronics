@@ -324,6 +324,7 @@ export default function NewProjectPage() {
       mimeType: string;
       sizeBytes: number;
     };
+    const normalizedMimeType = projectMediaMimeType(file, upload.mimeType);
     const attachResponse = await fetch(`${getApiBaseUrl()}/api/explorer/projects/${projectId}/assets`, {
       method: 'POST',
       headers: {
@@ -335,7 +336,7 @@ export default function NewProjectPage() {
         kind: overrideKind ?? assetKind,
         visibility: overrideVisibility ?? assetVisibility,
         originalName: upload.originalName,
-        mimeType: upload.mimeType,
+        mimeType: normalizedMimeType,
         sizeBytes: upload.sizeBytes,
       }),
     });
@@ -356,8 +357,8 @@ export default function NewProjectPage() {
         nextForm = {
           ...current,
           imageUrl: publicUrl,
-          coverPreviewUrl: upload.mimeType.startsWith('video/') ? current.coverPreviewUrl : (current.coverPreviewUrl || localPreviewUrl),
-          videoPreviewUrl: upload.mimeType.startsWith('video/') ? (current.videoPreviewUrl || localPreviewUrl) : current.videoPreviewUrl,
+          coverPreviewUrl: normalizedMimeType.startsWith('video/') ? current.coverPreviewUrl : (current.coverPreviewUrl || localPreviewUrl),
+          videoPreviewUrl: normalizedMimeType.startsWith('video/') ? (current.videoPreviewUrl || localPreviewUrl) : current.videoPreviewUrl,
         };
         return nextForm;
       });
@@ -739,6 +740,20 @@ function buildPayload(form: EditorForm, projectType: ProjectType) {
 
 function messageFromError(error: { message?: string | string[] }, fallback: string) {
   return Array.isArray(error.message) ? error.message.join(' ') : error.message || fallback;
+}
+
+function projectMediaMimeType(file: File, fallback: string) {
+  const current = file.type || fallback || 'application/octet-stream';
+  const name = file.name.toLowerCase();
+  if (current === 'application/octet-stream' || !current.includes('/')) {
+    if (name.endsWith('.mp4')) return 'video/mp4';
+    if (name.endsWith('.mov')) return 'video/quicktime';
+    if (name.endsWith('.webm')) return 'video/webm';
+    if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg';
+    if (name.endsWith('.png')) return 'image/png';
+    if (name.endsWith('.webp')) return 'image/webp';
+  }
+  return current;
 }
 
 function stringValue(value: unknown, fallback = '') {
