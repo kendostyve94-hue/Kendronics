@@ -581,17 +581,17 @@ function ProjectCard({
   return (
     <article className={`min-w-0 bg-transparent transition ${selected ? 'opacity-100' : 'opacity-95 hover:opacity-100'}`}>
       <a href={`/explorer/${project.id}`} onClick={onSelect} className="block w-full text-left">
-        <div className="relative left-1/2 aspect-video w-screen -translate-x-1/2 overflow-hidden bg-[#e8eef5] sm:left-auto sm:w-full sm:translate-x-0">
+        <div className="relative left-1/2 h-[calc(100vw*9/16)] w-screen -translate-x-1/2 overflow-hidden bg-[#e8eef5] sm:left-auto sm:aspect-video sm:h-auto sm:w-full sm:translate-x-0">
           {project.imageUrl ? (
             <ProjectMedia project={project} className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]" autoPlayVideo />
           ) : (
             <div className="grid h-full w-full place-items-center bg-[#edf3f8] px-4 text-center text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">{project.category}</div>
           )}
-          <div className="group/author absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full bg-white/92 px-2 py-1 text-xs font-semibold text-[#0b1724] backdrop-blur transition-all duration-500 hover:max-w-[calc(100%-1.5rem)] sm:max-w-[2.75rem] sm:hover:max-w-[calc(100%-1.5rem)]">
+          <div className="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full bg-white/92 px-2 py-1 text-xs font-semibold text-[#0b1724] backdrop-blur">
             <span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[11px] font-black text-white">
               {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
             </span>
-            <span className="min-w-0 max-w-[12rem] truncate opacity-100 transition-all duration-500 sm:max-w-0 sm:opacity-0 sm:group-hover/author:max-w-[12rem] sm:group-hover/author:opacity-100">{project.authorName}</span>
+            <span className="min-w-0 max-w-[12rem] truncate">{project.authorName}</span>
             <CertificationBadge level={project.authorVerificationLevel ?? 0} />
           </div>
         </div>

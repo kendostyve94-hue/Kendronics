@@ -249,7 +249,7 @@ export default function ExplorerProjectDetailPage() {
               </div>
             </header>
 
-            <div className="mt-8 aspect-video w-full overflow-hidden bg-[#edf3f8]">
+            <div className="mt-8 h-[calc((100vw-2rem)*9/16)] w-full overflow-hidden bg-[#edf3f8] sm:aspect-video sm:h-auto">
               {project.imageUrl ? (
                 <ProjectMedia project={project} className="h-full w-full object-cover" />
               ) : (

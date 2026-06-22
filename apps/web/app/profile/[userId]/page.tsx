@@ -184,7 +184,7 @@ export default function PublicAuthorProfilePage() {
               <div className="mt-5 grid gap-7 px-4 sm:grid-cols-2 sm:px-0 lg:grid-cols-3">
                 {profile.projects.filter((project) => activeTab === 'forks' ? project.projectType === 'paid' : true).map((project) => (
                   <a key={project.id} href={`/explorer/${project.id}`} className="group block">
-                    <div className="aspect-[4/3] overflow-hidden bg-[#edf3f8]">
+                    <div className="h-[calc((100vw-2rem)*9/16)] w-full overflow-hidden bg-[#edf3f8] sm:aspect-video sm:h-auto">
                       {project.imageUrl ? (
                         <ProjectMedia project={project} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
                       ) : (
