@@ -1,8 +1,6 @@
 # Kendronics Mobile
 
-Application mobile Expo qui embarque le site Kendronics public dans une WebView native.
-
-Cette approche garde une seule source produit : le site web. Les corrections de design, profil, Explorer, projets, panier et devis sont visibles dans l'application sans reconstruire deux interfaces separees.
+Application mobile Expo branchee sur la meme API que le site Kendronics.
 
 ## Tester sur iPhone avec Expo Go
 
@@ -21,24 +19,26 @@ npm run start
 
 4. Scanner le QR code avec l'appareil photo de l'iPhone ou Expo Go.
 
-Par defaut, l'application ouvre le site production :
+Par defaut, l'application utilise l'API production :
 
 ```text
-https://kendronics.com
+https://kendronics-api.onrender.com
 ```
 
-Pour utiliser une autre URL :
+Pour utiliser une autre API :
 
 ```bash
-EXPO_PUBLIC_SITE_URL=https://votre-site.example.com npm run start
+EXPO_PUBLIC_API_BASE_URL=https://votre-api.example.com npm run start
 ```
 
 ## Fonctionnalites phase 1
 
-- Charge le vrai site Kendronics mobile.
-- Utilise les memes comptes, sessions, projets, medias, commandes et profils que le web.
-- Garde les liens externes hors WebView en les ouvrant dans le navigateur du telephone.
-- Supporte le pull-to-refresh et les medias inline.
+- Connexion avec le compte Kendronics existant.
+- Session stockee dans le trousseau securise du telephone.
+- Explorer branche sur les projets publics reels.
+- Likes branches sur l'API existante pour les utilisateurs connectes.
+- Profil connecte a `/api/users/me`.
+- Navigation basse mobile : Accueil, Panier, Devis, Explorer, Compte.
 
 ## Publication iPhone
 

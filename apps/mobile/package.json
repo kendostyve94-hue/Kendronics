@@ -18,8 +18,7 @@
     "expo-status-bar": "~3.0.8",
     "is-docker": "^4.0.0",
     "react": "19.1.0",
-    "react-native": "0.81.4",
-    "react-native-webview": "^14.0.1"
+    "react-native": "0.81.4"
   },
   "devDependencies": {
     "@types/react": "~19.1.10",
