@@ -40,3 +40,44 @@ export type ExplorerProject = {
   forksCount: number;
   createdAt: string;
 };
+
+export type RecentProductionItem = {
+  date: string;
+  region: string;
+  reference: string;
+  service: string;
+  leadTime: string;
+  progress: number;
+};
+
+export type Order = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  totalPrice?: number;
+  currency?: string;
+  destinationCountryIso2: string;
+  createdAt: string;
+  quoteSnapshot?: {
+    productType: string;
+    layers: number;
+    lengthMm: number;
+    widthMm: number;
+    quantity: number;
+    finalTotal: number;
+    currency: string;
+  };
+};
+
+export type QuotePreview = {
+  productType: string;
+  layers: number;
+  lengthMm: number;
+  widthMm: number;
+  quantity: number;
+  destinationCountryIso2: string;
+  shippingMode: string;
+  currency: 'EUR';
+  finalTotal: number;
+  breakdown: Record<string, number>;
+};

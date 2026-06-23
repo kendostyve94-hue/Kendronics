@@ -1,6 +1,6 @@
 import { apiBaseUrl } from './config';
 import { clearSession, readSession, saveSession } from './session';
-import { AuthTokens, ExplorerProject, UserProfile } from './types';
+import { AuthTokens, ExplorerProject, Order, QuotePreview, RecentProductionItem, UserProfile } from './types';
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -63,6 +63,42 @@ export async function loadMe() {
 
 export async function loadExplorerProjects() {
   return apiRequest<ExplorerProject[]>('/api/explorer/projects');
+}
+
+export async function loadRecentProduction() {
+  const payload = await apiRequest<{ items: RecentProductionItem[] }>('/api/home/recent-production?limit=6');
+  return payload.items;
+}
+
+export async function loadOrders() {
+  return apiRequest<Order[]>('/api/orders', { authenticated: true });
+}
+
+export async function loadMyProjects() {
+  return apiRequest<ExplorerProject[]>('/api/explorer/me/projects?includeHidden=true', { authenticated: true });
+}
+
+export async function loadMyFavorites() {
+  return apiRequest<ExplorerProject[]>('/api/explorer/me/favorites', { authenticated: true });
+}
+
+export async function loadMyPurchases() {
+  return apiRequest<unknown[]>('/api/explorer/me/purchases', { authenticated: true });
+}
+
+export async function previewQuote(input: {
+  productType: string;
+  layers: number;
+  lengthMm: number;
+  widthMm: number;
+  quantity: number;
+  destinationCountryIso2: string;
+  shippingMode: 'economy' | 'standard' | 'express';
+}) {
+  return apiRequest<QuotePreview>('/api/pricing/preview', {
+    method: 'POST',
+    body: input,
+  });
 }
 
 export async function toggleProjectLike(projectId: string) {

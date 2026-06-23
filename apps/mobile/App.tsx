@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -15,9 +15,9 @@ import {
   View,
 } from 'react-native';
 import { clearSession, readSession } from './src/session';
-import { loadExplorerProjects, loadMe, login, toggleProjectLike } from './src/api';
+import { loadExplorerProjects, loadMe, loadMyFavorites, loadMyProjects, loadMyPurchases, loadOrders, loadRecentProduction, login, previewQuote, toggleProjectLike } from './src/api';
 import { mediaUrl } from './src/config';
-import { ExplorerProject, UserProfile } from './src/types';
+import { ExplorerProject, Order, QuotePreview, RecentProductionItem, UserProfile } from './src/types';
 
 type Tab = 'home' | 'cart' | 'quote' | 'explorer' | 'profile';
 
@@ -61,9 +61,9 @@ export default function App() {
       </View>
 
       <View style={styles.content}>
-        {tab === 'home' ? <PlaceholderScreen title="Accueil" body="Le tableau de bord mobile Kendronics arrive ici." /> : null}
-        {tab === 'cart' ? <PlaceholderScreen title="Panier" body="Les commandes et achats marketplace seront branches sur le meme compte." /> : null}
-        {tab === 'quote' ? <PlaceholderScreen title="Devis" body="La demande de devis PCB sera reprise depuis le moteur du site." /> : null}
+        {tab === 'home' ? <HomeScreen signedIn={signedIn} onOpenQuote={() => setTab('quote')} onOpenExplorer={() => setTab('explorer')} /> : null}
+        {tab === 'cart' ? signedIn ? <OrdersScreen /> : <LoginScreen onSignedIn={async () => { await refreshProfile(); setTab('cart'); }} /> : null}
+        {tab === 'quote' ? <QuoteScreen /> : null}
         {tab === 'explorer' ? <ExplorerScreen signedIn={signedIn} /> : null}
         {tab === 'profile' ? signedIn ? <ProfileScreen profile={profile} onLogout={async () => { await clearSession(); await refreshProfile(); setTab('explorer'); }} /> : <LoginScreen onSignedIn={async () => { await refreshProfile(); setTab('profile'); }} /> : null}
       </View>
@@ -147,8 +147,128 @@ function ExplorerScreen({ signedIn }: { signedIn: boolean }) {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#0f8f6b" />}
       contentContainerStyle={styles.feed}
       renderItem={({ item }) => <ProjectCard project={item} liked={likedIds.has(item.id)} onLike={() => void like(item)} />}
-      ListEmptyComponent={<PlaceholderScreen title="Explorer" body="Aucune publication publique disponible pour le moment." />}
+      ListEmptyComponent={<EmptyState title="Explorer" body="Aucune publication publique disponible pour le moment." />}
     />
+  );
+}
+
+function HomeScreen({ signedIn, onOpenQuote, onOpenExplorer }: { signedIn: boolean; onOpenQuote: () => void; onOpenExplorer: () => void }) {
+  const [recent, setRecent] = useState<RecentProductionItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    void loadRecentProduction()
+      .then(setRecent)
+      .catch(() => setRecent([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <ScrollView contentContainerStyle={styles.page}>
+      <View style={styles.heroBlock}>
+        <Text style={styles.heroKicker}>PCB, PCBA et projets electroniques</Text>
+        <Text style={styles.heroTitle}>Devis, production, Explorer et suivi dans la meme application.</Text>
+        <Text style={styles.heroText}>L'app native utilise les memes comptes et donnees que le site Kendronics.</Text>
+        <View style={styles.actionRow}>
+          <Pressable onPress={onOpenQuote} style={styles.primaryButtonSmall}><Text style={styles.primaryButtonText}>Devis PCB</Text></Pressable>
+          <Pressable onPress={onOpenExplorer} style={styles.secondaryButtonSmall}><Text style={styles.secondaryButtonText}>Explorer</Text></Pressable>
+        </View>
+      </View>
+      <View style={styles.section}>
+        <SectionTitle title="Pourquoi Kendronics" />
+        {['Revue fichier et parcours commande', 'Suivi production et livraison', 'Marketplace projets et forks', signedIn ? 'Compte connecte' : 'Connexion avec le compte du site'].map((item) => (
+          <View key={item} style={styles.checkRow}><Ionicons name="checkmark-circle" size={18} color="#0f8f6b" /><Text style={styles.rowText}>{item}</Text></View>
+        ))}
+      </View>
+      <View style={styles.section}>
+        <SectionTitle title="Activite production" />
+        {loading ? <ActivityIndicator color="#0f8f6b" /> : recent.length === 0 ? <Text style={styles.mutedText}>Aucune activite recente disponible.</Text> : recent.map((item) => (
+          <View key={`${item.reference}-${item.date}`} style={styles.productionRow}>
+            <View><Text style={styles.rowTitle}>{item.reference}</Text><Text style={styles.mutedText}>{item.service} - {item.region}</Text></View>
+            <Text style={styles.badge}>{item.progress}%</Text>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
+
+function OrdersScreen() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    void loadOrders().then(setOrders).catch(() => setOrders([])).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <CenteredLoader label="Chargement du panier" />;
+  return (
+    <ScrollView contentContainerStyle={styles.page}>
+      <SectionTitle title="Panier et commandes" />
+      {orders.length === 0 ? <EmptyState title="Aucune commande" body="Les commandes creees depuis le site ou l'app apparaitront ici." /> : orders.map((order) => (
+        <View key={order.id} style={styles.listCard}>
+          <Text style={styles.rowTitle}>Commande {order.orderNumber}</Text>
+          <Text style={styles.mutedText}>{order.status} - {order.destinationCountryIso2}</Text>
+          {order.quoteSnapshot ? <Text style={styles.rowText}>{order.quoteSnapshot.quantity} PCB - {order.quoteSnapshot.layers} couches - {order.quoteSnapshot.lengthMm} x {order.quoteSnapshot.widthMm} mm</Text> : null}
+          <Text style={styles.priceText}>{formatMoney(order.totalPrice ?? order.quoteSnapshot?.finalTotal, order.currency ?? order.quoteSnapshot?.currency)}</Text>
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+function QuoteScreen() {
+  const [layers, setLayers] = useState('2');
+  const [quantity, setQuantity] = useState('5');
+  const [lengthMm, setLengthMm] = useState('100');
+  const [widthMm, setWidthMm] = useState('80');
+  const [preview, setPreview] = useState<QuotePreview | null>(null);
+  const [status, setStatus] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function runPreview() {
+    setLoading(true);
+    setStatus('');
+    try {
+      const result = await previewQuote({
+        productType: 'standard_pcb',
+        layers: Number(layers),
+        lengthMm: Number(lengthMm),
+        widthMm: Number(widthMm),
+        quantity: Number(quantity),
+        destinationCountryIso2: 'CM',
+        shippingMode: 'standard',
+      });
+      setPreview(result);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Devis indisponible.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+      <SectionTitle title="Devis PCB" />
+      <Text style={styles.mutedText}>Preview branchee sur le moteur de prix du site.</Text>
+      <View style={styles.formGrid}>
+        <LabeledInput label="Couches" value={layers} onChangeText={setLayers} keyboardType="number-pad" />
+        <LabeledInput label="Quantite" value={quantity} onChangeText={setQuantity} keyboardType="number-pad" />
+        <LabeledInput label="Longueur mm" value={lengthMm} onChangeText={setLengthMm} keyboardType="decimal-pad" />
+        <LabeledInput label="Largeur mm" value={widthMm} onChangeText={setWidthMm} keyboardType="decimal-pad" />
+      </View>
+      {status ? <Text style={styles.errorText}>{status}</Text> : null}
+      <Pressable onPress={runPreview} disabled={loading} style={[styles.primaryButton, loading && styles.disabled]}>
+        <Text style={styles.primaryButtonText}>{loading ? 'Calcul...' : 'Calculer le devis'}</Text>
+      </Pressable>
+      {preview ? (
+        <View style={styles.quoteResult}>
+          <Text style={styles.resultLabel}>Prix estime</Text>
+          <Text style={styles.resultPrice}>{formatMoney(preview.finalTotal, preview.currency)}</Text>
+          <Text style={styles.mutedText}>{preview.quantity} PCB - {preview.layers} couches - {preview.lengthMm} x {preview.widthMm} mm</Text>
+        </View>
+      ) : null}
+    </ScrollView>
   );
 }
 
@@ -186,6 +306,22 @@ function ProjectCard({ project, liked, onLike }: { project: ExplorerProject; lik
 
 function ProfileScreen({ profile, onLogout }: { profile: UserProfile | null; onLogout: () => void }) {
   const badge = badgeLabel(profile?.verificationLevel ?? 0);
+  const [projects, setProjects] = useState<ExplorerProject[]>([]);
+  const [favorites, setFavorites] = useState<ExplorerProject[]>([]);
+  const [purchasesCount, setPurchasesCount] = useState(0);
+
+  useEffect(() => {
+    void Promise.all([
+      loadMyProjects().catch(() => []),
+      loadMyFavorites().catch(() => []),
+      loadMyPurchases().catch(() => []),
+    ]).then(([nextProjects, nextFavorites, nextPurchases]) => {
+      setProjects(nextProjects);
+      setFavorites(nextFavorites);
+      setPurchasesCount(nextPurchases.length);
+    });
+  }, []);
+
   return (
     <ScrollView contentContainerStyle={styles.profileScreen}>
       <View style={styles.profileHero}>
@@ -202,8 +338,25 @@ function ProfileScreen({ profile, onLogout }: { profile: UserProfile | null; onL
       <View style={styles.statsRow}>
         <Stat label="Suivi" value="-" />
         <Stat label="Abonnes" value="-" />
-        <Stat label="Likes" value="-" />
+        <Stat label="Likes" value={String(projects.reduce((total, project) => total + project.likesCount, 0))} />
         <Stat label="Note" value="4,3" />
+      </View>
+      <View style={styles.section}>
+        <SectionTitle title="Mon espace" />
+        <View style={styles.profileGrid}>
+          <MiniCounter label="Projets" value={projects.length} />
+          <MiniCounter label="Favoris" value={favorites.length} />
+          <MiniCounter label="Achats" value={purchasesCount} />
+        </View>
+      </View>
+      <View style={styles.section}>
+        <SectionTitle title="Mes projets" />
+        {projects.length === 0 ? <Text style={styles.mutedText}>Aucun projet public pour le moment.</Text> : projects.slice(0, 5).map((project) => (
+          <View key={project.id} style={styles.compactProjectRow}>
+            <Text numberOfLines={1} style={styles.rowTitle}>{project.title}</Text>
+            <Text style={styles.mutedText}>{project.likesCount} likes - {project.commentsCount} commentaires</Text>
+          </View>
+        ))}
       </View>
       <Pressable onPress={onLogout} style={styles.secondaryButton}><Text style={styles.secondaryButtonText}>Se deconnecter</Text></Pressable>
     </ScrollView>
@@ -233,11 +386,33 @@ function MobileDock({ active, onChange }: { active: Tab; onChange: (tab: Tab) =>
   );
 }
 
-function PlaceholderScreen({ title, body }: { title: string; body: string }) {
+function SectionTitle({ title }: { title: string }) {
+  return <Text style={styles.sectionTitle}>{title}</Text>;
+}
+
+function EmptyState({ title, body }: { title: string; body: string }) {
   return (
-    <View style={styles.placeholder}>
-      <Text style={styles.placeholderTitle}>{title}</Text>
-      <Text style={styles.placeholderText}>{body}</Text>
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyTitle}>{title}</Text>
+      <Text style={styles.emptyText}>{body}</Text>
+    </View>
+  );
+}
+
+function LabeledInput({ label, value, onChangeText, keyboardType }: { label: string; value: string; onChangeText: (value: string) => void; keyboardType: 'number-pad' | 'decimal-pad' }) {
+  return (
+    <View style={styles.inputGroup}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <TextInput value={value} onChangeText={onChangeText} keyboardType={keyboardType} style={styles.input} />
+    </View>
+  );
+}
+
+function MiniCounter({ label, value }: { label: string; value: number }) {
+  return (
+    <View style={styles.miniCounter}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
 }
@@ -276,6 +451,11 @@ function compactNumber(value: number) {
   return String(value);
 }
 
+function formatMoney(value?: number, currency = 'EUR') {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '-';
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(value);
+}
+
 const styles = StyleSheet.create({
   shell: { flex: 1, backgroundColor: '#f6f8fb' },
   header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, backgroundColor: '#ffffff', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#d9e2ec' },
@@ -285,6 +465,33 @@ const styles = StyleSheet.create({
   avatarImage: { width: '100%', height: '100%' },
   avatarText: { color: '#0f8f6b', fontWeight: '900' },
   content: { flex: 1 },
+  page: { padding: 16, paddingBottom: 96, gap: 16 },
+  heroBlock: { backgroundColor: '#ffffff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee', padding: 16 },
+  heroKicker: { color: '#0f8f6b', fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
+  heroTitle: { color: '#0b1724', fontSize: 25, lineHeight: 31, fontWeight: '900', marginTop: 8 },
+  heroText: { color: '#52627a', fontSize: 14, lineHeight: 21, marginTop: 8 },
+  actionRow: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  section: { backgroundColor: '#ffffff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee', padding: 14, gap: 12 },
+  sectionTitle: { color: '#0b1724', fontSize: 18, fontWeight: '900' },
+  checkRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  rowText: { color: '#334155', fontSize: 14, lineHeight: 21 },
+  rowTitle: { color: '#0b1724', fontSize: 15, fontWeight: '900' },
+  mutedText: { color: '#64748b', fontSize: 13, lineHeight: 20 },
+  productionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#e2e8f0', paddingTop: 10 },
+  listCard: { backgroundColor: '#ffffff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee', padding: 14, gap: 6 },
+  priceText: { color: '#0f8f6b', fontSize: 16, fontWeight: '900' },
+  formGrid: { gap: 12 },
+  inputGroup: { gap: 6 },
+  inputLabel: { color: '#0b1724', fontSize: 13, fontWeight: '800' },
+  quoteResult: { backgroundColor: '#f1faf7', borderWidth: 1, borderColor: '#cfe2dc', padding: 16, gap: 4 },
+  resultLabel: { color: '#0f8f6b', fontSize: 12, fontWeight: '900', textTransform: 'uppercase' },
+  resultPrice: { color: '#0b1724', fontSize: 28, fontWeight: '900' },
+  primaryButtonSmall: { flex: 1, height: 42, backgroundColor: '#0f8f6b', alignItems: 'center', justifyContent: 'center' },
+  secondaryButtonSmall: { flex: 1, height: 42, borderWidth: 1, borderColor: '#cbd6e2', alignItems: 'center', justifyContent: 'center' },
+  emptyState: { minHeight: 160, alignItems: 'center', justifyContent: 'center', padding: 18 },
+  profileGrid: { flexDirection: 'row', gap: 10 },
+  miniCounter: { flex: 1, alignItems: 'center', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee', paddingVertical: 12 },
+  compactProjectRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#e2e8f0', paddingTop: 10, gap: 3 },
   feed: { padding: 12, gap: 18, paddingBottom: 96 },
   projectCard: { backgroundColor: '#ffffff', borderRadius: 0, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee' },
   authorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12 },
@@ -323,9 +530,8 @@ const styles = StyleSheet.create({
   stat: { flex: 1, alignItems: 'center' },
   statValue: { fontSize: 20, color: '#0b1724', fontWeight: '800' },
   statLabel: { color: '#64748b', fontSize: 12, marginTop: 4 },
-  placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 },
-  placeholderTitle: { fontSize: 24, fontWeight: '900', color: '#0b1724' },
-  placeholderText: { marginTop: 8, color: '#64748b', textAlign: 'center', lineHeight: 22 },
+  emptyTitle: { fontSize: 24, fontWeight: '900', color: '#0b1724' },
+  emptyText: { marginTop: 8, color: '#64748b', textAlign: 'center', lineHeight: 22 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#f6f8fb' },
   loaderText: { color: '#64748b', fontWeight: '700' },
   dock: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 74, flexDirection: 'row', backgroundColor: '#ffffff', borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#d9e2ec', paddingTop: 8 },
