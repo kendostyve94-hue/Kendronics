@@ -1,9 +1,9 @@
 import { apiBaseUrl } from './config';
 import { clearSession, readSession, saveSession } from './session';
-import { AuthTokens, ExplorerProject, Order, QuotePreview, RecentProductionItem, UserProfile } from './types';
+import { AuthTokens, ExplorerProject, Order, ProjectDetail, PublicAuthorProfile, QuotePreview, RecentProductionItem, TrackingTimeline, UserProfile } from './types';
 
 type RequestOptions = {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   authenticated?: boolean;
 };
@@ -43,6 +43,35 @@ export async function login(contact: string, password: string) {
   return tokens;
 }
 
+export async function registerAccount(input: { fullName: string; email: string; password: string; country: string; username: string }) {
+  const tokens = await apiRequest<AuthTokens>('/api/auth/register', {
+    method: 'POST',
+    body: {
+      email: input.email,
+      contactMethod: 'email',
+      password: input.password,
+      fullName: input.fullName,
+      profile: { username: input.username, country: input.country, accountType: 'individual' },
+    },
+  });
+  await saveSession(tokens);
+  return tokens;
+}
+
+export async function requestPasswordReset(email: string) {
+  return apiRequest<{ ok?: boolean }>('/api/auth/forgot-password', {
+    method: 'POST',
+    body: { email },
+  });
+}
+
+export async function resetPassword(token: string, password: string) {
+  return apiRequest<{ ok?: boolean }>('/api/auth/reset-password', {
+    method: 'POST',
+    body: { token, password },
+  });
+}
+
 export async function refreshSession(refreshToken: string) {
   try {
     const tokens = await apiRequest<AuthTokens>('/api/auth/refresh', {
@@ -74,6 +103,10 @@ export async function loadOrders() {
   return apiRequest<Order[]>('/api/orders', { authenticated: true });
 }
 
+export async function loadOrderDetail(orderId: string) {
+  return apiRequest<Order>(`/api/orders/${orderId}`, { authenticated: true });
+}
+
 export async function loadMyProjects() {
   return apiRequest<ExplorerProject[]>('/api/explorer/me/projects?includeHidden=true', { authenticated: true });
 }
@@ -84,6 +117,50 @@ export async function loadMyFavorites() {
 
 export async function loadMyPurchases() {
   return apiRequest<unknown[]>('/api/explorer/me/purchases', { authenticated: true });
+}
+
+export async function loadNotifications() {
+  return apiRequest<Array<{ id: string; title?: string; body?: string; readAt?: string | null; createdAt?: string }>>('/api/notifications', { authenticated: true });
+}
+
+export async function loadProjectDetail(projectId: string) {
+  return apiRequest<ProjectDetail>(`/api/explorer/projects/${projectId}`);
+}
+
+export async function loadPublicAuthorProfile(userId: string) {
+  return apiRequest<PublicAuthorProfile>(`/api/explorer/users/${userId}/profile`, { authenticated: true });
+}
+
+export async function followUser(userId: string) {
+  return apiRequest<{ following: boolean; followersCount?: number }>(`/api/users/${userId}/follow`, { method: 'POST', authenticated: true });
+}
+
+export async function toggleProjectFavorite(projectId: string) {
+  return apiRequest<{ favorited: boolean; favoritesCount: number }>(`/api/explorer/projects/${projectId}/favorites`, { method: 'POST', authenticated: true });
+}
+
+export async function createProjectComment(projectId: string, body: string) {
+  return apiRequest<{ id?: string; commentsCount?: number }>(`/api/explorer/projects/${projectId}/comments`, { method: 'POST', body: { body } });
+}
+
+export async function createProjectDraft(projectType: 'free' | 'paid') {
+  return apiRequest<ProjectDetail>('/api/explorer/projects/drafts', { method: 'POST', authenticated: true, body: { projectType } });
+}
+
+export async function updateProject(projectId: string, input: { title: string; category: string; summary: string; description: string; projectType: 'free' | 'paid'; repositoryUrl?: string; priceCents?: number; currency?: string }) {
+  return apiRequest<ProjectDetail>(`/api/explorer/projects/${projectId}`, { method: 'PATCH', authenticated: true, body: input });
+}
+
+export async function publishProject(projectId: string) {
+  return apiRequest<ProjectDetail>(`/api/explorer/projects/${projectId}/publish`, { method: 'POST', authenticated: true });
+}
+
+export async function lookupTracking(orderId: string, email: string) {
+  return apiRequest<TrackingTimeline>('/api/tracking/lookup', { method: 'POST', body: { orderId, email } });
+}
+
+export async function sendPublicContact(input: { name: string; email: string; category: string; message: string }) {
+  return apiRequest<{ id?: string }>('/api/support/contact', { method: 'POST', body: input });
 }
 
 export async function previewQuote(input: {
