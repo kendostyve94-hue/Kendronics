@@ -3,7 +3,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthTokenService } from '../auth/auth-token.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
-import { CreateExplorerCommentDto } from './dto/create-explorer-comment.dto';
+import { CreateExplorerCommentDto, UpdateExplorerCommentDto } from './dto/create-explorer-comment.dto';
 import {
   AttachExplorerProjectAssetDto,
   CreateExplorerProjectDraftDto,
@@ -214,6 +214,17 @@ export class ExplorerController {
     @Req() request: { headers: Record<string, string> },
   ) {
     return this.explorerService.commentProject(projectId, dto, this.readOptionalUser(request));
+  }
+
+  @Patch('projects/:projectId/comments/:commentId')
+  @UseGuards(JwtAuthGuard)
+  updateProjectComment(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('projectId') projectId: string,
+    @Param('commentId') commentId: string,
+    @Body() dto: UpdateExplorerCommentDto,
+  ) {
+    return this.explorerService.updateProjectComment(projectId, commentId, dto, user);
   }
 
   private readOptionalUser(request: { headers: Record<string, string> }): AuthenticatedUser | undefined {

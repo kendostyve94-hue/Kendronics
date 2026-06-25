@@ -103,6 +103,7 @@ const initialForm: EditorForm = {
 export default function NewProjectPage() {
   const initialized = useRef(false);
   const [projectType, setProjectType] = useState<ProjectType>('free');
+  const [publicationFormat, setPublicationFormat] = useState<'post' | 'short'>('post');
   const [projectId, setProjectId] = useState('');
   const [form, setForm] = useState<EditorForm>(initialForm);
   const [assets, setAssets] = useState<ProjectAsset[]>([]);
@@ -146,7 +147,7 @@ export default function NewProjectPage() {
         }
         const draft = await response.json() as ProjectDraft;
         applyDraft(draft);
-        setStatus('Brouillon charge.');
+        setStatus('');
         return;
       }
 
@@ -163,7 +164,7 @@ export default function NewProjectPage() {
       setProjectId(draft.id);
       setAssets(draft.assets ?? []);
       window.history.replaceState({}, '', `/projects/new?type=${requestedType}&id=${draft.id}`);
-      setStatus('Brouillon securise cree automatiquement.');
+      setStatus('');
     }
 
     void initialize();
@@ -211,7 +212,8 @@ export default function NewProjectPage() {
     const missing: string[] = [];
     if (form.title.trim().length < 4) missing.push('Titre du projet');
     if (form.summary.trim().length < 24) missing.push('Resume public');
-    if (!form.coverPreviewUrl && !form.videoPreviewUrl && !assets.some((asset) => ['cover', 'video', 'gallery'].includes(asset.kind))) missing.push('Image ou video de presentation');
+    const hasPublicMedia = Boolean(form.coverPreviewUrl || form.videoPreviewUrl || assets.some((asset) => ['cover', 'video', 'gallery'].includes(asset.kind)));
+    if (!hasPublicMedia) missing.push(publicationFormat === 'short' ? 'Video short' : 'Media public');
     if (projectType === 'paid') {
       if (form.description.trim().length < 80) missing.push('Presentation detaillee');
       if (!form.dimensions.trim()) missing.push('Dimensions');
@@ -228,7 +230,7 @@ export default function NewProjectPage() {
       if (!form.rightsConfirmed) missing.push('Declaration de droits');
     }
     return missing;
-  }, [assets, form, projectType]);
+  }, [assets, form, projectType, publicationFormat]);
 
   function update<K extends keyof EditorForm>(key: K, value: EditorForm[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -283,7 +285,7 @@ export default function NewProjectPage() {
       setStatus(messageFromError(error, 'Impossible d enregistrer le brouillon.'));
       return false;
     }
-    if (showConfirmation) setStatus('Brouillon enregistre dans votre compte.');
+    if (showConfirmation) setStatus('');
     return true;
   }
 
@@ -436,11 +438,11 @@ export default function NewProjectPage() {
       <section className="border-b border-[#dbe4ee] bg-white">
         <div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-4 py-7 sm:px-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
           <div>
-            <h1 className="text-3xl font-black sm:text-4xl">{projectType === 'paid' ? 'Creer un nouveau projet' : 'Publier un projet'}</h1>
+            <h1 className="text-3xl font-black sm:text-4xl">{projectType === 'paid' ? 'Creer un nouveau projet' : 'Publier un post'}</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#64748b]">
               {projectType === 'paid'
                 ? 'Preparez un dossier commercial complet avec description, fichiers proteges, licence, prix et droits d utilisation.'
-                : 'Publiez un post public simple avec un titre, une categorie, une image et un resume clair pour Explorer.'}
+                : 'Partagez une idee, une video courte, une image ou une realisation technique avec la communaute Explorer.'}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -452,9 +454,19 @@ export default function NewProjectPage() {
 
       <div className="mx-auto max-w-[1180px] px-2 py-6 sm:px-6 sm:py-7 lg:px-8">
         <div className="min-w-0 space-y-6">
-          <EditorSection id="step-01" title="Informations publiques" description="Ce que les visiteurs verront en premier dans Explorer.">
-            <Field label="Titre du projet" required>
-              <input value={form.title} onChange={(event) => update('title', event.target.value)} className={inputClass} maxLength={90} placeholder="Ex. Station meteo solaire ESP32" />
+          <EditorSection id="step-01" title={projectType === 'paid' ? 'Informations publiques' : 'Contenu du post'} description={projectType === 'paid' ? 'Ce que les visiteurs verront en premier dans Explorer.' : 'Redigez un post clair, court et utile pour le flux Explorer.'}>
+            {projectType === 'free' ? (
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button type="button" onClick={() => setPublicationFormat('post')} className={`h-11 border px-4 text-sm font-black transition ${publicationFormat === 'post' ? 'border-[#0f8f6b] bg-[#e7f5f0] text-[#0f8f6b]' : 'border-[#cfd8e3] bg-white text-[#102033]'}`}>
+                  Post simple
+                </button>
+                <button type="button" onClick={() => { setPublicationFormat('short'); setAssetKind('video'); setAssetVisibility('public'); }} className={`h-11 border px-4 text-sm font-black transition ${publicationFormat === 'short' ? 'border-[#0f8f6b] bg-[#e7f5f0] text-[#0f8f6b]' : 'border-[#cfd8e3] bg-white text-[#102033]'}`}>
+                  Ajouter un short
+                </button>
+              </div>
+            ) : null}
+            <Field label={projectType === 'paid' ? 'Titre du projet' : 'Titre du post'} required>
+              <input value={form.title} onChange={(event) => update('title', event.target.value)} className={inputClass} maxLength={90} placeholder={projectType === 'paid' ? 'Ex. Station meteo solaire ESP32' : 'Ex. Test radio LoRa en atelier'} />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Categorie" required>
@@ -466,25 +478,29 @@ export default function NewProjectPage() {
                 <input value={form.tags} onChange={(event) => update('tags', event.target.value)} className={inputClass} maxLength={180} placeholder="ESP32, capteur, solaire, KiCad" />
               </Field>
             </div>
-            <Field label="Resume public" required hint="24 a 360 caracteres" help="Texte court visible dans les cartes Explorer. Il doit expliquer le besoin, le resultat et l'interet du projet.">
-              <textarea value={form.summary} onChange={(event) => update('summary', event.target.value)} className={`${inputClass} min-h-[76px] py-3`} maxLength={360} placeholder="Expliquez le besoin traite, le resultat obtenu et le public concerne." />
+            <Field label={projectType === 'paid' ? 'Resume public' : 'Description courte'} required hint="24 a 360 caracteres" help={projectType === 'paid' ? "Texte court visible dans les cartes Explorer. Il doit expliquer le besoin, le resultat et l'interet du projet." : 'Texte visible sous le titre dans Explorer. Il doit resumer le contexte, le resultat ou ce que les visiteurs doivent remarquer.'}>
+              <textarea value={form.summary} onChange={(event) => update('summary', event.target.value)} className={`${inputClass} min-h-[76px] py-3`} maxLength={360} placeholder={projectType === 'paid' ? 'Expliquez le besoin traite, le resultat obtenu et le public concerne.' : 'Ajoutez une description courte et naturelle du post.'} />
             </Field>
-            <Field label="Presentation detaillee" required help="Redigez une description professionnelle : contexte du projet, probleme traite, fonctionnement global, choix techniques importants, limites connues et cas d'utilisation recommandes.">
-              <textarea value={form.description} onChange={(event) => update('description', event.target.value)} className={`${inputClass} min-h-[125px] py-3`} maxLength={12000} placeholder="Contexte, architecture, fonctionnement, choix techniques, limites et cas d usage." />
+            <Field label={projectType === 'paid' ? 'Presentation detaillee' : 'Texte du post'} required help={projectType === 'paid' ? "Redigez une description professionnelle : contexte du projet, probleme traite, fonctionnement global, choix techniques importants, limites connues et cas d'utilisation recommandes." : 'Ajoutez le texte complet du post, comme sur un reseau social : contexte, observation, question, resultat ou appel a discussion.'}>
+              <textarea value={form.description} onChange={(event) => update('description', event.target.value)} className={`${inputClass} min-h-[125px] py-3`} maxLength={12000} placeholder={projectType === 'paid' ? 'Contexte, architecture, fonctionnement, choix techniques, limites et cas d usage.' : 'Decrivez ce que vous partagez, ce que vous avez teste ou ce que vous voulez montrer.'} />
             </Field>
             <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_290px]">
               <div className="grid gap-3">
-                <div>
+                <div className="border border-dashed border-[#b7c4d2] bg-white px-4 py-5 text-center">
                   <p className="inline-flex items-center gap-1.5 text-sm font-black">Médias de présentation <span className="text-[#d9485f]">*</span></p>
                   <p className="mt-1 text-xs leading-5 text-[#64748b]">Ajoutez une couverture ou une video MP4, WebM ou MOV pour controler le rendu public avant publication.</p>
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-                    <label className="inline-flex h-11 min-w-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#0f8f6b] px-2 text-center text-[12px] font-black text-[#0f8f6b] sm:px-4 sm:text-sm">
+                  <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                    <label className="inline-flex h-11 min-w-0 cursor-pointer items-center justify-center border border-[#0f8f6b] px-3 text-center text-[12px] font-black text-[#0f8f6b] sm:text-sm">
                       Téléverser une image
                       <input type="file" className="sr-only" accept=".jpg,.jpeg,.png,.webp" onChange={(event) => previewMedia(event, 'cover')} />
                     </label>
-                    <label className="inline-flex h-11 min-w-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#cfd8e3] px-2 text-center text-[12px] font-black text-[#102033] sm:px-4 sm:text-sm">
+                    <label className="inline-flex h-11 min-w-0 cursor-pointer items-center justify-center border border-[#cfd8e3] px-3 text-center text-[12px] font-black text-[#102033] sm:text-sm">
                       Ajouter une vidéo
-                      <input type="file" className="sr-only" accept=".mp4,.mov,.webm" onChange={(event) => previewMedia(event, 'video')} />
+                      <input type="file" className="sr-only" accept=".mp4,.mov,.webm" onChange={(event) => { setPublicationFormat('post'); previewMedia(event, 'video'); }} />
+                    </label>
+                    <label className="inline-flex h-11 min-w-0 cursor-pointer items-center justify-center border border-[#0b1724] bg-[#0b1724] px-3 text-center text-[12px] font-black text-white sm:text-sm">
+                      Ajouter un short
+                      <input type="file" className="sr-only" accept=".mp4,.mov,.webm" onChange={(event) => { setPublicationFormat('short'); previewMedia(event, 'video'); }} />
                     </label>
                   </div>
                 </div>
@@ -591,7 +607,8 @@ export default function NewProjectPage() {
           </EditorSection>
           ) : null}
 
-          <EditorSection id="step-06" title={projectType === 'paid' ? 'Controle et publication' : 'Publication'} description={projectType === 'paid' ? 'La publication reste impossible tant que les informations essentielles ne sont pas completes.' : 'Verifiez le rendu public avant de publier votre post dans Explorer.'}>
+          {projectType === 'paid' ? (
+          <EditorSection id="step-06" title="Controle et publication" description="La publication reste impossible tant que les informations essentielles ne sont pas completes.">
             {projectType === 'paid' ? (
               <label className="flex items-start gap-3 border border-[#dbe4ee] bg-[#f8fafc] p-4 text-sm leading-6">
                 <input type="checkbox" checked={form.rightsConfirmed} onChange={(event) => update('rightsConfirmed', event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#0f8f6b]" />
@@ -606,8 +623,17 @@ export default function NewProjectPage() {
               <button type="button" onClick={() => void publish()} disabled={isPublishing || isUploading || isSaving || !projectId} className="h-12 bg-[#0f8f6b] px-7 text-sm font-black text-white transition hover:bg-[#0b7558] disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Televersement...' : isPublishing ? 'Publication...' : 'Publier le projet'}</button>
             </div>
           </EditorSection>
+          ) : (
+            <div className="grid gap-4 bg-white px-5 py-5 sm:grid-cols-[1fr_auto] sm:items-center">
+              <div>
+                <p className="text-sm font-black">{validation.length === 0 ? 'Le post est pret.' : `${validation.length} element(s) restent a completer.`}</p>
+                {validation.length > 0 ? <p className="mt-2 text-sm leading-6 text-[#b45309]">{validation.join(' - ')}</p> : <p className="mt-2 text-sm text-[#0f8f6b]">Votre publication sera visible dans Explorer.</p>}
+              </div>
+              <button type="button" onClick={() => void publish()} disabled={isPublishing || isUploading || isSaving || !projectId} className="h-12 bg-[#0f8f6b] px-7 text-sm font-black text-white transition hover:bg-[#0b7558] disabled:cursor-not-allowed disabled:opacity-50">{isUploading ? 'Televersement...' : isPublishing ? 'Publication...' : 'Publier le post'}</button>
+            </div>
+          )}
 
-          <div className="border border-[#cfe2dc] bg-[#f1faf7] px-4 py-3 text-sm font-semibold text-[#0f6f56]" aria-live="polite">{status}</div>
+          {status ? <div className="border border-[#cfe2dc] bg-[#f1faf7] px-4 py-3 text-sm font-semibold text-[#0f6f56]" aria-live="polite">{status}</div> : null}
         </div>
       </div>
     </main>

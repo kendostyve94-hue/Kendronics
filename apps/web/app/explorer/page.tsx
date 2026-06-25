@@ -587,8 +587,8 @@ function ProjectCard({
           ) : (
             <div className="grid h-full w-full place-items-center bg-[#edf3f8] px-4 text-center text-xs font-black uppercase tracking-[0.14em] text-[#64748b]">{project.category}</div>
           )}
-          <div className="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full bg-white/92 px-2 py-1 text-xs font-semibold text-[#0b1724] backdrop-blur">
-            <span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[11px] font-black text-white">
+          <div className="absolute inset-x-0 top-0 flex max-w-full items-center gap-2 bg-gradient-to-b from-black/70 to-transparent px-3 pb-8 pt-3 text-xs font-semibold text-white">
+            <span className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full bg-[#0b1724] text-[11px] font-black text-white ring-1 ring-white/30">
               {project.authorAvatarUrl ? <img src={project.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : project.authorName.slice(0, 1).toUpperCase()}
             </span>
             <span className="min-w-0 max-w-[12rem] truncate">{project.authorName}</span>
@@ -598,6 +598,7 @@ function ProjectCard({
         <div className="mt-3 flex min-w-0 items-center">
           <h3 className="min-w-0 truncate text-base font-medium text-[#0b1724]">{project.title}</h3>
         </div>
+        <p className="mt-1 line-clamp-2 text-sm leading-5 text-[#526173]">{project.summary || project.description}</p>
       </a>
       <div className="mt-3 flex items-center gap-4 text-sm text-[#9aa6b2]">
         <span className="inline-flex items-center gap-1" title="Vues"><EyeIcon />{formatCompact(project.viewsCount)}</span>

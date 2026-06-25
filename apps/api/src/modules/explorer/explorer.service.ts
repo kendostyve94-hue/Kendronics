@@ -4,7 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AuthenticatedUser } from '../../common/types/authenticated-user.type';
 import { UserRole } from '../../common/types/user-role.enum';
 import { UploadRepository } from '../uploads/repositories/upload.repository';
-import { CreateExplorerCommentDto } from './dto/create-explorer-comment.dto';
+import { CreateExplorerCommentDto, UpdateExplorerCommentDto } from './dto/create-explorer-comment.dto';
 import {
   AttachExplorerProjectAssetDto,
   CreateExplorerProjectDraftDto,
@@ -709,6 +709,36 @@ export class ExplorerService {
       return tx.explorerProject.update({
         where: { id: projectId },
         data: { commentsCount: { increment: 1 } },
+        include: {
+          _count: { select: { favorites: true } },
+          comments: previewCommentsInclude(40),
+        },
+      });
+    });
+
+    return toExplorerProject(project);
+  }
+
+  async updateProjectComment(projectId: string, commentId: string, dto: UpdateExplorerCommentDto, user: AuthenticatedUser): Promise<ExplorerProject> {
+    await this.ensureProject(projectId);
+    const comment = await this.prisma.explorerComment.findFirst({
+      where: { id: commentId, projectId, status: 'visible' },
+      select: { id: true, userId: true, createdAt: true },
+    });
+    if (!comment) throw new NotFoundException('Comment not found.');
+    if (!comment.userId || comment.userId !== user.id) throw new ForbiddenException('You cannot edit this comment.');
+    const editWindowMs = 20_000;
+    if (Date.now() - comment.createdAt.getTime() > editWindowMs) {
+      throw new BadRequestException('Comment edit window expired.');
+    }
+
+    const project = await this.prisma.$transaction(async (tx) => {
+      await tx.explorerComment.update({
+        where: { id: comment.id },
+        data: { body: clean(dto.body) || '' },
+      });
+      return tx.explorerProject.findUniqueOrThrow({
+        where: { id: projectId },
         include: {
           _count: { select: { favorites: true } },
           comments: previewCommentsInclude(40),

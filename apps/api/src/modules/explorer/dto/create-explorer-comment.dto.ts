@@ -15,3 +15,10 @@ export class CreateExplorerCommentDto {
   @IsString()
   parentId?: string;
 }
+
+export class UpdateExplorerCommentDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(600)
+  body!: string;
+}

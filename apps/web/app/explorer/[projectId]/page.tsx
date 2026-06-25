@@ -89,6 +89,10 @@ export default function ExplorerProjectDetailPage() {
   const [followed, setFollowed] = useState(false);
   const [commentDraft, setCommentDraft] = useState('');
   const [replyTarget, setReplyTarget] = useState<ExplorerProject['comments'][number] | null>(null);
+  const [editableUntil, setEditableUntil] = useState<Record<string, number>>({});
+  const [editTarget, setEditTarget] = useState<ExplorerProject['comments'][number] | null>(null);
+  const [editDraft, setEditDraft] = useState('');
+  const [clock, setClock] = useState(Date.now());
 
   useEffect(() => {
     let cancelled = false;
@@ -118,6 +122,11 @@ export default function ExplorerProjectDetailPage() {
       cancelled = true;
     };
   }, [projectId]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   async function likeProject() {
     if (!project) return;
@@ -181,6 +190,7 @@ export default function ExplorerProjectDetailPage() {
   async function postComment() {
     if (!project || !commentDraft.trim()) return;
     const session = readAuthSession();
+    const previousIds = new Set(project.comments.map((comment) => comment.id));
     const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}/comments`, {
       method: 'POST',
       headers: {
@@ -191,9 +201,32 @@ export default function ExplorerProjectDetailPage() {
     });
     if (!response.ok) return;
     const updated = await response.json() as ExplorerProject;
+    const newComment = updated.comments.find((comment) => !previousIds.has(comment.id));
     setProject((current) => current ? { ...current, comments: updated.comments, commentsCount: updated.commentsCount } : current);
+    if (newComment && session) {
+      setEditableUntil((current) => ({ ...current, [newComment.id]: Date.now() + 20_000 }));
+    }
     setCommentDraft('');
     setReplyTarget(null);
+  }
+
+  async function updateComment(commentId: string) {
+    if (!project || !editDraft.trim()) return;
+    const session = readAuthSession();
+    if (!session) return openAuthRequired();
+    const response = await fetch(`${apiBaseUrl}/api/explorer/projects/${project.id}/comments/${commentId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `${session.tokenType} ${session.accessToken}`,
+      },
+      body: JSON.stringify({ body: editDraft.trim() }),
+    });
+    if (!response.ok) return;
+    const updated = await response.json() as ExplorerProject;
+    setProject((current) => current ? { ...current, comments: updated.comments, commentsCount: updated.commentsCount } : current);
+    setEditTarget(null);
+    setEditDraft('');
   }
 
   return (
@@ -326,6 +359,14 @@ export default function ExplorerProjectDetailPage() {
               onReply={setReplyTarget}
               onCancelReply={() => setReplyTarget(null)}
               onSubmit={() => void postComment()}
+              editableUntil={editableUntil}
+              now={clock}
+              editTarget={editTarget}
+              editDraft={editDraft}
+              onEditStart={(comment) => { setEditTarget(comment); setEditDraft(comment.body); }}
+              onEditDraftChange={setEditDraft}
+              onEditCancel={() => { setEditTarget(null); setEditDraft(''); }}
+              onEditSubmit={(commentId) => void updateComment(commentId)}
             />
           </>
         )}
@@ -363,6 +404,14 @@ function ProjectComments({
   onReply,
   onCancelReply,
   onSubmit,
+  editableUntil,
+  now,
+  editTarget,
+  editDraft,
+  onEditStart,
+  onEditDraftChange,
+  onEditCancel,
+  onEditSubmit,
 }: {
   comments: ExplorerProject['comments'];
   draft: string;
@@ -371,6 +420,14 @@ function ProjectComments({
   onReply: (comment: ExplorerProject['comments'][number]) => void;
   onCancelReply: () => void;
   onSubmit: () => void;
+  editableUntil: Record<string, number>;
+  now: number;
+  editTarget: ExplorerProject['comments'][number] | null;
+  editDraft: string;
+  onEditStart: (comment: ExplorerProject['comments'][number]) => void;
+  onEditDraftChange: (value: string) => void;
+  onEditCancel: () => void;
+  onEditSubmit: (commentId: string) => void;
 }) {
   const rootComments = comments
     .filter((comment) => !comment.parentId)
@@ -412,13 +469,21 @@ function ProjectComments({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-4">
+      <div className="mt-4 bg-[#f7fafc] px-3 py-3">
         {rootComments.length > 0 ? rootComments.map((comment) => (
           <CommentThread
             key={comment.id}
             comment={comment}
             replies={repliesByParent[comment.id] ?? []}
             onReply={onReply}
+            editableUntil={editableUntil}
+            now={now}
+            editTarget={editTarget}
+            editDraft={editDraft}
+            onEditStart={onEditStart}
+            onEditDraftChange={onEditDraftChange}
+            onEditCancel={onEditCancel}
+            onEditSubmit={onEditSubmit}
           />
         )) : <p className="text-sm text-[#64748b]">Aucun commentaire pour le moment.</p>}
       </div>
@@ -426,22 +491,68 @@ function ProjectComments({
   );
 }
 
-function CommentThread({ comment, replies, onReply }: { comment: ExplorerProject['comments'][number]; replies: ExplorerProject['comments']; onReply: (comment: ExplorerProject['comments'][number]) => void }) {
+function CommentThread({
+  comment,
+  replies,
+  onReply,
+  editableUntil,
+  now,
+  editTarget,
+  editDraft,
+  onEditStart,
+  onEditDraftChange,
+  onEditCancel,
+  onEditSubmit,
+}: {
+  comment: ExplorerProject['comments'][number];
+  replies: ExplorerProject['comments'];
+  onReply: (comment: ExplorerProject['comments'][number]) => void;
+  editableUntil: Record<string, number>;
+  now: number;
+  editTarget: ExplorerProject['comments'][number] | null;
+  editDraft: string;
+  onEditStart: (comment: ExplorerProject['comments'][number]) => void;
+  onEditDraftChange: (value: string) => void;
+  onEditCancel: () => void;
+  onEditSubmit: (commentId: string) => void;
+}) {
   return (
-    <article className="grid gap-3">
-      <CommentCard comment={comment} onReply={onReply} />
+    <article className="grid gap-3 border-b border-[#e4ebf2] py-3 last:border-b-0">
+      <CommentCard comment={comment} onReply={onReply} canEdit={(editableUntil[comment.id] ?? 0) > now} isEditing={editTarget?.id === comment.id} editDraft={editDraft} onEditStart={onEditStart} onEditDraftChange={onEditDraftChange} onEditCancel={onEditCancel} onEditSubmit={onEditSubmit} />
       {replies.length > 0 ? (
         <div className="ml-8 grid gap-3 border-l border-[#dbe4ee] pl-4 sm:ml-12">
-          {replies.map((reply) => <CommentCard key={reply.id} comment={reply} onReply={onReply} compact />)}
+          {replies.map((reply) => <CommentCard key={reply.id} comment={reply} onReply={onReply} compact canEdit={(editableUntil[reply.id] ?? 0) > now} isEditing={editTarget?.id === reply.id} editDraft={editDraft} onEditStart={onEditStart} onEditDraftChange={onEditDraftChange} onEditCancel={onEditCancel} onEditSubmit={onEditSubmit} />)}
         </div>
       ) : null}
     </article>
   );
 }
 
-function CommentCard({ comment, onReply, compact = false }: { comment: ExplorerProject['comments'][number]; onReply: (comment: ExplorerProject['comments'][number]) => void; compact?: boolean }) {
+function CommentCard({
+  comment,
+  onReply,
+  compact = false,
+  canEdit,
+  isEditing,
+  editDraft,
+  onEditStart,
+  onEditDraftChange,
+  onEditCancel,
+  onEditSubmit,
+}: {
+  comment: ExplorerProject['comments'][number];
+  onReply: (comment: ExplorerProject['comments'][number]) => void;
+  compact?: boolean;
+  canEdit: boolean;
+  isEditing: boolean;
+  editDraft: string;
+  onEditStart: (comment: ExplorerProject['comments'][number]) => void;
+  onEditDraftChange: (value: string) => void;
+  onEditCancel: () => void;
+  onEditSubmit: (commentId: string) => void;
+}) {
   return (
-    <div className="flex gap-3 bg-[#f7fafc] px-3 py-3 text-sm leading-6 text-[#334155]">
+    <div className="flex gap-3 text-sm leading-6 text-[#334155]">
       <div className={`${compact ? 'h-8 w-8' : 'h-10 w-10'} grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#102033] text-xs font-black text-white`}>
         {comment.authorAvatarUrl ? <img src={comment.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : comment.authorName.slice(0, 1).toUpperCase()}
       </div>
@@ -452,10 +563,19 @@ function CommentCard({ comment, onReply, compact = false }: { comment: ExplorerP
           <span className="rounded-full bg-[#eefbf6] px-1.5 py-0.5 text-[10px] font-black leading-none text-[#0f8f6b]">{comment.authorBadgeLabel || accountBadgeLabel(comment.authorVerificationLevel ?? 0)}</span>
           <time className="text-xs font-semibold text-[#94a3b8]">{formatCommentDate(comment.createdAt)}</time>
         </div>
-        <p className="mt-1 whitespace-pre-line break-words text-[#334155]">{comment.body}</p>
-        <button type="button" onClick={() => onReply(comment)} className="mt-1 text-xs font-black text-[#64748b] transition hover:text-[#0f8f6b]">
-          Repondre
-        </button>
+        {isEditing ? (
+          <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+            <input value={editDraft} onChange={(event) => onEditDraftChange(event.target.value)} className="h-10 border border-[#cfd8e3] bg-white px-3 text-sm outline-none focus:border-[#0f8f6b]" />
+            <button type="button" onClick={() => onEditSubmit(comment.id)} className="h-10 bg-[#102033] px-4 text-xs font-black text-white transition hover:bg-[#0f8f6b]">Enregistrer</button>
+            <button type="button" onClick={onEditCancel} className="h-10 border border-[#cfd8e3] px-4 text-xs font-black text-[#52627a]">Annuler</button>
+          </div>
+        ) : (
+          <p className="mt-1 whitespace-pre-line break-words text-[#334155]">{comment.body}</p>
+        )}
+        <div className="mt-1 flex items-center gap-3">
+          <button type="button" onClick={() => onReply(comment)} className="text-xs font-black text-[#64748b] transition hover:text-[#0f8f6b]">Repondre</button>
+          {canEdit && !isEditing ? <button type="button" onClick={() => onEditStart(comment)} className="text-xs font-black text-[#0f8f6b] transition hover:text-[#0b7558]">Modifier</button> : null}
+        </div>
       </div>
     </div>
   );
