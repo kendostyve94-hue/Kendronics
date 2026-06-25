@@ -212,8 +212,13 @@ export default function NewProjectPage() {
     const missing: string[] = [];
     if (form.title.trim().length < 4) missing.push('Titre du projet');
     if (form.summary.trim().length < 24) missing.push('Resume public');
-    const hasPublicMedia = Boolean(form.coverPreviewUrl || form.videoPreviewUrl || assets.some((asset) => ['cover', 'video', 'gallery'].includes(asset.kind)));
-    if (!hasPublicMedia) missing.push(publicationFormat === 'short' ? 'Video short' : 'Media public');
+    const hasPublicMediaAsset = assets.some((asset) => asset.visibility === 'public' && ['cover', 'video', 'gallery'].includes(asset.kind));
+    const hasPublicVideoAsset = assets.some((asset) => asset.visibility === 'public' && (asset.kind === 'video' || asset.mimeType.startsWith('video/')));
+    if (publicationFormat === 'short') {
+      if (!hasPublicVideoAsset) missing.push(form.videoPreviewUrl ? 'Patientez, la video short termine son enregistrement' : 'Video short');
+    } else if (!hasPublicMediaAsset && !form.coverPreviewUrl && !form.videoPreviewUrl) {
+      missing.push('Media public');
+    }
     if (projectType === 'paid') {
       if (form.description.trim().length < 80) missing.push('Presentation detaillee');
       if (!form.dimensions.trim()) missing.push('Dimensions');
@@ -381,7 +386,7 @@ export default function NewProjectPage() {
       }
     }
     setIsUploading(false);
-    setStatus(`${file.name} est maintenant rattache au brouillon.`);
+    setStatus('');
   }
 
   async function removeAsset(asset: ProjectAsset) {
