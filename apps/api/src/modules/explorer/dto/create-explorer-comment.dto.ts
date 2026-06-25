@@ -10,4 +10,8 @@ export class CreateExplorerCommentDto {
   @IsString()
   @MaxLength(80)
   authorName?: string;
+
+  @IsOptional()
+  @IsString()
+  parentId?: string;
 }

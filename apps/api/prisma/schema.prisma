@@ -1002,6 +1002,7 @@ model ExplorerComment {
   id          String   @id @default(uuid())
   projectId   String
   userId      String?
+  parentId    String?
   authorName  String
   body        String
   status      String   @default("visible")
@@ -1010,9 +1011,12 @@ model ExplorerComment {
 
   project ExplorerProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  parent ExplorerComment? @relation("ExplorerCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies ExplorerComment[] @relation("ExplorerCommentReplies")
 
   @@index([projectId])
   @@index([userId])
+  @@index([parentId])
   @@index([status])
   @@index([createdAt])
 }

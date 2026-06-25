@@ -32,7 +32,16 @@ type ExplorerProject = {
   commentsCount: number;
   forksCount: number;
   createdAt: string;
-  comments: Array<{ id: string; authorName: string; body: string; createdAt: string }>;
+  comments: Array<{
+    id: string;
+    parentId?: string;
+    authorName: string;
+    authorAvatarUrl?: string;
+    authorBadgeLabel?: string;
+    authorVerificationLevel?: number;
+    body: string;
+    createdAt: string;
+  }>;
   technicalDetails?: Record<string, unknown>;
   documentation?: Record<string, unknown>;
   publicAssets?: Array<{
@@ -79,6 +88,7 @@ export default function ExplorerProjectDetailPage() {
   const [favorited, setFavorited] = useState(false);
   const [followed, setFollowed] = useState(false);
   const [commentDraft, setCommentDraft] = useState('');
+  const [replyTarget, setReplyTarget] = useState<ExplorerProject['comments'][number] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -177,12 +187,13 @@ export default function ExplorerProjectDetailPage() {
         'Content-Type': 'application/json',
         ...(session ? { Authorization: `${session.tokenType} ${session.accessToken}` } : {}),
       },
-      body: JSON.stringify({ body: commentDraft.trim() }),
+      body: JSON.stringify({ body: commentDraft.trim(), parentId: replyTarget?.id }),
     });
     if (!response.ok) return;
     const updated = await response.json() as ExplorerProject;
     setProject((current) => current ? { ...current, comments: updated.comments, commentsCount: updated.commentsCount } : current);
     setCommentDraft('');
+    setReplyTarget(null);
   }
 
   return (
@@ -307,20 +318,15 @@ export default function ExplorerProjectDetailPage() {
               </div>
             </section> : null}
 
-            <section className="mx-auto mt-10 max-w-5xl">
-              <h2 className="border-b border-[#dbe4ee] pb-3 text-lg font-black text-[#0b1724]">Commentaires</h2>
-              <div className="mt-4 grid gap-3">
-                {project.comments.length > 0 ? project.comments.map((comment) => (
-                  <div key={comment.id} className="bg-[#f7fafc] px-3 py-2 text-sm leading-6 text-[#334155]">
-                    <strong className="text-[#0b1724]">{comment.authorName}</strong> {comment.body}
-                  </div>
-                )) : <p className="text-sm text-[#64748b]">Aucun commentaire pour le moment.</p>}
-              </div>
-              <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_110px]">
-                <input value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} className="h-11 border border-[#dbe4ee] px-3 text-sm outline-none transition focus:border-[#0f8f6b]" placeholder="Ajouter un commentaire..." />
-                <button type="button" onClick={() => void postComment()} className="h-11 bg-[#102033] px-4 text-sm font-black text-white transition hover:bg-[#0f8f6b]">Publier</button>
-              </div>
-            </section>
+            <ProjectComments
+              comments={project.comments}
+              draft={commentDraft}
+              replyTarget={replyTarget}
+              onDraftChange={setCommentDraft}
+              onReply={setReplyTarget}
+              onCancelReply={() => setReplyTarget(null)}
+              onSubmit={() => void postComment()}
+            />
           </>
         )}
       </div>
@@ -345,6 +351,112 @@ function ProjectInfoBlock({ title, items }: { title: string; items: Array<[strin
       ) : (
         <p className="py-4 text-sm text-[#64748b]">Non renseigne.</p>
       )}
+    </div>
+  );
+}
+
+function ProjectComments({
+  comments,
+  draft,
+  replyTarget,
+  onDraftChange,
+  onReply,
+  onCancelReply,
+  onSubmit,
+}: {
+  comments: ExplorerProject['comments'];
+  draft: string;
+  replyTarget: ExplorerProject['comments'][number] | null;
+  onDraftChange: (value: string) => void;
+  onReply: (comment: ExplorerProject['comments'][number]) => void;
+  onCancelReply: () => void;
+  onSubmit: () => void;
+}) {
+  const rootComments = comments
+    .filter((comment) => !comment.parentId)
+    .sort((left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime());
+  const repliesByParent = comments.reduce<Record<string, ExplorerProject['comments']>>((grouped, comment) => {
+    if (!comment.parentId) return grouped;
+    grouped[comment.parentId] = grouped[comment.parentId] ?? [];
+    grouped[comment.parentId].push(comment);
+    return grouped;
+  }, {});
+
+  for (const replies of Object.values(repliesByParent)) {
+    replies.sort((left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime());
+  }
+
+  return (
+    <section className="mx-auto mt-10 max-w-5xl" id="comments">
+      <div className="border-b border-[#dbe4ee] pb-3">
+        <h2 className="text-lg font-black text-[#0b1724]">Commentaires</h2>
+      </div>
+
+      <div className="sticky top-[72px] z-30 mt-0 border-b border-[#dbe4ee] bg-white/95 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+        {replyTarget ? (
+          <div className="mb-2 flex items-center justify-between gap-3 bg-[#f4f8fb] px-3 py-2 text-xs font-semibold text-[#52627a]">
+            <span className="truncate">Reponse a <strong className="text-[#0b1724]">{replyTarget.authorName}</strong></span>
+            <button type="button" onClick={onCancelReply} className="shrink-0 text-[#0f8f6b] transition hover:text-[#0b7558]">Annuler</button>
+          </div>
+        ) : null}
+        <div className="grid gap-2 sm:grid-cols-[1fr_110px]">
+          <input
+            value={draft}
+            onChange={(event) => onDraftChange(event.target.value)}
+            className="h-11 border border-[#cfd8e3] bg-white px-3 text-sm outline-none transition focus:border-[#0f8f6b]"
+            placeholder={replyTarget ? `Repondre a ${replyTarget.authorName}...` : 'Ajouter un commentaire...'}
+          />
+          <button type="button" onClick={onSubmit} disabled={!draft.trim()} className="h-11 bg-[#102033] px-4 text-sm font-black text-white transition hover:bg-[#0f8f6b] disabled:cursor-not-allowed disabled:bg-[#a8b4c2]">
+            Publier
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4">
+        {rootComments.length > 0 ? rootComments.map((comment) => (
+          <CommentThread
+            key={comment.id}
+            comment={comment}
+            replies={repliesByParent[comment.id] ?? []}
+            onReply={onReply}
+          />
+        )) : <p className="text-sm text-[#64748b]">Aucun commentaire pour le moment.</p>}
+      </div>
+    </section>
+  );
+}
+
+function CommentThread({ comment, replies, onReply }: { comment: ExplorerProject['comments'][number]; replies: ExplorerProject['comments']; onReply: (comment: ExplorerProject['comments'][number]) => void }) {
+  return (
+    <article className="grid gap-3">
+      <CommentCard comment={comment} onReply={onReply} />
+      {replies.length > 0 ? (
+        <div className="ml-8 grid gap-3 border-l border-[#dbe4ee] pl-4 sm:ml-12">
+          {replies.map((reply) => <CommentCard key={reply.id} comment={reply} onReply={onReply} compact />)}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function CommentCard({ comment, onReply, compact = false }: { comment: ExplorerProject['comments'][number]; onReply: (comment: ExplorerProject['comments'][number]) => void; compact?: boolean }) {
+  return (
+    <div className="flex gap-3 bg-[#f7fafc] px-3 py-3 text-sm leading-6 text-[#334155]">
+      <div className={`${compact ? 'h-8 w-8' : 'h-10 w-10'} grid shrink-0 place-items-center overflow-hidden rounded-full bg-[#102033] text-xs font-black text-white`}>
+        {comment.authorAvatarUrl ? <img src={comment.authorAvatarUrl} alt="" className="h-full w-full object-cover" /> : comment.authorName.slice(0, 1).toUpperCase()}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <strong className="truncate text-sm font-black text-[#0b1724]">{comment.authorName}</strong>
+          <CertificationBadge level={comment.authorVerificationLevel ?? 0} />
+          <span className="rounded-full bg-[#eefbf6] px-1.5 py-0.5 text-[10px] font-black leading-none text-[#0f8f6b]">{comment.authorBadgeLabel || accountBadgeLabel(comment.authorVerificationLevel ?? 0)}</span>
+          <time className="text-xs font-semibold text-[#94a3b8]">{formatCommentDate(comment.createdAt)}</time>
+        </div>
+        <p className="mt-1 whitespace-pre-line break-words text-[#334155]">{comment.body}</p>
+        <button type="button" onClick={() => onReply(comment)} className="mt-1 text-xs font-black text-[#64748b] transition hover:text-[#0f8f6b]">
+          Repondre
+        </button>
+      </div>
     </div>
   );
 }
@@ -461,6 +573,19 @@ function PublicLinkIcon({ type }: { type: string }) {
 
 function formatCompact(value: number) {
   return new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+}
+
+function accountBadgeLabel(level: number) {
+  if (level >= 3) return 'Industriel certifie';
+  if (level >= 2) return 'Professionnel certifie';
+  if (level >= 1) return 'Compte verifie';
+  return 'Nouveau compte';
+}
+
+function formatCommentDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(date);
 }
 
 function formatBytes(value: number) {

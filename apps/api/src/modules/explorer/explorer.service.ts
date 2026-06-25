@@ -33,7 +33,7 @@ export class ExplorerService {
       take: 80,
       include: {
         _count: { select: { favorites: true } },
-        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+        comments: previewCommentsInclude(3),
         assets: publicPreviewAssetSelect(),
         user: { select: { verificationLevel: true } },
       },
@@ -52,7 +52,7 @@ export class ExplorerService {
       },
       include: {
         _count: { select: { favorites: true } },
-        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 12 },
+        comments: previewCommentsInclude(40),
         assets: {
           where: { visibility: 'public' },
           orderBy: { createdAt: 'asc' },
@@ -338,7 +338,7 @@ export class ExplorerService {
       data: { visibility: nextVisibility },
       include: {
         _count: { select: { favorites: true } },
-        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+        comments: previewCommentsInclude(3),
         assets: publicPreviewAssetSelect(),
         user: { select: { verificationLevel: true } },
       },
@@ -380,7 +380,7 @@ export class ExplorerService {
       data: { status: 'published', publishedAt: new Date(), imageUrl: nextImageUrl },
       include: {
         _count: { select: { favorites: true } },
-        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+        comments: previewCommentsInclude(3),
         assets: publicPreviewAssetSelect(),
         user: { select: { verificationLevel: true } },
       },
@@ -415,7 +415,7 @@ export class ExplorerService {
       orderBy: { createdAt: 'desc' },
       include: {
         _count: { select: { favorites: true } },
-        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+        comments: previewCommentsInclude(3),
         assets: publicPreviewAssetSelect(),
         user: { select: { verificationLevel: true } },
       },
@@ -439,7 +439,7 @@ export class ExplorerService {
         project: {
           include: {
             _count: { select: { favorites: true } },
-            comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+            comments: previewCommentsInclude(3),
             assets: publicPreviewAssetSelect(),
             user: { select: { verificationLevel: true } },
           },
@@ -464,7 +464,7 @@ export class ExplorerService {
       take: 80,
       include: {
         _count: { select: { favorites: true } },
-        comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+        comments: previewCommentsInclude(3),
         assets: publicPreviewAssetSelect(),
         user: { select: { verificationLevel: true } },
       },
@@ -686,6 +686,13 @@ export class ExplorerService {
 
   async commentProject(projectId: string, dto: CreateExplorerCommentDto, user?: AuthenticatedUser): Promise<ExplorerProject> {
     await this.ensureProject(projectId);
+    if (dto.parentId) {
+      const parent = await this.prisma.explorerComment.findFirst({
+        where: { id: dto.parentId, projectId, status: 'visible', parentId: null },
+        select: { id: true },
+      });
+      if (!parent) throw new NotFoundException('Parent comment not found.');
+    }
     const author = user ? await this.prisma.user.findUnique({ where: { id: user.id } }) : null;
     const authorName = author?.fullName || clean(dto.authorName) || (user?.email ? emailName(user.email) : '') || 'Visiteur Kendronics';
 
@@ -694,6 +701,7 @@ export class ExplorerService {
         data: {
           projectId,
           userId: user?.id,
+          parentId: dto.parentId,
           authorName,
           body: clean(dto.body) || '',
         },
@@ -703,7 +711,7 @@ export class ExplorerService {
         data: { commentsCount: { increment: 1 } },
         include: {
           _count: { select: { favorites: true } },
-          comments: { where: { status: 'visible' }, orderBy: { createdAt: 'desc' }, take: 3 },
+          comments: previewCommentsInclude(40),
         },
       });
     });
@@ -749,9 +757,22 @@ type ExplorerProjectAssetRecord = {
   visibility?: string | null;
 };
 
-type ExplorerProjectRecord = Prisma.ExplorerProjectGetPayload<{
+type ExplorerProjectBaseRecord = Prisma.ExplorerProjectGetPayload<{
   include: { _count: { select: { favorites: true } }; comments: true };
-}> & { assets?: ExplorerProjectAssetRecord[]; user?: { verificationLevel: number } | null };
+}>;
+
+type ExplorerProjectRecord = Omit<ExplorerProjectBaseRecord, 'comments'> & {
+  assets?: ExplorerProjectAssetRecord[];
+  user?: { verificationLevel: number } | null;
+  comments: Array<{
+    id: string;
+    parentId?: string | null;
+    authorName: string;
+    body: string;
+    createdAt: Date;
+    user?: { avatarDataUrl?: string | null; verificationLevel?: number | null } | null;
+  }>;
+};
 
 function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
   const { videoAsset, coverAsset, previewAsset } = selectProjectMediaAssets(project.assets ?? []);
@@ -789,10 +810,25 @@ function toExplorerProject(project: ExplorerProjectRecord): ExplorerProject {
     createdAt: project.createdAt,
     comments: project.comments.map((comment) => ({
       id: comment.id,
+      parentId: comment.parentId ?? undefined,
       authorName: comment.authorName,
+      authorAvatarUrl: comment.user?.avatarDataUrl ?? undefined,
+      authorBadgeLabel: accountBadgeLabel(comment.user?.verificationLevel ?? 0),
+      authorVerificationLevel: comment.user?.verificationLevel ?? 0,
       body: comment.body,
       createdAt: comment.createdAt,
     })),
+  };
+}
+
+function previewCommentsInclude(take: number) {
+  return {
+    where: { status: 'visible' },
+    orderBy: { createdAt: 'desc' as const },
+    take,
+    include: {
+      user: { select: { avatarDataUrl: true, verificationLevel: true } },
+    },
   };
 }
 

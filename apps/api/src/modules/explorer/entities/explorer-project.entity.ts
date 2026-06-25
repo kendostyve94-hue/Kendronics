@@ -1,6 +1,10 @@
 export type ExplorerProjectComment = {
   id: string;
+  parentId?: string;
   authorName: string;
+  authorAvatarUrl?: string;
+  authorBadgeLabel?: string;
+  authorVerificationLevel?: number;
   body: string;
   createdAt: Date;
 };
