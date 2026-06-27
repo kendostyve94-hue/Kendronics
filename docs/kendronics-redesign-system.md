@@ -91,6 +91,17 @@ The first reusable web primitives live in:
 
 `apps/web/components/ui/kendronics-system.tsx`
 
+The legacy UI entry points now also use the new tokens:
+
+- `apps/web/components/ui/Button.tsx`
+- `apps/web/components/ui/Card.tsx`
+- `apps/web/components/ui/Section.tsx`
+- `apps/web/components/ui/index.ts`
+
+Native mobile tokens live in:
+
+`apps/mobile/src/design-system.ts`
+
 Available primitives:
 
 - `KButton`
