@@ -94,8 +94,8 @@ body {
   margin: 0;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-weight: 400;
-  background: #ffffff;
-  color: #0b1724;
+  background: var(--kd-bg);
+  color: var(--kd-text);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -104,7 +104,6 @@ body {
 body,
 body * {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-  font-weight: 400 !important;
 }
 
 @media (max-width: 1023px) {
@@ -229,7 +228,8 @@ summary:active,
 input,
 select,
 textarea {
-  background: #ffffff !important;
+  background: var(--kd-surface) !important;
+  color: var(--kd-text) !important;
   border-color: rgba(82, 108, 134, 0.36) !important;
   border-radius: var(--control-radius) !important;
   min-height: 2.75rem;
@@ -255,16 +255,16 @@ summary:focus-visible {
 
 @media (max-width: 767px) {
   :root {
-    --surface: #ffffff;
-    --surface-muted: #ffffff;
-    --surface-raised: #ffffff;
+    --surface: var(--kd-surface);
+    --surface-muted: var(--kd-surface-muted);
+    --surface-raised: var(--kd-surface-elevated);
     --surface-tint: #e8f7f1;
     --color-cloud: #ffffff;
     --color-line: #b8c9d9;
   }
 
   body {
-    background: #ffffff;
+    background: var(--kd-bg);
   }
 
   .label-caps {
@@ -277,6 +277,104 @@ summary:focus-visible {
     background: transparent !important;
   }
 
+}
+
+/* Product-wide theme compatibility for screens migrated before the token system. */
+[data-theme="dark"] body,
+[data-theme="dark"] main,
+[data-theme="dark"] section:not(.bg-ink) {
+  background-color: var(--kd-bg) !important;
+  color: var(--kd-text) !important;
+}
+
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-slate-50,
+[data-theme="dark"] .bg-slate-100,
+[data-theme="dark"] .bg-cloud,
+[data-theme="dark"] [class*="bg-[#f"],
+[data-theme="dark"] [class*="bg-[#e"] {
+  background-color: var(--kd-surface) !important;
+}
+
+[data-theme="dark"] .text-ink,
+[data-theme="dark"] .text-slate-950,
+[data-theme="dark"] .text-slate-900,
+[data-theme="dark"] .text-slate-800,
+[data-theme="dark"] .text-slate-700,
+[data-theme="dark"] [class*="text-[#0"],
+[data-theme="dark"] [class*="text-[#1"],
+[data-theme="dark"] [class*="text-[#2"] {
+  color: var(--kd-text) !important;
+}
+
+[data-theme="dark"] .text-slate-600,
+[data-theme="dark"] .text-slate-500,
+[data-theme="dark"] .text-slate-400,
+[data-theme="dark"] [class*="text-[#3"],
+[data-theme="dark"] [class*="text-[#4"],
+[data-theme="dark"] [class*="text-[#5"],
+[data-theme="dark"] [class*="text-[#6"],
+[data-theme="dark"] [class*="text-[#7"],
+[data-theme="dark"] [class*="text-[#8"],
+[data-theme="dark"] [class*="text-[#9"] {
+  color: var(--kd-text-secondary) !important;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea,
+[data-theme="dark"] option {
+  background-color: var(--kd-surface-muted) !important;
+  border-color: var(--kd-border) !important;
+  color: var(--kd-text) !important;
+  color-scheme: dark;
+}
+
+[data-theme="dark"] header > div,
+[data-theme="dark"] nav[class*="fixed"],
+[data-theme="dark"] article,
+[data-theme="dark"] aside,
+[data-theme="dark"] form[class*="border"],
+[data-theme="dark"] details,
+[data-theme="dark"] table,
+[data-theme="dark"] thead,
+[data-theme="dark"] tbody,
+[data-theme="dark"] tr,
+[data-theme="dark"] td,
+[data-theme="dark"] th {
+  border-color: var(--kd-border) !important;
+}
+
+[data-theme="dark"] img[src*="kendronics-logo"] {
+  filter: brightness(1.18) saturate(0.92);
+}
+
+.kd-navbar,
+.kd-mobile-dock {
+  color: var(--kd-text);
+}
+
+h1 { font-size: clamp(2rem, 4vw, 3.25rem); line-height: 1.08; font-weight: 750; }
+h2 { font-size: clamp(1.5rem, 2.6vw, 2.25rem); line-height: 1.16; font-weight: 700; }
+h3 { font-size: clamp(1.125rem, 1.8vw, 1.5rem); line-height: 1.25; font-weight: 650; }
+h4, h5 { font-weight: 650; }
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .auth-neumo input,

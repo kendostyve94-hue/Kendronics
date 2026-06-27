@@ -3,6 +3,7 @@ import { AuthRequiredModal } from '../components/layout/AuthRequiredModal';
 import { CookieConsentBanner } from '../components/layout/CookieConsentBanner';
 import { LanguageRuntime } from '../components/layout/LanguageRuntime';
 import { OneSignalRuntime } from '../components/layout/OneSignalRuntime';
+import { ThemeRuntime } from '../components/layout/ThemeRuntime';
 import { ViewportScaleRuntime } from '../components/layout/ViewportScaleRuntime';
 import './globals.css';
 
@@ -61,9 +62,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var p=localStorage.getItem('kendronics.theme')||'system';var d=p==='dark'||(p==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';document.documentElement.dataset.themePreference=p;document.documentElement.style.colorScheme=d?'dark':'light'}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body>
         <LanguageRuntime>
+          <ThemeRuntime />
           <ViewportScaleRuntime />
           <OneSignalRuntime />
           {children}

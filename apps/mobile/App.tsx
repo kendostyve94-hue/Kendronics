@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Appearance,
   FlatList,
   Image,
   Pressable,
@@ -13,7 +14,9 @@ import {
   Text,
   TextInput,
   View,
+  useColorScheme,
 } from 'react-native';
+import { kdColors, kdDarkColors } from './src/design-system';
 import {
   createProjectComment,
   createProjectDraft,
@@ -236,6 +239,7 @@ const contentPages: Partial<Record<RouteKey, { title: string; kicker: string; pa
 };
 
 export default function App() {
+  const colorScheme = useColorScheme();
   const [nav, setNav] = useState<NavigationState>({ route: 'explorer' });
   const [sessionReady, setSessionReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
@@ -265,10 +269,10 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.shell}>
-      <StatusBar style="dark" />
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
       <View style={styles.header}>
         <Pressable onPress={() => navigate({ route: 'menu' })} style={styles.iconButton}>
-          <Ionicons name="menu" size={24} color="#0b1724" />
+          <Ionicons name="menu" size={24} color={nativeColors.text} />
         </Pressable>
         <Pressable onPress={() => navigate({ route: 'home' })}>
           <Text style={styles.logo}>Kendronics</Text>
@@ -414,9 +418,9 @@ function ExplorerToolbar({ navigate }: { navigate: Navigate }) {
   return (
     <View style={styles.toolbar}>
       <Pressable onPress={() => navigate({ route: 'projectNew' })} style={styles.toolbarButtonActive}><Ionicons name="add" size={22} color="#fff" /></Pressable>
-      <Pressable onPress={() => navigate({ route: 'explorer' })} style={styles.toolbarButton}><Ionicons name="play-circle-outline" size={22} color="#0b1724" /></Pressable>
-      <Pressable onPress={() => navigate({ route: 'explorer' })} style={styles.toolbarButton}><Ionicons name="git-branch-outline" size={22} color="#0b1724" /></Pressable>
-      <Pressable onPress={() => navigate({ route: 'explorer' })} style={styles.toolbarButton}><Ionicons name="people-outline" size={22} color="#0b1724" /></Pressable>
+      <Pressable onPress={() => navigate({ route: 'explorer' })} style={styles.toolbarButton}><Ionicons name="play-circle-outline" size={22} color={nativeColors.text} /></Pressable>
+      <Pressable onPress={() => navigate({ route: 'explorer' })} style={styles.toolbarButton}><Ionicons name="git-branch-outline" size={22} color={nativeColors.text} /></Pressable>
+      <Pressable onPress={() => navigate({ route: 'explorer' })} style={styles.toolbarButton}><Ionicons name="people-outline" size={22} color={nativeColors.text} /></Pressable>
     </View>
   );
 }
@@ -1071,99 +1075,103 @@ function messageOf(error: unknown) {
   return error instanceof Error ? error.message : 'Action impossible.';
 }
 
+const nativeColors = Appearance.getColorScheme() === 'dark'
+  ? { ...kdColors, ...kdDarkColors }
+  : kdColors;
+
 const styles = StyleSheet.create({
-  shell: { flex: 1, backgroundColor: '#f6f8fb' },
-  header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, backgroundColor: '#ffffff', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#d9e2ec' },
+  shell: { flex: 1, backgroundColor: nativeColors.bg },
+  header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, backgroundColor: nativeColors.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: nativeColors.border },
   logo: { color: '#0f8f6b', fontSize: 23, fontWeight: '900' },
   iconButton: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#e7f5f0', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  avatarGeneric: { backgroundColor: '#e7f5f0', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: nativeColors.surfaceMuted, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatarGeneric: { backgroundColor: nativeColors.surfaceMuted, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImage: { width: '100%', height: '100%' },
   avatarText: { color: '#0f8f6b', fontWeight: '900' },
   content: { flex: 1 },
   page: { padding: 16, paddingBottom: 96, gap: 16 },
-  heroBlock: { backgroundColor: '#ffffff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee', padding: 16 },
+  heroBlock: { backgroundColor: nativeColors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: nativeColors.border, padding: 16, borderRadius: 8 },
   heroKicker: { color: '#0f8f6b', fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
-  heroTitle: { color: '#0b1724', fontSize: 25, lineHeight: 31, fontWeight: '900', marginTop: 8 },
-  heroText: { color: '#52627a', fontSize: 14, lineHeight: 21, marginTop: 8 },
+  heroTitle: { color: nativeColors.text, fontSize: 25, lineHeight: 31, fontWeight: '900', marginTop: 8 },
+  heroText: { color: nativeColors.textSecondary, fontSize: 14, lineHeight: 21, marginTop: 8 },
   actionRow: { flexDirection: 'row', gap: 10, marginTop: 16 },
-  section: { backgroundColor: '#ffffff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee', padding: 14, gap: 12 },
-  sectionTitle: { color: '#0b1724', fontSize: 18, fontWeight: '900' },
+  section: { backgroundColor: nativeColors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: nativeColors.border, padding: 14, gap: 12, borderRadius: 8 },
+  sectionTitle: { color: nativeColors.text, fontSize: 18, fontWeight: '900' },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   linkRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#e2e8f0', paddingVertical: 8 },
-  rowText: { color: '#334155', fontSize: 14, lineHeight: 21 },
-  rowTitle: { color: '#0b1724', fontSize: 15, fontWeight: '900' },
-  mutedText: { color: '#64748b', fontSize: 13, lineHeight: 20 },
+  rowText: { color: nativeColors.textSecondary, fontSize: 14, lineHeight: 21 },
+  rowTitle: { color: nativeColors.text, fontSize: 15, fontWeight: '900' },
+  mutedText: { color: nativeColors.muted, fontSize: 13, lineHeight: 20 },
   productionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#e2e8f0', paddingTop: 10 },
-  listCard: { backgroundColor: '#ffffff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee', padding: 14, gap: 6 },
-  pageRow: { backgroundColor: '#ffffff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee', minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12 },
+  listCard: { backgroundColor: nativeColors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: nativeColors.border, padding: 14, gap: 6, borderRadius: 8 },
+  pageRow: { backgroundColor: nativeColors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: nativeColors.border, minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 8 },
   priceText: { color: '#0f8f6b', fontSize: 16, fontWeight: '900' },
   formGrid: { gap: 12 },
   inputGroup: { gap: 6 },
-  inputLabel: { color: '#0b1724', fontSize: 13, fontWeight: '800' },
-  input: { minHeight: 48, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#d6e0eb', paddingHorizontal: 14, paddingVertical: 10, color: '#0b1724', fontSize: 15 },
+  inputLabel: { color: nativeColors.text, fontSize: 13, fontWeight: '800' },
+  input: { minHeight: 48, backgroundColor: nativeColors.surface, borderWidth: 1, borderColor: nativeColors.border, paddingHorizontal: 14, paddingVertical: 10, color: nativeColors.text, fontSize: 15, borderRadius: 6 },
   textArea: { minHeight: 112, textAlignVertical: 'top' },
   quoteResult: { backgroundColor: '#f1faf7', borderWidth: 1, borderColor: '#cfe2dc', padding: 16, gap: 4 },
   resultLabel: { color: '#0f8f6b', fontSize: 12, fontWeight: '900', textTransform: 'uppercase' },
-  resultPrice: { color: '#0b1724', fontSize: 28, fontWeight: '900' },
+  resultPrice: { color: nativeColors.text, fontSize: 28, fontWeight: '900' },
   primaryButton: { minHeight: 46, flex: 1, backgroundColor: '#0f8f6b', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   primaryButtonText: { color: '#ffffff', fontWeight: '900', textAlign: 'center' },
-  secondaryButton: { minHeight: 46, flex: 1, borderWidth: 1, borderColor: '#cbd6e2', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
-  secondaryButtonText: { color: '#0b1724', fontWeight: '800', textAlign: 'center' },
+  secondaryButton: { minHeight: 46, flex: 1, borderWidth: 1, borderColor: nativeColors.border, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, borderRadius: 6 },
+  secondaryButtonText: { color: nativeColors.text, fontWeight: '800', textAlign: 'center' },
   disabled: { backgroundColor: '#a9c9bf' },
   emptyState: { minHeight: 160, alignItems: 'center', justifyContent: 'center', padding: 18 },
-  emptyTitle: { fontSize: 24, fontWeight: '900', color: '#0b1724', textAlign: 'center' },
-  emptyText: { marginTop: 8, color: '#64748b', textAlign: 'center', lineHeight: 22 },
+  emptyTitle: { fontSize: 24, fontWeight: '900', color: nativeColors.text, textAlign: 'center' },
+  emptyText: { marginTop: 8, color: nativeColors.muted, textAlign: 'center', lineHeight: 22 },
   feed: { padding: 12, gap: 18, paddingBottom: 96 },
   toolbar: { height: 54, flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
-  toolbarButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee' },
+  toolbarButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: nativeColors.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: nativeColors.border, borderRadius: 6 },
   toolbarButtonActive: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f8f6b' },
-  projectCard: { backgroundColor: '#ffffff', overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee' },
+  projectCard: { backgroundColor: nativeColors.surface, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: nativeColors.border, borderRadius: 8 },
   authorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12 },
   authorRowPlain: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   authorText: { flex: 1 },
   nameLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  authorName: { maxWidth: '88%', color: '#0b1724', fontSize: 15, fontWeight: '800' },
+  authorName: { maxWidth: '88%', color: nativeColors.text, fontSize: 15, fontWeight: '800' },
   badge: { color: '#0f8f6b', fontSize: 11, fontWeight: '700', marginTop: 2 },
   followText: { color: '#0f8f6b', fontSize: 13, fontWeight: '800', marginTop: 6 },
-  mediaFrame: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#e6edf5' },
+  mediaFrame: { width: '100%', aspectRatio: 16 / 9, backgroundColor: nativeColors.surfaceMuted },
   media: { width: '100%', height: '100%', resizeMode: 'cover' },
   mediaFallback: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  projectTitle: { color: '#0b1724', fontSize: 18, fontWeight: '800', paddingHorizontal: 12, paddingTop: 12 },
-  projectSummary: { color: '#52627a', fontSize: 14, lineHeight: 21, paddingHorizontal: 12, paddingTop: 6 },
-  detailTitle: { color: '#0b1724', fontSize: 28, lineHeight: 35, fontWeight: '900' },
-  detailBody: { color: '#1f2d3d', fontSize: 16, lineHeight: 26 },
+  projectTitle: { color: nativeColors.text, fontSize: 18, fontWeight: '800', paddingHorizontal: 12, paddingTop: 12 },
+  projectSummary: { color: nativeColors.textSecondary, fontSize: 14, lineHeight: 21, paddingHorizontal: 12, paddingTop: 6 },
+  detailTitle: { color: nativeColors.text, fontSize: 28, lineHeight: 35, fontWeight: '900' },
+  detailBody: { color: nativeColors.textSecondary, fontSize: 16, lineHeight: 26 },
   metrics: { flexDirection: 'row', alignItems: 'center', gap: 18, padding: 12 },
   metricButton: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   metricText: { color: '#8091a7', fontSize: 13, fontWeight: '700' },
   authPanel: { flexGrow: 1, justifyContent: 'center', padding: 24, gap: 14 },
-  authTitle: { fontSize: 30, fontWeight: '900', color: '#0b1724' },
-  authText: { color: '#52627a', fontSize: 14, lineHeight: 22 },
+  authTitle: { fontSize: 30, fontWeight: '900', color: nativeColors.text },
+  authText: { color: nativeColors.textSecondary, fontSize: 14, lineHeight: 22 },
   errorText: { color: '#c2413a', fontWeight: '700' },
   statusText: { color: '#0f8f6b', fontWeight: '800' },
   profileScreen: { padding: 16, paddingBottom: 96, gap: 16 },
   profileHero: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 8 },
   profileInfo: { flex: 1 },
-  profileName: { color: '#0b1724', fontSize: 21, fontWeight: '900', maxWidth: '88%' },
-  profileEmail: { color: '#64748b', fontSize: 13, marginTop: 6 },
+  profileName: { color: nativeColors.text, fontSize: 21, fontWeight: '900', maxWidth: '88%' },
+  profileEmail: { color: nativeColors.muted, fontSize: 13, marginTop: 6 },
   publicProfileHead: { flexDirection: 'row', alignItems: 'flex-end', gap: 14, marginTop: -34 },
-  banner: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#dbe4ee' },
-  bannerFallback: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#dbe4ee' },
-  statsRow: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee', paddingVertical: 14 },
+  banner: { width: '100%', aspectRatio: 16 / 9, backgroundColor: nativeColors.surfaceMuted },
+  bannerFallback: { width: '100%', aspectRatio: 16 / 9, backgroundColor: nativeColors.surfaceMuted },
+  statsRow: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: nativeColors.border, paddingVertical: 14 },
   stat: { flex: 1, alignItems: 'center' },
-  statValue: { fontSize: 20, color: '#0b1724', fontWeight: '800' },
-  statLabel: { color: '#64748b', fontSize: 12, marginTop: 4 },
+  statValue: { fontSize: 20, color: nativeColors.text, fontWeight: '800' },
+  statLabel: { color: nativeColors.muted, fontSize: 12, marginTop: 4 },
   profileGrid: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
-  miniCounter: { minWidth: '45%', flex: 1, alignItems: 'center', borderWidth: StyleSheet.hairlineWidth, borderColor: '#dbe4ee', paddingVertical: 12 },
+  miniCounter: { minWidth: '45%', flex: 1, alignItems: 'center', borderWidth: StyleSheet.hairlineWidth, borderColor: nativeColors.border, paddingVertical: 12 },
   compactProjectRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#e2e8f0', paddingTop: 10, gap: 3 },
-  segment: { flexDirection: 'row', backgroundColor: '#e7eef6', padding: 3 },
+  segment: { flexDirection: 'row', backgroundColor: nativeColors.surfaceMuted, padding: 3, borderRadius: 8 },
   segmentButton: { flex: 1, minHeight: 42, alignItems: 'center', justifyContent: 'center' },
-  segmentActive: { backgroundColor: '#ffffff' },
-  segmentText: { color: '#0b1724', fontWeight: '800' },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#f6f8fb' },
-  loaderText: { color: '#64748b', fontWeight: '700' },
-  dock: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 74, flexDirection: 'row', backgroundColor: '#ffffff', borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#d9e2ec', paddingTop: 8 },
+  segmentActive: { backgroundColor: nativeColors.surface },
+  segmentText: { color: nativeColors.text, fontWeight: '800' },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: nativeColors.bg },
+  loaderText: { color: nativeColors.muted, fontWeight: '700' },
+  dock: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 74, flexDirection: 'row', backgroundColor: nativeColors.surface, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: nativeColors.border, paddingTop: 8 },
   dockItem: { flex: 1, alignItems: 'center', gap: 4 },
   dockLabel: { color: '#7a8aa0', fontSize: 11, fontWeight: '700' },
   dockLabelActive: { color: '#0f8f6b' },

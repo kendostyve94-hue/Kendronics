@@ -6,6 +6,7 @@ import { getApiBaseUrl } from '../../lib/api-base-url';
 import { readAuthSession } from '../../lib/auth-session';
 import { purgeLegacySensitiveStorage, readScopedLocalStorage, writeScopedLocalStorage } from '../../lib/user-scoped-storage';
 import { useI18n, type TranslationKey } from './LanguageRuntime';
+import { readTheme, setTheme, type KendronicsTheme } from './ThemeRuntime';
 const ORDER_STORAGE_KEY = 'kendronics.customer.orders';
 const AVATAR_STORAGE_KEY = 'kendronics.customer.avatar';
 const PROFILE_STORAGE_KEY = 'kendronics.customer.profile';
@@ -217,10 +218,24 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   const [avatarDataUrl, setAvatarDataUrl] = useState('');
   const [firstName, setFirstName] = useState('Rafale');
   const [profileView, setProfileView] = useState('');
+  const [theme, setThemeState] = useState<KendronicsTheme>('system');
   const headerRef = useRef<HTMLElement | null>(null);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
   const { language, t, toggleLanguage } = useI18n();
+
+  useEffect(() => {
+    const refreshTheme = () => setThemeState(readTheme());
+    refreshTheme();
+    window.addEventListener('kendronics:theme-change', refreshTheme);
+    return () => window.removeEventListener('kendronics:theme-change', refreshTheme);
+  }, []);
+
+  function cycleTheme() {
+    const next: KendronicsTheme = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system';
+    setTheme(next);
+    setThemeState(next);
+  }
 
   useEffect(() => {
     function handleScroll() {
@@ -383,8 +398,8 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   }, [cartHref, searchQuery, t]);
   return (
     <>
-    {hideHeader ? null : <header ref={headerRef} className={`fixed left-0 right-0 top-0 z-50 text-slate-800 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="border-b border-[#d7d7d7] bg-white px-3 py-0 sm:px-6 lg:px-5">
+    {hideHeader ? null : <header ref={headerRef} className={`kd-navbar fixed left-0 right-0 top-0 z-50 text-[var(--kd-text)] transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+      <div className="border-b border-[var(--kd-border)] bg-[var(--kd-surface)]/95 px-3 py-0 backdrop-blur-xl sm:px-6 lg:px-5">
         <div className="mx-auto flex h-[70px] w-full max-w-none items-center justify-between gap-3 sm:max-w-[1180px] lg:max-w-[1368px]">
           <div className="flex min-w-0 flex-1 items-center gap-3 lg:gap-5">
             <a href="/" className="-ml-3 inline-flex shrink-0 items-center sm:ml-0 lg:mr-2" aria-label="Accueil Kendronics">
@@ -411,6 +426,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
           </div>
 
           <nav className="hidden shrink-0 items-center justify-end gap-3 text-[15px] font-normal text-slate-800 xl:gap-4 lg:flex">
+            <ThemeToggle theme={theme} onToggle={cycleTheme} />
             <LanguageToggle language={language} label={t('nav.language')} onToggle={toggleLanguage} switchLabel={language === 'fr' ? t('nav.switchToEnglish') : t('nav.switchToFrench')} />
             {isSignedIn ? <NotificationBell count={unreadNotifications} /> : null}
             <CartLink href={cartHref} count={orders.length} requireAuth={!isSignedIn} />
@@ -418,6 +434,7 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
+            <ThemeToggle theme={theme} onToggle={cycleTheme} compact />
             {isSignedIn ? (
               <>
                 <NotificationBell count={unreadNotifications} compact />
@@ -517,6 +534,33 @@ export function Navbar({ hideHeader = false }: { hideHeader?: boolean }) {
   );
 }
 
+function ThemeToggle({ theme, onToggle, compact = false }: { theme: KendronicsTheme; onToggle: () => void; compact?: boolean }) {
+  const label = theme === 'dark' ? 'Theme sombre' : theme === 'light' ? 'Theme clair' : 'Theme automatique';
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`${compact ? 'h-9 w-9' : 'h-10 w-10'} grid place-items-center rounded-[var(--kd-radius-2)] text-[var(--kd-text-secondary)] hover:bg-[var(--kd-surface-muted)] hover:text-[var(--kd-text)]`}
+      aria-label={`${label}. Changer de theme`}
+      title={label}
+    >
+      {theme === 'dark' ? <MoonIcon /> : theme === 'light' ? <SunIcon /> : <SystemThemeIcon />}
+    </button>
+  );
+}
+
+function SunIcon() {
+  return <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>;
+}
+
+function MoonIcon() {
+  return <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.5 8.5 0 1 0 20.2 15.1Z"/></svg>;
+}
+
+function SystemThemeIcon() {
+  return <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>;
+}
+
 function NotificationBell({ count, compact = false }: { count: number; compact?: boolean }) {
   return (
     <a href="/profile?view=notifications" className={`relative inline-flex items-center justify-center text-[#0f8f6b] transition hover:text-[#0b7558] ${compact ? 'h-9 w-9' : 'h-10 w-10'}`} aria-label="Notifications">
@@ -542,7 +586,7 @@ function MobileDock({ cartHref, orderCount, pathname, profileView }: { cartHref:
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 bg-white px-4 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-0 lg:hidden"
+      className="kd-mobile-dock fixed inset-x-0 bottom-0 z-50 border-t border-[var(--kd-border)] bg-[var(--kd-surface)]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+0.4rem)] pt-0 backdrop-blur-xl lg:hidden"
       aria-label="Navigation mobile principale"
     >
       <div className="mx-auto grid w-full max-w-none grid-cols-5 gap-1 sm:max-w-[40rem]">

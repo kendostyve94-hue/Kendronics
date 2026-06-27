@@ -102,6 +102,8 @@ Native mobile tokens live in:
 
 `apps/mobile/src/design-system.ts`
 
+Theme orchestration lives in `apps/web/components/layout/ThemeRuntime.tsx`. The web theme follows the operating system by default, can be switched from the global navigation, persists locally, and is applied before hydration to avoid a light-theme flash.
+
 Available primitives:
 
 - `KButton`
@@ -115,29 +117,16 @@ Available primitives:
 - `KSkeleton`
 - `KEmptyState`
 
-Next primitives to add:
+Additional available primitives:
 
-- Upload
-- Search with suggestions
-- Select
-- Checkbox
-- Radio
-- Switch
-- OTP
-- Autocomplete
-- Table
-- Pagination
-- Tooltip
-- Popover
-- Toast
-- Modal
-- Drawer
-- Bottom Sheet
-- Timeline
-- Progress
-- Navbar
-- Bottom Navigation
-- FAB
+- `KAvatar`, `KBreadcrumb`, `KSelect`, `KSearch`
+- `KCheckbox`, `KRadio`, `KSwitch`, `KOtp`, `KAutocomplete`
+- `KUpload`, `KProgress`, `KSpinner`, `KTableShell`, `KPagination`
+- `KAccordion`, `KDropdown`, `KPopover`, `KTooltip`
+- `KModal`, `KDrawer`, `KBottomSheet`, `KToast`, `KTimeline`, `KFab`
+- Product, community, article, documentation, tutorial, company, manufacturer, supplier, project and quote cards
+
+The shared navbar and mobile bottom navigation consume the same theme tokens. Legacy pages receive token compatibility globally while their local markup is progressively simplified.
 
 ## Page Architecture
 
@@ -303,9 +292,13 @@ Phase 1: Foundation
 - Document system
 - Stop creating one-off styles for new work
 
+Status: implemented.
+
 Phase 2: Core Shell
 
 - Rebuild navbar, bottom navigation, page layout, search, notifications, auth prompts, and profile menu with shared components.
+
+Status: theme-aware shell, navigation, search, notifications, auth prompt and profile menu are implemented.
 
 Phase 3: Community / Explorer
 
@@ -329,6 +322,14 @@ Phase 7: Native App Parity
 - Port the same tokens and component model to React Native.
 - Keep API contracts shared.
 - Avoid WebView.
+
+Status: native routes use the production API client and share the Kendronics palette, spacing and automatic device-theme behavior. No WebView is used.
+
+## Backend Boundaries
+
+Visual routes must not pretend that a production capability exists when there is no server contract. The current backend supports authentication, users, profiles, Explorer projects, interactions, uploads, quotes, orders, payments, tracking, notifications, support and administration.
+
+A standalone direct-messaging service and an independent marketplace catalog/review service are not yet complete backend domains. Their final pages must be introduced together with authenticated APIs, authorization, moderation, persistence and tests. Until then, existing real project, quote and support flows remain the production surfaces; no mock messages, products, suppliers or reviews may be injected.
 
 ## Engineering Rules
 
